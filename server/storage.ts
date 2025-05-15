@@ -848,10 +848,10 @@ export class DatabaseStorage implements IStorage {
             const updateResult = await db
               .update(dailyBonus)
               .set({ 
-                is_spun: false,
+                isSpun: false,
                 // Keep the original spin result tickets that were assigned, don't set to null/0
                 // This preserves the "prize" while making it available again
-                spin_result_tickets: originalSpinResultTickets
+                spinResultTickets: originalSpinResultTickets
               })
               .where(eq(dailyBonus.id, dailyBonusRecord.id))
               .returning();
@@ -859,16 +859,16 @@ export class DatabaseStorage implements IStorage {
             console.log(`Daily bonus reset complete. Update result:`, updateResult);
             console.log(`Spin result tickets preserved: ${originalSpinResultTickets}`);
           } else {
-            console.log(`Daily bonus assigned chore ID ${dailyBonusRecord.assigned_chore_id} doesn't match transaction chore ID ${transaction.chore_id}, not resetting`);
+            console.log(`Daily bonus assigned chore ID ${dailyBonusRecord.assignedChoreId} doesn't match transaction chore ID ${transaction.choreId}, not resetting`);
           }
         } else {
-          console.log(`No daily bonus record found for user ${transaction.user_id} on ${transactionDateStr}`);
+          console.log(`No daily bonus record found for user ${transaction.userId} on ${transactionDateStr}`);
         }
       } else {
         console.log(`Transaction ${transaction.id} is not a chore completion transaction or lacks required fields:`, {
-          has_chore_id: !!transaction.chore_id,
+          has_choreId: !!transaction.choreId,
           type: transaction.type,
-          has_date: !!transaction.date
+          has_createdAt: !!transaction.createdAt
         });
       }
       
@@ -969,13 +969,13 @@ export class DatabaseStorage implements IStorage {
       } = { ...tx };
       
       // Fetch chore if applicable
-      if (tx.chore_id) {
-        result.chore = await this.getChore(tx.chore_id);
+      if (tx.choreId) {
+        result.chore = await this.getChore(tx.choreId);
       }
       
       // Fetch goal and product if applicable
-      if (tx.goal_id) {
-        const goalWithProduct = await this.getGoalWithProduct(tx.goal_id);
+      if (tx.goalId) {
+        const goalWithProduct = await this.getGoalWithProduct(tx.goalId);
         if (goalWithProduct) {
           result.goal = goalWithProduct;
         }
