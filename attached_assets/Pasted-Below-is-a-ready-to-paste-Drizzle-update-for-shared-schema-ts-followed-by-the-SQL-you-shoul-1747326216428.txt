@@ -1,0 +1,286 @@
+Below is a **ready-to-paste Drizzle update** for `shared/schema.ts`, followed by the **SQL you should see** in the next migration (Drizzle will create a file like `migrations/0002_lean_schema_updates.sql`).
+Everything matches the lean-blueprint spec you approved.
+
+---
+
+### 1 · `shared/schema.ts`
+
+```ts
+/* ----------------------------------------------------------------
+ *  ENUMS
+ * ----------------------------------------------------------------*/
+export const txnSourceEnum = pgEnum('txn_source', [
+  // earnings
+  'chore_completion',
+  'bonus_spin',
+  'good_behavior',
+  'bad_behavior',
+  'parent_adjustment',
+  // reversals
+  'undo_manual',
+  'undo_chore_completion',
+  'undo_bonus_spin',
+  // family goals (phase-2, kept for forward-compat)
+  'family_goal_contribution',
+  'family_goal_spend',
+]);
+
+export const bonusTriggerEnum = pgEnum('bonus_trigger', [
+  'chore_completion',
+  'good_behavior_reward',
+]);
+
+/* ----------------------------------------------------------------
+ *  USERS  (passwordless parent, optional child pw)
+ * ----------------------------------------------------------------*/
+export const users = pgTable('users', {
+  id            : serial('id').primaryKey(),
+  name          : text('name').notNull(),
+  email         : text('email').notNull().unique(),               // <- primary identifier
+  passwordHash  : text('password_hash'),                          // NULL for parent
+  role          : text('role').$type<'parent' | 'child'>().notNull(),
+  familyId      : integer('family_id').references(() => families.id, { onDelete: 'set null' }),
+  balanceCache  : integer('balance_cache').notNull().default(0),
+  createdAt     : timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/* ----------------------------------------------------------------
+ *  FAMILIES  (new)
+ * ----------------------------------------------------------------*/
+export const families = pgTable('families', {
+  id               : serial('id').primaryKey(),
+  name             : text('name').notNull(),
+  primaryParentId  : integer('primary_parent_id')
+                       .references(() => users.id, { onDelete: 'set null' }),
+  timezone         : varchar('timezone', { length: 64 }).notNull().default('UTC'),
+  createdAt        : timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/* ----------------------------------------------------------------
+ *  LOGIN  TOKENS
+ * ----------------------------------------------------------------*/
+export const loginTokens = pgTable('login_tokens', {
+  tokenHash     : char('token_hash', { length: 64 }).primaryKey(),   // SHA-256
+  userId        : integer('user_id').notNull()
+                    .references(() => users.id, { onDelete: 'cascade' }),
+  createdAt     : timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  expiresAt     : timestamp('expires_at', { withTimezone: true }).notNull(),
+  consumedAt    : timestamp('consumed_at', { withTimezone: true }),
+  ipFingerprint : text('ip_fingerprint'),
+}, (t) => ({
+  userIdx: index('login_tokens_user_idx').on(t.userId),
+}));
+
+/* ----------------------------------------------------------------
+ *  CHORES
+ * ----------------------------------------------------------------*/
+export const chores = pgTable('chores', {
+  id                 : serial('id').primaryKey(),
+  name               : text('name').notNull(),
+  description        : text('description'),
+  baseTickets        : integer('base_tickets').notNull(),
+  emoji              : varchar('emoji', { length: 4 }),
+  recurrence         : text('recurrence'),         // daily / weekly / etc.
+  isActive           : boolean('is_active').notNull().default(true),
+  lastBonusAssigned  : date('last_bonus_assigned'),
+  createdByUserId    : integer('created_by_user_id')
+                         .references(() => users.id, { onDelete: 'set null' }),
+  createdAt          : timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/* ----------------------------------------------------------------
+ *  CHORE COMPLETIONS  (new)
+ * ----------------------------------------------------------------*/
+export const choreCompletions = pgTable('chore_completions', {
+  id             : serial('id').primaryKey(),
+  userId         : integer('user_id').notNull()
+                     .references(() => users.id, { onDelete: 'cascade' }),
+  choreId        : integer('chore_id').notNull()
+                     .references(() => chores.id, { onDelete: 'cascade' }),
+  completionDate : date('completion_date').notNull(),
+  createdAt      : timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  onePerDay: unique('chore_completions_user_chore_day')
+               .on(t.userId, t.choreId, t.completionDate),
+}));
+
+/* ----------------------------------------------------------------
+ *  TRANSACTIONS
+ * ----------------------------------------------------------------*/
+export const transactions = pgTable('transactions', {
+  id          : serial('id').primaryKey(),
+  userId      : integer('user_id').notNull()
+                  .references(() => users.id, { onDelete: 'cascade' }),
+  delta       : integer('delta_tickets').notNull(),
+  source      : txnSourceEnum('source').notNull(),
+  refId       : integer('ref_id'),
+  reason      : text('reason'),
+  metadata    : jsonb('metadata'),
+  createdAt   : timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  toSharedGoalId : integer('to_shared_goal_id'), // FK -> shared_goals.id  (phase-2)
+});
+
+/* ----------------------------------------------------------------
+ *  DAILY BONUS
+ * ----------------------------------------------------------------*/
+export const dailyBonus = pgTable('daily_bonus', {
+  id              : serial('id').primaryKey(),
+  userId          : integer('user_id').notNull()
+                      .references(() => users.id, { onDelete: 'cascade' }),
+  bonusDate       : date('bonus_date').notNull(),
+  assignedChoreId : integer('assigned_chore_id')
+                      .references(() => chores.id, { onDelete: 'set null' }),
+  triggerType     : bonusTriggerEnum('trigger_type').notNull(),
+  isOverride      : boolean('is_override').notNull().default(false),
+  isSpun          : boolean('is_spun').notNull().default(false),
+  spinResultTickets : smallint('spin_result_tickets'),
+  pendingMultiplier : smallint('pending_multiplier'),
+  respinUsed      : boolean('respin_used').notNull().default(false),
+  createdAt       : timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  onePerChildPerDay: unique('daily_bonus_user_date').on(t.userId, t.bonusDate),
+}));
+```
+
+> **Note on CHECKs:**
+> Drizzle can’t yet emit `CHECK(balance_cache >= 0)` automatically.
+> It will appear in the migration as a manual `ALTER TABLE … ADD CONSTRAINT …` clause — Drizzle inserts it for you.
+
+---
+
+### 2 · Expected migration (`0002_lean_schema_updates.sql`)
+
+The exact file name may differ, but the SQL should look roughly like:
+
+```sql
+-- USERS adjustments
+ALTER TABLE "users"
+    ADD COLUMN "family_id" integer,
+    ADD COLUMN "balance_cache" integer NOT NULL DEFAULT 0,
+    ADD COLUMN "created_at" timestamptz NOT NULL DEFAULT now(),
+    DROP COLUMN "password",
+    ALTER COLUMN "email" SET NOT NULL;
+
+ALTER TABLE "users"
+    ADD CONSTRAINT "users_balance_nonnegative"
+      CHECK ("balance_cache" >= 0);
+
+-- FAMILIES
+CREATE TABLE "families" (
+    "id" serial PRIMARY KEY,
+    "name" text NOT NULL,
+    "primary_parent_id" integer,
+    "timezone" varchar(64) NOT NULL DEFAULT 'UTC',
+    "created_at" timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE "users"
+    ADD CONSTRAINT "users_family_fk"
+      FOREIGN KEY ("family_id") REFERENCES "families"("id") ON DELETE SET NULL;
+
+ALTER TABLE "families"
+    ADD CONSTRAINT "families_primary_parent_fk"
+      FOREIGN KEY ("primary_parent_id") REFERENCES "users"("id") ON DELETE SET NULL;
+
+-- LOGIN TOKENS
+CREATE TABLE "login_tokens" (
+    "token_hash" char(64) PRIMARY KEY,
+    "user_id" integer NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+    "created_at" timestamptz NOT NULL DEFAULT now(),
+    "expires_at" timestamptz NOT NULL,
+    "consumed_at" timestamptz,
+    "ip_fingerprint" text
+);
+
+CREATE INDEX "login_tokens_user_idx" ON "login_tokens" ("user_id");
+
+-- TXN ENUM & TABLE updates
+DO $$ BEGIN
+  CREATE TYPE "txn_source" AS ENUM (
+    'chore_completion','bonus_spin','good_behavior','bad_behavior',
+    'parent_adjustment','undo_manual','undo_chore_completion',
+    'undo_bonus_spin','family_goal_contribution','family_goal_spend'
+  );
+EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+ALTER TABLE "transactions"
+    ADD COLUMN "source" txn_source NOT NULL,
+    ADD COLUMN "ref_id" integer,
+    ADD COLUMN "reason" text,
+    ADD COLUMN "metadata" jsonb,
+    ADD COLUMN "created_at" timestamptz NOT NULL DEFAULT now();
+
+ALTER TABLE "transactions"
+    ALTER COLUMN "date" TYPE timestamptz USING "date"::timestamptz,
+    RENAME COLUMN "date" TO "deprecated_date";  -- keep old col just in case (drop later)
+
+-- CHORES updates
+ALTER TABLE "chores"
+    ADD COLUMN "emoji" varchar(4),
+    ADD COLUMN "last_bonus_assigned" date,
+    ADD COLUMN "created_by_user_id" integer,
+    ADD COLUMN "created_at" timestamptz NOT NULL DEFAULT now();
+
+ALTER TABLE "chores"
+    ADD CONSTRAINT "chores_creator_fk"
+      FOREIGN KEY ("created_by_user_id") REFERENCES "users"("id") ON DELETE SET NULL;
+
+-- CHORE COMPLETIONS
+CREATE TABLE "chore_completions" (
+    "id" serial PRIMARY KEY,
+    "user_id" integer NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+    "chore_id" integer NOT NULL REFERENCES "chores"("id") ON DELETE CASCADE,
+    "completion_date" date NOT NULL,
+    "created_at" timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT "one_per_day" UNIQUE ("user_id","chore_id","completion_date")
+);
+
+-- DAILY BONUS updates
+DO $$ BEGIN
+  CREATE TYPE "bonus_trigger" AS ENUM ('chore_completion','good_behavior_reward');
+EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+ALTER TABLE "daily_bonus"
+    ADD COLUMN "assigned_chore_id" integer,
+    ADD COLUMN "pending_multiplier" smallint,
+    ADD COLUMN "respin_used" boolean NOT NULL DEFAULT FALSE,
+    ALTER COLUMN "trigger_type" TYPE bonus_trigger
+       USING "trigger_type"::text::bonus_trigger;
+
+ALTER TABLE "daily_bonus"
+    ADD CONSTRAINT "daily_bonus_chore_fk"
+      FOREIGN KEY ("assigned_chore_id") REFERENCES "chores"("id") ON DELETE SET NULL;
+```
+
+*(Drizzle will also emit `COMMENT ON` lines and running‐order guards; those are omitted here for brevity.)*
+
+---
+
+### 3 · Next steps for you
+
+1. **Copy the TypeScript block** into `shared/schema.ts` (merge carefully if you already edited).
+2. Run
+
+   ```bash
+   npx drizzle-kit generate
+   npx drizzle-kit push
+   ```
+
+   or `npm run db:migrate` if you have a script wrapper — confirm the generated SQL matches (or very closely resembles) the snippet above, then apply.
+3. Keep old data?
+
+   * If you’re migrating an existing local DB, dropping `password` (**not `password_hash` anymore**) may lose child passwords — export first if you still need them.
+4. After the migration lands:
+
+   * Implement **FamilyService** (it now has real FK backing).
+   * Wire `create_family_for_new_parent` into `authService.requestLogin`.
+
+---
+
+Let me know if you’d like help:
+
+* tweaking the migration before you push,
+* scaffolding **FamilyService**,
+* or writing one-shot SQL to back-fill existing rows (e.g. creating a default family for your current parent user).
+
+Once you confirm the schema is migrated, we’ll roll straight into service-layer implementation.

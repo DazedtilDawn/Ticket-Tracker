@@ -1,136 +1,245 @@
-import { pgTable, text, serial, integer, boolean, timestamp, uniqueIndex, varchar, date, smallint, pgEnum, char } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, uniqueIndex, varchar, date, smallint, pgEnum, char, index, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations } from "drizzle-orm";
 
-// Define enums for the schema
-export const bonusTriggerEnum = pgEnum('bonus_trigger', ['chore_completion', 'good_behavior_reward', 'respin']);
-export const txnSourceEnum = pgEnum('txn_source', ['chore', 'bonus_spin', 'manual_add', 'manual_deduct', 'undo', 'family_contrib']);
+/* ----------------------------------------------------------------
+ *  ENUMS
+ * ----------------------------------------------------------------*/
+export const txnSourceEnum = pgEnum('txn_source', [
+  // earnings
+  'chore_completion',
+  'bonus_spin',
+  'good_behavior',
+  'bad_behavior',
+  'parent_adjustment',
+  // reversals
+  'undo_manual',
+  'undo_chore_completion',
+  'undo_bonus_spin',
+  // family goals (phase-2, kept for forward-compat)
+  'family_goal_contribution',
+  'family_goal_spend',
+]);
 
+export const bonusTriggerEnum = pgEnum('bonus_trigger', [
+  'chore_completion',
+  'good_behavior_reward',
+]);
+
+/* ----------------------------------------------------------------
+ *  FAMILIES
+ * ----------------------------------------------------------------*/
+export const families = pgTable('families', {
+  id        : serial('id').primaryKey(),
+  name      : text('name').notNull(),
+  primaryParentId: integer('primary_parent_id'),  // Reference added with relations()
+  timezone  : varchar('timezone', { length: 64 }).notNull().default('UTC'),
+  createdAt : timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/* ----------------------------------------------------------------
+ *  USERS
+ * ----------------------------------------------------------------*/
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
-  role: text("role").notNull().default("child"), // "parent" or "child"
+  id           : serial("id").primaryKey(),
+  name         : text("name").notNull(),
+  username     : text("username").notNull().unique(),
+  email        : text("email").notNull().unique(),
+  passwordHash : text("password_hash"),  // NULL for parent
+  role         : text("role").$type<'parent' | 'child'>().notNull(),
+  familyId     : integer("family_id"),   // Reference added with relations()
+  balanceCache : integer("balance_cache").notNull().default(0),
+  createdAt    : timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// Set up relations for circular references
+export const usersRelations = relations(users, ({ one }) => ({
+  family: one(families, {
+    fields: [users.familyId],
+    references: [families.id],
+  }),
+}));
+
+export const familiesRelations = relations(families, ({ one, many }) => ({
+  primaryParent: one(users, {
+    fields: [families.primaryParentId],
+    references: [users.id],
+  }),
+  members: many(users),
+}));
+
+/* ----------------------------------------------------------------
+ *  CHORES
+ * ----------------------------------------------------------------*/
 export const chores = pgTable("chores", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  description: text("description"),
-  tickets: integer("tickets").notNull(),
-  recurrence: text("recurrence").default("daily"), // "daily", "weekly", "monthly"
-  tier: text("tier").default("common"), // "common", "rare", "epic"
-  image_url: text("image_url"), // Field for storing chore image URL
-  is_active: boolean("is_active").default(true),
-  emoji: varchar("emoji", { length: 4 }), // For storing a single emoji character
-  last_bonus_assigned: date("last_bonus_assigned"), // Tracks the last date this chore was assigned as a bonus
+  id                : serial("id").primaryKey(),
+  name              : text("name").notNull(),
+  description       : text("description"),
+  baseTickets       : integer("base_tickets").notNull(),
+  recurrence        : text("recurrence"),         // daily / weekly / etc.
+  emoji             : varchar("emoji", { length: 4 }),
+  isActive          : boolean("is_active").notNull().default(true),
+  lastBonusAssigned : date("last_bonus_assigned"),
+  createdByUserId   : integer("created_by_user_id").references(() => users.id, { onDelete: "set null" }),
+  createdAt         : timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+/* ----------------------------------------------------------------
+ *  CHORE COMPLETIONS
+ * ----------------------------------------------------------------*/
+export const choreCompletions = pgTable('chore_completions', {
+  id             : serial('id').primaryKey(),
+  userId         : integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  choreId        : integer('chore_id').notNull().references(() => chores.id, { onDelete: 'cascade' }),
+  completionDate : date('completion_date').notNull(),
+  createdAt      : timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  onePerDay: uniqueIndex('chore_completions_user_chore_day').on(t.userId, t.choreId, t.completionDate),
+}));
+
+/* ----------------------------------------------------------------
+ *  PRODUCTS
+ * ----------------------------------------------------------------*/
 export const products = pgTable("products", {
-  id: serial("id").primaryKey(),
-  title: text("title").notNull(),
-  asin: text("asin").notNull().unique(),
-  image_url: text("image_url"),
-  price_cents: integer("price_cents").notNull(),
+  id              : serial("id").primaryKey(),
+  title           : text("title").notNull(),
+  asin            : text("asin").notNull().unique(),
+  image_url       : text("image_url"),
+  price_cents     : integer("price_cents").notNull(),
   price_locked_cents: integer("price_locked_cents"),
-  last_checked: timestamp("last_checked").defaultNow(),
+  last_checked    : timestamp("last_checked").defaultNow(),
   camel_last_checked: timestamp("camel_last_checked"),
 });
 
+/* ----------------------------------------------------------------
+ *  GOALS
+ * ----------------------------------------------------------------*/
 export const goals = pgTable("goals", {
-  id: serial("id").primaryKey(),
-  user_id: integer("user_id").notNull().references(() => users.id),
-  product_id: integer("product_id").notNull().references(() => products.id),
-  tickets_saved: integer("tickets_saved").notNull().default(0),
-  is_active: boolean("is_active").default(true),
+  id            : serial("id").primaryKey(),
+  user_id       : integer("user_id").notNull().references(() => users.id),
+  product_id    : integer("product_id").notNull().references(() => products.id),
+  tickets_saved : integer("tickets_saved").notNull().default(0),
+  is_active     : boolean("is_active").default(true),
 });
 
-export const transactions = pgTable(
-  "transactions",
-  {
-    id: serial("id").primaryKey(),
-    user_id: integer("user_id").notNull().references(() => users.id),
-    chore_id: integer("chore_id").references(() => chores.id),
-    goal_id: integer("goal_id").references(() => goals.id),
-    delta_tickets: integer("delta_tickets").notNull(),
-    date: timestamp("date").defaultNow(), // This could be renamed to created_at in a future migration
-    type: text("type").notNull().default("earn"), // "earn", "spend"
-    note: text("note"), // Description of the transaction
-    source: txnSourceEnum("source").notNull().default('chore'), // Where the transaction originated
-    ref_id: integer("ref_id"), // For undo: original transactions.id; For bonus_spin: daily_bonus.id
-    reason: text("reason"), // For manual adjustments, undo
-  },
-  (table) => {
-    return {
-      uniqUserChoreDate: uniqueIndex("uniq_user_chore_date_idx").on(
-        table.user_id,
-        table.chore_id,
-        table.date
-      ),
-    };
-  }
-);
+/* ----------------------------------------------------------------
+ *  TRANSACTIONS
+ * ----------------------------------------------------------------*/
+export const transactions = pgTable("transactions", {
+  id             : serial("id").primaryKey(),
+  userId         : integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  delta          : integer("delta_tickets").notNull(),
+  source         : txnSourceEnum("source").notNull(),
+  refId          : integer("ref_id"),
+  reason         : text("reason"),
+  metadata       : jsonb("metadata"),
+  createdAt      : timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  toSharedGoalId : integer("to_shared_goal_id"), // FK -> shared_goals.id  (phase-2)
+});
 
-// Daily bonus feature - adds a special bonus to one chore per day per child
+/* ----------------------------------------------------------------
+ *  DAILY BONUS
+ * ----------------------------------------------------------------*/
 export const dailyBonus = pgTable("daily_bonus", {
-  id: serial("id").primaryKey(),
-  bonus_date: date("bonus_date").notNull(), // Date the bonus was assigned
-  user_id: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  assigned_chore_id: integer("assigned_chore_id").references(() => chores.id, { onDelete: "set null" }), // Allows bonus via good behavior without a specific chore
-  is_override: boolean("is_override").notNull().default(false), // Indicates if this was manually assigned
-  is_spun: boolean("is_spun").notNull().default(false), // Tracks if the bonus wheel has been spun
-  trigger_type: bonusTriggerEnum("trigger_type").notNull(), // What triggered this bonus (chore completion or good behavior)
-  spin_result_tickets: smallint("spin_result_tickets"), // Number of tickets won from spinning the wheel
-  created_at: timestamp("created_at").defaultNow(),
-}, (table) => {
-  return {
-    uniqDateUser: uniqueIndex("uniq_date_user_idx").on(
-      table.bonus_date,
-      table.user_id
-    ),
-  };
-});
+  id                : serial("id").primaryKey(),
+  userId            : integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  bonusDate         : date("bonus_date").notNull(),
+  assignedChoreId   : integer("assigned_chore_id").references(() => chores.id, { onDelete: "set null" }),
+  triggerType       : bonusTriggerEnum("trigger_type").notNull(),
+  isOverride        : boolean("is_override").notNull().default(false),
+  isSpun            : boolean("is_spun").notNull().default(false),
+  spinResultTickets : smallint("spin_result_tickets"),
+  pendingMultiplier : smallint("pending_multiplier"),
+  respinUsed        : boolean("respin_used").notNull().default(false),
+  createdAt         : timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  onePerChildPerDay: uniqueIndex("daily_bonus_user_date").on(t.userId, t.bonusDate),
+}));
 
-// Magic link login tokens for passwordless auth
+/* ----------------------------------------------------------------
+ *  LOGIN TOKENS
+ * ----------------------------------------------------------------*/
 export const loginTokens = pgTable("login_tokens", {
-  tokenHash: char("token_hash", { length: 64 }).primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-  consumedAt: timestamp("consumed_at", { withTimezone: true }),
-  ipFingerprint: text("ip_fingerprint"),
+  tokenHash     : char("token_hash", { length: 64 }).primaryKey(),   // SHA-256
+  userId        : integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  createdAt     : timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  expiresAt     : timestamp("expires_at", { withTimezone: true }).notNull(),
+  consumedAt    : timestamp("consumed_at", { withTimezone: true }),
+  ipFingerprint : text("ip_fingerprint"),
+}, (t) => ({
+  userIdx: index("login_tokens_user_idx").on(t.userId),
+}));
+
+/* ----------------------------------------------------------------
+ *  INSERT SCHEMAS
+ * ----------------------------------------------------------------*/
+
+// Family schemas
+export const insertFamilySchema = createInsertSchema(families).omit({
+  id: true,
+  createdAt: true,
 });
 
-// Insert schemas
+// User schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
+  createdAt: true,
+  balanceCache: true,
 });
 
+// Chore schemas
 export const insertChoreSchema = createInsertSchema(chores).omit({
   id: true,
+  createdAt: true,
+  lastBonusAssigned: true,
 });
 
+// Chore completion schemas
+export const insertChoreCompletionSchema = createInsertSchema(choreCompletions).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Product schemas
 export const insertProductSchema = createInsertSchema(products).omit({
   id: true,
   last_checked: true,
+  camel_last_checked: true,
 });
 
+// Goal schemas
 export const insertGoalSchema = createInsertSchema(goals).omit({
   id: true,
   tickets_saved: true,
   is_active: true,
 });
 
+// Transaction schemas
 export const insertTransactionSchema = createInsertSchema(transactions).omit({
   id: true,
-  date: true,
+  createdAt: true,
 });
 
-// Auth schema
+// Daily bonus schemas
+export const insertDailyBonusSchema = createInsertSchema(dailyBonus).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Auth schemas
 export const loginSchema = z.object({
   username: z.string().min(3),
   password: z.string().min(4),
+});
+
+// Magic link login schema
+export const magicLinkRequestSchema = z.object({
+  email: z.string().email("Please enter a valid email address")
+});
+
+export const magicLinkConsumeSchema = z.object({
+  token: z.string().min(16, "Invalid token")
 });
 
 // Amazon product search schema
@@ -171,12 +280,6 @@ export const deleteTransactionSchema = z.object({
   transaction_id: z.number().int().positive()
 });
 
-// Daily bonus schema
-export const insertDailyBonusSchema = createInsertSchema(dailyBonus).omit({
-  id: true,
-  created_at: true
-});
-
 // Spin wheel schema for parents
 export const spinWheelSchema = z.object({
   user_id: z.number().int().positive(),
@@ -188,29 +291,39 @@ export const bonusSpinSchema = z.object({
   daily_bonus_id: z.number().int().positive()
 });
 
-// Magic link login schema
-export const magicLinkRequestSchema = z.object({
-  email: z.string().email("Please enter a valid email address")
-});
+/* ----------------------------------------------------------------
+ *  TYPES
+ * ----------------------------------------------------------------*/
+export type Family = typeof families.$inferSelect;
+export type InsertFamily = z.infer<typeof insertFamilySchema>;
 
-export const magicLinkConsumeSchema = z.object({
-  token: z.string().min(16, "Invalid token")
-});
-
-// Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+
 export type Chore = typeof chores.$inferSelect;
 export type InsertChore = z.infer<typeof insertChoreSchema>;
+
+export type ChoreCompletion = typeof choreCompletions.$inferSelect;
+export type InsertChoreCompletion = z.infer<typeof insertChoreCompletionSchema>;
+
 export type Product = typeof products.$inferSelect;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
+
 export type Goal = typeof goals.$inferSelect;
 export type InsertGoal = z.infer<typeof insertGoalSchema>;
+
 export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
+
 export type DailyBonus = typeof dailyBonus.$inferSelect;
 export type InsertDailyBonus = z.infer<typeof insertDailyBonusSchema>;
+
+export type LoginToken = typeof loginTokens.$inferSelect;
+export type InsertLoginToken = typeof loginTokens.$inferInsert;
+
 export type Login = z.infer<typeof loginSchema>;
+export type MagicLinkRequest = z.infer<typeof magicLinkRequestSchema>;
+export type MagicLinkConsume = z.infer<typeof magicLinkConsumeSchema>;
 export type AmazonSearch = z.infer<typeof amazonSearchSchema>;
 export type ManualProduct = z.infer<typeof manualProductSchema>;
 export type CompleteChore = z.infer<typeof completeChoreSchema>;
@@ -219,7 +332,3 @@ export type GoodBehavior = z.infer<typeof goodBehaviorSchema>;
 export type DeleteTransaction = z.infer<typeof deleteTransactionSchema>;
 export type SpinWheel = z.infer<typeof spinWheelSchema>;
 export type BonusSpin = z.infer<typeof bonusSpinSchema>;
-export type MagicLinkRequest = z.infer<typeof magicLinkRequestSchema>;
-export type MagicLinkConsume = z.infer<typeof magicLinkConsumeSchema>;
-export type LoginToken = typeof loginTokens.$inferSelect;
-export type InsertLoginToken = typeof loginTokens.$inferInsert;
