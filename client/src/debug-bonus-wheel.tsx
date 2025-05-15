@@ -36,7 +36,7 @@ export function BonusWheelDebugger() {
     mutationFn: (userId: number) => 
       apiRequest("/api/reset-daily-bonus", { 
         method: "POST", 
-        body: JSON.stringify({ user_id: userId }) 
+        body: JSON.stringify({ userId: userId }) 
       }),
     onSuccess: (data) => {
       console.log("[DEBUG] Reset bonus success:", data);

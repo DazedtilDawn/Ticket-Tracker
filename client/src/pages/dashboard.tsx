@@ -94,16 +94,16 @@ export default function Dashboard() {
         console.log("[Bonus] polling /unspun for id:", activeChildId);
 
         const response = await apiRequest(
-          `/api/daily-bonus/unspun?user_id=${activeChildId}`,
+          `/api/daily-bonus/unspun?userId=${activeChildId}`,
           { method: "GET" }
         );
         
         // If we found an unspun daily bonus, open the spin prompt
-        if (response && response.daily_bonus_id) {
+        if (response && response.dailyBonusId) {
           console.log("Found unspun bonus:", response);
           // Set up the data for the spin prompt modal
-          setDailyBonusId(response.daily_bonus_id);
-          setCompletedChoreName(response.chore_name || "Daily Bonus");
+          setDailyBonusId(response.dailyBonusId);
+          setCompletedChoreName(response.choreName || "Daily Bonus");
           setIsSpinPromptOpen(true);
         } else {
           console.log("No unspun daily bonus found");
