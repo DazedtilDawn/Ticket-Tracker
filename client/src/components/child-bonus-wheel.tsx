@@ -212,6 +212,56 @@ export function ChildBonusWheel({
     onSuccess: (data) => {
       console.log('[WHEEL_DEBUG] Spin mutation success response:', data);
       
+      // Check if this is a multiplier or respin
+      if (data.respin_allowed) {
+        // Get the server-assigned segment index and adjust wheel position for animation
+        const serverSegmentIndex = data.segment_index;
+        console.log('[WHEEL_DEBUG] Server assigned segment index for respin:', serverSegmentIndex);
+        
+        // Calculate the final rotation to land on the winning segment
+        const FULL_SPINS = 12;
+        const midPoint = serverSegmentIndex * SEGMENT_ANGLE - 90 + SEGMENT_ANGLE / 2; 
+        const JITTER_RANGE = SEGMENT_ANGLE / 2 - 4;
+        const jitter = (Math.random() - 0.5) * 2 * JITTER_RANGE;
+        const finalRotation = FULL_SPINS * 360 + 270 - midPoint + jitter;
+        
+        // Apply the rotation
+        setRotation(finalRotation);
+        
+        // For multiplier, save the value and show a toast
+        const winningSegment = WHEEL_SEGMENTS[data.segment_index];
+        if (winningSegment.type === "multiplier") {
+          const multiplier = winningSegment.multiplier || 2;
+          setPendingMultiplier(multiplier);
+          
+          // Show toast about multiplier 
+          setTimeout(() => {
+            toast({
+              title: `✨ ${multiplier}× Multiplier!`,
+              description: `Spinning again to see how many tickets you'll ${multiplier > 2 ? `multiply by ${multiplier}` : 'double'}!`,
+              className: "bg-pink-50 border-pink-300",
+            });
+            
+            // Automatically spin again after a short delay
+            setTimeout(() => handleSpin(), 1500);
+          }, 8000); // After wheel finishes spinning
+        } else {
+          // For regular respin
+          setTimeout(() => {
+            toast({
+              title: "🎡 Spin Again!",
+              description: "You get another spin!",
+              className: "bg-green-50 border-green-300",
+            });
+            
+            // Automatically spin again after a short delay
+            setTimeout(() => handleSpin(), 1500);
+          }, 8000);
+        }
+        return;
+      }
+      
+      // Regular spin (not a respin)
       // Get the server-assigned segment index and adjust wheel position to match it
       const serverSegmentIndex = data.segment_index;
       console.log('[WHEEL_DEBUG] Server assigned segment index:', serverSegmentIndex);
@@ -233,14 +283,12 @@ export function ChildBonusWheel({
         console.log('[WHEEL_DEBUG] Animation finished, setting result with tickets:', data.tickets_awarded);
         setSpinResult(data.tickets_awarded);
         
-        // Get the segment that was landed on to determine if it was a multiplier
-        const winningSegment = WHEEL_SEGMENTS[data.segment_index];
-        const isMultiplier = winningSegment.type === "double";
-        
-        // Set a custom result label for multipliers
-        if (isMultiplier) {
-          console.log('[WHEEL_DEBUG] Landed on multiplier segment');
-          setResultLabel('×2');
+        // See if the multiplier was applied
+        if (pendingMultiplier > 1) {
+          console.log('[WHEEL_DEBUG] Applying multiplier:', pendingMultiplier);
+          setResultLabel(`×${pendingMultiplier}`);
+          // Reset the multiplier after use
+          setPendingMultiplier(1);
         } else {
           setResultLabel(null);
         }
