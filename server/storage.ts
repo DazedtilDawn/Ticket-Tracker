@@ -530,11 +530,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createProduct(insertProduct: InsertProduct): Promise<Product> {
-    // Ensure price_locked_cents is set if not provided
+    // Ensure priceLockedCents is set if not provided
     const productData = {
       ...insertProduct,
-      price_locked_cents: insertProduct.price_locked_cents || insertProduct.price_cents,
-      last_checked: new Date()
+      priceLockedCents: insertProduct.priceLockedCents || insertProduct.priceCents,
+      lastChecked: new Date()
     };
     
     const [product] = await db.insert(products).values(productData).returning();
@@ -800,50 +800,50 @@ export class DatabaseStorage implements IStorage {
               .from(transactions)
               .where(
                 and(
-                  eq(transactions.user_id, transaction.user_id),
+                  eq(transactions.userId, transaction.userId),
                   eq(transactions.type, 'spend')
                 )
               );
             
-            const totalSpent = spendTransactions.reduce((sum, tx) => sum + Math.abs(tx.delta_tickets), 0);
+            const totalSpent = spendTransactions.reduce((sum, tx) => sum + Math.abs(tx.delta), 0);
             
             // Calculate how many tickets should be in the goal (remaining balance)
-            const balance = await this.getUserBalance(transaction.user_id);
+            const balance = await this.getUserBalance(transaction.userId);
             const ticketsForGoal = Math.max(0, totalEarned - totalSpent - balance);
             
             console.log(`Recalculated goal tickets: total earned ${totalEarned}, total spent ${totalSpent}, current balance ${balance}, tickets for goal ${ticketsForGoal}`);
             
             // Update the goal with recalculated amount
-            await this.updateGoal(activeGoal.id, { tickets_saved: ticketsForGoal });
+            await this.updateGoal(activeGoal.id, { ticketsSaved: ticketsForGoal });
           }
         }
       }
       
       // If this transaction is for completing a chore, we need to check if it was a daily bonus chore
       // and reset the revealed flag in the dailyBonus table
-      if (transaction.chore_id && transaction.type === 'earn' && transaction.date) {
-        console.log(`Transaction ${transaction.id} is a chore completion transaction for chore ${transaction.chore_id}`);
+      if (transaction.choreId && transaction.type === 'earn' && transaction.createdAt) {
+        console.log(`Transaction ${transaction.id} is a chore completion transaction for chore ${transaction.choreId}`);
         
         // Extract the date from the transaction date
-        const transactionDate = new Date(transaction.date);
+        const transactionDate = new Date(transaction.createdAt);
         const transactionDateStr = transactionDate.toISOString().split('T')[0];
         console.log(`Transaction date: ${transactionDateStr}`);
         
         // Check if there is a dailyBonus record for this user, date, and chore
-        console.log(`Looking for daily bonus record for user ${transaction.user_id} on ${transactionDateStr}`);
-        const dailyBonusRecord = await this.getDailyBonus(transactionDateStr, transaction.user_id);
+        console.log(`Looking for daily bonus record for user ${transaction.userId} on ${transactionDateStr}`);
+        const dailyBonusRecord = await this.getDailyBonus(transactionDateStr, transaction.userId);
         
         if (dailyBonusRecord) {
           console.log(`Found daily bonus record: `, dailyBonusRecord);
           
-          if (dailyBonusRecord.assigned_chore_id === transaction.chore_id) {
-            console.log(`Resetting daily bonus for user ${transaction.user_id}, chore ${transaction.chore_id} on ${transactionDateStr}`);
+          if (dailyBonusRecord.assignedChoreId === transaction.choreId) {
+            console.log(`Resetting daily bonus for user ${transaction.userId}, chore ${transaction.choreId} on ${transactionDateStr}`);
             
             // Store the original spin result tickets value before resetting
-            const originalSpinResultTickets = dailyBonusRecord.spin_result_tickets || null;
+            const originalSpinResultTickets = dailyBonusRecord.spinResultTickets || null;
             
             // Completely reset the daily bonus state
-            console.log(`Updating daily bonus record ${dailyBonusRecord.id} to set is_spun=false, preserving spin_result_tickets=${originalSpinResultTickets}`);
+            console.log(`Updating daily bonus record ${dailyBonusRecord.id} to set isSpun=false, preserving spinResultTickets=${originalSpinResultTickets}`);
             
             const updateResult = await db
               .update(dailyBonus)
@@ -886,38 +886,38 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createTransaction(insertTransaction: InsertTransaction): Promise<Transaction> {
-    console.log(`[TRANSACTION] Creating transaction for user ${insertTransaction.user_id}, delta: ${insertTransaction.delta_tickets}, type: ${insertTransaction.type}`);
+    console.log(`[TRANSACTION] Creating transaction for user ${insertTransaction.userId}, delta: ${insertTransaction.delta}, type: ${insertTransaction.type}`);
     
     const transactionData = {
       ...insertTransaction,
-      date: new Date()
+      createdAt: new Date() // Using createdAt instead of date
     };
     
     // Calculate user's current balance for validation
-    const currentBalance = await this.getUserBalance(insertTransaction.user_id);
-    console.log(`[TRANSACTION] Current balance for user ${insertTransaction.user_id}: ${currentBalance}`);
+    const currentBalance = await this.getUserBalance(insertTransaction.userId);
+    console.log(`[TRANSACTION] Current balance for user ${insertTransaction.userId}: ${currentBalance}`);
     
     // Insert transaction
     const [transaction] = await db.insert(transactions).values(transactionData).returning();
-    console.log(`[TRANSACTION] Created transaction ${transaction.id} with delta ${transaction.delta_tickets}`);
+    console.log(`[TRANSACTION] Created transaction ${transaction.id} with delta ${transaction.delta}`);
     
     // Calculate new balance
-    const newBalance = await this.getUserBalance(insertTransaction.user_id);
-    console.log(`[TRANSACTION] New balance for user ${insertTransaction.user_id}: ${newBalance}`);
+    const newBalance = await this.getUserBalance(insertTransaction.userId);
+    console.log(`[TRANSACTION] New balance for user ${insertTransaction.userId}: ${newBalance}`);
     
     // Always sync the active goal with the latest total
     try {
       // Get the active goal for the user
-      const activeGoal = await this.getActiveGoalByUser(transaction.user_id);
+      const activeGoal = await this.getActiveGoalByUser(transaction.userId);
       
       if (activeGoal) {
-        console.log(`[TRANSACTION] User ${transaction.user_id} has active goal ${activeGoal.id} with tickets_saved: ${activeGoal.tickets_saved}`);
+        console.log(`[TRANSACTION] User ${transaction.userId} has active goal ${activeGoal.id} with ticketsSaved: ${activeGoal.ticketsSaved}`);
         
         // If this is a spend transaction on a specific goal, set it to 0
-        if (transaction.type === 'spend' && transaction.goal_id && transaction.goal_id === activeGoal.id) {
-          console.log(`[TRANSACTION] Setting active goal ${activeGoal.id} tickets_saved to 0 because it's being spent directly`);
+        if (transaction.type === 'spend' && transaction.goalId && transaction.goalId === activeGoal.id) {
+          console.log(`[TRANSACTION] Setting active goal ${activeGoal.id} ticketsSaved to 0 because it's being spent directly`);
           await db.update(goals)
-            .set({ tickets_saved: 0 })
+            .set({ ticketsSaved: 0 })
             .where(eq(goals.id, activeGoal.id));
           
         } else {
@@ -927,19 +927,19 @@ export class DatabaseStorage implements IStorage {
           
           // Ensure goal progress never goes below 0 or exceeds current balance
           const newTicketsSaved = Math.min(Math.max(0, newBalance), 
-            Math.ceil(activeGoal.product.price_locked_cents / 25));
+            Math.ceil(activeGoal.product.priceLockedCents / 25));
           
-          console.log(`[TRANSACTION] Updating active goal ${activeGoal.id} tickets_saved from ${activeGoal.tickets_saved} to ${newTicketsSaved}`);
+          console.log(`[TRANSACTION] Updating active goal ${activeGoal.id} ticketsSaved from ${activeGoal.ticketsSaved} to ${newTicketsSaved}`);
           
           await db.update(goals)
-            .set({ tickets_saved: newTicketsSaved })
+            .set({ ticketsSaved: newTicketsSaved })
             .where(eq(goals.id, activeGoal.id));
         }
       } else {
-        console.log(`[TRANSACTION] No active goal found for user ${transaction.user_id}`);
+        console.log(`[TRANSACTION] No active goal found for user ${transaction.userId}`);
       }
     } catch (error) {
-      console.error(`[TRANSACTION] Error updating goal progress: ${error}`);
+      console.error(`[TRANSACTION] Error updating goal progress:`, error);
     }
     
     return transaction;

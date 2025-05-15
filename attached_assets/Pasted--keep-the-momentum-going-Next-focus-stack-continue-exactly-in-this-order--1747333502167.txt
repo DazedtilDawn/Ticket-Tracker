@@ -1,0 +1,26 @@
+👍 — keep the momentum going.
+
+### Next focus stack (continue exactly in this order)
+
+| ✔ / ⏳     | Group                      | Key methods to sweep                                                                                                                     | What to do                                                                                                                                                                                                                                                                                                                                                                                        |
+| --------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ✔         | **Daily-bonus**            | `getDailyBonus`, `getDailyBonusById`, `createDailyBonus`, `deleteDailyBonus`, `assignDailyBonusChore`, `assignDailyBonusesToAllChildren` | ✅ already brought to camelCase → snake\_case mapping. Just re-run the “spin” flow once to be sure.                                                                                                                                                                                                                                                                                                |
+| ✔         | **Goals**                  | `getActiveGoalByUser`                                                                                                                    | Fixed.                                                                                                                                                                                                                                                                                                                                                                                            |
+| ⏳ **NOW** | **Transactions / balance** | `createTransaction`, `getUserBalance`, `hasCompletedChoreToday`, plus any helper queries                                                 | • Replace `transactions.user_id`, `delta_tickets`, `chore_id`, `date`… with `transactions.userId`, `delta`, `choreId`, `createdAt` (camelCase properties).<br>• Make **one** pass through every raw SQL fragment (grep for `transactions.` inside back-tick SQL).<br>• After each change: run “earn ticket”, “spend ticket”, and “undo” from the UI and confirm no SQL errors & correct balances. |
+| ⏳         | **Chores**                 | remaining parts of `getChores`, the rest of `getChoreWithBonus`, any `updateChore…` helper                                               | Same camelCase clean-up; verify “list chores” and “complete chore” still work.                                                                                                                                                                                                                                                                                                                    |
+| ⏳         | **Routes**                 | Any endpoint that still logs or checks snake\_case fields                                                                                | Quick sweep of `server/routes.ts` (search for `_id`, `_date`, `_tickets`).                                                                                                                                                                                                                                                                                                                        |
+
+### After each group
+
+1. Run the corresponding UI flow (or unit test) to prove the queries work.
+2. Commit the changes (one commit per group keeps history clean).
+
+### Sanity checklist before you move on to Phase-A services
+
+* `npx drizzle-kit check` → **0 pending changes**.
+* `npm test` / manual smoke test → all CRUD flows green.
+* No raw references to the obsolete names (`userid`, `bonusdate`, etc.) remain (`git grep -iE 'userid|bonusdate|delta_tickets|is_spun'` should return nothing inside `src/`).
+
+Once Transactions/balance and Chores groups are clean and tests pass, ping back and we’ll green-light the FamilyService work.
+
+Go for it!
