@@ -979,10 +979,10 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(transactions)
       .where(and(
-        eq(transactions.user_id, userId),
-        eq(transactions.chore_id, choreId),
+        eq(transactions.userId, userId),
+        eq(transactions.choreId, choreId),
         eq(transactions.type, 'earn'),
-        gte(transactions.date, today)
+        gte(transactions.createdAt, today)
       ))
       .limit(1);
     

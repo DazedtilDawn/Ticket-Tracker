@@ -894,25 +894,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // DEBUG: Log conditions for bonus triggering with more detail
       console.log(`[API_EARN] Daily bonus lookup for user ${user.id}, date ${today}:`, dailyBonus ? {
         id: dailyBonus.id,
-        assigned_chore_id: dailyBonus.assigned_chore_id,
-        is_spun: dailyBonus.is_spun,
-        trigger_type: dailyBonus.trigger_type,
-        user_id: dailyBonus.user_id,
-        bonus_date: dailyBonus.bonus_date
+        assignedChoreId: dailyBonus.assignedChoreId,
+        isSpun: dailyBonus.isSpun,
+        triggerType: dailyBonus.triggerType,
+        userId: dailyBonus.userId,
+        bonusDate: dailyBonus.bonusDate
       } : 'No daily bonus record found');
       
       console.log(`[API_EARN] Checking bonus conditions for chore_id=${chore_id}:`, {
         hasDailyBonus: !!dailyBonus,
-        assignedChoreId: dailyBonus?.assigned_chore_id,
+        assignedChoreId: dailyBonus?.assignedChoreId,
         completedChoreId: chore_id,
-        choreMatch: dailyBonus?.assigned_chore_id === chore_id,
-        isSpun: dailyBonus?.is_spun,
-        notYetSpun: dailyBonus ? !dailyBonus.is_spun : false,
-        triggerTypeMatch: dailyBonus?.trigger_type === 'chore_completion'
+        choreMatch: dailyBonus?.assignedChoreId === chore_id,
+        isSpun: dailyBonus?.isSpun,
+        notYetSpun: dailyBonus ? !dailyBonus.isSpun : false,
+        triggerTypeMatch: dailyBonus?.triggerType === 'chore_completion'
       });
       
       // Check if this is a bonus-triggering chore completion
-      if (dailyBonus && dailyBonus.assigned_chore_id === chore_id && !dailyBonus.is_spun) {
+      if (dailyBonus && dailyBonus.assignedChoreId === chore_id && !dailyBonus.isSpun) {
         console.log(`[API_EARN] 🎯 BONUS CHORE COMPLETED! User ${user.id} completed their assigned bonus chore ${chore_id}`);
         
         // Only mark as triggered if not already spun
@@ -982,11 +982,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const broadcastPayload = {
         data: {
           id: transaction.id,
-          delta_tickets: transaction.delta_tickets,
+          delta: transaction.delta,
           note: transaction.note,
-          user_id: transaction.user_id,
+          userId: transaction.userId,
           type: transaction.type,
-          chore_id: transaction.chore_id,
+          choreId: transaction.choreId,
           balance: balance, // Include updated balance for immediate UI updates
           bonus_triggered, // Flag to tell clients user is eligible for spin
           daily_bonus_id // ID needed for the spin
@@ -1041,11 +1041,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ message: "Goal not found" });
         }
         
-        if (targetGoal.user_id !== targetUserId) {
+        if (targetGoal.userId !== targetUserId) {
           return res.status(403).json({ message: "Not authorized to spend from this goal" });
         }
         
-        ticketsToSpend = targetGoal.tickets_saved;
+        ticketsToSpend = targetGoal.ticketsSaved;
       } else {
         // Spend a specific number of tickets
         const ticketValue = typeof tickets === 'string' ? parseInt(tickets, 10) : tickets;
