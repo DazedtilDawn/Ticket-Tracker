@@ -34,7 +34,8 @@ const WHEEL_SEGMENTS = [
   { value: 5,  color: "#4BC0C0", label: "5",  text: "#fff" },
   { value: 2,  color: "#9966FF", label: "2",  text: "#fff" },
   { value: 10, color: "#FF9F40", label: "10", text: "#222" },
-  { type: "multiplier", value: "double", multiplier: 2, color: "#FF66CC", label: "×2", text: "#fff" },
+  // Special segment for multiplier with gradient fill defined in SVG
+  { type: "multiplier", value: "double", multiplier: 2, color: "#FF66CC", label: "×2", text: "#fff", special: true },
   { value: 4,  color: "#7BC043", label: "4",  text: "#fff" },
   { value: "respin", color: "#4CAF50", label: "Spin Again", text: "#fff" },
 ];
@@ -530,6 +531,14 @@ export function ChildBonusWheel({
             >
               {/* SVG slices */}
               <svg viewBox="0 0 100 100" className="absolute inset-0">
+                {/* Define gradient for multiplier slices */}
+                <defs>
+                  <radialGradient id="multiplierGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                    <stop offset="0%" stopColor="#ff66ff" />
+                    <stop offset="60%" stopColor="#ff00cc" />
+                    <stop offset="100%" stopColor="#cc00ff" />
+                  </radialGradient>
+                </defs>
                 {WHEEL_SEGMENTS.map((seg, i) => {
                   const start = i * SEGMENT_ANGLE - 90; // rotate to start at top
                   const end = start + SEGMENT_ANGLE;
@@ -543,9 +552,10 @@ export function ChildBonusWheel({
                       {/* slice wedge */}
                       <path
                         d={describeSlice(start, end)}
-                        fill={seg.color}
+                        fill={seg.type === "multiplier" ? "url(#multiplierGradient)" : seg.color}
                         stroke="#ffffff"
                         strokeWidth={0.4}
+                        className={seg.type === "multiplier" ? "animate-pulse-slow" : ""}
                       />
                       {/* label positioned at fixed radius with direct x,y coordinates */}
                       {(() => {
@@ -561,11 +571,16 @@ export function ChildBonusWheel({
                             dominantBaseline="middle"
                             textAnchor="middle"
                             fontWeight="700"
-                            fontSize="9"
+                            fontSize={seg.type === "multiplier" ? "11" : "9"}
                             fill={seg.text}
                             transform={`rotate(${flip} ${xLab} ${yLab})`}
+                            className={seg.type === "multiplier" ? "animate-pulse" : ""}
                           >
-                            {seg.label}
+                            {seg.type === "multiplier" ? (
+                              <tspan fontWeight="900" strokeWidth="0.3" stroke="#ffffff">{seg.label}</tspan>
+                            ) : (
+                              seg.label
+                            )}
                           </text>
                         );
                       })()}
@@ -576,11 +591,22 @@ export function ChildBonusWheel({
 
               {/* hub */}
               <div className={cn(
-                "absolute left-1/2 top-1/2 w-16 h-16 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-b from-white to-gray-200 flex flex-col items-center justify-center border-2 border-gray-300 shadow-lg",
+                "absolute left-1/2 top-1/2 w-16 h-16 -translate-x-1/2 -translate-y-1/2 rounded-full flex flex-col items-center justify-center border-2 shadow-lg",
+                isRespinMode && pendingMultiplier > 1 
+                  ? "bg-gradient-to-b from-pink-300 to-pink-500 border-pink-300 animate-pulse" 
+                  : "bg-gradient-to-b from-white to-gray-200 border-gray-300",
                 isSpinning && "animate-ping-slow"
               )}>
-                <Star className="w-4 h-4 text-yellow-500 mb-0.5" />
-                <span className="font-bold text-gray-800 text-sm">SPIN</span>
+                <Star className={cn(
+                  "w-4 h-4 mb-0.5",
+                  isRespinMode && pendingMultiplier > 1 ? "text-white" : "text-yellow-500"
+                )} />
+                <span className={cn(
+                  "font-bold text-sm",
+                  isRespinMode && pendingMultiplier > 1 ? "text-white" : "text-gray-800"
+                )}>
+                  {isRespinMode && pendingMultiplier > 1 ? `×${pendingMultiplier}` : "SPIN"}
+                </span>
               </div>
             </div>
           </div>
@@ -591,13 +617,20 @@ export function ChildBonusWheel({
               <span className="inline-flex items-center gap-1 text-4xl font-bold bg-white/80 px-6 py-3 rounded-full border-2 border-pink-400 shadow">
                 {resultLabel ? (
                   <>
-                    <span className="text-pink-500">{resultLabel}</span>
-                    <span className="text-yellow-500">= {spinResult}</span>
+                    {/* Show calculation for multiplier */}
+                    <div className="flex flex-col items-center">
+                      <div className="flex items-center gap-1">
+                        <span className="text-3xl text-blue-500">{spinResult / parseInt(resultLabel.substring(1))}</span>
+                        <span className="text-pink-500 text-3xl">{resultLabel}</span>
+                        <span className="text-3xl">=</span>
+                      </div>
+                      <span className="text-yellow-500 text-5xl">{spinResult}</span>
+                    </div>
                   </>
                 ) : (
                   <span className="text-yellow-500">+{spinResult}</span>
                 )}
-                <span className="text-purple-600">tickets</span>
+                <span className="text-purple-600 ml-1">tickets</span>
               </span>
             </div>
           )}
