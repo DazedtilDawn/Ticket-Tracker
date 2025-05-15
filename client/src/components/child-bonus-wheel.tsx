@@ -77,6 +77,7 @@ export function ChildBonusWheel({
   const [rotation, setRotation] = useState(0); // deg
   const [showResult, setShowResult] = useState(false);
   const [pendingMultiplier, setPendingMultiplier] = useState<number>(1);
+  const [isRespinMode, setIsRespinMode] = useState(false);
   const wheelRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
   
