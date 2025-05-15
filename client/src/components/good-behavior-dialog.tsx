@@ -40,7 +40,7 @@ import { Switch } from "@/components/ui/switch";
 
 const formSchema = z.object({
   user_id: z.string().min(1, "Please select a child"),
-  tickets: z.string().transform((val) => parseInt(val, 10)).optional(),
+  tickets: z.coerce.number().default(1),
   reason: z.string().min(1, "Please provide a reason"),
 });
 
@@ -105,7 +105,7 @@ export function GoodBehaviorDialog({ children, onCompleted }: GoodBehaviorDialog
     resolver: zodResolver(formSchema),
     defaultValues: {
       user_id: "",
-      tickets: "1",
+      tickets: 1,
       reason: "",
     },
   });
@@ -174,9 +174,9 @@ export function GoodBehaviorDialog({ children, onCompleted }: GoodBehaviorDialog
     // This reaches up to the parent component that has the actual SpinPromptModal
     const event = new CustomEvent('openSpinPromptModal', { 
       detail: { 
-        dailyBonusId: bonusId,
+        bonusId: bonusId,
         childName,
-        choreName: friendlyTrigger
+        friendlyTrigger
       }
     });
     window.dispatchEvent(event);
