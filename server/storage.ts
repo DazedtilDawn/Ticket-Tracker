@@ -609,23 +609,28 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getActiveGoalByUser(userId: number): Promise<(Goal & { product: Product }) | undefined> {
-    const result = await db
-      .select({
-        id: goals.id,
-        user_id: goals.user_id,
-        product_id: goals.product_id,
-        tickets_saved: goals.tickets_saved,
-        is_active: goals.is_active,
-        product: products
-      })
-      .from(goals)
-      .where(and(
-        eq(goals.user_id, userId),
-        eq(goals.is_active, true)
-      ))
-      .innerJoin(products, eq(goals.product_id, products.id));
-      
-    return result[0];
+    try {
+      const result = await db
+        .select({
+          id: goals.id,
+          userId: goals.userId,
+          productId: goals.productId,
+          ticketsSaved: goals.ticketsSaved,
+          isActive: goals.isActive,
+          product: products
+        })
+        .from(goals)
+        .where(and(
+          eq(goals.userId, userId),
+          eq(goals.isActive, true)
+        ))
+        .innerJoin(products, eq(goals.productId, products.id));
+        
+      return result[0];
+    } catch (error) {
+      console.error(`[GET_ACTIVE_GOAL] Error getting active goal for user ${userId}:`, error);
+      return undefined;
+    }
   }
 
   async createGoal(insertGoal: InsertGoal): Promise<Goal> {
