@@ -120,8 +120,8 @@ export default function Wishlist() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: user.id,
-          product_id: productId,
+          userId: user.id,
+          productId: productId,
         })
       });
     },
@@ -149,8 +149,8 @@ export default function Wishlist() {
   };
   
   // Separate active goals
-  const activeGoal = goals && Array.isArray(goals) ? goals.find((goal: any) => goal.is_active) : undefined;
-  const wishlistGoals = goals && Array.isArray(goals) ? goals.filter((goal: any) => !goal.is_active) : [];
+  const activeGoal = goals && Array.isArray(goals) ? goals.find((goal: any) => goal.isActive) : undefined;
+  const wishlistGoals = goals && Array.isArray(goals) ? goals.filter((goal: any) => !goal.isActive) : [];
   
   return (
     <>
@@ -269,8 +269,8 @@ export default function Wishlist() {
                     </div>
                   </div>
                   <div className="flex justify-between mt-2 text-sm">
-                    <div>Saved: {activeGoal.tickets_saved} tickets</div>
-                    <div>Goal: {Math.ceil(activeGoal.product.price_locked_cents / 10)} tickets</div>
+                    <div>Saved: {activeGoal.ticketsSaved} tickets</div>
+                    <div>Goal: {Math.ceil(activeGoal.product.priceLockedCents / 10)} tickets</div>
                   </div>
                 </div>
               </div>
