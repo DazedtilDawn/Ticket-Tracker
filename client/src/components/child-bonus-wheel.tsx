@@ -234,21 +234,45 @@ export function ChildBonusWheel({
         if (winningSegment.type === "multiplier") {
           const multiplier = winningSegment.multiplier || 2;
           setPendingMultiplier(multiplier);
+          setIsRespinMode(true);
           
-          // Show toast about multiplier 
+          // Highlight the winning slice
           setTimeout(() => {
+            const slices = wheelRef.current?.querySelectorAll<HTMLElement>("[data-slice]");
+            if (slices && slices[serverSegmentIndex]) {
+              console.log('[WHEEL_DEBUG] Highlighting multiplier slice', serverSegmentIndex);
+              slices[serverSegmentIndex].classList.add("ring-4", "ring-pink-400", "animate-pulse");
+            }
+            
+            // Show multiplier toast and trigger respin 
             toast({
               title: `✨ ${multiplier}× Multiplier!`,
               description: `Spinning again to see how many tickets you'll ${multiplier > 2 ? `multiply by ${multiplier}` : 'double'}!`,
               className: "bg-pink-50 border-pink-300",
             });
             
+            // Launch confetti when landing on a multiplier
+            confetti({
+              particleCount: 100,
+              spread: 70,
+              origin: { y: 0.6 }
+            });
+            
             // Automatically spin again after a short delay
-            setTimeout(() => handleSpin(), 1500);
+            setTimeout(() => handleSpin(), 2500);
           }, 8000); // After wheel finishes spinning
         } else {
           // For regular respin
+          setIsRespinMode(true);
+          
           setTimeout(() => {
+            // Highlight the winning slice
+            const slices = wheelRef.current?.querySelectorAll<HTMLElement>("[data-slice]");
+            if (slices && slices[serverSegmentIndex]) {
+              console.log('[WHEEL_DEBUG] Highlighting respin slice', serverSegmentIndex);
+              slices[serverSegmentIndex].classList.add("ring-4", "ring-green-400", "animate-pulse");
+            }
+            
             toast({
               title: "🎡 Spin Again!",
               description: "You get another spin!",
@@ -256,7 +280,7 @@ export function ChildBonusWheel({
             });
             
             // Automatically spin again after a short delay
-            setTimeout(() => handleSpin(), 1500);
+            setTimeout(() => handleSpin(), 2500);
           }, 8000);
         }
         return;
@@ -285,10 +309,26 @@ export function ChildBonusWheel({
         setSpinResult(data.tickets_awarded);
         
         // See if the multiplier was applied
-        if (pendingMultiplier > 1) {
+        if (isRespinMode && pendingMultiplier > 1) {
           console.log('[WHEEL_DEBUG] Applying multiplier:', pendingMultiplier);
           setResultLabel(`×${pendingMultiplier}`);
-          // Reset the multiplier after use
+          
+          // Add confetti burst for multiplier final result
+          confetti({
+            particleCount: 150,
+            spread: 90,
+            origin: { y: 0.6 }
+          });
+          
+          // Show toast with multiplier result
+          toast({
+            title: `${pendingMultiplier}× Multiplier Applied!`,
+            description: `You earned ${data.tickets_awarded} tickets from this spin!`,
+            className: "bg-yellow-50 border-yellow-300",
+          });
+          
+          // Reset respin mode and multiplier after use
+          setIsRespinMode(false);
           setPendingMultiplier(1);
         } else {
           setResultLabel(null);
@@ -382,6 +422,15 @@ export function ChildBonusWheel({
         variant: "destructive" 
       });
       return;
+    }
+
+    // Reset the result display unless it's a multiplier respin
+    if (!isRespinMode) {
+      setSpinResult(null);
+      setShowResult(false);
+      setResultLabel(null);
+    } else {
+      console.log('[WHEEL_DEBUG] In respin mode with multiplier:', pendingMultiplier);
     }
 
     console.log('[WHEEL_DEBUG] Starting wheel spin animation for bonus ID:', dailyBonusId);
