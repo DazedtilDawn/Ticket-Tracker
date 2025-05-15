@@ -64,16 +64,17 @@ export async function requestLogin(email: string, ip: string, userAgent: string)
   const baseUrl = process.env.APP_URL || "http://localhost:5173";
   const magicLink = `${baseUrl}/login-consume?token=${rawToken}`;
   
-  // In development, log the link to the console
+  // In development, log the link to the console for testing
   if (process.env.NODE_ENV === "development") {
     console.log(`🔑 Magic link for ${email}: ${magicLink}`);
+    // Return the magic link in development for easy testing
+    return { success: true, magicLink };
   } else {
     // In production, you would send an email
     console.log(`Email would be sent to ${email} with link: ${magicLink}`);
     // TODO: Implement email sending
+    return { success: true };
   }
-  
-  return { success: true };
 }
 
 /**

@@ -174,9 +174,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/request-login", async (req: Request, res: Response) => {
     try {
       const data = magicLinkRequestSchema.parse(req.body);
-      await requestLogin(data.email, req.ip, req.headers["user-agent"] || "");
-      // Always return success even if email doesn't exist, to prevent user enumeration
-      return res.status(202).json({ success: true });
+      const result = await requestLogin(data.email, req.ip, req.headers["user-agent"] || "");
+      
+      // Include the magic link in development mode for testing
+      if (process.env.NODE_ENV === "development") {
+        // In development, return the magic link in the response for easy testing
+        return res.status(202).json({ success: true, devMagicLink: result.magicLink });
+      } else {
+        // In production, just return success status
+        return res.status(202).json({ success: true });
+      }
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid email format", errors: error.format() });

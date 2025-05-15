@@ -181,6 +181,31 @@ export default function Login() {
     }
   };
   
+  const consumeMagicLink = async (token: string) => {
+    setTokenConsuming(true);
+    setConsumeError("");
+    
+    try {
+      const result = await doFetch("/api/auth/consume-login", "POST", { token });
+      
+      toast({
+        title: "Login successful",
+        description: "Welcome back!",
+      });
+      
+      login(result.jwt, result.user);
+      setLocation("/");
+    } catch (error) {
+      setConsumeError("Invalid or expired login link. Please request a new one.");
+      toast({
+        title: "Login failed",
+        description: "Invalid or expired login link",
+        variant: "destructive",
+      });
+    } finally {
+      setTokenConsuming(false);
+    }
+  };
   
   const handleLogin = async (data: z.infer<typeof loginSchema>) => {
     setIsLoading(true);
