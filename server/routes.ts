@@ -1731,7 +1731,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         { value: 5, weight: 13, label: "5" },   // 13% chance
         { value: 2, weight: 14, label: "2" },   // 14% chance (duplicate for UX)
         { value: 10, weight: 7, label: "10" },  // 7% chance
-        { type: "double", weight: 5, label: "×2", value: "double", multiplier: 2 }, // 5% chance
+        { type: "multiplier", value: "double", multiplier: 2, weight: 5, label: "×2" }, // 5% chance
         { value: 4, weight: 7, label: "4" },    // 7% chance
         { value: "respin", weight: 5, label: "Spin Again" }  // 5% chance
       ];
@@ -1763,42 +1763,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Step 6: Calculate bonus tickets based on the spin result
       let bonusTickets = 0;
       let respin = false;
+      let respinMultiplier = 1;
       let segmentLabel = selectedSegment.label;
       
       console.log(`[BONUS_SPIN] Calculating bonus tickets for segment type: ${selectedSegment.value}`);
+      
+      // Check for any pending multiplier from a previous spin
+      const pendingMultiplier = dailyBonusRecord.pending_multiplier || 1;
+      console.log(`[BONUS_SPIN] Pending multiplier from previous spin: ${pendingMultiplier}`);
       
       if (selectedSegment.value === "respin") {
         // First check if this is already a respin attempt
         if (dailyBonusRecord.trigger_type === "respin") {
           // Convert respin to +1 ticket if this is a second respin
-          bonusTickets = 1;
-          segmentLabel = "1 (converted from Spin Again)";
-          console.log(`[BONUS_SPIN] Already a respin attempt, converting to 1 ticket`);
+          bonusTickets = 1 * pendingMultiplier;
+          segmentLabel = `${bonusTickets} (converted from Spin Again)`;
+          console.log(`[BONUS_SPIN] Already a respin attempt, converting to ${bonusTickets} tickets`);
         } else {
           // Mark for respin
           respin = true;
           bonusTickets = 0;
           console.log(`[BONUS_SPIN] First respin attempt, will set trigger_type='respin'`);
         }
-      } else if (selectedSegment.value === "double") {
-        // For "×2 Multiplier" - double the original tickets from the chore
-        if (dailyBonusRecord.trigger_type === "chore_completion" && chore) {
-          // Double the base tickets up to a max of 10 tickets total
-          const baseTickets = chore.tickets;
-          bonusTickets = Math.min(baseTickets * 2, 10);
-          // Show the multiplier in the result for clarity
-          segmentLabel = `×2 (${bonusTickets} tickets)`;
-          console.log(`[BONUS_SPIN] ×2 Multiplier: ${baseTickets} × 2 = ${bonusTickets} tickets`);
-        } else {
-          // For good behavior rewards, award a fixed prize (4 tickets)
-          bonusTickets = 4;
-          segmentLabel = "4 (×2 Multiplier)";
-          console.log(`[BONUS_SPIN] ×2 Multiplier for non-chore completion, awarding 4 tickets`);
-        }
+      } else if (selectedSegment.type === "multiplier") {
+        // For multiplier segments (×2, etc.) - set up for respin with multiplier
+        respin = true;
+        respinMultiplier = selectedSegment.multiplier || 2; // Default to 2 if not specified
+        bonusTickets = 0; // No tickets yet, need to spin again
+        segmentLabel = `${selectedSegment.label}`;
+        console.log(`[BONUS_SPIN] Multiplier segment: ${segmentLabel}, will set multiplier=${respinMultiplier} and trigger respin`);
       } else {
         // For direct ticket amounts (1, 2, 3, 5, 10)
-        bonusTickets = Number(selectedSegment.value);
-        console.log(`[BONUS_SPIN] Direct ticket award: ${bonusTickets} tickets`);
+        const baseTickets = Number(selectedSegment.value);
+        bonusTickets = baseTickets * pendingMultiplier;
+        
+        if (pendingMultiplier > 1) {
+          segmentLabel = `${baseTickets} × ${pendingMultiplier} = ${bonusTickets}`;
+          console.log(`[BONUS_SPIN] Direct ticket award with multiplier: ${baseTickets} × ${pendingMultiplier} = ${bonusTickets} tickets`);
+        } else {
+          console.log(`[BONUS_SPIN] Direct ticket award: ${bonusTickets} tickets`);
+        }
       }
       
       // Step 7: Update the dailyBonus record
@@ -1807,18 +1811,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bonusTickets,
         segmentLabel,
         trigger_type: respin ? 'respin' : dailyBonusRecord.trigger_type,
-        is_spun: !respin
+        is_spun: !respin,
+        pending_multiplier: respin && selectedSegment.type === "multiplier" ? respinMultiplier : 1
       });
       
       let updatedBonus;
       
       if (respin) {
-        // For "Spin Again", update trigger_type but don't mark as spun yet
+        // For respins, keep the bonus active but update the type and multiplier if needed
+        const updateData: any = {
+          trigger_type: 'respin',
+        };
+        
+        // If we landed on a multiplier slice, set the pending_multiplier
+        if (selectedSegment.type === "multiplier") {
+          updateData.pending_multiplier = respinMultiplier;
+          console.log(`[BONUS_SPIN] Setting pending multiplier to ${respinMultiplier}`);
+        }
+        
         const result = await db
           .update(dailyBonus)
-          .set({
-            trigger_type: 'respin'
-          })
+          .set(updateData)
           .where(eq(dailyBonus.id, dailyBonusRecord.id))
           .returning();
         
@@ -1830,7 +1843,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .update(dailyBonus)
           .set({
             is_spun: true,
-            spin_result_tickets: bonusTickets
+            spin_result_tickets: bonusTickets,
+            pending_multiplier: 1 // Reset multiplier after final spin
           })
           .where(eq(dailyBonus.id, dailyBonusRecord.id))
           .returning();

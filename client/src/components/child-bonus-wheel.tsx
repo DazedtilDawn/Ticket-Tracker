@@ -34,8 +34,9 @@ const WHEEL_SEGMENTS = [
   { value: 5,  color: "#4BC0C0", label: "5",  text: "#fff" },
   { value: 2,  color: "#9966FF", label: "2",  text: "#fff" },
   { value: 10, color: "#FF9F40", label: "10", text: "#222" },
-  { type: "double", color: "#FF66CC", label: "×2", text: "#fff" },
+  { type: "multiplier", value: "double", multiplier: 2, color: "#FF66CC", label: "×2", text: "#fff" },
   { value: 4,  color: "#7BC043", label: "4",  text: "#fff" },
+  { value: "respin", color: "#4CAF50", label: "Spin Again", text: "#fff" },
 ];
 
 const SEGMENT_ANGLE = 360 / WHEEL_SEGMENTS.length;
@@ -75,6 +76,7 @@ export function ChildBonusWheel({
   const [resultLabel, setResultLabel] = useState<string | null>(null);
   const [rotation, setRotation] = useState(0); // deg
   const [showResult, setShowResult] = useState(false);
+  const [pendingMultiplier, setPendingMultiplier] = useState<number>(1);
   const wheelRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
   
