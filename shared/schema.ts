@@ -92,6 +92,16 @@ export const dailyBonus = pgTable("daily_bonus", {
   };
 });
 
+// Magic link login tokens for passwordless auth
+export const loginTokens = pgTable("login_tokens", {
+  tokenHash: char("token_hash", { length: 64 }).primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  consumedAt: timestamp("consumed_at", { withTimezone: true }),
+  ipFingerprint: text("ip_fingerprint"),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -178,6 +188,15 @@ export const bonusSpinSchema = z.object({
   daily_bonus_id: z.number().int().positive()
 });
 
+// Magic link login schema
+export const magicLinkRequestSchema = z.object({
+  email: z.string().email("Please enter a valid email address")
+});
+
+export const magicLinkConsumeSchema = z.object({
+  token: z.string().min(16, "Invalid token")
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -200,3 +219,7 @@ export type GoodBehavior = z.infer<typeof goodBehaviorSchema>;
 export type DeleteTransaction = z.infer<typeof deleteTransactionSchema>;
 export type SpinWheel = z.infer<typeof spinWheelSchema>;
 export type BonusSpin = z.infer<typeof bonusSpinSchema>;
+export type MagicLinkRequest = z.infer<typeof magicLinkRequestSchema>;
+export type MagicLinkConsume = z.infer<typeof magicLinkConsumeSchema>;
+export type LoginToken = typeof loginTokens.$inferSelect;
+export type InsertLoginToken = typeof loginTokens.$inferInsert;

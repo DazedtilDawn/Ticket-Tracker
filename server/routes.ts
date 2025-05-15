@@ -23,12 +23,15 @@ import {
   spinWheelSchema,
   insertDailyBonusSchema,
   dailyBonus,
-  bonusSpinSchema
+  bonusSpinSchema,
+  magicLinkRequestSchema,
+  magicLinkConsumeSchema
 } from "@shared/schema";
 import { createJwt, verifyJwt, AuthMiddleware } from "./lib/auth";
 import { DailyBonusAssignmentMiddleware } from "./lib/daily-bonus-middleware";
 import { scrapeAmazon, extractAsin } from "./lib/amazon-api";
 import { calculateTier, calculateProgressPercent, calculateBoostPercent } from "./lib/business-logic";
+import { requestLogin, consumeLogin } from "./services/authService";
 import { WebSocketServer, WebSocket } from "ws";
 import { cleanupOrphanedProducts } from "./cleanup";
 import { upload, getFileUrl } from "./lib/upload";
