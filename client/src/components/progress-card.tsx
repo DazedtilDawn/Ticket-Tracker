@@ -8,16 +8,16 @@ import { useAuthStore } from "@/store/auth-store";
 interface ProgressCardProps {
   goal: {
     id: number;
-    user_id: number;
+    userId: number;
     product: {
       id: number;
       title: string;
       asin: string;
-      image_url: string;
-      price_cents: number;
-      price_locked_cents: number;
+      imageUrl: string;
+      priceCents: number;
+      priceLockedCents: number;
     };
-    tickets_saved: number;
+    ticketsSaved: number;
     progress: number;
     estimatedCompletion?: {
       days: number;
