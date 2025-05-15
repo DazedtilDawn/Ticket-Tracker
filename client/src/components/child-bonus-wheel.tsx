@@ -34,10 +34,8 @@ const WHEEL_SEGMENTS = [
   { value: 5,  color: "#4BC0C0", label: "5",  text: "#fff" },
   { value: 2,  color: "#9966FF", label: "2",  text: "#fff" },
   { value: 10, color: "#FF9F40", label: "10", text: "#222" },
-  // Special segment for multiplier with gradient fill defined in SVG
-  { type: "multiplier", value: "double", multiplier: 2, color: "#FF66CC", label: "×2", text: "#fff", special: true },
+  { type: "double", color: "#FF66CC", label: "×2", text: "#fff" },
   { value: 4,  color: "#7BC043", label: "4",  text: "#fff" },
-  { value: "respin", color: "#4CAF50", label: "Spin Again", text: "#fff" },
 ];
 
 const SEGMENT_ANGLE = 360 / WHEEL_SEGMENTS.length;
@@ -77,8 +75,6 @@ export function ChildBonusWheel({
   const [resultLabel, setResultLabel] = useState<string | null>(null);
   const [rotation, setRotation] = useState(0); // deg
   const [showResult, setShowResult] = useState(false);
-  const [pendingMultiplier, setPendingMultiplier] = useState<number>(1);
-  const [isRespinMode, setIsRespinMode] = useState(false);
   const wheelRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
   
@@ -214,80 +210,6 @@ export function ChildBonusWheel({
     onSuccess: (data) => {
       console.log('[WHEEL_DEBUG] Spin mutation success response:', data);
       
-      // Check if this is a multiplier or respin
-      if (data.respin_allowed) {
-        // Get the server-assigned segment index and adjust wheel position for animation
-        const serverSegmentIndex = data.segment_index;
-        console.log('[WHEEL_DEBUG] Server assigned segment index for respin:', serverSegmentIndex);
-        
-        // Calculate the final rotation to land on the winning segment
-        const FULL_SPINS = 12;
-        const midPoint = serverSegmentIndex * SEGMENT_ANGLE - 90 + SEGMENT_ANGLE / 2; 
-        const JITTER_RANGE = SEGMENT_ANGLE / 2 - 4;
-        const jitter = (Math.random() - 0.5) * 2 * JITTER_RANGE;
-        const finalRotation = FULL_SPINS * 360 + 270 - midPoint + jitter;
-        
-        // Apply the rotation
-        setRotation(finalRotation);
-        
-        // For multiplier, save the value and show a toast
-        const winningSegment = WHEEL_SEGMENTS[data.segment_index];
-        if (winningSegment.type === "multiplier") {
-          const multiplier = winningSegment.multiplier || 2;
-          setPendingMultiplier(multiplier);
-          setIsRespinMode(true);
-          
-          // Highlight the winning slice
-          setTimeout(() => {
-            const slices = wheelRef.current?.querySelectorAll<HTMLElement>("[data-slice]");
-            if (slices && slices[serverSegmentIndex]) {
-              console.log('[WHEEL_DEBUG] Highlighting multiplier slice', serverSegmentIndex);
-              slices[serverSegmentIndex].classList.add("ring-4", "ring-pink-400", "animate-pulse");
-            }
-            
-            // Show multiplier toast and trigger respin 
-            toast({
-              title: `✨ ${multiplier}× Multiplier!`,
-              description: `Spinning again to see how many tickets you'll ${multiplier > 2 ? `multiply by ${multiplier}` : 'double'}!`,
-              className: "bg-pink-50 border-pink-300",
-            });
-            
-            // Launch confetti when landing on a multiplier
-            confetti({
-              particleCount: 100,
-              spread: 70,
-              origin: { y: 0.6 }
-            });
-            
-            // Automatically spin again after a short delay
-            setTimeout(() => handleSpin(), 2500);
-          }, 8000); // After wheel finishes spinning
-        } else {
-          // For regular respin
-          setIsRespinMode(true);
-          
-          setTimeout(() => {
-            // Highlight the winning slice
-            const slices = wheelRef.current?.querySelectorAll<HTMLElement>("[data-slice]");
-            if (slices && slices[serverSegmentIndex]) {
-              console.log('[WHEEL_DEBUG] Highlighting respin slice', serverSegmentIndex);
-              slices[serverSegmentIndex].classList.add("ring-4", "ring-green-400", "animate-pulse");
-            }
-            
-            toast({
-              title: "🎡 Spin Again!",
-              description: "You get another spin!",
-              className: "bg-green-50 border-green-300",
-            });
-            
-            // Automatically spin again after a short delay
-            setTimeout(() => handleSpin(), 2500);
-          }, 8000);
-        }
-        return;
-      }
-      
-      // Regular spin (not a respin)
       // Get the server-assigned segment index and adjust wheel position to match it
       const serverSegmentIndex = data.segment_index;
       console.log('[WHEEL_DEBUG] Server assigned segment index:', serverSegmentIndex);
@@ -309,28 +231,14 @@ export function ChildBonusWheel({
         console.log('[WHEEL_DEBUG] Animation finished, setting result with tickets:', data.tickets_awarded);
         setSpinResult(data.tickets_awarded);
         
-        // See if the multiplier was applied
-        if (isRespinMode && pendingMultiplier > 1) {
-          console.log('[WHEEL_DEBUG] Applying multiplier:', pendingMultiplier);
-          setResultLabel(`×${pendingMultiplier}`);
-          
-          // Add confetti burst for multiplier final result
-          confetti({
-            particleCount: 150,
-            spread: 90,
-            origin: { y: 0.6 }
-          });
-          
-          // Show toast with multiplier result
-          toast({
-            title: `${pendingMultiplier}× Multiplier Applied!`,
-            description: `You earned ${data.tickets_awarded} tickets from this spin!`,
-            className: "bg-yellow-50 border-yellow-300",
-          });
-          
-          // Reset respin mode and multiplier after use
-          setIsRespinMode(false);
-          setPendingMultiplier(1);
+        // Get the segment that was landed on to determine if it was a multiplier
+        const winningSegment = WHEEL_SEGMENTS[data.segment_index];
+        const isMultiplier = winningSegment.type === "double";
+        
+        // Set a custom result label for multipliers
+        if (isMultiplier) {
+          console.log('[WHEEL_DEBUG] Landed on multiplier segment');
+          setResultLabel('×2');
         } else {
           setResultLabel(null);
         }
@@ -423,15 +331,6 @@ export function ChildBonusWheel({
         variant: "destructive" 
       });
       return;
-    }
-
-    // Reset the result display unless it's a multiplier respin
-    if (!isRespinMode) {
-      setSpinResult(null);
-      setShowResult(false);
-      setResultLabel(null);
-    } else {
-      console.log('[WHEEL_DEBUG] In respin mode with multiplier:', pendingMultiplier);
     }
 
     console.log('[WHEEL_DEBUG] Starting wheel spin animation for bonus ID:', dailyBonusId);
@@ -531,14 +430,6 @@ export function ChildBonusWheel({
             >
               {/* SVG slices */}
               <svg viewBox="0 0 100 100" className="absolute inset-0">
-                {/* Define gradient for multiplier slices */}
-                <defs>
-                  <radialGradient id="multiplierGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-                    <stop offset="0%" stopColor="#ff66ff" />
-                    <stop offset="60%" stopColor="#ff00cc" />
-                    <stop offset="100%" stopColor="#cc00ff" />
-                  </radialGradient>
-                </defs>
                 {WHEEL_SEGMENTS.map((seg, i) => {
                   const start = i * SEGMENT_ANGLE - 90; // rotate to start at top
                   const end = start + SEGMENT_ANGLE;
@@ -552,10 +443,9 @@ export function ChildBonusWheel({
                       {/* slice wedge */}
                       <path
                         d={describeSlice(start, end)}
-                        fill={seg.type === "multiplier" ? "url(#multiplierGradient)" : seg.color}
+                        fill={seg.color}
                         stroke="#ffffff"
                         strokeWidth={0.4}
-                        className={seg.type === "multiplier" ? "animate-pulse-slow" : ""}
                       />
                       {/* label positioned at fixed radius with direct x,y coordinates */}
                       {(() => {
@@ -571,16 +461,11 @@ export function ChildBonusWheel({
                             dominantBaseline="middle"
                             textAnchor="middle"
                             fontWeight="700"
-                            fontSize={seg.type === "multiplier" ? "11" : "9"}
+                            fontSize="9"
                             fill={seg.text}
                             transform={`rotate(${flip} ${xLab} ${yLab})`}
-                            className={seg.type === "multiplier" ? "animate-pulse" : ""}
                           >
-                            {seg.type === "multiplier" ? (
-                              <tspan fontWeight="900" strokeWidth="0.3" stroke="#ffffff">{seg.label}</tspan>
-                            ) : (
-                              seg.label
-                            )}
+                            {seg.label}
                           </text>
                         );
                       })()}
@@ -591,22 +476,11 @@ export function ChildBonusWheel({
 
               {/* hub */}
               <div className={cn(
-                "absolute left-1/2 top-1/2 w-16 h-16 -translate-x-1/2 -translate-y-1/2 rounded-full flex flex-col items-center justify-center border-2 shadow-lg",
-                isRespinMode && pendingMultiplier > 1 
-                  ? "bg-gradient-to-b from-pink-300 to-pink-500 border-pink-300 animate-pulse" 
-                  : "bg-gradient-to-b from-white to-gray-200 border-gray-300",
+                "absolute left-1/2 top-1/2 w-16 h-16 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-b from-white to-gray-200 flex flex-col items-center justify-center border-2 border-gray-300 shadow-lg",
                 isSpinning && "animate-ping-slow"
               )}>
-                <Star className={cn(
-                  "w-4 h-4 mb-0.5",
-                  isRespinMode && pendingMultiplier > 1 ? "text-white" : "text-yellow-500"
-                )} />
-                <span className={cn(
-                  "font-bold text-sm",
-                  isRespinMode && pendingMultiplier > 1 ? "text-white" : "text-gray-800"
-                )}>
-                  {isRespinMode && pendingMultiplier > 1 ? `×${pendingMultiplier}` : "SPIN"}
-                </span>
+                <Star className="w-4 h-4 text-yellow-500 mb-0.5" />
+                <span className="font-bold text-gray-800 text-sm">SPIN</span>
               </div>
             </div>
           </div>
@@ -617,20 +491,13 @@ export function ChildBonusWheel({
               <span className="inline-flex items-center gap-1 text-4xl font-bold bg-white/80 px-6 py-3 rounded-full border-2 border-pink-400 shadow">
                 {resultLabel ? (
                   <>
-                    {/* Show calculation for multiplier */}
-                    <div className="flex flex-col items-center">
-                      <div className="flex items-center gap-1">
-                        <span className="text-3xl text-blue-500">{spinResult / parseInt(resultLabel.substring(1))}</span>
-                        <span className="text-pink-500 text-3xl">{resultLabel}</span>
-                        <span className="text-3xl">=</span>
-                      </div>
-                      <span className="text-yellow-500 text-5xl">{spinResult}</span>
-                    </div>
+                    <span className="text-pink-500">{resultLabel}</span>
+                    <span className="text-yellow-500">= {spinResult}</span>
                   </>
                 ) : (
                   <span className="text-yellow-500">+{spinResult}</span>
                 )}
-                <span className="text-purple-600 ml-1">tickets</span>
+                <span className="text-purple-600">tickets</span>
               </span>
             </div>
           )}

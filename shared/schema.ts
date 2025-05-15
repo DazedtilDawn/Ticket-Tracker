@@ -82,7 +82,6 @@ export const dailyBonus = pgTable("daily_bonus", {
   is_spun: boolean("is_spun").notNull().default(false), // Tracks if the bonus wheel has been spun
   trigger_type: bonusTriggerEnum("trigger_type").notNull(), // What triggered this bonus (chore completion or good behavior)
   spin_result_tickets: smallint("spin_result_tickets"), // Number of tickets won from spinning the wheel
-  pending_multiplier: smallint("pending_multiplier").default(1), // Tracks multiplier for two-stage spins (×2, ×3, etc.)
   created_at: timestamp("created_at").defaultNow(),
 }, (table) => {
   return {
