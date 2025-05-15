@@ -50,11 +50,33 @@ export default function Login() {
   
   // Check for token in query params
   useEffect(() => {
+    // Handle existing token query param (universal login path)
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
     
+    // Special handling for the login-consume path
+    const isLoginConsume = window.location.pathname === '/login-consume';
+    
     if (token) {
+      // Set active tab to magic link if we're processing a token
+      setActiveTab('magic');
       consumeMagicLink(token);
+      
+      // If we're on the special consume path, clean the URL after consuming
+      if (isLoginConsume) {
+        // Replace URL without token to avoid reusing expired links
+        window.history.replaceState(null, '', '/login');
+      }
+    } else if (isLoginConsume) {
+      // Handle case where login-consume is used without a token
+      setActiveTab('magic');
+      toast({
+        title: "Invalid Login Link",
+        description: "The login link is missing or expired. Please request a new one.",
+        variant: "destructive",
+      });
+      // Redirect to regular login
+      window.history.replaceState(null, '', '/login');
     }
   }, []);
   
@@ -87,13 +109,34 @@ export default function Login() {
     },
   });
   
+  // Helper function for API requests
+  const doFetch = async (url: string, method: string, data: any) => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    };
+    
+    const response = await fetch(url, {
+      method,
+      headers,
+      body: JSON.stringify(data)
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || response.statusText);
+    }
+    
+    try {
+      return await response.json();
+    } catch (e) {
+      return await response.text();
+    }
+  };
+  
   const handleRequestMagicLink = async (data: z.infer<typeof magicLinkSchema>) => {
     setIsLoading(true);
     try {
-      const response = await apiRequest("/api/auth/request-login", {
-        method: "POST",
-        body: data
-      });
+      await doFetch("/api/auth/request-login", "POST", data);
       
       // Always show success, even if email doesn't exist (prevents enumeration)
       setEmailSent(true);
@@ -116,10 +159,7 @@ export default function Login() {
     setConsumeError("");
     
     try {
-      const result = await apiRequest("/api/auth/consume-login", {
-        method: "POST", 
-        body: { token }
-      });
+      const result = await doFetch("/api/auth/consume-login", "POST", { token });
       
       toast({
         title: "Login successful",
@@ -143,10 +183,7 @@ export default function Login() {
   const handleLogin = async (data: z.infer<typeof loginSchema>) => {
     setIsLoading(true);
     try {
-      const result = await apiRequest("/api/auth/login", {
-        method: "POST",
-        body: data
-      });
+      const result = await doFetch("/api/auth/login", "POST", data);
       
       toast({
         title: "Login successful",
@@ -172,10 +209,7 @@ export default function Login() {
       // Remove confirmPassword before sending
       const { confirmPassword, ...registerData } = data;
       
-      const result = await apiRequest("/api/auth/register", {
-        method: "POST",
-        body: registerData
-      });
+      const result = await doFetch("/api/auth/register", "POST", registerData);
       
       toast({
         title: "Registration successful",
@@ -212,11 +246,11 @@ export default function Login() {
           </div>
         </div>
 
-        <Tabs defaultValue="family" value={activeTab} onValueChange={setActiveTab}>
+        <Tabs defaultValue="magic" value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-4 mx-6 mb-6">
-            <TabsTrigger value="family">Family</TabsTrigger>
             <TabsTrigger value="magic">Magic Link</TabsTrigger>
-            <TabsTrigger value="login">Login</TabsTrigger>
+            <TabsTrigger value="family">Quick Login</TabsTrigger>
+            <TabsTrigger value="login">Username</TabsTrigger>
             <TabsTrigger value="register">Register</TabsTrigger>
           </TabsList>
           
