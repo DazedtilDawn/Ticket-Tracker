@@ -88,8 +88,8 @@ export class DatabaseStorage implements IStorage {
         .from(dailyBonus)
         .where(
           and(
-            eq(dailyBonus.bonus_date, today),
-            eq(dailyBonus.user_id, userId)
+            eq(dailyBonus.bonusDate, today),
+            eq(dailyBonus.userId, userId)
           )
         );
         
@@ -97,9 +97,9 @@ export class DatabaseStorage implements IStorage {
         bonus = result[0];
         console.log(`[GET_BONUS] Found daily bonus for user ${userId} on ${today}:`, {
           id: bonus.id,
-          assigned_chore_id: bonus.assigned_chore_id,
-          is_spun: bonus.is_spun, // Critical field we're debugging
-          trigger_type: bonus.trigger_type
+          assignedChoreId: bonus.assignedChoreId,
+          isSpun: bonus.isSpun, // Critical field we're debugging
+          triggerType: bonus.triggerType
         });
       } else {
         console.log(`[GET_BONUS] No daily bonus found for user ${userId} on date ${today}`);
@@ -109,15 +109,15 @@ export class DatabaseStorage implements IStorage {
       const result = await db
         .select()
         .from(dailyBonus)
-        .where(eq(dailyBonus.bonus_date, today));
+        .where(eq(dailyBonus.bonusDate, today));
       
       if (result.length > 0) {
         bonus = result[0];
         console.log(`[GET_BONUS] Found daily bonus for date ${today} (no user specified):`, {
           id: bonus.id,
-          user_id: bonus.user_id,
-          is_spun: bonus.is_spun, // Critical field we're debugging
-          trigger_type: bonus.trigger_type
+          userId: bonus.userId,
+          isSpun: bonus.isSpun, // Critical field we're debugging
+          triggerType: bonus.triggerType
         });
       } else {
         console.log(`[GET_BONUS] No daily bonus found for date ${today} (no user specified)`);
