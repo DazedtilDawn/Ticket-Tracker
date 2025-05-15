@@ -439,7 +439,7 @@ export class DatabaseStorage implements IStorage {
 
   async getChores(activeOnly = true): Promise<Chore[]> {
     if (activeOnly) {
-      return db.select().from(chores).where(eq(chores.is_active, true));
+      return db.select().from(chores).where(eq(chores.isActive, true));
     }
     return db.select().from(chores);
   }

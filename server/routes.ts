@@ -95,10 +95,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 // Create a real transaction (small reward for testing)
                 const testAmount = 5; // 5 tickets as a test reward
                 const transaction = await storage.createTransaction({
-                  type: 'reward',
-                  delta_tickets: testAmount, // Must use delta_tickets, not amount
-                  note: 'WebSocket test reward (connection test)',
-                  user_id: 1 // Parent user ID
+                  source: 'parent_adjustment', // Use an enum value from txnSourceEnum
+                  delta: testAmount, // Use delta instead of delta_tickets
+                  reason: 'WebSocket test reward (connection test)',
+                  userId: 1 // Parent user ID
                 });
                 
                 console.log("Created real test transaction:", transaction.id);
@@ -106,10 +106,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 // Broadcast the real transaction to all clients
                 broadcast('transaction:reward', {
                   id: transaction.id,
-                  type: 'reward',
-                  delta_tickets: testAmount, 
-                  note: 'WebSocket test reward (connection test)',
-                  user_id: 1
+                  source: 'parent_adjustment',
+                  delta: testAmount, 
+                  reason: 'WebSocket test reward (connection test)',
+                  userId: 1
                 });
               } catch (error) {
                 console.error("Failed to create test transaction:", error);
