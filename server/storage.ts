@@ -917,8 +917,8 @@ export class DatabaseStorage implements IStorage {
     return db
       .select()
       .from(transactions)
-      .where(eq(transactions.user_id, userId))
-      .orderBy(desc(transactions.date))
+      .where(eq(transactions.userId, userId))
+      .orderBy(desc(transactions.createdAt))
       .limit(limit);
   }
   

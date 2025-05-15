@@ -129,12 +129,16 @@ export const goals = pgTable("goals", {
 export const transactions = pgTable("transactions", {
   id             : serial("id").primaryKey(),
   userId         : integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
-  delta          : integer("delta_tickets").notNull(),
+  choreId        : integer("chore_id").references(() => chores.id),
+  goalId         : integer("goal_id").references(() => goals.id),
+  delta          : integer("delta").notNull(),
+  createdAt      : timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  type           : text("type"),
+  note           : text("note"),
   source         : txnSourceEnum("source").notNull(),
   refId          : integer("ref_id"),
   reason         : text("reason"),
   metadata       : jsonb("metadata"),
-  createdAt      : timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   toSharedGoalId : integer("to_shared_goal_id"), // FK -> shared_goals.id  (phase-2)
 });
 
