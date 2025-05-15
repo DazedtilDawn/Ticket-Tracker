@@ -1749,28 +1749,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`[BONUS_SPIN] Validated request data:`, data);
       
       // Step 1: Get the daily bonus record
-      const dailyBonusRecord = await storage.getDailyBonusById(data.daily_bonus_id);
+      const dailyBonusRecord = await storage.getDailyBonusById(data.dailyBonusId);
       
       console.log(`[BONUS_SPIN] Daily bonus record lookup:`, dailyBonusRecord ? {
         id: dailyBonusRecord.id,
-        user_id: dailyBonusRecord.user_id,
-        assigned_chore_id: dailyBonusRecord.assigned_chore_id,
-        is_spun: dailyBonusRecord.is_spun,
-        trigger_type: dailyBonusRecord.trigger_type,
-        bonus_date: dailyBonusRecord.bonus_date
+        userId: dailyBonusRecord.userId,
+        assignedChoreId: dailyBonusRecord.assignedChoreId,
+        isSpun: dailyBonusRecord.isSpun,
+        triggerType: dailyBonusRecord.triggerType,
+        bonusDate: dailyBonusRecord.bonusDate
       } : 'Record not found');
       
       if (!dailyBonusRecord) {
-        console.log(`[BONUS_SPIN] ERROR: Daily bonus record ${data.daily_bonus_id} not found`);
+        console.log(`[BONUS_SPIN] ERROR: Daily bonus record ${data.dailyBonusId} not found`);
         return res.status(404).json({ message: "Daily bonus record not found" });
       }
       
       // Step 2: Verify the requesting user is either the bonus owner or a parent
       const requestingUser = req.user;
-      console.log(`[BONUS_SPIN] Authorizing request from user ${requestingUser.id} (${requestingUser.role}) for bonus belonging to user ${dailyBonusRecord.user_id}`);
+      console.log(`[BONUS_SPIN] Authorizing request from user ${requestingUser.id} (${requestingUser.role}) for bonus belonging to user ${dailyBonusRecord.userId}`);
       
       if (
-        requestingUser.id !== dailyBonusRecord.user_id && 
+        requestingUser.id !== dailyBonusRecord.userId && 
         requestingUser.role !== "parent"
       ) {
         console.log(`[BONUS_SPIN] ERROR: Authorization failed - requester is not owner or parent`);
@@ -1780,7 +1780,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Step 3: Check if the bonus has already been spun
-      if (dailyBonusRecord.is_spun) {
+      if (dailyBonusRecord.isSpun) {
         console.log(`[BONUS_SPIN] ERROR: Bonus ${dailyBonusRecord.id} has already been spun`);
         return res.status(400).json({ 
           message: "This bonus wheel has already been spun",
@@ -1790,19 +1790,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Step 4: Get the associated chore information if this is a chore completion bonus
       let chore = null;
-      if (dailyBonusRecord.assigned_chore_id) {
-        console.log(`[BONUS_SPIN] Looking up associated chore ${dailyBonusRecord.assigned_chore_id}`);
-        chore = await storage.getChore(dailyBonusRecord.assigned_chore_id);
+      if (dailyBonusRecord.assignedChoreId) {
+        console.log(`[BONUS_SPIN] Looking up associated chore ${dailyBonusRecord.assignedChoreId}`);
+        chore = await storage.getChore(dailyBonusRecord.assignedChoreId);
         
         console.log(`[BONUS_SPIN] Associated chore lookup result:`, chore ? {
           id: chore.id,
           name: chore.name,
-          tickets: chore.tickets,
+          baseTickets: chore.baseTickets,
           recurrence: chore.recurrence
         } : 'Chore not found');
         
         if (!chore) {
-          console.log(`[BONUS_SPIN] ERROR: Associated chore ${dailyBonusRecord.assigned_chore_id} not found`);
+          console.log(`[BONUS_SPIN] ERROR: Associated chore ${dailyBonusRecord.assignedChoreId} not found`);
           return res.status(404).json({ message: "Associated chore not found" });
         }
       }
@@ -1893,18 +1893,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         respin,
         bonusTickets,
         segmentLabel,
-        trigger_type: respin ? 'respin' : dailyBonusRecord.trigger_type,
-        is_spun: !respin
+        triggerType: respin ? 'respin' : dailyBonusRecord.triggerType,
+        isSpun: !respin
       });
       
       let updatedBonus;
       
       if (respin) {
-        // For "Spin Again", update trigger_type but don't mark as spun yet
+        // For "Spin Again", update triggerType but don't mark as spun yet
         const result = await db
           .update(dailyBonus)
           .set({
-            trigger_type: 'respin'
+            triggerType: 'respin'
           })
           .where(eq(dailyBonus.id, dailyBonusRecord.id))
           .returning();
@@ -1916,8 +1916,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const result = await db
           .update(dailyBonus)
           .set({
-            is_spun: true,
-            spin_result_tickets: bonusTickets
+            isSpun: true,
+            spinResultTickets: bonusTickets
           })
           .where(eq(dailyBonus.id, dailyBonusRecord.id))
           .returning();
@@ -1928,19 +1928,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Step 8: Create a transaction for the bonus tickets (only if positive tickets and not respin)
       if (bonusTickets > 0) {
-        const child = await storage.getUser(dailyBonusRecord.user_id);
+        const child = await storage.getUser(dailyBonusRecord.userId);
         
         if (!child) {
           return res.status(404).json({ message: "Child user not found" });
         }
         
         const transaction = await storage.createTransaction({
-          user_id: child.id,
-          delta_tickets: bonusTickets,
+          userId: child.id,
+          deltaTickets: bonusTickets,
           type: "earn",
           note: `Bonus Wheel: ${segmentLabel}`,
           source: "bonus_spin",
-          ref_id: dailyBonusRecord.id
+          refId: dailyBonusRecord.id
         });
         
         // Step 9: Get updated user balance
@@ -1950,12 +1950,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         broadcast("transaction:earn", {
           data: {
             id: transaction.id,
-            delta_tickets: transaction.delta_tickets,
+            deltaTickets: transaction.deltaTickets,
             note: transaction.note,
-            user_id: transaction.user_id,
+            userId: transaction.userId,
             type: transaction.type,
             source: transaction.source,
-            ref_id: transaction.ref_id,
+            refId: transaction.refId,
             balance: balance
           }
         });
