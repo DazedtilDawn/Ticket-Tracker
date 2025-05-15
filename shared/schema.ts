@@ -147,14 +147,14 @@ export const transactions = pgTable("transactions", {
  * ----------------------------------------------------------------*/
 export const dailyBonus = pgTable("daily_bonus", {
   id                : serial("id").primaryKey(),
-  userId            : integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  bonusDate         : date("bonus_date").notNull(),
-  assignedChoreId   : integer("assigned_chore_id").references(() => chores.id, { onDelete: "set null" }),
-  triggerType       : bonusTriggerEnum("trigger_type").notNull(),
-  isOverride        : boolean("is_override").notNull().default(false),
-  isSpun            : boolean("is_spun").notNull().default(false),
-  spinResultTickets : smallint("spin_result_tickets"),
-  pendingMultiplier : smallint("pending_multiplier"),
+  userId            : integer("userid").notNull().references(() => users.id, { onDelete: "cascade" }),
+  bonusDate         : date("bonusdate").notNull(),
+  assignedChoreId   : integer("assignedchoreid").references(() => chores.id, { onDelete: "set null" }),
+  triggerType       : bonusTriggerEnum("triggertype").notNull(),
+  isOverride        : boolean("isoverride").notNull().default(false),
+  isSpun            : boolean("isspun").notNull().default(false),
+  spinResultTickets : smallint("spinresulttickets"),
+  pendingMultiplier : smallint("pendingmultiplier"),
   respinUsed        : boolean("respin_used").notNull().default(false),
   createdAt         : timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => ({
