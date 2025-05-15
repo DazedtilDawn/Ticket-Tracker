@@ -254,45 +254,45 @@ export const amazonSearchSchema = z.object({
 // Manual product creation schema
 export const manualProductSchema = z.object({
   title: z.string().min(1, "Title is required"),
-  price_cents: z.number().int().min(1, "Price must be greater than 0"),
+  priceCents: z.number().int().min(1, "Price must be greater than 0"),
   amazonUrl: z.string().url("Please enter a valid URL").optional(),
-  image_url: z.string().url("Please enter a valid image URL").optional(),
+  imageUrl: z.string().url("Please enter a valid image URL").optional(),
 });
 
 // Chore completion schema
 export const completeChoreSchema = z.object({
-  chore_id: z.number().int().positive(),
-  user_id: z.number().int().positive().optional() // Optional user_id for when parents complete chores for children
+  choreId: z.number().int().positive(),
+  userId: z.number().int().positive().optional() // Optional userId for when parents complete chores for children
 });
 
 // Bad behavior schema for deducting tickets
 export const badBehaviorSchema = z.object({
-  user_id: z.number().int().positive(),
+  userId: z.number().int().positive(),
   reason: z.string().min(1, "Reason is required"),
   tickets: z.number().int().positive("Must deduct at least 1 ticket")
 });
 
 // Good behavior schema for adding bonus tickets
 export const goodBehaviorSchema = z.object({
-  user_id: z.number().int().positive(),
+  userId: z.number().int().positive(),
   reason: z.string().min(1, "Reason is required"),
   tickets: z.number().int().positive("Must add at least 1 ticket")
 });
 
 // Transaction deletion schema
 export const deleteTransactionSchema = z.object({
-  transaction_id: z.number().int().positive()
+  transactionId: z.number().int().positive()
 });
 
 // Spin wheel schema for parents
 export const spinWheelSchema = z.object({
-  user_id: z.number().int().positive(),
-  assigned_chore_id: z.number().int().positive()
+  userId: z.number().int().positive(),
+  assignedChoreId: z.number().int().positive()
 });
 
 // Bonus spin schema for the wheel spin endpoint
 export const bonusSpinSchema = z.object({
-  daily_bonus_id: z.number().int().positive()
+  dailyBonusId: z.number().int().positive()
 });
 
 /* ----------------------------------------------------------------
