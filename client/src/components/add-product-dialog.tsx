@@ -37,16 +37,16 @@ const searchSchema = z.object({
 
 const manualSchema = z.object({
   title: z.string().min(1, { message: "Product title is required" }),
-  price_cents: z.coerce.number()
+  priceCents: z.coerce.number()
     .int({ message: "Price must be a whole number" })
     .min(1, { message: "Price must be greater than 0" }),
-  image_url: z.string().url({ message: "Image URL must be valid" }).optional().or(z.literal("")),
+  imageUrl: z.string().url({ message: "Image URL must be valid" }).optional().or(z.literal("")),
   amazonUrl: z.string().url({ message: "Amazon URL must be valid" }).optional().or(z.literal("")),
 });
 
 const goalSchema = z.object({
-  user_id: z.number().int().positive(),
-  product_id: z.number().int().positive(),
+  userId: z.number().int().positive(),
+  productId: z.number().int().positive(),
 });
 
 type SearchValues = z.infer<typeof searchSchema>;
@@ -79,8 +79,8 @@ export function AddProductDialog({ children, onProductAdded }: AddProductDialogP
     resolver: zodResolver(manualSchema),
     defaultValues: {
       title: "",
-      price_cents: 0,
-      image_url: "",
+      priceCents: 0,
+      imageUrl: "",
       amazonUrl: "",
     }
   });
@@ -88,8 +88,8 @@ export function AddProductDialog({ children, onProductAdded }: AddProductDialogP
   const goalForm = useForm<GoalValues>({
     resolver: zodResolver(goalSchema),
     defaultValues: {
-      user_id: user?.id,
-      product_id: 0,
+      userId: user?.id,
+      productId: 0,
     },
   });
   
@@ -124,7 +124,7 @@ export function AddProductDialog({ children, onProductAdded }: AddProductDialogP
     
     try {
       // Convert price from dollars to cents if needed
-      let priceCents = data.price_cents;
+      let priceCents = data.priceCents;
       if (priceCents < 100 && priceCents > 0) {
         priceCents = Math.round(priceCents * 100);
       }
@@ -132,9 +132,9 @@ export function AddProductDialog({ children, onProductAdded }: AddProductDialogP
       // Prepare request data
       const requestData = {
         title: data.title,
-        price_cents: priceCents,
+        priceCents: priceCents,
         amazonUrl: data.amazonUrl || undefined,
-        image_url: data.image_url || undefined
+        imageUrl: data.imageUrl || undefined
       };
       
       console.log("Sending manual product data:", requestData);
@@ -299,7 +299,7 @@ export function AddProductDialog({ children, onProductAdded }: AddProductDialogP
                 
                 <FormField
                   control={manualForm.control}
-                  name="price_cents"
+                  name="priceCents"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Price (in dollars)</FormLabel>
@@ -322,7 +322,7 @@ export function AddProductDialog({ children, onProductAdded }: AddProductDialogP
                 
                 <FormField
                   control={manualForm.control}
-                  name="image_url"
+                  name="imageUrl"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Image URL (optional)</FormLabel>
