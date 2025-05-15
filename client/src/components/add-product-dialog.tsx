@@ -107,7 +107,7 @@ export function AddProductDialog({ children, onProductAdded }: AddProductDialogP
       setSearchResult(result);
       
       // Update goal form with product ID
-      goalForm.setValue("product_id", result.id);
+      goalForm.setValue("productId", result.id);
     } catch (error) {
       toast({
         title: "Search Error",
@@ -168,7 +168,7 @@ export function AddProductDialog({ children, onProductAdded }: AddProductDialogP
       setSearchResult(result);
       
       // Update goal form with product ID
-      goalForm.setValue("product_id", result.id);
+      goalForm.setValue("productId", result.id);
       
       // Switch to the product display section
       setActiveTab("preview");
@@ -192,7 +192,7 @@ export function AddProductDialog({ children, onProductAdded }: AddProductDialogP
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...data,
-          user_id: user?.id, // Ensure using current user ID
+          userId: user?.id, // Ensure using current user ID
         })
       });
       
@@ -378,7 +378,7 @@ export function AddProductDialog({ children, onProductAdded }: AddProductDialogP
                 <Card>
                   <CardContent className="p-4 flex items-center space-x-4">
                     <img 
-                      src={searchResult.image_url || "https://placehold.co/100x100/e5e7eb/a1a1aa?text=No+Image"} 
+                      src={searchResult.imageUrl || "https://placehold.co/100x100/e5e7eb/a1a1aa?text=No+Image"} 
                       alt={searchResult.title} 
                       className="w-20 h-20 object-contain"
                       onError={(e) => {
@@ -388,10 +388,10 @@ export function AddProductDialog({ children, onProductAdded }: AddProductDialogP
                     <div className="flex-1">
                       <h4 className="font-medium text-sm">{searchResult.title}</h4>
                       <p className="text-sm text-gray-500 mt-1">
-                        Price: {formatPrice(searchResult.price_cents)}
+                        Price: {formatPrice(searchResult.priceCents)}
                       </p>
                       <p className="text-sm text-gray-500">
-                        Tickets required: {Math.ceil(searchResult.price_cents / 25)}
+                        Tickets required: {Math.ceil(searchResult.priceCents / 25)}
                       </p>
                     </div>
                   </CardContent>
@@ -399,8 +399,8 @@ export function AddProductDialog({ children, onProductAdded }: AddProductDialogP
                 
                 <Form {...goalForm}>
                   <form onSubmit={goalForm.handleSubmit(handleAddGoal)}>
-                    <input type="hidden" {...goalForm.register("product_id")} />
-                    <input type="hidden" {...goalForm.register("user_id")} />
+                    <input type="hidden" {...goalForm.register("productId")} />
+                    <input type="hidden" {...goalForm.register("userId")} />
                     
                     <div className="flex justify-end mt-4">
                       <Button type="submit" disabled={isCreating} className="w-full">
