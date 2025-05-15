@@ -1963,22 +1963,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Step 11: Broadcast the spin result
       broadcast("bonus_spin:result", {
-        daily_bonus_id: dailyBonusRecord.id,
-        user_id: dailyBonusRecord.user_id,
-        segment_index: selectedIndex,
-        tickets_awarded: bonusTickets,
-        segment_label: segmentLabel,
-        respin_allowed: respin
+        dailyBonusId: dailyBonusRecord.id,
+        userId: dailyBonusRecord.userId,
+        segmentIndex: selectedIndex,
+        ticketsAwarded: bonusTickets,
+        segmentLabel: segmentLabel,
+        respinAllowed: respin
       });
       
       // Step 12: Return success response
       return res.status(200).json({
         success: true,
-        daily_bonus: updatedBonus,
-        segment_index: selectedIndex,
-        segment_label: segmentLabel,
-        tickets_awarded: bonusTickets,
-        respin_allowed: respin,
+        dailyBonus: updatedBonus,
+        segmentIndex: selectedIndex,
+        segmentLabel: segmentLabel,
+        ticketsAwarded: bonusTickets,
+        respinAllowed: respin,
         chore: chore
       });
     } catch (error: any) {
@@ -2255,31 +2255,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     // Get the assigned bonus chore if there is one
     let assignedBonusChore = null;
-    if (dailyBonus && dailyBonus.assigned_chore_id) {
-      assignedBonusChore = chores.find(c => c.id === dailyBonus.assigned_chore_id) || null;
+    if (dailyBonus && dailyBonus.assignedChoreId) {
+      assignedBonusChore = chores.find(c => c.id === dailyBonus.assignedChoreId) || null;
     }
     
     // Add completion status and bonus info to chores
     const choresWithStatus = chores.map(chore => ({
       ...chore,
       completed: completedChoreIds.has(chore.id),
-      boostPercent: activeGoal ? calculateBoostPercent(chore.tickets, activeGoal.product.price_locked_cents) : 0,
+      boostPercent: activeGoal ? calculateBoostPercent(chore.baseTickets, activeGoal.product.priceLockedCents) : 0,
       // Add bonus information if this chore is the assigned bonus chore for today
-      is_bonus: dailyBonus ? dailyBonus.assigned_chore_id === chore.id : false,
+      isBonus: dailyBonus ? dailyBonus.assignedChoreId === chore.id : false,
       // If the chore is the bonus chore and has been completed (but wheel not spun), it's eligible for spin
-      spin_eligible: dailyBonus && 
-                    dailyBonus.assigned_chore_id === chore.id && 
+      spinEligible: dailyBonus && 
+                    dailyBonus.assignedChoreId === chore.id && 
                     completedChoreIds.has(chore.id) && 
-                    !dailyBonus.is_spun
+                    !dailyBonus.isSpun
     }));
     
     // Check if the user is eligible for a bonus spin
     const isBonusSpinAvailable = !!dailyBonus && 
-                               ((dailyBonus.trigger_type === 'chore_completion' && 
-                                 dailyBonus.assigned_chore_id !== null && 
-                                 completedChoreIds.has(dailyBonus.assigned_chore_id)) || 
-                                dailyBonus.trigger_type === 'good_behavior_reward') && 
-                               !dailyBonus.is_spun;
+                               ((dailyBonus.triggerType === 'chore_completion' && 
+                                 dailyBonus.assignedChoreId !== null && 
+                                 completedChoreIds.has(dailyBonus.assignedChoreId)) || 
+                                dailyBonus.triggerType === 'good_behavior_reward') && 
+                               !dailyBonus.isSpun;
     
     return res.json({
       balance,
@@ -2290,21 +2290,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } : null,
       chores: choresWithStatus,
       // Enhanced daily bonus information
-      daily_bonus: {
-        has_bonus_assignment: !!dailyBonus,
-        is_bonus_spin_available: isBonusSpinAvailable,
-        daily_bonus_id: dailyBonus?.id || null,
-        assigned_bonus_chore_id: dailyBonus?.assigned_chore_id || null,
-        assigned_bonus_chore: assignedBonusChore ? {
+      dailyBonus: {
+        hasBonusAssignment: !!dailyBonus,
+        isBonusSpinAvailable: isBonusSpinAvailable,
+        dailyBonusId: dailyBonus?.id || null,
+        assignedBonusChoreId: dailyBonus?.assignedChoreId || null,
+        assignedBonusChore: assignedBonusChore ? {
           id: assignedBonusChore.id,
           name: assignedBonusChore.name,
           emoji: assignedBonusChore.emoji,
-          tickets: assignedBonusChore.tickets,
+          baseTickets: assignedBonusChore.baseTickets,
           completed: completedChoreIds.has(assignedBonusChore.id)
         } : null,
-        is_spun: dailyBonus?.is_spun || false,
-        spin_result_tickets: dailyBonus?.spin_result_tickets || 0,
-        trigger_type: dailyBonus?.trigger_type || null
+        isSpun: dailyBonus?.isSpun || false,
+        spinResultTickets: dailyBonus?.spinResultTickets || 0,
+        triggerType: dailyBonus?.triggerType || null
       }
     });
   });
