@@ -961,10 +961,10 @@ export class DatabaseStorage implements IStorage {
       const txList = await db
         .select()
         .from(transactions)
-        .where(eq(transactions.user_id, userId));
+        .where(eq(transactions.userId, userId));
       
       // Calculate sum manually for better type safety
-      return txList.reduce((sum, tx) => sum + tx.delta_tickets, 0);
+      return txList.reduce((sum, tx) => sum + tx.delta, 0);
     } catch (error) {
       console.error("Error getting user balance:", error);
       return 0;
