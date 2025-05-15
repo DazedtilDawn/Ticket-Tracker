@@ -566,10 +566,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         product = await storage.createProduct({
           title: "LEGO Star Wars 25th Anniversary X-Wing Starfighter",
           asin,
-          image_url: "https://m.media-amazon.com/images/I/81ww66OBpQL._AC_SL1500_.jpg",
-          price_cents: 12999, // $129.99
-          price_locked_cents: 12999,
-          camel_last_checked: new Date(),
+          imageUrl: "https://m.media-amazon.com/images/I/81ww66OBpQL._AC_SL1500_.jpg",
+          priceCents: 12999, // $129.99
+          priceLockedCents: 12999,
+          camelLastChecked: new Date(),
         });
         
         return res.json(product);
@@ -603,9 +603,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Update the existing product with the new details
             const updatedProduct = await storage.updateProduct(existingProduct.id, {
               title: productData.title,
-              image_url: productData.image_url || existingProduct.image_url,
-              price_cents: productData.price_cents,
-              price_locked_cents: productData.price_cents,
+              imageUrl: productData.imageUrl || existingProduct.imageUrl,
+              priceCents: productData.priceCents,
+              priceLockedCents: productData.priceCents,
             });
             
             console.log("Updated existing product with new details:", updatedProduct);
@@ -1320,11 +1320,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Returns bonus info only if the chore has been completed (for chore_completion trigger types)
   app.get("/api/daily-bonus/unspun", auth, async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.query.user_id as string);
+      const userId = parseInt(req.query.userId as string);
       
       if (!userId || isNaN(userId)) {
-        console.log("[UNSPUN_BONUS] Missing or invalid user_id:", req.query.user_id);
-        return res.status(400).json({ message: "Missing or invalid user_id parameter" });
+        console.log("[UNSPUN_BONUS] Missing or invalid userId:", req.query.userId);
+        return res.status(400).json({ message: "Missing or invalid userId parameter" });
       }
       
       console.log("[UNSPUN_BONUS] Checking for unspun bonus for user:", userId);
@@ -1340,13 +1340,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "No daily bonus found for this user and date" });
       }
       
-      if (dailyBonus.is_spun) {
+      if (dailyBonus.isSpun) {
         console.log("[UNSPUN_BONUS] Daily bonus already spun for user", userId, "on date", today);
         return res.status(404).json({ message: "Daily bonus has already been spun" });
       }
       
       // For chore completion bonuses, check if the chore has actually been completed
-      if (dailyBonus.trigger_type === 'chore_completion' && dailyBonus.assigned_chore_id) {
+      if (dailyBonus.triggerType === 'chore_completion' && dailyBonus.assignedChoreId) {
         // Get today's transactions to see if the assigned chore was completed
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -1356,16 +1356,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Find which chores were completed today
         for (const tx of recentTransactions) {
-          if (tx.type === 'earn' && tx.chore_id && tx.date && tx.date >= today) {
-            completedChoreIds.add(tx.chore_id);
+          if (tx.type === 'earn' && tx.choreId && tx.createdAt && tx.createdAt >= today) {
+            completedChoreIds.add(tx.choreId);
           }
         }
         
-        console.log("[UNSPUN_BONUS] Checking if chore was completed - Assigned chore:", dailyBonus.assigned_chore_id);
+        console.log("[UNSPUN_BONUS] Checking if chore was completed - Assigned chore:", dailyBonus.assignedChoreId);
         console.log("[UNSPUN_BONUS] Completed chores today:", Array.from(completedChoreIds));
         
         // If the assigned chore wasn't completed, don't show the bonus yet
-        if (!completedChoreIds.has(dailyBonus.assigned_chore_id)) {
+        if (!completedChoreIds.has(dailyBonus.assignedChoreId)) {
           console.log("[UNSPUN_BONUS] Assigned chore has not been completed yet");
           return res.status(404).json({ 
             message: "Daily bonus chore has not been completed yet" 
@@ -1374,18 +1374,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // If we have an unspun bonus and prerequisites are met, get more details
-      let bonusDetails: any = { daily_bonus_id: dailyBonus.id };
+      let bonusDetails: any = { dailyBonusId: dailyBonus.id };
       
-      if (dailyBonus.trigger_type === 'chore_completion' && dailyBonus.assigned_chore_id) {
+      if (dailyBonus.triggerType === 'chore_completion' && dailyBonus.assignedChoreId) {
         // For chore-triggered bonuses, include chore details
-        const chore = await storage.getChore(dailyBonus.assigned_chore_id);
+        const chore = await storage.getChore(dailyBonus.assignedChoreId);
         if (chore) {
-          bonusDetails.chore_name = chore.name;
-          bonusDetails.chore_id = chore.id;
+          bonusDetails.choreName = chore.name;
+          bonusDetails.choreId = chore.id;
         }
       } else {
         // For good behavior bonuses, use a generic name
-        bonusDetails.chore_name = "Good Behavior";
+        bonusDetails.choreName = "Good Behavior";
       }
       
       console.log("[UNSPUN_BONUS] Found unspun bonus:", bonusDetails);
