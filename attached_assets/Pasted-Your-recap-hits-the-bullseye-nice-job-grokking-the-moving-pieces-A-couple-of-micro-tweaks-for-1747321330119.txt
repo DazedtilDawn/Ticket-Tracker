@@ -1,0 +1,28 @@
+Your recap hits the bullseye — nice job grokking the moving pieces. 🏆
+A couple of micro-tweaks for full accuracy:
+
+| What you wrote                                   | Tiny correction                                                                                                    |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| “Supabase **Database**”                          | We’re only using Supabase **hosting for Postgres**; no Supabase auth/RT helpers.                                   |
+| “Role-based permissions (parent vs child)”       | After the lean pass we’ll have *one* parent user and two child users. Most of the old RBAC plumbing can disappear. |
+| “Interactive wheel animation with sound effects” | ✅ Animation is in place; the final sound/vibration hooks are TODOs.                                                |
+
+Everything else lines up perfectly with the lean blueprint.
+
+---
+
+### Where do you want to dive in?
+
+Below are the **highest-impact chunks** we can tackle next. Pick one (or reorder) and I’ll generate the PR-ready code + migration scripts.
+
+| 🔧 Work package                 | What you’ll get                                                                                                                                                                                       |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1. Magic-link auth (parent)** | • `login_tokens` table + Drizzle model<br>• `/auth/request-login` & `/auth/consume-login` routes<br>• Console-logged links (dev) + JWT issue<br>• React `LoginRequest.tsx` + `LoginConsume.tsx` pages |
+| **2. Schema lean-down**         | • Drop `families` table & FKs<br>• Seed script for Mom/Dad, Bryce, Kiki<br>• Remove unused columns/enums<br>• Adjust storage.ts queries                                                               |
+| **3. Balance-cache refactor**   | • `users.balance` authoritative cache<br>• Unified helper `recalcBalance(userId)`<br>• Transactions and undo paths updated<br>• One Drizzle migration                                                 |
+| **4. Bonus-wheel polish**       | • Server-side spin logic (respin, x2 slice)<br>• Thin `/bonus-spin` controller calling service<br>• Front-end wheel component updated for respin flow                                                 |
+| **5. Cleanup & UX touches**     | • Delete i18n scaffolding<br>• Remove shared-goal UI<br>• Mobile-first tweaks (bigger tap targets, dark mode toggle)                                                                                  |
+
+*If you’d rather start smaller (e.g., just the schema migration) let me know — we can slice it even thinner.*
+
+What feels like the best first bite?
