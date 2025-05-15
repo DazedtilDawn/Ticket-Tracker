@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useLocation } from "wouter";
+import { useState, useEffect } from "react";
+import { useLocation, useRoute } from "wouter";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,10 +12,20 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FamilyUserSelector } from "@/components/family-user-selector";
+import { Check, Mail, AlertCircle, Loader2 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const loginSchema = z.object({
   username: z.string().min(3, { message: "Username must be at least 3 characters" }),
   password: z.string().min(4, { message: "Password must be at least 4 characters" }),
+});
+
+const magicLinkSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email address" }),
+});
+
+const magicLinkConsumeSchema = z.object({
+  token: z.string().min(10, { message: "Invalid magic link token" }),
 });
 
 const registerSchema = loginSchema.extend({
@@ -29,10 +39,24 @@ const registerSchema = loginSchema.extend({
 
 export default function Login() {
   const [, setLocation] = useLocation();
+  const [match, params] = useRoute('/login-consume');
   const { toast } = useToast();
   const { login } = useAuthStore();
   const [activeTab, setActiveTab] = useState("family");
   const [isLoading, setIsLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [tokenConsuming, setTokenConsuming] = useState(false);
+  const [consumeError, setConsumeError] = useState("");
+  
+  // Check for token in query params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    
+    if (token) {
+      consumeMagicLink(token);
+    }
+  }, []);
   
   // Login form
   const loginForm = useForm<z.infer<typeof loginSchema>>({
@@ -55,11 +79,74 @@ export default function Login() {
     },
   });
   
+  // Magic link login form
+  const magicLinkForm = useForm<z.infer<typeof magicLinkSchema>>({
+    resolver: zodResolver(magicLinkSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+  
+  const handleRequestMagicLink = async (data: z.infer<typeof magicLinkSchema>) => {
+    setIsLoading(true);
+    try {
+      const response = await apiRequest("/api/auth/request-login", {
+        method: "POST",
+        body: data
+      });
+      
+      // Always show success, even if email doesn't exist (prevents enumeration)
+      setEmailSent(true);
+      
+      toast({
+        title: "Magic link sent",
+        description: "Check your email for a login link",
+      });
+    } catch (error) {
+      // Even for errors we show success to prevent user enumeration
+      setEmailSent(true);
+      console.error("Error requesting magic link:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const consumeMagicLink = async (token: string) => {
+    setTokenConsuming(true);
+    setConsumeError("");
+    
+    try {
+      const result = await apiRequest("/api/auth/consume-login", {
+        method: "POST", 
+        body: { token }
+      });
+      
+      toast({
+        title: "Login successful",
+        description: "Welcome back!",
+      });
+      
+      login(result.jwt, result.user);
+      setLocation("/");
+    } catch (error) {
+      setConsumeError("Invalid or expired login link. Please request a new one.");
+      toast({
+        title: "Login failed",
+        description: "Invalid or expired login link",
+        variant: "destructive",
+      });
+    } finally {
+      setTokenConsuming(false);
+    }
+  };
+  
   const handleLogin = async (data: z.infer<typeof loginSchema>) => {
     setIsLoading(true);
     try {
-      const response = await apiRequest("POST", "/api/auth/login", data);
-      const result = await response.json();
+      const result = await apiRequest("/api/auth/login", {
+        method: "POST",
+        body: data
+      });
       
       toast({
         title: "Login successful",
@@ -68,7 +155,7 @@ export default function Login() {
       
       login(result.token, result.user);
       setLocation("/");
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Login failed",
         description: error.message || "Please check your credentials and try again",
@@ -85,8 +172,10 @@ export default function Login() {
       // Remove confirmPassword before sending
       const { confirmPassword, ...registerData } = data;
       
-      const response = await apiRequest("POST", "/api/auth/register", registerData);
-      const result = await response.json();
+      const result = await apiRequest("/api/auth/register", {
+        method: "POST",
+        body: registerData
+      });
       
       toast({
         title: "Registration successful",
@@ -95,7 +184,7 @@ export default function Login() {
       
       login(result.token, result.user);
       setLocation("/");
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Registration failed",
         description: error.message || "Please try again with different credentials",
@@ -124,14 +213,113 @@ export default function Login() {
         </div>
 
         <Tabs defaultValue="family" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-3 mx-6 mb-6">
+          <TabsList className="grid grid-cols-4 mx-6 mb-6">
             <TabsTrigger value="family">Family</TabsTrigger>
+            <TabsTrigger value="magic">Magic Link</TabsTrigger>
             <TabsTrigger value="login">Login</TabsTrigger>
             <TabsTrigger value="register">Register</TabsTrigger>
           </TabsList>
           
           <TabsContent value="family">
             <FamilyUserSelector />
+          </TabsContent>
+          
+          <TabsContent value="magic">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-center text-2xl">Magic Link Login</CardTitle>
+                <CardDescription className="text-center">
+                  Get a secure login link sent to your email
+                </CardDescription>
+              </CardHeader>
+              
+              {emailSent ? (
+                <div className="p-6">
+                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-4">
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <Check className="h-5 w-5 text-green-400" />
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-green-800 dark:text-green-200">Email Sent</h3>
+                        <p className="mt-2 text-sm text-green-700 dark:text-green-300">
+                          A magic link has been sent to your email. Click the link in your email to sign in.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    className="w-full" 
+                    onClick={() => setEmailSent(false)}
+                  >
+                    Send Another Link
+                  </Button>
+                </div>
+              ) : (
+                <Form {...magicLinkForm}>
+                  <form onSubmit={magicLinkForm.handleSubmit(handleRequestMagicLink)}>
+                    <CardContent className="space-y-4 pt-4">
+                      <FormField
+                        control={magicLinkForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email Address</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="parent@example.com" 
+                                type="email" 
+                                autoComplete="email"
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </CardContent>
+                    
+                    <CardFooter>
+                      <Button type="submit" className="w-full" disabled={isLoading}>
+                        {isLoading ? (
+                          <span className="flex items-center">
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Sending Link...
+                          </span>
+                        ) : (
+                          <span className="flex items-center">
+                            <Mail className="mr-2 h-4 w-4" />
+                            Send Magic Link
+                          </span>
+                        )}
+                      </Button>
+                    </CardFooter>
+                  </form>
+                </Form>
+              )}
+              
+              {consumeError && (
+                <div className="px-6 pb-6">
+                  <Alert variant="destructive" className="mt-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Invalid Link</AlertTitle>
+                    <AlertDescription>
+                      {consumeError}
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              )}
+              
+              {tokenConsuming && (
+                <div className="p-6 flex justify-center">
+                  <div className="flex flex-col items-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+                    <p className="text-sm text-muted-foreground">Verifying your login link...</p>
+                  </div>
+                </div>
+              )}
+            </Card>
           </TabsContent>
           
           <TabsContent value="login">

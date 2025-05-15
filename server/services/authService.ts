@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { db } from "../db";
 import { loginTokens, users } from "@shared/schema";
 import { eq, and, isNull, gt, sql } from "drizzle-orm";
-import { sign } from "jsonwebtoken";
+import jsonwebtoken from "jsonwebtoken";
 
 // Constants
 const MAGIC_TOKEN_TTL_MIN = 15; // 15 minutes
@@ -27,7 +27,7 @@ function createFingerprint(ip: string, userAgent: string): string {
  * Create a JWT token for authenticated sessions
  */
 export function createJwt(payload: { userId: number; role: string }): string {
-  return sign(payload, JWT_SECRET, { expiresIn: "24h" });
+  return jsonwebtoken.sign(payload, JWT_SECRET, { expiresIn: "24h" });
 }
 
 /**

@@ -8,6 +8,7 @@ import path from "path";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 import {
   loginSchema,
   insertUserSchema,
@@ -169,6 +170,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
   
   // Auth Routes
+  // Magic link request endpoint
+  app.post("/api/auth/request-login", async (req: Request, res: Response) => {
+    try {
+      const data = magicLinkRequestSchema.parse(req.body);
+      await requestLogin(data.email, req.ip, req.headers["user-agent"] || "");
+      // Always return success even if email doesn't exist, to prevent user enumeration
+      return res.status(202).json({ success: true });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid email format", errors: error.format() });
+      }
+      // Return 202 even on error to prevent user enumeration
+      console.error("Error requesting login link:", error);
+      return res.status(202).json({ success: true });
+    }
+  });
+  
+  // Magic link consumption endpoint
+  app.post("/api/auth/consume-login", async (req: Request, res: Response) => {
+    try {
+      const data = magicLinkConsumeSchema.parse(req.body);
+      const result = await consumeLogin(data.token, req.ip, req.headers["user-agent"] || "");
+      
+      // Handle daily bonus assignment for parent users on login
+      if (result.user.role === 'parent') {
+        try {
+          console.log(`Parent user ${result.user.id} (${result.user.username}) logged in via magic link, checking daily bonus assignments`);
+          
+          // Get today's date
+          const today = new Date().toISOString().split('T')[0];
+          
+          // Check if daily bonuses have already been assigned today
+          const childUsers = await storage.getUsersByRole('child');
+          let assignedCount = 0;
+          let needsAssignment = false;
+          
+          // Check each child to see if they already have a bonus for today
+          for (const child of childUsers) {
+            const existingBonus = await storage.getDailyBonus(today, child.id);
+            if (!existingBonus) {
+              needsAssignment = true;
+              break;
+            } else {
+              assignedCount++;
+            }
+          }
+          
+          // If any child needs assignment, get available chores for bonus assignment
+          if (needsAssignment) {
+            const availableChores = await storage.getAvailableChoresForBonus();
+            
+            if (availableChores && availableChores.length > 0) {
+              const pendingBonusData = {
+                needsAssignment,
+                availableChores,
+                childUsers,
+                assignedCount,
+                totalChildren: childUsers.length
+              };
+              
+              result.dailyBonusAssignments = pendingBonusData;
+            }
+          }
+        } catch (error) {
+          console.error("Error checking daily bonus assignments:", error);
+        }
+      }
+      
+      return res.json(result);
+    } catch (error) {
+      console.error("Error consuming login token:", error);
+      return res.status(401).json({ message: "Invalid or expired login link" });
+    }
+  });
+  
+  // Traditional login route (kept for backward compatibility)
   app.post("/api/auth/login", async (req: Request, res: Response) => {
     try {
       const credentials = loginSchema.parse(req.body);
