@@ -375,14 +375,17 @@ export default function Dashboard() {
         onClose={() => setIsSpinPromptOpen(false)}
         onSpin={() => handleUserInitiatesSpin(dailyBonusId as number)}
         choreName={completedChoreName}
+        childName={user?.name}
+        dailyBonusId={dailyBonusId}
       />
       
       {/* Bonus Wheel Modal */}
       <ChildBonusWheel
         isOpen={isBonusWheelModalOpen}
         onClose={handleWheelComplete}
-        onSpin={handleSpinWheel}
         dailyBonusId={dailyBonusId}
+        childName={user?.name || "Child"}
+        onSpin={handleSpinWheel}
       />
       
       <div className="container min-h-full flex flex-col">
