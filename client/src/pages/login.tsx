@@ -78,7 +78,7 @@ export default function Login() {
       // Redirect to regular login
       window.history.replaceState(null, '', '/login');
     }
-  }, []);
+  }, [toast, setActiveTab, consumeMagicLink]);
   
   // Login form
   const loginForm = useForm<z.infer<typeof loginSchema>>({

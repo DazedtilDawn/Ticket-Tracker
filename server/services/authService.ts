@@ -35,7 +35,8 @@ export function createJwt(payload: { userId: number; role: string }): string {
  * Generates a token, stores it in the database, and returns a magic link
  */
 export async function requestLogin(email: string, ip: string, userAgent: string) {
-  // Find user by email
+  // Find user by email (note: this assumes email is stored in username field)
+  // In a production app, you would typically have a separate email field
   const userResults = await db.select().from(users).where(eq(users.username, email)).limit(1);
   const user = userResults[0];
   
