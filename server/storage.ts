@@ -79,52 +79,57 @@ export class DatabaseStorage implements IStorage {
     
     console.log(`[GET_BONUS] Looking for daily bonus with date=${today}${userId ? ` and userId=${userId}` : ''}`);
     
-    let bonus: DailyBonus | undefined;
-    
-    if (userId) {
-      // Get bonus for specific user
-      const result = await db
-        .select()
-        .from(dailyBonus)
-        .where(
-          and(
-            eq(dailyBonus.bonusDate, today),
-            eq(dailyBonus.userId, userId)
-          )
-        );
-        
-      if (result.length > 0) {
-        bonus = result[0];
-        console.log(`[GET_BONUS] Found daily bonus for user ${userId} on ${today}:`, {
-          id: bonus.id,
-          assignedChoreId: bonus.assignedChoreId,
-          isSpun: bonus.isSpun, // Critical field we're debugging
-          triggerType: bonus.triggerType
-        });
-      } else {
-        console.log(`[GET_BONUS] No daily bonus found for user ${userId} on date ${today}`);
-      }
-    } else {
-      // Get any bonus for the date (for backward compatibility)
-      const result = await db
-        .select()
-        .from(dailyBonus)
-        .where(eq(dailyBonus.bonusDate, today));
+    try {
+      let bonus: DailyBonus | undefined;
       
-      if (result.length > 0) {
-        bonus = result[0];
-        console.log(`[GET_BONUS] Found daily bonus for date ${today} (no user specified):`, {
-          id: bonus.id,
-          userId: bonus.userId,
-          isSpun: bonus.isSpun, // Critical field we're debugging
-          triggerType: bonus.triggerType
-        });
+      if (userId) {
+        // Get bonus for specific user
+        const result = await db
+          .select()
+          .from(dailyBonus)
+          .where(
+            and(
+              eq(dailyBonus.bonusDate, today),
+              eq(dailyBonus.userId, userId)
+            )
+          );
+          
+        if (result.length > 0) {
+          bonus = result[0];
+          console.log(`[GET_BONUS] Found daily bonus for user ${userId} on ${today}:`, {
+            id: bonus.id,
+            assignedChoreId: bonus.assignedChoreId,
+            isSpun: bonus.isSpun, // Critical field we're debugging
+            triggerType: bonus.triggerType
+          });
+        } else {
+          console.log(`[GET_BONUS] No daily bonus found for user ${userId} on date ${today}`);
+        }
       } else {
-        console.log(`[GET_BONUS] No daily bonus found for date ${today} (no user specified)`);
+        // Get any bonus for the date (for backward compatibility)
+        const result = await db
+          .select()
+          .from(dailyBonus)
+          .where(eq(dailyBonus.bonusDate, today));
+        
+        if (result.length > 0) {
+          bonus = result[0];
+          console.log(`[GET_BONUS] Found daily bonus for date ${today} (no user specified):`, {
+            id: bonus.id,
+            userId: bonus.userId,
+            isSpun: bonus.isSpun, // Critical field we're debugging
+            triggerType: bonus.triggerType
+          });
+        } else {
+          console.log(`[GET_BONUS] No daily bonus found for date ${today} (no user specified)`);
+        }
       }
+      
+      return bonus;
+    } catch (error) {
+      console.error('[GET_BONUS] Error retrieving daily bonus:', error);
+      throw error;
     }
-    
-    return bonus;
   }
   
   async getDailyBonusById(id: number): Promise<DailyBonus | undefined> {

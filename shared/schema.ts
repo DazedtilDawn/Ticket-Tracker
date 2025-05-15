@@ -105,11 +105,11 @@ export const products = pgTable("products", {
   id              : serial("id").primaryKey(),
   title           : text("title").notNull(),
   asin            : text("asin").notNull().unique(),
-  image_url       : text("image_url"),
-  price_cents     : integer("price_cents").notNull(),
-  price_locked_cents: integer("price_locked_cents"),
-  last_checked    : timestamp("last_checked").defaultNow(),
-  camel_last_checked: timestamp("camel_last_checked"),
+  imageUrl        : text("image_url"),
+  priceCents      : integer("price_cents").notNull(),
+  priceLockedCents: integer("price_locked_cents"),
+  lastChecked     : timestamp("last_checked").defaultNow(),
+  camelLastChecked: timestamp("camel_last_checked"),
 });
 
 /* ----------------------------------------------------------------
@@ -117,10 +117,10 @@ export const products = pgTable("products", {
  * ----------------------------------------------------------------*/
 export const goals = pgTable("goals", {
   id            : serial("id").primaryKey(),
-  user_id       : integer("user_id").notNull().references(() => users.id),
-  product_id    : integer("product_id").notNull().references(() => products.id),
-  tickets_saved : integer("tickets_saved").notNull().default(0),
-  is_active     : boolean("is_active").default(true),
+  userId        : integer("user_id").notNull().references(() => users.id),
+  productId     : integer("product_id").notNull().references(() => products.id),
+  ticketsSaved  : integer("tickets_saved").notNull().default(0),
+  isActive      : boolean("is_active").default(true),
 });
 
 /* ----------------------------------------------------------------
@@ -147,14 +147,14 @@ export const transactions = pgTable("transactions", {
  * ----------------------------------------------------------------*/
 export const dailyBonus = pgTable("daily_bonus", {
   id                : serial("id").primaryKey(),
-  userId            : integer("userid").notNull().references(() => users.id, { onDelete: "cascade" }),
-  bonusDate         : date("bonusdate").notNull(),
-  assignedChoreId   : integer("assignedchoreid").references(() => chores.id, { onDelete: "set null" }),
-  triggerType       : bonusTriggerEnum("triggertype").notNull(),
-  isOverride        : boolean("isoverride").notNull().default(false),
-  isSpun            : boolean("isspun").notNull().default(false),
-  spinResultTickets : smallint("spinresulttickets"),
-  pendingMultiplier : smallint("pendingmultiplier"),
+  userId            : integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  bonusDate         : date("bonus_date").notNull(),
+  assignedChoreId   : integer("assigned_chore_id").references(() => chores.id, { onDelete: "set null" }),
+  triggerType       : bonusTriggerEnum("trigger_type").notNull(),
+  isOverride        : boolean("is_override").notNull().default(false),
+  isSpun            : boolean("is_spun").notNull().default(false),
+  spinResultTickets : smallint("spin_result_tickets"),
+  pendingMultiplier : smallint("pending_multiplier"),
   respinUsed        : boolean("respin_used").notNull().default(false),
   createdAt         : timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => ({
