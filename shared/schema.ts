@@ -208,15 +208,15 @@ export const insertChoreCompletionSchema = createInsertSchema(choreCompletions).
 // Product schemas
 export const insertProductSchema = createInsertSchema(products).omit({
   id: true,
-  last_checked: true,
-  camel_last_checked: true,
+  lastChecked: true,
+  camelLastChecked: true,
 });
 
 // Goal schemas
 export const insertGoalSchema = createInsertSchema(goals).omit({
   id: true,
-  tickets_saved: true,
-  is_active: true,
+  ticketsSaved: true,
+  isActive: true,
 });
 
 // Transaction schemas

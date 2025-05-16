@@ -122,10 +122,10 @@ export async function consumeLogin(rawToken: string, ip: string, userAgent: stri
   // Create a JWT token for the session
   const jwt = createJwt({ userId: user.id, role: user.role });
   
-  // Return user data (excluding password) and JWT
-  const { password, ...userData } = user;
+  // Return user data and JWT
+  // Note: no need to exclude password as we're using passwordHash now
   return {
     jwt,
-    user: userData
+    user
   };
 }
