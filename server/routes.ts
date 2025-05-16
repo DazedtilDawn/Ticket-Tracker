@@ -258,7 +258,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const credentials = loginSchema.parse(req.body);
       const user = await storage.getUserByUsername(credentials.username);
       
-      if (!user || user.password !== credentials.password) {
+      // Using passwordHash for authentication instead of password
+      if (!user || user.passwordHash !== credentials.password) {
         return res.status(401).json({ message: "Invalid username or password" });
       }
       
