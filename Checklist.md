@@ -35,7 +35,17 @@
 
 ## Phase 2: Application Configuration (AI-led, then Manual Redeploy)
 
-- [ ] **Step 3: Re-point Multer to S3**
+- [ ] **Step 3: Apply Database Driver Patch for Railway Compatibility**
+    - (Files: `package.json`, `pnpm-lock.yaml` (or `package-lock.json`), `server/db.ts`, Goal: Resolve Neon WebSocket driver TLS error by switching to standard `pg` driver for Railway Postgres)
+    - Pre-condition: Initial Railway deployment attempts to connect to DB and potentially fails with `ERR_TLS_CERT_ALTNAME_INVALID`.
+    - Action (User executes based on provided instructions):
+        - [ ] Install `pg` driver: `pnpm add pg` (or `npm install pg`)
+        - [ ] Remove Neon driver: `pnpm remove @neondatabase/serverless` (or `npm uninstall @neondatabase/serverless`)
+        - [ ] Update `server/db.ts` with the provided patch (see user message for patch details).
+        - [ ] Commit & push changes: `git add server/db.ts package.json pnpm-lock.yaml` (or `package-lock.json`), `git commit -m "fix: switch to pg driver for Railway Postgres"`, `git push origin main`
+    - Verify: Railway auto-redeploys. New build completes successfully. Logs show "serving on port 5000" and no WebSocket/TLS errors. Application frontend loads.
+
+- [ ] **Step 4: Re-point Multer to S3**
     - (Files: `server/lib/upload.ts`, router file (e.g., `server/index.ts` or similar), Goal: Configure file uploads to use Railway's S3-compatible storage)
     - Action (AI-led for edits, then manual for commit/push):
         - [ ] Edit `server/lib/upload.ts` and router file as per patch (AI will provide patch)
@@ -44,13 +54,13 @@
 
 ## Phase 3: Database Migration (User-led, AI-assisted)
 
-- [ ] **Step 4: Run Database Migrations (Manual via Railway CLI)**
+- [ ] **Step 5: Run Database Migrations (Manual via Railway CLI)**
     - (Files: Railway CLI, Database Schema, Goal: Apply Drizzle migrations to the new Railway Postgres instance)
     - Action: Run `railway run npx drizzle-kit push`
     - Verify:
         - [ ] `drizzle-kit push` command completes successfully.
         - [ ] Tables are created in the Railway SQL console.
-- [ ] **Step 4.1 (Optional): Import existing data (Manual via Railway CLI)**
+- [ ] **Step 5.1 (Optional): Import existing data (Manual via Railway CLI)**
     - (Files: Railway CLI, `replit.sql` (example dump file), Goal: Transfer data from an existing database to Railway Postgres)
     - Action: Run `railway db:dump > replit.sql` (or similar, to get your current data) then `cat replit.sql | railway sql` (or `railway db:restore < replit.sql` if supported directly by CLI for your use-case).
     - Verify: Data is present in the Railway database tables.
