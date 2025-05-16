@@ -1003,7 +1003,7 @@ async function initDefaultUsers() {
       email: "parent@example.com", 
       passwordHash: "password",
       role: "parent"
-    });
+    } as InsertUser);
   }
   
   const childUser = await storage.getUserByUsername("child");
@@ -1014,7 +1014,7 @@ async function initDefaultUsers() {
       email: "child@example.com",
       passwordHash: "password",
       role: "child"
-    });
+    } as InsertUser);
   }
 }
 

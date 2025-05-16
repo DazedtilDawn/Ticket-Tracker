@@ -121,7 +121,7 @@ export const insertTransactionSchema = createInsertSchema(transactions).omit({
 // Auth schema
 export const loginSchema = z.object({
   username: z.string().min(3),
-  password: z.string().min(4),
+  password: z.string().min(4), // Used for login, server verifies against passwordHash
 });
 
 // Amazon product search schema
