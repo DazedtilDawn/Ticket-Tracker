@@ -152,11 +152,11 @@ export default function Chores() {
       console.log("Chore completed API response:", data);
       
       // Check if this was a bonus chore
-      const isBonusChore = data.bonusRevealed && data.bonusTickets > 0;
+      const isBonusChore = data.bonus_revealed && data.bonus_tickets > 0;
       
       // Calculate total tickets earned
-      const totalTickets = data.transaction.delta;
-      const regularTickets = totalTickets - (data.bonusTickets || 0);
+      const totalTickets = data.transaction.delta_tickets;
+      const regularTickets = totalTickets - (data.bonus_tickets || 0);
       
       // Immediately update the stats store and cache with the new balance
       // This ensures the balance updates in real-time without waiting for WebSocket events
@@ -197,10 +197,10 @@ export default function Chores() {
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       refetch();
       
-      // Check if this chore completion triggered a bonus - use the bonusTriggered flag
-      if (data && data.bonusTriggered === true && data.dailyBonusId) {
-        console.log("Bonus chore triggered! Opening spin modal with bonus ID:", data.dailyBonusId);
-        handleBonusChoreComplete(data.dailyBonusId, data.chore ? data.chore.name : "Daily Bonus Chore");
+      // Check if this chore completion triggered a bonus - use the bonus_triggered flag
+      if (data && data.bonus_triggered === true && data.daily_bonus_id) {
+        console.log("Bonus chore triggered! Opening spin modal with bonus ID:", data.daily_bonus_id);
+        handleBonusChoreComplete(data.daily_bonus_id, data.chore ? data.chore.name : "Daily Bonus Chore");
       }
       
     } catch (error) {
@@ -286,7 +286,7 @@ export default function Chores() {
   
   // Handle user clicking "Spin Now!" in the prompt modal
   const handleUserInitiatesSpin = (bonusIdFromPrompt: number) => {
-    console.log(`User initiated spin for dailyBonusId: ${bonusIdFromPrompt}`);
+    console.log(`User initiated spin for daily_bonus_id: ${bonusIdFromPrompt}`);
     // Close the prompt modal
     setIsSpinPromptOpen(false);
     // Open the main wheel modal
@@ -299,7 +299,7 @@ export default function Chores() {
       console.log(`Spinning wheel for daily bonus ID: ${bonusId}`);
       const response = await apiRequest("/api/bonus-spin", {
         method: "POST",
-        body: JSON.stringify({ dailyBonusId: bonusId }),
+        body: JSON.stringify({ daily_bonus_id: bonusId }),
       });
       
       console.log("Bonus spin response:", response);
@@ -317,10 +317,10 @@ export default function Chores() {
       queryClient.invalidateQueries({ queryKey: ["/api/chores"] });
       
       return {
-        segmentIndex: response.segmentIndex,
-        ticketsAwarded: response.ticketsAwarded,
-        segmentLabel: response.segmentLabel,
-        respinAllowed: response.respinAllowed
+        segmentIndex: response.segment_index,
+        ticketsAwarded: response.tickets_awarded,
+        segmentLabel: response.segment_label,
+        respinAllowed: response.respin_allowed
       };
     } catch (error: any) {
       toast({

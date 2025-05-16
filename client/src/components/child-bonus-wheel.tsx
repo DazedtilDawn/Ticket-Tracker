@@ -61,15 +61,13 @@ interface ChildBonusWheelProps {
   onClose: () => void;
   dailyBonusId: number | null;
   childName: string;
-  onSpin?: (bonusId: number) => Promise<any>;
 }
 
 export function ChildBonusWheel({
   isOpen,
   onClose,
   dailyBonusId,
-  childName,
-  onSpin
+  childName
 }: ChildBonusWheelProps) {
   /* ----- local UI state ----------------------------------------*/
   const [isSpinning, setIsSpinning] = useState(false);
@@ -370,111 +368,8 @@ export function ChildBonusWheel({
     setTimeout(() => {
       console.log('[WHEEL_DEBUG] Making API call to /api/bonus-spin with ID:', dailyBonusId);
       
-      // Use the provided onSpin callback if available, otherwise use internal spinMutation
-      if (onSpin && typeof onSpin === 'function') {
-        console.log('[WHEEL_DEBUG] Using provided onSpin callback');
-        onSpin(dailyBonusId)
-          .then(data => {
-            console.log('[WHEEL_DEBUG] Custom onSpin callback returned data:', data);
-            // Process the response using our normal flow
-            const serverSegmentIndex = data.segmentIndex;
-            const ticketsAwarded = data.ticketsAwarded;
-            const segmentLabel = data.segmentLabel;
-            
-            // Handle the spin result as if the mutation succeeded
-            // Calculate the final rotation to land on the winning segment
-            const FULL_SPINS = 12;
-            const midPoint = serverSegmentIndex * SEGMENT_ANGLE - 90 + SEGMENT_ANGLE / 2; //° of slice centre
-            const JITTER_RANGE = SEGMENT_ANGLE / 2 - 4;                  // keep 4° from edge
-            const jitter = (Math.random() - 0.5) * 2 * JITTER_RANGE;
-            // 0° (north) + 270° offset minus the slice-centre brings it under the pointer
-            const finalRotation = FULL_SPINS * 360 + 270 - midPoint + jitter;
-            console.log('[WHEEL_DEBUG] Setting final rotation to:', finalRotation);
-            
-            // Apply the final rotation that will correctly land on the server-chosen segment
-            setRotation(finalRotation);
-            
-            // Show the result after the wheel stops
-            setTimeout(() => {
-              console.log('[WHEEL_DEBUG] Animation finished, setting result with tickets:', ticketsAwarded);
-              setSpinResult(ticketsAwarded);
-              
-              // Set a custom result label if provided
-              setResultLabel(segmentLabel || null);
-              
-              // Highlight the winning slice
-              const slices = wheelRef.current?.querySelectorAll<HTMLElement>("[data-slice]");
-              console.log('[WHEEL_DEBUG] Found wheel slices:', slices?.length || 0);
-              
-              if (slices) {
-                slices.forEach((s, i) => {
-                  if (i === serverSegmentIndex) {
-                    console.log('[WHEEL_DEBUG] Highlighting winning slice at index', i);
-                    s.classList.add("ring-4", "ring-yellow-300", "animate-pulse");
-                  } else {
-                    s.classList.remove("ring-4", "ring-yellow-300", "animate-pulse");
-                  }
-                });
-              }
-              
-              // Celebration effects
-              try {
-                const celebrationAudio = new Audio('/sounds/celebration.mp3');
-                celebrationAudio.volume = 0.4;
-                celebrationAudio.play().catch(err => {
-                  console.log('[WHEEL_DEBUG] Could not play celebration sound:', err);
-                });
-              } catch (err) {
-                console.log('[WHEEL_DEBUG] Error setting up celebration sound:', err);
-              }
-              
-              // Vibration feedback if available
-              if (navigator.vibrate) {
-                console.log('[WHEEL_DEBUG] Triggering device vibration');
-                navigator.vibrate([50, 60, 50]);
-              }
-              
-              // Confetti for 10 tickets
-              if (ticketsAwarded >= 10) {
-                console.log('[WHEEL_DEBUG] Triggering confetti for high ticket win');
-                confetti({ 
-                  particleCount: 120, 
-                  spread: 80, 
-                  origin: { y: 0.6 } 
-                });
-              }
-              
-              // Show toast with the result
-              console.log('[WHEEL_DEBUG] Showing success toast with', ticketsAwarded, 'tickets');
-              toast({
-                title: "🎊 Bonus Spin Complete!",
-                description: `You won ${ticketsAwarded} tickets!`,
-                className: "bg-yellow-50 border-yellow-200 text-yellow-900",
-              });
-              
-              // Allow user to close the modal after seeing the result
-              setIsSpinning(false);
-              console.log('[WHEEL_DEBUG] Spin animation and process complete');
-            }, 8000);
-          })
-          .catch(err => {
-            // Handle errors
-            console.error('[WHEEL_DEBUG] Custom onSpin callback error:', err);
-            clearInterval(tickTimer.current!);
-            
-            toast({
-              title: "Spin Error",
-              description: err.message || "Something went wrong when spinning the wheel.",
-              variant: "destructive",
-            });
-            
-            setIsSpinning(false);
-          });
-      } else {
-        // Send request to /api/bonus-spin to get the actual segment index
-        console.log('[WHEEL_DEBUG] Using internal spinMutation');
-        spinMutation.mutate(dailyBonusId);
-      }
+      // Send request to /api/bonus-spin to get the actual segment index
+      spinMutation.mutate(dailyBonusId);
       
       // Start the wheel spin immediately with a temporary rotation
       // The final rotation will be set in the onSuccess handler based on server response

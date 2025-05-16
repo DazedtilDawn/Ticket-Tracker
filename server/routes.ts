@@ -8,7 +8,6 @@ import path from "path";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import { eq } from "drizzle-orm";
-import { z } from "zod";
 import {
   loginSchema,
   insertUserSchema,
@@ -24,15 +23,12 @@ import {
   spinWheelSchema,
   insertDailyBonusSchema,
   dailyBonus,
-  bonusSpinSchema,
-  magicLinkRequestSchema,
-  magicLinkConsumeSchema
+  bonusSpinSchema
 } from "@shared/schema";
 import { createJwt, verifyJwt, AuthMiddleware } from "./lib/auth";
 import { DailyBonusAssignmentMiddleware } from "./lib/daily-bonus-middleware";
 import { scrapeAmazon, extractAsin } from "./lib/amazon-api";
 import { calculateTier, calculateProgressPercent, calculateBoostPercent } from "./lib/business-logic";
-import { requestLogin, consumeLogin } from "./services/authService";
 import { WebSocketServer, WebSocket } from "ws";
 import { cleanupOrphanedProducts } from "./cleanup";
 import { upload, getFileUrl } from "./lib/upload";
@@ -95,10 +91,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 // Create a real transaction (small reward for testing)
                 const testAmount = 5; // 5 tickets as a test reward
                 const transaction = await storage.createTransaction({
-                  source: 'parent_adjustment', // Use an enum value from txnSourceEnum
-                  delta: testAmount, // Use delta instead of delta_tickets
-                  reason: 'WebSocket test reward (connection test)',
-                  userId: 1 // Parent user ID
+                  type: 'reward',
+                  delta_tickets: testAmount, // Must use delta_tickets, not amount
+                  note: 'WebSocket test reward (connection test)',
+                  user_id: 1 // Parent user ID
                 });
                 
                 console.log("Created real test transaction:", transaction.id);
@@ -106,10 +102,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 // Broadcast the real transaction to all clients
                 broadcast('transaction:reward', {
                   id: transaction.id,
-                  source: 'parent_adjustment',
-                  delta: testAmount, 
-                  reason: 'WebSocket test reward (connection test)',
-                  userId: 1
+                  type: 'reward',
+                  delta_tickets: testAmount, 
+                  note: 'WebSocket test reward (connection test)',
+                  user_id: 1
                 });
               } catch (error) {
                 console.error("Failed to create test transaction:", error);
@@ -170,96 +166,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
   
   // Auth Routes
-  // Magic link request endpoint
-  app.post("/api/auth/request-login", async (req: Request, res: Response) => {
-    try {
-      const data = magicLinkRequestSchema.parse(req.body);
-      const result = await requestLogin(data.email, req.ip, req.headers["user-agent"] || "");
-      
-      // Include the magic link in development mode for testing
-      if (process.env.NODE_ENV === "development") {
-        // In development, return the magic link in the response for easy testing
-        return res.status(202).json({ success: true, devMagicLink: result.magicLink });
-      } else {
-        // In production, just return success status
-        return res.status(202).json({ success: true });
-      }
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid email format", errors: error.format() });
-      }
-      // Return 202 even on error to prevent user enumeration
-      console.error("Error requesting login link:", error);
-      return res.status(202).json({ success: true });
-    }
-  });
-  
-  // Magic link consumption endpoint
-  app.post("/api/auth/consume-login", async (req: Request, res: Response) => {
-    try {
-      const data = magicLinkConsumeSchema.parse(req.body);
-      const result = await consumeLogin(data.token, req.ip, req.headers["user-agent"] || "");
-      
-      // Handle daily bonus assignment for parent users on login
-      if (result.user.role === 'parent') {
-        try {
-          console.log(`Parent user ${result.user.id} (${result.user.username}) logged in via magic link, checking daily bonus assignments`);
-          
-          // Get today's date
-          const today = new Date().toISOString().split('T')[0];
-          
-          // Check if daily bonuses have already been assigned today
-          const childUsers = await storage.getUsersByRole('child');
-          let assignedCount = 0;
-          let needsAssignment = false;
-          
-          // Check each child to see if they already have a bonus for today
-          for (const child of childUsers) {
-            const existingBonus = await storage.getDailyBonus(today, child.id);
-            if (!existingBonus) {
-              needsAssignment = true;
-              break;
-            } else {
-              assignedCount++;
-            }
-          }
-          
-          // If any child needs assignment, get available chores for bonus assignment
-          if (needsAssignment) {
-            const availableChores = await storage.getAvailableChoresForBonus();
-            
-            if (availableChores && availableChores.length > 0) {
-              const pendingBonusData = {
-                needsAssignment,
-                availableChores,
-                childUsers,
-                assignedCount,
-                totalChildren: childUsers.length
-              };
-              
-              result.dailyBonusAssignments = pendingBonusData;
-            }
-          }
-        } catch (error) {
-          console.error("Error checking daily bonus assignments:", error);
-        }
-      }
-      
-      return res.json(result);
-    } catch (error) {
-      console.error("Error consuming login token:", error);
-      return res.status(401).json({ message: "Invalid or expired login link" });
-    }
-  });
-  
-  // Traditional login route (kept for backward compatibility)
   app.post("/api/auth/login", async (req: Request, res: Response) => {
     try {
       const credentials = loginSchema.parse(req.body);
       const user = await storage.getUserByUsername(credentials.username);
       
-      // Using passwordHash for authentication instead of password
-      if (!user || user.passwordHash !== credentials.password) {
+      if (!user || user.password !== credentials.password) {
         return res.status(401).json({ message: "Invalid username or password" });
       }
       
@@ -567,10 +479,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         product = await storage.createProduct({
           title: "LEGO Star Wars 25th Anniversary X-Wing Starfighter",
           asin,
-          imageUrl: "https://m.media-amazon.com/images/I/81ww66OBpQL._AC_SL1500_.jpg",
-          priceCents: 12999, // $129.99
-          priceLockedCents: 12999,
-          camelLastChecked: new Date(),
+          image_url: "https://m.media-amazon.com/images/I/81ww66OBpQL._AC_SL1500_.jpg",
+          price_cents: 12999, // $129.99
+          price_locked_cents: 12999,
+          camel_last_checked: new Date(),
         });
         
         return res.json(product);
@@ -604,9 +516,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Update the existing product with the new details
             const updatedProduct = await storage.updateProduct(existingProduct.id, {
               title: productData.title,
-              imageUrl: productData.imageUrl || existingProduct.imageUrl,
-              priceCents: productData.priceCents,
-              priceLockedCents: productData.priceCents,
+              image_url: productData.image_url || existingProduct.image_url,
+              price_cents: productData.price_cents,
+              price_locked_cents: productData.price_cents,
             });
             
             console.log("Updated existing product with new details:", updatedProduct);
@@ -895,25 +807,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // DEBUG: Log conditions for bonus triggering with more detail
       console.log(`[API_EARN] Daily bonus lookup for user ${user.id}, date ${today}:`, dailyBonus ? {
         id: dailyBonus.id,
-        assignedChoreId: dailyBonus.assignedChoreId,
-        isSpun: dailyBonus.isSpun,
-        triggerType: dailyBonus.triggerType,
-        userId: dailyBonus.userId,
-        bonusDate: dailyBonus.bonusDate
+        assigned_chore_id: dailyBonus.assigned_chore_id,
+        is_spun: dailyBonus.is_spun,
+        trigger_type: dailyBonus.trigger_type,
+        user_id: dailyBonus.user_id,
+        bonus_date: dailyBonus.bonus_date
       } : 'No daily bonus record found');
       
       console.log(`[API_EARN] Checking bonus conditions for chore_id=${chore_id}:`, {
         hasDailyBonus: !!dailyBonus,
-        assignedChoreId: dailyBonus?.assignedChoreId,
+        assignedChoreId: dailyBonus?.assigned_chore_id,
         completedChoreId: chore_id,
-        choreMatch: dailyBonus?.assignedChoreId === chore_id,
-        isSpun: dailyBonus?.isSpun,
-        notYetSpun: dailyBonus ? !dailyBonus.isSpun : false,
-        triggerTypeMatch: dailyBonus?.triggerType === 'chore_completion'
+        choreMatch: dailyBonus?.assigned_chore_id === chore_id,
+        isSpun: dailyBonus?.is_spun,
+        notYetSpun: dailyBonus ? !dailyBonus.is_spun : false,
+        triggerTypeMatch: dailyBonus?.trigger_type === 'chore_completion'
       });
       
       // Check if this is a bonus-triggering chore completion
-      if (dailyBonus && dailyBonus.assignedChoreId === chore_id && !dailyBonus.isSpun) {
+      if (dailyBonus && dailyBonus.assigned_chore_id === chore_id && !dailyBonus.is_spun) {
         console.log(`[API_EARN] 🎯 BONUS CHORE COMPLETED! User ${user.id} completed their assigned bonus chore ${chore_id}`);
         
         // Only mark as triggered if not already spun
@@ -983,11 +895,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const broadcastPayload = {
         data: {
           id: transaction.id,
-          delta: transaction.delta,
+          delta_tickets: transaction.delta_tickets,
           note: transaction.note,
-          userId: transaction.userId,
+          user_id: transaction.user_id,
           type: transaction.type,
-          choreId: transaction.choreId,
+          chore_id: transaction.chore_id,
           balance: balance, // Include updated balance for immediate UI updates
           bonus_triggered, // Flag to tell clients user is eligible for spin
           daily_bonus_id // ID needed for the spin
@@ -1042,11 +954,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ message: "Goal not found" });
         }
         
-        if (targetGoal.userId !== targetUserId) {
+        if (targetGoal.user_id !== targetUserId) {
           return res.status(403).json({ message: "Not authorized to spend from this goal" });
         }
         
-        ticketsToSpend = targetGoal.ticketsSaved;
+        ticketsToSpend = targetGoal.tickets_saved;
       } else {
         // Spend a specific number of tickets
         const ticketValue = typeof tickets === 'string' ? parseInt(tickets, 10) : tickets;
@@ -1321,11 +1233,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Returns bonus info only if the chore has been completed (for chore_completion trigger types)
   app.get("/api/daily-bonus/unspun", auth, async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.query.userId as string);
+      const userId = parseInt(req.query.user_id as string);
       
       if (!userId || isNaN(userId)) {
-        console.log("[UNSPUN_BONUS] Missing or invalid userId:", req.query.userId);
-        return res.status(400).json({ message: "Missing or invalid userId parameter" });
+        console.log("[UNSPUN_BONUS] Missing or invalid user_id:", req.query.user_id);
+        return res.status(400).json({ message: "Missing or invalid user_id parameter" });
       }
       
       console.log("[UNSPUN_BONUS] Checking for unspun bonus for user:", userId);
@@ -1341,13 +1253,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "No daily bonus found for this user and date" });
       }
       
-      if (dailyBonus.isSpun) {
+      if (dailyBonus.is_spun) {
         console.log("[UNSPUN_BONUS] Daily bonus already spun for user", userId, "on date", today);
         return res.status(404).json({ message: "Daily bonus has already been spun" });
       }
       
       // For chore completion bonuses, check if the chore has actually been completed
-      if (dailyBonus.triggerType === 'chore_completion' && dailyBonus.assignedChoreId) {
+      if (dailyBonus.trigger_type === 'chore_completion' && dailyBonus.assigned_chore_id) {
         // Get today's transactions to see if the assigned chore was completed
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -1357,16 +1269,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Find which chores were completed today
         for (const tx of recentTransactions) {
-          if (tx.type === 'earn' && tx.choreId && tx.createdAt && tx.createdAt >= today) {
-            completedChoreIds.add(tx.choreId);
+          if (tx.type === 'earn' && tx.chore_id && tx.date && tx.date >= today) {
+            completedChoreIds.add(tx.chore_id);
           }
         }
         
-        console.log("[UNSPUN_BONUS] Checking if chore was completed - Assigned chore:", dailyBonus.assignedChoreId);
+        console.log("[UNSPUN_BONUS] Checking if chore was completed - Assigned chore:", dailyBonus.assigned_chore_id);
         console.log("[UNSPUN_BONUS] Completed chores today:", Array.from(completedChoreIds));
         
         // If the assigned chore wasn't completed, don't show the bonus yet
-        if (!completedChoreIds.has(dailyBonus.assignedChoreId)) {
+        if (!completedChoreIds.has(dailyBonus.assigned_chore_id)) {
           console.log("[UNSPUN_BONUS] Assigned chore has not been completed yet");
           return res.status(404).json({ 
             message: "Daily bonus chore has not been completed yet" 
@@ -1375,18 +1287,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // If we have an unspun bonus and prerequisites are met, get more details
-      let bonusDetails: any = { dailyBonusId: dailyBonus.id };
+      let bonusDetails: any = { daily_bonus_id: dailyBonus.id };
       
-      if (dailyBonus.triggerType === 'chore_completion' && dailyBonus.assignedChoreId) {
+      if (dailyBonus.trigger_type === 'chore_completion' && dailyBonus.assigned_chore_id) {
         // For chore-triggered bonuses, include chore details
-        const chore = await storage.getChore(dailyBonus.assignedChoreId);
+        const chore = await storage.getChore(dailyBonus.assigned_chore_id);
         if (chore) {
-          bonusDetails.choreName = chore.name;
-          bonusDetails.choreId = chore.id;
+          bonusDetails.chore_name = chore.name;
+          bonusDetails.chore_id = chore.id;
         }
       } else {
         // For good behavior bonuses, use a generic name
-        bonusDetails.choreName = "Good Behavior";
+        bonusDetails.chore_name = "Good Behavior";
       }
       
       console.log("[UNSPUN_BONUS] Found unspun bonus:", bonusDetails);
@@ -1750,28 +1662,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`[BONUS_SPIN] Validated request data:`, data);
       
       // Step 1: Get the daily bonus record
-      const dailyBonusRecord = await storage.getDailyBonusById(data.dailyBonusId);
+      const dailyBonusRecord = await storage.getDailyBonusById(data.daily_bonus_id);
       
       console.log(`[BONUS_SPIN] Daily bonus record lookup:`, dailyBonusRecord ? {
         id: dailyBonusRecord.id,
-        userId: dailyBonusRecord.userId,
-        assignedChoreId: dailyBonusRecord.assignedChoreId,
-        isSpun: dailyBonusRecord.isSpun,
-        triggerType: dailyBonusRecord.triggerType,
-        bonusDate: dailyBonusRecord.bonusDate
+        user_id: dailyBonusRecord.user_id,
+        assigned_chore_id: dailyBonusRecord.assigned_chore_id,
+        is_spun: dailyBonusRecord.is_spun,
+        trigger_type: dailyBonusRecord.trigger_type,
+        bonus_date: dailyBonusRecord.bonus_date
       } : 'Record not found');
       
       if (!dailyBonusRecord) {
-        console.log(`[BONUS_SPIN] ERROR: Daily bonus record ${data.dailyBonusId} not found`);
+        console.log(`[BONUS_SPIN] ERROR: Daily bonus record ${data.daily_bonus_id} not found`);
         return res.status(404).json({ message: "Daily bonus record not found" });
       }
       
       // Step 2: Verify the requesting user is either the bonus owner or a parent
       const requestingUser = req.user;
-      console.log(`[BONUS_SPIN] Authorizing request from user ${requestingUser.id} (${requestingUser.role}) for bonus belonging to user ${dailyBonusRecord.userId}`);
+      console.log(`[BONUS_SPIN] Authorizing request from user ${requestingUser.id} (${requestingUser.role}) for bonus belonging to user ${dailyBonusRecord.user_id}`);
       
       if (
-        requestingUser.id !== dailyBonusRecord.userId && 
+        requestingUser.id !== dailyBonusRecord.user_id && 
         requestingUser.role !== "parent"
       ) {
         console.log(`[BONUS_SPIN] ERROR: Authorization failed - requester is not owner or parent`);
@@ -1781,7 +1693,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Step 3: Check if the bonus has already been spun
-      if (dailyBonusRecord.isSpun) {
+      if (dailyBonusRecord.is_spun) {
         console.log(`[BONUS_SPIN] ERROR: Bonus ${dailyBonusRecord.id} has already been spun`);
         return res.status(400).json({ 
           message: "This bonus wheel has already been spun",
@@ -1791,19 +1703,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Step 4: Get the associated chore information if this is a chore completion bonus
       let chore = null;
-      if (dailyBonusRecord.assignedChoreId) {
-        console.log(`[BONUS_SPIN] Looking up associated chore ${dailyBonusRecord.assignedChoreId}`);
-        chore = await storage.getChore(dailyBonusRecord.assignedChoreId);
+      if (dailyBonusRecord.assigned_chore_id) {
+        console.log(`[BONUS_SPIN] Looking up associated chore ${dailyBonusRecord.assigned_chore_id}`);
+        chore = await storage.getChore(dailyBonusRecord.assigned_chore_id);
         
         console.log(`[BONUS_SPIN] Associated chore lookup result:`, chore ? {
           id: chore.id,
           name: chore.name,
-          baseTickets: chore.baseTickets,
+          tickets: chore.tickets,
           recurrence: chore.recurrence
         } : 'Chore not found');
         
         if (!chore) {
-          console.log(`[BONUS_SPIN] ERROR: Associated chore ${dailyBonusRecord.assignedChoreId} not found`);
+          console.log(`[BONUS_SPIN] ERROR: Associated chore ${dailyBonusRecord.assigned_chore_id} not found`);
           return res.status(404).json({ message: "Associated chore not found" });
         }
       }
@@ -1894,18 +1806,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         respin,
         bonusTickets,
         segmentLabel,
-        triggerType: respin ? 'respin' : dailyBonusRecord.triggerType,
-        isSpun: !respin
+        trigger_type: respin ? 'respin' : dailyBonusRecord.trigger_type,
+        is_spun: !respin
       });
       
       let updatedBonus;
       
       if (respin) {
-        // For "Spin Again", update triggerType but don't mark as spun yet
+        // For "Spin Again", update trigger_type but don't mark as spun yet
         const result = await db
           .update(dailyBonus)
           .set({
-            triggerType: 'respin'
+            trigger_type: 'respin'
           })
           .where(eq(dailyBonus.id, dailyBonusRecord.id))
           .returning();
@@ -1917,8 +1829,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const result = await db
           .update(dailyBonus)
           .set({
-            isSpun: true,
-            spinResultTickets: bonusTickets
+            is_spun: true,
+            spin_result_tickets: bonusTickets
           })
           .where(eq(dailyBonus.id, dailyBonusRecord.id))
           .returning();
@@ -1929,19 +1841,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Step 8: Create a transaction for the bonus tickets (only if positive tickets and not respin)
       if (bonusTickets > 0) {
-        const child = await storage.getUser(dailyBonusRecord.userId);
+        const child = await storage.getUser(dailyBonusRecord.user_id);
         
         if (!child) {
           return res.status(404).json({ message: "Child user not found" });
         }
         
         const transaction = await storage.createTransaction({
-          userId: child.id,
-          deltaTickets: bonusTickets,
+          user_id: child.id,
+          delta_tickets: bonusTickets,
           type: "earn",
           note: `Bonus Wheel: ${segmentLabel}`,
           source: "bonus_spin",
-          refId: dailyBonusRecord.id
+          ref_id: dailyBonusRecord.id
         });
         
         // Step 9: Get updated user balance
@@ -1951,12 +1863,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         broadcast("transaction:earn", {
           data: {
             id: transaction.id,
-            deltaTickets: transaction.deltaTickets,
+            delta_tickets: transaction.delta_tickets,
             note: transaction.note,
-            userId: transaction.userId,
+            user_id: transaction.user_id,
             type: transaction.type,
             source: transaction.source,
-            refId: transaction.refId,
+            ref_id: transaction.ref_id,
             balance: balance
           }
         });
@@ -1964,22 +1876,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Step 11: Broadcast the spin result
       broadcast("bonus_spin:result", {
-        dailyBonusId: dailyBonusRecord.id,
-        userId: dailyBonusRecord.userId,
-        segmentIndex: selectedIndex,
-        ticketsAwarded: bonusTickets,
-        segmentLabel: segmentLabel,
-        respinAllowed: respin
+        daily_bonus_id: dailyBonusRecord.id,
+        user_id: dailyBonusRecord.user_id,
+        segment_index: selectedIndex,
+        tickets_awarded: bonusTickets,
+        segment_label: segmentLabel,
+        respin_allowed: respin
       });
       
       // Step 12: Return success response
       return res.status(200).json({
         success: true,
-        dailyBonus: updatedBonus,
-        segmentIndex: selectedIndex,
-        segmentLabel: segmentLabel,
-        ticketsAwarded: bonusTickets,
-        respinAllowed: respin,
+        daily_bonus: updatedBonus,
+        segment_index: selectedIndex,
+        segment_label: segmentLabel,
+        tickets_awarded: bonusTickets,
+        respin_allowed: respin,
         chore: chore
       });
     } catch (error: any) {
@@ -2256,31 +2168,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     // Get the assigned bonus chore if there is one
     let assignedBonusChore = null;
-    if (dailyBonus && dailyBonus.assignedChoreId) {
-      assignedBonusChore = chores.find(c => c.id === dailyBonus.assignedChoreId) || null;
+    if (dailyBonus && dailyBonus.assigned_chore_id) {
+      assignedBonusChore = chores.find(c => c.id === dailyBonus.assigned_chore_id) || null;
     }
     
     // Add completion status and bonus info to chores
     const choresWithStatus = chores.map(chore => ({
       ...chore,
       completed: completedChoreIds.has(chore.id),
-      boostPercent: activeGoal ? calculateBoostPercent(chore.baseTickets, activeGoal.product.priceLockedCents) : 0,
+      boostPercent: activeGoal ? calculateBoostPercent(chore.tickets, activeGoal.product.price_locked_cents) : 0,
       // Add bonus information if this chore is the assigned bonus chore for today
-      isBonus: dailyBonus ? dailyBonus.assignedChoreId === chore.id : false,
+      is_bonus: dailyBonus ? dailyBonus.assigned_chore_id === chore.id : false,
       // If the chore is the bonus chore and has been completed (but wheel not spun), it's eligible for spin
-      spinEligible: dailyBonus && 
-                    dailyBonus.assignedChoreId === chore.id && 
+      spin_eligible: dailyBonus && 
+                    dailyBonus.assigned_chore_id === chore.id && 
                     completedChoreIds.has(chore.id) && 
-                    !dailyBonus.isSpun
+                    !dailyBonus.is_spun
     }));
     
     // Check if the user is eligible for a bonus spin
     const isBonusSpinAvailable = !!dailyBonus && 
-                               ((dailyBonus.triggerType === 'chore_completion' && 
-                                 dailyBonus.assignedChoreId !== null && 
-                                 completedChoreIds.has(dailyBonus.assignedChoreId)) || 
-                                dailyBonus.triggerType === 'good_behavior_reward') && 
-                               !dailyBonus.isSpun;
+                               ((dailyBonus.trigger_type === 'chore_completion' && 
+                                 dailyBonus.assigned_chore_id !== null && 
+                                 completedChoreIds.has(dailyBonus.assigned_chore_id)) || 
+                                dailyBonus.trigger_type === 'good_behavior_reward') && 
+                               !dailyBonus.is_spun;
     
     return res.json({
       balance,
@@ -2291,21 +2203,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } : null,
       chores: choresWithStatus,
       // Enhanced daily bonus information
-      dailyBonus: {
-        hasBonusAssignment: !!dailyBonus,
-        isBonusSpinAvailable: isBonusSpinAvailable,
-        dailyBonusId: dailyBonus?.id || null,
-        assignedBonusChoreId: dailyBonus?.assignedChoreId || null,
-        assignedBonusChore: assignedBonusChore ? {
+      daily_bonus: {
+        has_bonus_assignment: !!dailyBonus,
+        is_bonus_spin_available: isBonusSpinAvailable,
+        daily_bonus_id: dailyBonus?.id || null,
+        assigned_bonus_chore_id: dailyBonus?.assigned_chore_id || null,
+        assigned_bonus_chore: assignedBonusChore ? {
           id: assignedBonusChore.id,
           name: assignedBonusChore.name,
           emoji: assignedBonusChore.emoji,
-          baseTickets: assignedBonusChore.baseTickets,
+          tickets: assignedBonusChore.tickets,
           completed: completedChoreIds.has(assignedBonusChore.id)
         } : null,
-        isSpun: dailyBonus?.isSpun || false,
-        spinResultTickets: dailyBonus?.spinResultTickets || 0,
-        triggerType: dailyBonus?.triggerType || null
+        is_spun: dailyBonus?.is_spun || false,
+        spin_result_tickets: dailyBonus?.spin_result_tickets || 0,
+        trigger_type: dailyBonus?.trigger_type || null
       }
     });
   });

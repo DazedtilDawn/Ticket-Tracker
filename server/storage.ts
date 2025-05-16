@@ -79,57 +79,52 @@ export class DatabaseStorage implements IStorage {
     
     console.log(`[GET_BONUS] Looking for daily bonus with date=${today}${userId ? ` and userId=${userId}` : ''}`);
     
-    try {
-      let bonus: DailyBonus | undefined;
-      
-      if (userId) {
-        // Get bonus for specific user
-        const result = await db
-          .select()
-          .from(dailyBonus)
-          .where(
-            and(
-              eq(dailyBonus.bonusDate, today),
-              eq(dailyBonus.userId, userId)
-            )
-          );
-          
-        if (result.length > 0) {
-          bonus = result[0];
-          console.log(`[GET_BONUS] Found daily bonus for user ${userId} on ${today}:`, {
-            id: bonus.id,
-            assignedChoreId: bonus.assignedChoreId,
-            isSpun: bonus.isSpun, // Critical field we're debugging
-            triggerType: bonus.triggerType
-          });
-        } else {
-          console.log(`[GET_BONUS] No daily bonus found for user ${userId} on date ${today}`);
-        }
-      } else {
-        // Get any bonus for the date (for backward compatibility)
-        const result = await db
-          .select()
-          .from(dailyBonus)
-          .where(eq(dailyBonus.bonusDate, today));
+    let bonus: DailyBonus | undefined;
+    
+    if (userId) {
+      // Get bonus for specific user
+      const result = await db
+        .select()
+        .from(dailyBonus)
+        .where(
+          and(
+            eq(dailyBonus.bonus_date, today),
+            eq(dailyBonus.user_id, userId)
+          )
+        );
         
-        if (result.length > 0) {
-          bonus = result[0];
-          console.log(`[GET_BONUS] Found daily bonus for date ${today} (no user specified):`, {
-            id: bonus.id,
-            userId: bonus.userId,
-            isSpun: bonus.isSpun, // Critical field we're debugging
-            triggerType: bonus.triggerType
-          });
-        } else {
-          console.log(`[GET_BONUS] No daily bonus found for date ${today} (no user specified)`);
-        }
+      if (result.length > 0) {
+        bonus = result[0];
+        console.log(`[GET_BONUS] Found daily bonus for user ${userId} on ${today}:`, {
+          id: bonus.id,
+          assigned_chore_id: bonus.assigned_chore_id,
+          is_spun: bonus.is_spun, // Critical field we're debugging
+          trigger_type: bonus.trigger_type
+        });
+      } else {
+        console.log(`[GET_BONUS] No daily bonus found for user ${userId} on date ${today}`);
       }
+    } else {
+      // Get any bonus for the date (for backward compatibility)
+      const result = await db
+        .select()
+        .from(dailyBonus)
+        .where(eq(dailyBonus.bonus_date, today));
       
-      return bonus;
-    } catch (error) {
-      console.error('[GET_BONUS] Error retrieving daily bonus:', error);
-      throw error;
+      if (result.length > 0) {
+        bonus = result[0];
+        console.log(`[GET_BONUS] Found daily bonus for date ${today} (no user specified):`, {
+          id: bonus.id,
+          user_id: bonus.user_id,
+          is_spun: bonus.is_spun, // Critical field we're debugging
+          trigger_type: bonus.trigger_type
+        });
+      } else {
+        console.log(`[GET_BONUS] No daily bonus found for date ${today} (no user specified)`);
+      }
     }
+    
+    return bonus;
   }
   
   async getDailyBonusById(id: number): Promise<DailyBonus | undefined> {
@@ -143,29 +138,24 @@ export class DatabaseStorage implements IStorage {
   
   async createDailyBonus(bonus: InsertDailyBonus): Promise<DailyBonus> {
     console.log(`[CREATE_BONUS] Creating new daily bonus with params:`, {
-      bonusDate: bonus.bonusDate,
-      userId: bonus.userId,
-      assignedChoreId: bonus.assignedChoreId,
-      isOverride: bonus.isOverride,
-      isSpun: bonus.isSpun, // Critical field we're debugging
-      triggerType: bonus.triggerType
+      bonus_date: bonus.bonus_date,
+      user_id: bonus.user_id,
+      assigned_chore_id: bonus.assigned_chore_id,
+      is_override: bonus.is_override,
+      is_spun: bonus.is_spun, // Critical field we're debugging
+      trigger_type: bonus.trigger_type
     });
     
-    try {
-      const [newBonus] = await db
-        .insert(dailyBonus)
-        .values(bonus)
-        .returning();
-      
-      console.log(`[CREATE_BONUS] Successfully created daily bonus with ID ${newBonus.id}:`, {
-        isSpun: newBonus.isSpun // Confirm the value after creation
+    const [newBonus] = await db
+      .insert(dailyBonus)
+      .values(bonus)
+      .returning();
+    
+    console.log(`[CREATE_BONUS] Successfully created daily bonus with ID ${newBonus.id}:`, {
+      is_spun: newBonus.is_spun // Confirm the value after creation
     });
     
-      return newBonus;
-    } catch (error) {
-      console.error('[CREATE_BONUS] Error creating daily bonus:', error);
-      throw error;
-    }
+    return newBonus;
   }
   
   async deleteDailyBonus(userId: number, date?: string): Promise<boolean> {
@@ -173,266 +163,249 @@ export class DatabaseStorage implements IStorage {
     
     console.log(`[DELETE_BONUS] Deleting daily bonus for user ${userId} on date ${today}`);
     
-    try {
-      // First get the current bonus for logging purposes
-      const currentBonus = await this.getDailyBonus(today, userId);
-      if (currentBonus) {
-        console.log(`[DELETE_BONUS] Found daily bonus to delete:`, {
-          id: currentBonus.id,
-          assignedChoreId: currentBonus.assignedChoreId,
-          isSpun: currentBonus.isSpun,
-          triggerType: currentBonus.triggerType
-        });
-      } else {
-        console.log(`[DELETE_BONUS] No existing daily bonus found for user ${userId} on date ${today}`);
-      }
-      
-      // Delete the existing record
-      const result = await db
-        .delete(dailyBonus)
-        .where(
-          and(
-            eq(dailyBonus.userId, userId),
-            eq(dailyBonus.bonusDate, today)
-          )
-        );
-      
-      console.log(`[DELETE_BONUS] Daily bonus deletion complete for user ${userId}`);
-      return true;
-    } catch (error) {
-      console.error('[DELETE_BONUS] Error deleting daily bonus:', error);
-      return false;
+    // First get the current bonus for logging purposes
+    const currentBonus = await this.getDailyBonus(today, userId);
+    if (currentBonus) {
+      console.log(`[DELETE_BONUS] Found daily bonus to delete:`, {
+        id: currentBonus.id,
+        assigned_chore_id: currentBonus.assigned_chore_id,
+        is_spun: currentBonus.is_spun,
+        trigger_type: currentBonus.trigger_type
+      });
+    } else {
+      console.log(`[DELETE_BONUS] No existing daily bonus found for user ${userId} on date ${today}`);
     }
+    
+    // Delete the existing record
+    const result = await db
+      .delete(dailyBonus)
+      .where(
+        and(
+          eq(dailyBonus.user_id, userId),
+          eq(dailyBonus.bonus_date, today)
+        )
+      );
+    
+    console.log(`[DELETE_BONUS] Daily bonus deletion complete for user ${userId}`);
+    
+    return true; // Operation completed successfully
   }
   
   async assignDailyBonusChore(childId: number, date: string): Promise<DailyBonus | null> {
     console.log(`[BONUS_ASSIGN] Starting bonus assignment for child ${childId} on date ${date}`);
     
-    try {
-      // Check if a bonus already exists for this child and date
-      const existingBonus = await this.getDailyBonus(date, childId);
-      if (existingBonus) {
-        console.log(`[BONUS_ASSIGN] Daily bonus for user ${childId} on ${date} already exists:`, {
-          id: existingBonus.id,
-          assignedChoreId: existingBonus.assignedChoreId,
-          isSpun: existingBonus.isSpun,
-          triggerType: existingBonus.triggerType
-        });
+    // Check if a bonus already exists for this child and date
+    const existingBonus = await this.getDailyBonus(date, childId);
+    if (existingBonus) {
+      console.log(`[BONUS_ASSIGN] Daily bonus for user ${childId} on ${date} already exists:`, {
+        id: existingBonus.id,
+        assigned_chore_id: existingBonus.assigned_chore_id,
+        is_spun: existingBonus.is_spun,
+        trigger_type: existingBonus.trigger_type
+      });
+      
+      // BUGFIX: If we found a bonus with is_spun incorrectly set to true, fix it here
+      if (existingBonus.is_spun) {
+        console.log(`[BONUS_ASSIGN] IMPORTANT: Existing bonus for user ${childId} is marked as already spun.`);
+        console.log(`[BONUS_ASSIGN] DEBUG FIX: Resetting is_spun to false to allow wheel to trigger.`);
         
-        // BUGFIX: If we found a bonus with isSpun incorrectly set to true, fix it here
-        if (existingBonus.isSpun) {
-          console.log(`[BONUS_ASSIGN] IMPORTANT: Existing bonus for user ${childId} is marked as already spun.`);
-          console.log(`[BONUS_ASSIGN] DEBUG FIX: Resetting isSpun to false to allow wheel to trigger.`);
-          
-          try {
-            // Fix the isSpun flag so the wheel can be triggered
-            await db
-              .update(dailyBonus)
-              .set({ isSpun: false })
-              .where(eq(dailyBonus.id, existingBonus.id));
-              
-            console.log(`[BONUS_ASSIGN] Successfully reset isSpun flag to false for bonus ${existingBonus.id}`);
+        try {
+          // Fix the is_spun flag so the wheel can be triggered
+          await db
+            .update(dailyBonus)
+            .set({ is_spun: false })
+            .where(eq(dailyBonus.id, existingBonus.id));
             
-            // Re-fetch the updated bonus
-            const updatedBonus = await this.getDailyBonusById(existingBonus.id);
-            if (updatedBonus) {
-              console.log(`[BONUS_ASSIGN] Updated bonus state:`, {
-                id: updatedBonus.id,
-                isSpun: updatedBonus.isSpun
-              });
-              return updatedBonus;
-            }
-          } catch (err) {
-            console.error(`[BONUS_ASSIGN] Error resetting isSpun flag:`, err);
+          console.log(`[BONUS_ASSIGN] Successfully reset is_spun flag to false for bonus ${existingBonus.id}`);
+          
+          // Re-fetch the updated bonus
+          const updatedBonus = await this.getDailyBonusById(existingBonus.id);
+          if (updatedBonus) {
+            console.log(`[BONUS_ASSIGN] Updated bonus state:`, {
+              id: updatedBonus.id,
+              is_spun: updatedBonus.is_spun
+            });
+            return updatedBonus;
           }
+        } catch (err) {
+          console.error(`[BONUS_ASSIGN] Error resetting is_spun flag:`, err);
         }
-        
-        return existingBonus;
       }
       
-      // Get all active chores
-      const activeChores = await this.getChores(true);
-      console.log(`[BONUS_ASSIGN] Found ${activeChores.length} active chores to choose from for user ${childId}`);
-      
-      if (activeChores.length === 0) {
-        console.log(`[BONUS_ASSIGN] No active chores found for assigning daily bonus`);
-        return null;
-      }
+      return existingBonus;
+    }
     
-      // Filter out chores that were assigned as bonus within the last day
-      const oneDayAgo = new Date(date);
-      oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-      const oneDayAgoStr = oneDayAgo.toISOString().split('T')[0];
-      
-      // BUGFIX: Check if we need to bypass the cooldown for debugging
-      const bypassCooldown = process.env.NODE_ENV === 'development';
-      console.log(`[BONUS_ASSIGN] Debug environment detected: ${bypassCooldown ? 'Bypassing cooldown checks' : 'Using normal cooldown rules'}`);
-      
-      // Filter for DAILY chores that aren't on cooldown
-      const eligibleChores = activeChores.filter(chore => {
-        // Only select daily chores for bonuses
-        const isDaily = chore.recurrence === 'daily';
-        
-        // Check cooldown: If lastBonusAssigned is null or before the cooldown period, it's eligible
-        // In development mode, bypass the cooldown check to allow testing
-        const offCooldown = bypassCooldown || !chore.lastBonusAssigned || chore.lastBonusAssigned < oneDayAgoStr;
-        
-        const eligible = isDaily && offCooldown;
-        
-        // Log detailed eligibility info for each chore
-        console.log(`[BONUS_ASSIGN] Chore ${chore.id} (${chore.name}) eligibility:`, {
-          isDaily,
-          recurrence: chore.recurrence,
-          lastBonusAssigned: chore.lastBonusAssigned || 'never',
-          offCooldown,
-          eligible
-        });
-        
-        return eligible;
-      });
-      
-      if (eligibleChores.length === 0) {
-        console.log(`[BONUS_ASSIGN] No eligible daily chores found for assigning daily bonus (all on cooldown or not daily)`);
-        return null;
-      }
-      
-      console.log(`[BONUS_ASSIGN] Found ${eligibleChores.length} eligible daily chores for bonus assignment`);
-      
-      // Randomly select one eligible chore
-      const selectedChore = eligibleChores[Math.floor(Math.random() * eligibleChores.length)];
-      console.log(`Selected chore ${selectedChore.id} (${selectedChore.name}) for daily bonus`);
-      
-      // Create a new daily bonus record
-      const newBonus: InsertDailyBonus = {
-        bonusDate: date,
-        userId: childId,
-        assignedChoreId: selectedChore.id,
-        isOverride: false,
-        isSpun: false,
-        triggerType: 'chore_completion',
-        spinResultTickets: 0  // Default to 0 tickets until wheel is spun
-      };
-      
-      const createdBonus = await this.createDailyBonus(newBonus);
-      
-      // Update the selected chore's lastBonusAssigned date
-      await this.updateChore(selectedChore.id, {
-        lastBonusAssigned: date
-      });
-      
-      console.log(`Daily bonus created successfully for user ${childId}, chore ${selectedChore.id} on ${date}`);
-      return createdBonus;
-    } catch (error) {
-      console.error(`[BONUS_ASSIGN] Error assigning daily bonus to child ${childId}:`, error);
+    // Get all active chores
+    const activeChores = await this.getChores(true);
+    console.log(`[BONUS_ASSIGN] Found ${activeChores.length} active chores to choose from for user ${childId}`);
+    
+    if (activeChores.length === 0) {
+      console.log(`[BONUS_ASSIGN] No active chores found for assigning daily bonus`);
       return null;
     }
+    
+    // Filter out chores that were assigned as bonus within the last day
+    const oneDayAgo = new Date(date);
+    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+    const oneDayAgoStr = oneDayAgo.toISOString().split('T')[0];
+    
+    // BUGFIX: Check if we need to bypass the cooldown for debugging
+    const bypassCooldown = process.env.NODE_ENV === 'development';
+    console.log(`[BONUS_ASSIGN] Debug environment detected: ${bypassCooldown ? 'Bypassing cooldown checks' : 'Using normal cooldown rules'}`);
+    
+    // Filter for DAILY chores that aren't on cooldown
+    const eligibleChores = activeChores.filter(chore => {
+      // Only select daily chores for bonuses
+      const isDaily = chore.recurrence === 'daily';
+      
+      // Check cooldown: If last_bonus_assigned is null or before the cooldown period, it's eligible
+      // In development mode, bypass the cooldown check to allow testing
+      const offCooldown = bypassCooldown || !chore.last_bonus_assigned || chore.last_bonus_assigned < oneDayAgoStr;
+      
+      const eligible = isDaily && offCooldown;
+      
+      // Log detailed eligibility info for each chore
+      console.log(`[BONUS_ASSIGN] Chore ${chore.id} (${chore.name}) eligibility:`, {
+        isDaily,
+        recurrence: chore.recurrence,
+        last_bonus_assigned: chore.last_bonus_assigned || 'never',
+        offCooldown,
+        eligible
+      });
+      
+      return eligible;
+    });
+    
+    if (eligibleChores.length === 0) {
+      console.log(`[BONUS_ASSIGN] No eligible daily chores found for assigning daily bonus (all on cooldown or not daily)`);
+      return null;
+    }
+    
+    console.log(`[BONUS_ASSIGN] Found ${eligibleChores.length} eligible daily chores for bonus assignment`);
+    
+    // Randomly select one eligible chore
+    const selectedChore = eligibleChores[Math.floor(Math.random() * eligibleChores.length)];
+    console.log(`Selected chore ${selectedChore.id} (${selectedChore.name}) for daily bonus`);
+    
+    // Create a new daily bonus record
+    const newBonus: InsertDailyBonus = {
+      bonus_date: date,
+      user_id: childId,
+      assigned_chore_id: selectedChore.id,
+      is_override: false,
+      is_spun: false,
+      trigger_type: 'chore_completion',
+      spin_result_tickets: 0  // Default to 0 tickets until wheel is spun
+    };
+    
+    const createdBonus = await this.createDailyBonus(newBonus);
+    
+    // Update the selected chore's last_bonus_assigned date
+    await this.updateChore(selectedChore.id, {
+      last_bonus_assigned: date
+    });
+    
+    console.log(`Daily bonus created successfully for user ${childId}, chore ${selectedChore.id} on ${date}`);
+    return createdBonus;
   }
 
   async assignDailyBonusesToAllChildren(date?: string): Promise<Record<number, DailyBonus | null>> {
     const today = date || new Date().toISOString().split('T')[0];
     console.log(`Assigning daily bonuses to all children for date ${today}`);
     
-    try {
-      // Get all child users
-      const childUsers = await this.getUsersByRole('child');
-      if (childUsers.length === 0) {
-        console.log('No child users found to assign daily bonuses');
-        return {};
-      }
-      
-      // Assign bonus chores to each child
-      const results: Record<number, DailyBonus | null> = {};
-      
-      for (const child of childUsers) {
-        // Assign a bonus to this child
-        console.log(`Assigning daily bonus for child ${child.id} (${child.name})`);
-        try {
-          const bonus = await this.assignDailyBonusChore(child.id, today);
-          results[child.id] = bonus;
-        } catch (error) {
-          console.error(`Error assigning daily bonus to child ${child.id} (${child.name}):`, error);
-          results[child.id] = null;
-        }
-      }
-      
-      console.log(`Daily bonus assignment complete for ${childUsers.length} children`);
-      return results;
-    } catch (error) {
-      console.error(`Error in assignDailyBonusesToAllChildren:`, error);
+    // Get all child users
+    const childUsers = await this.getUsersByRole('child');
+    if (childUsers.length === 0) {
+      console.log('No child users found to assign daily bonuses');
       return {};
     }
+    
+    // Assign bonus chores to each child
+    const results: Record<number, DailyBonus | null> = {};
+    
+    for (const child of childUsers) {
+      // Assign a bonus to this child
+      console.log(`Assigning daily bonus for child ${child.id} (${child.name})`);
+      try {
+        const bonus = await this.assignDailyBonusChore(child.id, today);
+        results[child.id] = bonus;
+      } catch (error) {
+        console.error(`Error assigning daily bonus to child ${child.id} (${child.name}):`, error);
+        results[child.id] = null;
+      }
+    }
+    
+    console.log(`Daily bonus assignment complete for ${childUsers.length} children`);
+    return results;
   }
   
-  async getChoreWithBonus(choreId: number, date?: string, userId?: number): Promise<(Chore & { bonusTickets: number }) | undefined> {
+  async getChoreWithBonus(choreId: number, date?: string, userId?: number): Promise<(Chore & { bonus_tickets: number }) | undefined> {
     const today = date || new Date().toISOString().split('T')[0];
     
-    try {
-      let query = db
+    let query = db
+      .select({
+        id: chores.id,
+        name: chores.name,
+        description: chores.description,
+        tickets: chores.tickets,
+        recurrence: chores.recurrence,
+        tier: chores.tier,
+        image_url: chores.image_url,
+        is_active: chores.is_active,
+        emoji: chores.emoji,
+        last_bonus_assigned: chores.last_bonus_assigned,
+        bonus_tickets: dailyBonus.spin_result_tickets
+      })
+      .from(chores)
+      .innerJoin(
+        dailyBonus,
+        and(
+          eq(dailyBonus.assigned_chore_id, chores.id),
+          eq(dailyBonus.bonus_date, today)
+        )
+      )
+      .where(eq(chores.id, choreId));
+    
+    // If a specific user is requested, filter bonus chores for that user
+    const baseConditions = eq(chores.id, choreId);
+    if (userId) {
+      query = db
         .select({
           id: chores.id,
           name: chores.name,
           description: chores.description,
-          baseTickets: chores.baseTickets,
+          tickets: chores.tickets,
           recurrence: chores.recurrence,
+          tier: chores.tier,
+          image_url: chores.image_url,
+          is_active: chores.is_active,
           emoji: chores.emoji,
-          isActive: chores.isActive,
-          lastBonusAssigned: chores.lastBonusAssigned,
-          createdByUserId: chores.createdByUserId,
-          bonusTickets: dailyBonus.spinResultTickets
+          last_bonus_assigned: chores.last_bonus_assigned,
+          bonus_tickets: dailyBonus.spin_result_tickets
         })
         .from(chores)
         .innerJoin(
           dailyBonus,
           and(
-            eq(dailyBonus.assignedChoreId, chores.id),
-            eq(dailyBonus.bonusDate, today)
+            eq(dailyBonus.assigned_chore_id, chores.id),
+            eq(dailyBonus.bonus_date, today),
+            eq(dailyBonus.user_id, userId)
           )
         )
-        .where(eq(chores.id, choreId));
-      
-      // If a specific user is requested, filter bonus chores for that user
-      const baseConditions = eq(chores.id, choreId);
-      if (userId) {
-        query = db
-          .select({
-            id: chores.id,
-            name: chores.name,
-            description: chores.description,
-            baseTickets: chores.baseTickets,
-            recurrence: chores.recurrence,
-            emoji: chores.emoji,
-            isActive: chores.isActive,
-            lastBonusAssigned: chores.lastBonusAssigned,
-            createdByUserId: chores.createdByUserId,
-            bonusTickets: dailyBonus.spinResultTickets
-          })
-          .from(chores)
-          .innerJoin(
-            dailyBonus,
-            and(
-              eq(dailyBonus.assignedChoreId, chores.id),
-              eq(dailyBonus.bonusDate, today),
-              eq(dailyBonus.userId, userId)
-            )
-          )
-          .where(baseConditions);
-      }
-      
-      const [result] = await query;
-      
-      // If a result is found but bonusTickets is null, treat it as 0
-      if (result && result.bonusTickets === null) {
-        return {
-          ...result,
-          bonusTickets: 0
-        };
-      }
-      
-      return result;
-    } catch (error) {
-      console.error(`[GET_CHORE_WITH_BONUS] Error fetching chore with bonus for choreId ${choreId}:`, error);
-      return undefined;
+        .where(baseConditions);
     }
+    
+    const [result] = await query;
+    
+    // If a result is found but bonus_tickets is null, treat it as 0
+    if (result && result.bonus_tickets === null) {
+      return {
+        ...result,
+        bonus_tickets: 0
+      };
+    }
+    
+    return result;
   }
   // User operations
   async getUser(id: number): Promise<User | undefined> {
@@ -466,7 +439,7 @@ export class DatabaseStorage implements IStorage {
 
   async getChores(activeOnly = true): Promise<Chore[]> {
     if (activeOnly) {
-      return db.select().from(chores).where(eq(chores.isActive, true));
+      return db.select().from(chores).where(eq(chores.is_active, true));
     }
     return db.select().from(chores);
   }
@@ -530,11 +503,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createProduct(insertProduct: InsertProduct): Promise<Product> {
-    // Ensure priceLockedCents is set if not provided
+    // Ensure price_locked_cents is set if not provided
     const productData = {
       ...insertProduct,
-      priceLockedCents: insertProduct.priceLockedCents || insertProduct.priceCents,
-      lastChecked: new Date()
+      price_locked_cents: insertProduct.price_locked_cents || insertProduct.price_cents,
+      last_checked: new Date()
     };
     
     const [product] = await db.insert(products).values(productData).returning();
@@ -609,28 +582,23 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getActiveGoalByUser(userId: number): Promise<(Goal & { product: Product }) | undefined> {
-    try {
-      const result = await db
-        .select({
-          id: goals.id,
-          userId: goals.userId,
-          productId: goals.productId,
-          ticketsSaved: goals.ticketsSaved,
-          isActive: goals.isActive,
-          product: products
-        })
-        .from(goals)
-        .where(and(
-          eq(goals.userId, userId),
-          eq(goals.isActive, true)
-        ))
-        .innerJoin(products, eq(goals.productId, products.id));
-        
-      return result[0];
-    } catch (error) {
-      console.error(`[GET_ACTIVE_GOAL] Error getting active goal for user ${userId}:`, error);
-      return undefined;
-    }
+    const result = await db
+      .select({
+        id: goals.id,
+        user_id: goals.user_id,
+        product_id: goals.product_id,
+        tickets_saved: goals.tickets_saved,
+        is_active: goals.is_active,
+        product: products
+      })
+      .from(goals)
+      .where(and(
+        eq(goals.user_id, userId),
+        eq(goals.is_active, true)
+      ))
+      .innerJoin(products, eq(goals.product_id, products.id));
+      
+    return result[0];
   }
 
   async createGoal(insertGoal: InsertGoal): Promise<Goal> {
@@ -800,58 +768,58 @@ export class DatabaseStorage implements IStorage {
               .from(transactions)
               .where(
                 and(
-                  eq(transactions.userId, transaction.userId),
+                  eq(transactions.user_id, transaction.user_id),
                   eq(transactions.type, 'spend')
                 )
               );
             
-            const totalSpent = spendTransactions.reduce((sum, tx) => sum + Math.abs(tx.delta), 0);
+            const totalSpent = spendTransactions.reduce((sum, tx) => sum + Math.abs(tx.delta_tickets), 0);
             
             // Calculate how many tickets should be in the goal (remaining balance)
-            const balance = await this.getUserBalance(transaction.userId);
+            const balance = await this.getUserBalance(transaction.user_id);
             const ticketsForGoal = Math.max(0, totalEarned - totalSpent - balance);
             
             console.log(`Recalculated goal tickets: total earned ${totalEarned}, total spent ${totalSpent}, current balance ${balance}, tickets for goal ${ticketsForGoal}`);
             
             // Update the goal with recalculated amount
-            await this.updateGoal(activeGoal.id, { ticketsSaved: ticketsForGoal });
+            await this.updateGoal(activeGoal.id, { tickets_saved: ticketsForGoal });
           }
         }
       }
       
       // If this transaction is for completing a chore, we need to check if it was a daily bonus chore
       // and reset the revealed flag in the dailyBonus table
-      if (transaction.choreId && transaction.type === 'earn' && transaction.createdAt) {
-        console.log(`Transaction ${transaction.id} is a chore completion transaction for chore ${transaction.choreId}`);
+      if (transaction.chore_id && transaction.type === 'earn' && transaction.date) {
+        console.log(`Transaction ${transaction.id} is a chore completion transaction for chore ${transaction.chore_id}`);
         
         // Extract the date from the transaction date
-        const transactionDate = new Date(transaction.createdAt);
+        const transactionDate = new Date(transaction.date);
         const transactionDateStr = transactionDate.toISOString().split('T')[0];
         console.log(`Transaction date: ${transactionDateStr}`);
         
         // Check if there is a dailyBonus record for this user, date, and chore
-        console.log(`Looking for daily bonus record for user ${transaction.userId} on ${transactionDateStr}`);
-        const dailyBonusRecord = await this.getDailyBonus(transactionDateStr, transaction.userId);
+        console.log(`Looking for daily bonus record for user ${transaction.user_id} on ${transactionDateStr}`);
+        const dailyBonusRecord = await this.getDailyBonus(transactionDateStr, transaction.user_id);
         
         if (dailyBonusRecord) {
           console.log(`Found daily bonus record: `, dailyBonusRecord);
           
-          if (dailyBonusRecord.assignedChoreId === transaction.choreId) {
-            console.log(`Resetting daily bonus for user ${transaction.userId}, chore ${transaction.choreId} on ${transactionDateStr}`);
+          if (dailyBonusRecord.assigned_chore_id === transaction.chore_id) {
+            console.log(`Resetting daily bonus for user ${transaction.user_id}, chore ${transaction.chore_id} on ${transactionDateStr}`);
             
             // Store the original spin result tickets value before resetting
-            const originalSpinResultTickets = dailyBonusRecord.spinResultTickets || null;
+            const originalSpinResultTickets = dailyBonusRecord.spin_result_tickets || null;
             
             // Completely reset the daily bonus state
-            console.log(`Updating daily bonus record ${dailyBonusRecord.id} to set isSpun=false, preserving spinResultTickets=${originalSpinResultTickets}`);
+            console.log(`Updating daily bonus record ${dailyBonusRecord.id} to set is_spun=false, preserving spin_result_tickets=${originalSpinResultTickets}`);
             
             const updateResult = await db
               .update(dailyBonus)
               .set({ 
-                isSpun: false,
+                is_spun: false,
                 // Keep the original spin result tickets that were assigned, don't set to null/0
                 // This preserves the "prize" while making it available again
-                spinResultTickets: originalSpinResultTickets
+                spin_result_tickets: originalSpinResultTickets
               })
               .where(eq(dailyBonus.id, dailyBonusRecord.id))
               .returning();
@@ -859,16 +827,16 @@ export class DatabaseStorage implements IStorage {
             console.log(`Daily bonus reset complete. Update result:`, updateResult);
             console.log(`Spin result tickets preserved: ${originalSpinResultTickets}`);
           } else {
-            console.log(`Daily bonus assigned chore ID ${dailyBonusRecord.assignedChoreId} doesn't match transaction chore ID ${transaction.choreId}, not resetting`);
+            console.log(`Daily bonus assigned chore ID ${dailyBonusRecord.assigned_chore_id} doesn't match transaction chore ID ${transaction.chore_id}, not resetting`);
           }
         } else {
-          console.log(`No daily bonus record found for user ${transaction.userId} on ${transactionDateStr}`);
+          console.log(`No daily bonus record found for user ${transaction.user_id} on ${transactionDateStr}`);
         }
       } else {
         console.log(`Transaction ${transaction.id} is not a chore completion transaction or lacks required fields:`, {
-          has_choreId: !!transaction.choreId,
+          has_chore_id: !!transaction.chore_id,
           type: transaction.type,
-          has_createdAt: !!transaction.createdAt
+          has_date: !!transaction.date
         });
       }
       
@@ -886,38 +854,38 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createTransaction(insertTransaction: InsertTransaction): Promise<Transaction> {
-    console.log(`[TRANSACTION] Creating transaction for user ${insertTransaction.userId}, delta: ${insertTransaction.delta}, type: ${insertTransaction.type}`);
+    console.log(`[TRANSACTION] Creating transaction for user ${insertTransaction.user_id}, delta: ${insertTransaction.delta_tickets}, type: ${insertTransaction.type}`);
     
     const transactionData = {
       ...insertTransaction,
-      createdAt: new Date() // Using createdAt instead of date
+      date: new Date()
     };
     
     // Calculate user's current balance for validation
-    const currentBalance = await this.getUserBalance(insertTransaction.userId);
-    console.log(`[TRANSACTION] Current balance for user ${insertTransaction.userId}: ${currentBalance}`);
+    const currentBalance = await this.getUserBalance(insertTransaction.user_id);
+    console.log(`[TRANSACTION] Current balance for user ${insertTransaction.user_id}: ${currentBalance}`);
     
     // Insert transaction
     const [transaction] = await db.insert(transactions).values(transactionData).returning();
-    console.log(`[TRANSACTION] Created transaction ${transaction.id} with delta ${transaction.delta}`);
+    console.log(`[TRANSACTION] Created transaction ${transaction.id} with delta ${transaction.delta_tickets}`);
     
     // Calculate new balance
-    const newBalance = await this.getUserBalance(insertTransaction.userId);
-    console.log(`[TRANSACTION] New balance for user ${insertTransaction.userId}: ${newBalance}`);
+    const newBalance = await this.getUserBalance(insertTransaction.user_id);
+    console.log(`[TRANSACTION] New balance for user ${insertTransaction.user_id}: ${newBalance}`);
     
     // Always sync the active goal with the latest total
     try {
       // Get the active goal for the user
-      const activeGoal = await this.getActiveGoalByUser(transaction.userId);
+      const activeGoal = await this.getActiveGoalByUser(transaction.user_id);
       
       if (activeGoal) {
-        console.log(`[TRANSACTION] User ${transaction.userId} has active goal ${activeGoal.id} with ticketsSaved: ${activeGoal.ticketsSaved}`);
+        console.log(`[TRANSACTION] User ${transaction.user_id} has active goal ${activeGoal.id} with tickets_saved: ${activeGoal.tickets_saved}`);
         
         // If this is a spend transaction on a specific goal, set it to 0
-        if (transaction.type === 'spend' && transaction.goalId && transaction.goalId === activeGoal.id) {
-          console.log(`[TRANSACTION] Setting active goal ${activeGoal.id} ticketsSaved to 0 because it's being spent directly`);
+        if (transaction.type === 'spend' && transaction.goal_id && transaction.goal_id === activeGoal.id) {
+          console.log(`[TRANSACTION] Setting active goal ${activeGoal.id} tickets_saved to 0 because it's being spent directly`);
           await db.update(goals)
-            .set({ ticketsSaved: 0 })
+            .set({ tickets_saved: 0 })
             .where(eq(goals.id, activeGoal.id));
           
         } else {
@@ -927,19 +895,19 @@ export class DatabaseStorage implements IStorage {
           
           // Ensure goal progress never goes below 0 or exceeds current balance
           const newTicketsSaved = Math.min(Math.max(0, newBalance), 
-            Math.ceil(activeGoal.product.priceLockedCents / 25));
+            Math.ceil(activeGoal.product.price_locked_cents / 25));
           
-          console.log(`[TRANSACTION] Updating active goal ${activeGoal.id} ticketsSaved from ${activeGoal.ticketsSaved} to ${newTicketsSaved}`);
+          console.log(`[TRANSACTION] Updating active goal ${activeGoal.id} tickets_saved from ${activeGoal.tickets_saved} to ${newTicketsSaved}`);
           
           await db.update(goals)
-            .set({ ticketsSaved: newTicketsSaved })
+            .set({ tickets_saved: newTicketsSaved })
             .where(eq(goals.id, activeGoal.id));
         }
       } else {
-        console.log(`[TRANSACTION] No active goal found for user ${transaction.userId}`);
+        console.log(`[TRANSACTION] No active goal found for user ${transaction.user_id}`);
       }
     } catch (error) {
-      console.error(`[TRANSACTION] Error updating goal progress:`, error);
+      console.error(`[TRANSACTION] Error updating goal progress: ${error}`);
     }
     
     return transaction;
@@ -949,8 +917,8 @@ export class DatabaseStorage implements IStorage {
     return db
       .select()
       .from(transactions)
-      .where(eq(transactions.userId, userId))
-      .orderBy(desc(transactions.createdAt))
+      .where(eq(transactions.user_id, userId))
+      .orderBy(desc(transactions.date))
       .limit(limit);
   }
   
@@ -969,13 +937,13 @@ export class DatabaseStorage implements IStorage {
       } = { ...tx };
       
       // Fetch chore if applicable
-      if (tx.choreId) {
-        result.chore = await this.getChore(tx.choreId);
+      if (tx.chore_id) {
+        result.chore = await this.getChore(tx.chore_id);
       }
       
       // Fetch goal and product if applicable
-      if (tx.goalId) {
-        const goalWithProduct = await this.getGoalWithProduct(tx.goalId);
+      if (tx.goal_id) {
+        const goalWithProduct = await this.getGoalWithProduct(tx.goal_id);
         if (goalWithProduct) {
           result.goal = goalWithProduct;
         }
@@ -993,10 +961,10 @@ export class DatabaseStorage implements IStorage {
       const txList = await db
         .select()
         .from(transactions)
-        .where(eq(transactions.userId, userId));
+        .where(eq(transactions.user_id, userId));
       
       // Calculate sum manually for better type safety
-      return txList.reduce((sum, tx) => sum + tx.delta, 0);
+      return txList.reduce((sum, tx) => sum + tx.delta_tickets, 0);
     } catch (error) {
       console.error("Error getting user balance:", error);
       return 0;
@@ -1011,10 +979,10 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(transactions)
       .where(and(
-        eq(transactions.userId, userId),
-        eq(transactions.choreId, choreId),
+        eq(transactions.user_id, userId),
+        eq(transactions.chore_id, choreId),
         eq(transactions.type, 'earn'),
-        gte(transactions.createdAt, today)
+        gte(transactions.date, today)
       ))
       .limit(1);
     
@@ -1032,7 +1000,8 @@ async function initDefaultUsers() {
     await storage.createUser({
       name: "Parent User",
       username: "parent",
-      password: "password",
+      email: "parent@example.com", 
+      passwordHash: "password",
       role: "parent"
     });
   }
@@ -1042,7 +1011,8 @@ async function initDefaultUsers() {
     await storage.createUser({
       name: "Child User",
       username: "child",
-      password: "password",
+      email: "child@example.com",
+      passwordHash: "password",
       role: "child"
     });
   }

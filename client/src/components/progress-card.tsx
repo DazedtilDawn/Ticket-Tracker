@@ -8,16 +8,16 @@ import { useAuthStore } from "@/store/auth-store";
 interface ProgressCardProps {
   goal: {
     id: number;
-    userId: number;
+    user_id: number;
     product: {
       id: number;
       title: string;
       asin: string;
-      imageUrl: string;
-      priceCents: number;
-      priceLockedCents: number;
+      image_url: string;
+      price_cents: number;
+      price_locked_cents: number;
     };
-    ticketsSaved: number;
+    tickets_saved: number;
     progress: number;
     estimatedCompletion?: {
       days: number;
@@ -41,7 +41,7 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
   const amazonUrl = `https://www.amazon.com/dp/${goal.product.asin}`;
   
   // Calculate tickets needed
-  const ticketsNeeded = Math.ceil(goal.product.priceLockedCents / 25);
+  const ticketsNeeded = Math.ceil(goal.product.price_locked_cents / 25);
   
   // Handle switching goals - navigate to wishlist for the current child
   const handleSwitchGoal = async () => {
@@ -75,7 +75,7 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
     <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
       <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center">
         <img 
-          src={goal.product.imageUrl || "https://placehold.co/300x300/e5e7eb/a1a1aa?text=No+Image"} 
+          src={goal.product.image_url || "https://placehold.co/300x300/e5e7eb/a1a1aa?text=No+Image"} 
           alt={goal.product.title} 
           className="w-16 h-16 object-cover rounded-md"
           onError={(e) => {
@@ -88,7 +88,7 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
             <div>
               <h4 className="font-medium text-gray-900 dark:text-white">{goal.product.title}</h4>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Price: {formatPrice(goal.product.priceLockedCents)}
+                Price: {formatPrice(goal.product.price_locked_cents)}
               </p>
             </div>
             <div className="mt-2 sm:mt-0 flex items-center">
@@ -102,7 +102,7 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
           <div className="mt-3">
             <div className="flex items-center justify-between text-sm mb-1">
               <span className="text-gray-500 dark:text-gray-400">
-                Progress: {goal.ticketsSaved} of {ticketsNeeded} tickets saved
+                Progress: {goal.tickets_saved} of {ticketsNeeded} tickets saved
               </span>
               <span className="font-medium text-primary-600 dark:text-primary-400">
                 {Math.floor(goal.progress)}%

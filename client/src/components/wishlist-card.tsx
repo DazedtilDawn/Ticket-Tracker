@@ -24,13 +24,13 @@ interface WishlistCardProps {
       id: number;
       title: string;
       asin: string;
-      imageUrl: string;
-      priceCents: number;
-      priceLockedCents: number;
+      image_url: string;
+      price_cents: number;
+      price_locked_cents: number;
     };
-    userId: number;
-    ticketsSaved: number;
-    isActive: boolean;
+    user_id: number;
+    tickets_saved: number;
+    is_active: boolean;
     progress: number;
   };
   onSetAsGoal: (id: number) => void;
@@ -88,7 +88,7 @@ export default function WishlistCard({ goal, onSetAsGoal, onDelete, refreshList 
   };
   
   // Calculate tickets needed
-  const ticketsNeeded = Math.ceil(product.priceLockedCents / 25);
+  const ticketsNeeded = Math.ceil(product.price_locked_cents / 25);
   
   // Format price in dollars
   const formatPrice = (cents: number) => {
@@ -101,7 +101,7 @@ export default function WishlistCard({ goal, onSetAsGoal, onDelete, refreshList 
   return (
     <Card className="overflow-hidden border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow duration-200">
       <img 
-        src={product.imageUrl || "https://placehold.co/500x300/e5e7eb/a1a1aa?text=No+Image"} 
+        src={product.image_url || "https://placehold.co/500x300/e5e7eb/a1a1aa?text=No+Image"} 
         alt={product.title} 
         className="w-full h-48 object-cover"
         onError={(e) => {
@@ -114,7 +114,7 @@ export default function WishlistCard({ goal, onSetAsGoal, onDelete, refreshList 
         <div className="mt-1 flex items-center">
           <span className="text-sm text-gray-500 dark:text-gray-400">Price:</span>
           <span className="ml-1 text-sm font-medium text-gray-900 dark:text-white">
-            {formatPrice(product.priceLockedCents)}
+            {formatPrice(product.price_locked_cents)}
           </span>
           <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">
             ({ticketsNeeded} tickets)
@@ -163,7 +163,7 @@ export default function WishlistCard({ goal, onSetAsGoal, onDelete, refreshList 
             </AlertDialog>
           </div>
           
-          {goal.isActive ? (
+          {goal.is_active ? (
             <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 rounded-md">
               Active Goal
             </span>
