@@ -31,39 +31,10 @@ import { scrapeAmazon, extractAsin } from "./lib/amazon-api";
 import { calculateTier, calculateProgressPercent, calculateBoostPercent } from "./lib/business-logic";
 import { WebSocketServer, WebSocket } from "ws";
 import { cleanupOrphanedProducts } from "./cleanup";
+import { upload, getFileUrl } from "./lib/upload";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
-  
-  // Set up multer for file uploads
-  const fileStorage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-      // Create directory if it doesn't exist
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
-      cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-      // Generate unique filename with original extension
-      const uniqueFilename = `${uuidv4()}${path.extname(file.originalname)}`;
-      cb(null, uniqueFilename);
-    }
-  });
-  
-  const upload = multer({ 
-    storage: fileStorage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB file size limit
-    fileFilter: (req, file, cb) => {
-      // Accept only image files
-      if (file.mimetype.startsWith('image/')) {
-        cb(null, true);
-      } else {
-        cb(null, false);
-      }
-    }
-  });
   
   // Serve static files from public folder
   app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
@@ -356,9 +327,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file uploaded" });
       }
       
-      // Return the URL to the uploaded file
-      const imageUrl = `/uploads/${req.file.filename}`;
-      return res.json({ imageUrl });
+      // Return the URL to the uploaded file using our helper function
+      try {
+        const imageUrl = getFileUrl(req);
+        return res.json({ imageUrl });
+      } catch (urlError) {
+        console.error("Error getting file URL:", urlError);
+        return res.status(500).json({ message: "Failed to process uploaded file" });
+      }
     } catch (error) {
       console.error("Error uploading image:", error);
       return res.status(500).json({ message: "Failed to upload image" });
