@@ -1,0 +1,88 @@
+## 🎯 Objectives
+
+1. **Pointer must mark the *same* slice that gets the yellow glow / `spinResult`.**
+2. **The wheel must never stop exactly on a divider line.**
+
+Below is the precise maths change (5 new lines) that fulfils both goals.
+Drop-in patch goes inside **`handleSpin()`** where the spin target is computed.
+
+---
+
+### 1 — Why the pointer is still off
+
+*Slice 0 is drawn with its mid-line at **–67.5 °** (north-by-22.5° left), not 0 °.
+The rotation we use (`270 – idx × segment`) assumes slice 0’s mid-line is at 0 °.
+\=> every stop is still half-a-slice ahead of the pointer.*
+
+Formula we actually need:
+
+```
+mid =  idx × SEGMENT_ANGLE          // east-based angle of slice mid
+       – 90                         // shift so slice 0 starts at top
+       + SEGMENT_ANGLE / 2          // add half-slice to get centre-line
+target = FULL_SPINS×360 + 270 – mid // bring that centre to the pointer
+```
+
+Numerically (segment = 45 °): **target = FULL\_SPINS×360 + 337.5 – idx×45**
+
+---
+
+### 2 — How to miss the divider lines
+
+Add a random “wiggle” of ±(slice/ 4) **but keep 4 ° safety margin** so the pointer
+can’t drift over the neighbour’s border.
+
+```ts
+const JITTER_RANGE = SEGMENT_ANGLE / 2 - 4;           // 18.5° for 8 slices
+const jitter = (Math.random() - 0.5) * 2 * JITTER_RANGE;
+```
+
+Because we only jitter up to ±18 °, the pointer **always remains inside** the
+intended 45 ° slice.
+
+---
+
+### 3 — 5-line patch (drop straight in)
+
+```diff
+// inside the timeout that produces idx
+- const FULL_SPINS = 12;
+- const midPoint   = idx * SEGMENT_ANGLE;          // ⬅️ old (wrong) maths
+- const target     = FULL_SPINS * 360 + 270 - midPoint;
+
++ const FULL_SPINS = 12;
++
++ // ➊ exact centre-line of the chosen slice in SVG polar coords
++ const midPoint   = idx * SEGMENT_ANGLE          // east-based
++                  - 90                           // wheel rotated so 0° is north
++                  + SEGMENT_ANGLE / 2;           // move to slice centre
++
++ // ➋ small random offset so we never land on a divider
++ const JITTER_RANGE = SEGMENT_ANGLE / 2 - 4;     // leave 4° safety
++ const jitter       = (Math.random() - 0.5) * 2 * JITTER_RANGE;
++
++ // ➌ final rotation: lots of full spins, then land mid-slice plus offset
++ const target       = FULL_SPINS * 360 + 270 - midPoint + jitter;
+```
+
+No other code needs to change – the glow still uses `idx`, which is safe
+because `jitter` can’t push the pointer into an adjacent segment.
+
+---
+
+### 4 — Quick regression checklist
+
+| Test                                           | Expected                                                |
+| ---------------------------------------------- | ------------------------------------------------------- |
+| Spin 30×                                       | Star pointer always sits inside the glowing slice.      |
+| Record 10 spins on video, scrub frame-by-frame | Pointer tip never crosses a white divider.              |
+| Force `idx = 0‥7` via stubbed `Math.random()`  | Pointer points to exactly the intended slice each time. |
+
+---
+
+### 5 — Optional polish
+
+* **Visual cue on pointer** – make the triangle pulse the same yellow glow when the wheel settles so users’ eyes lock onto the winner.
+* **Unit-test the solver** – feed random `idx`+`jitter`, assert the resulting normalized angle is `withinSlice(idx)`.
+
+Patch those five lines and the Fun Wheel’s pointer, glow, and ticket value will finally be in perfect agreement – with no awkward stops on the slice boundaries. 🚀🛞⭐

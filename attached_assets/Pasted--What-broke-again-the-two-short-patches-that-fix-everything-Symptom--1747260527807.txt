@@ -1,0 +1,69 @@
+### What broke (again) & the two short patches that fix everything
+
+| Symptom                                           | Root cause                                                                                                                                                                    |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Pointer stops on a divider**                    | Final-angle formula still adds \*\* `+270`\*\*.  We actually need **`–midPoint`**; the extra 270° mis-aligns every stop by ¾ of a slice so the pointer ends up on the border. |
+| **Bottom-half numbers are mirrored ( `Ǝ Λ 0L` )** | We re-introduced the `rotate(180 …)` flip; that rotates glyphs *and* mirrors them, so 3→Ɛ, 5→Ƨ, 10→0L.                                                                        |
+
+Below are the two minimal edits you need. Nothing else changes.
+
+---
+
+## 1 — Pointer lands inside the slice (math patch)
+
+Inside **`handleSpin()`**, replace the target-angle block:
+
+```diff
+- const FULL_SPINS = 12;
+- const midPoint   = idx * SEGMENT_ANGLE - 90 + SEGMENT_ANGLE / 2;
+- const JITTER_RANGE = SEGMENT_ANGLE / 2 - 4;
+- const jitter     = (Math.random() - 0.5) * 2 * JITTER_RANGE;
+- const target     = FULL_SPINS * 360 + 270 - midPoint + jitter;
++ const FULL_SPINS = 12;
++ const midPoint   = idx * SEGMENT_ANGLE - 90 + SEGMENT_ANGLE / 2; //° of slice centre
++ const JITTER_RANGE = SEGMENT_ANGLE / 2 - 4;                       // keep 4° from edge
++ const jitter     = (Math.random() - 0.5) * 2 * JITTER_RANGE;
++ // 0° (north) minus the slice-centre brings it under the pointer
++ const target     = FULL_SPINS * 360 - midPoint + jitter;
+```
+
+*Why this works* CSS rotates **clockwise**; to bring the chosen slice’s centre to 0 °, we rotate by **`-midPoint`** (mod 360). `+270` was an old leftover.
+
+---
+
+## 2 — Numbers always upright (text patch)
+
+In the SVG loop, kill the flip logic and its transform:
+
+```diff
+- /* flip bottom-half labels */
+- const flip = mid > 90 && mid < 270 ? 180 : 0;
+…
+- <text
++ <text
+     x={x}
+     y={y}
+     dominantBaseline="middle"
+     textAnchor="middle"
+     fontWeight="700"
+     fontSize="9"
+     fill={seg.text}
+-    transform={`rotate(${flip} ${x} ${y})`}
++    /* no rotation → digits stay readable */
+>
+```
+
+Because we position each label with absolute `x/y` coordinates, they’re already upright; the extra 180° only mirrors them.
+
+---
+
+### Quick regression checklist
+
+| Test                       | Pass criteria                                                                                                          |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Spin 20×                   | Pointer tip is **always inside** the glowing slice; never touches a divider.                                           |
+| Observe grey/yellow slices | Labels show “1 2 3 … 10” (no mirrored glyphs).                                                                         |
+| Modal vs parent page       | Both now share identical component & behaviour.                                                                        |
+| Console                    | No `[DEBUG_HTML] BLOCKING WebSocket attempt …` messages when spinning *(unrelated, but confirm the earlier fix holds)* |
+
+Apply those two patches, redeploy, and your Fun-Wheel should behave perfectly in every place it’s embedded. 🛞🎉

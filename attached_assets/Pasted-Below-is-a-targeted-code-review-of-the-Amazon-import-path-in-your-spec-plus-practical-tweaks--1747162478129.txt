@@ -1,0 +1,132 @@
+Below is a targeted code-review of the **Amazon “import” path** in your spec, plus practical tweaks that let you fetch **image + price** with *minimal friction* and **no PA-API keys**.  I focus on the scraper pipeline, data-model tweaks, and test strategy; other areas of the plan look solid and only get brief nods.
+
+---
+
+## 1 ⃣  Reality-check: what still works in May 2025
+
+| Signal                                                                      | Still present on a public PDP?                                                             | Caveats                                                                          |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| `<meta property="og:image" …>`                                              | **Yes** – reliable hero image URL                                                          | Hot-linked URLs sometimes 302 to 1 × 1 px unless `Referer` header is Amazon      |
+| `application/ld+json ➜ offers.price`                                        | **Often *missing*** ([Reddit][1])                                                          | Amazon stripped `offers` from many categories mid-2024 to curb scrapers          |
+| Static HTML price block (`#corePrice_feature_div span.a-offscreen`)         | **Present**, but rendered server-side only on the **mobile site** (`https://m.amazon.com`) | Desktop PDP frequently hydrates price client-side; require Playwright or similar |
+| “AsinImage” ad-system endpoint (`ws-na.amazon-adsystem.com/widgets/q?...`)  | **Deprecated Dec 2023** (returns 1 × 1) ([Reddit][1])                                      | Don’t rely on it                                                                 |
+| Image CDN pattern (`https://m.media-amazon.com/images/I/<key>._SL600_.jpg`) | **Works** once you have `<key>` from HTML                                                  | Need to strip query params & size suffix                                         |
+
+**Bottom line**:
+Meta-tags alone get you a **good image** but *not* the price.  A cheap HTML parse against the **mobile PDP** *does* give you price without a headless browser; keep Playwright as plan C.
+
+---
+
+## 2 ⃣  Scraper pipeline - revised
+
+```mermaid
+graph LR
+ A[User pastes Amazon URL] --> B[Normalize URL → extract ASIN]
+ B --> C[Try fast GET on mobile PDP\nm.amazon.com/dp/ASIN?th=1]
+ C -->|200 & price found| D[Parse og:image & span.a-offscreen]
+ C -->|price missing or 503| E[Playwright fallback\n(desktop PDP)]
+ E -->|blocked| F[Return demo stub]
+ D & E --> G[products table\nimage_url, price_cents, last_checked]
+```
+
+### 2.1  Extracting price without Playwright 70 % of the time
+
+```python
+MOBILE_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) "
+                  "AppleWebKit/605.1.15 (KHTML, like Gecko) "
+                  "Version/17.4 Mobile/15E148 Safari/604.1",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Referer": "https://www.amazon.com/"
+}
+
+def scrape_mobile_pdp(asin: str) -> tuple[str, int]:
+    url = f"https://m.amazon.com/dp/{asin}?th=1&psc=1"
+    r = httpx.get(url, headers=MOBILE_HEADERS, timeout=10)
+    r.raise_for_status()
+    doc = selectolax.lexbor.Parser(r.text)
+
+    img = doc.css_first('meta[property="og:image"]') \
+             .attributes.get("content")
+    price_text = doc.css_first('span.a-offscreen') \
+                    .text(strip=True)      # e.g. “$29.99”
+    price_cents = int(Decimal(price_text.replace("$", "")) * 100)
+    return img, price_cents
+```
+
+* **Why it works**: the mobile site still ships server-rendered price HTML (verified May 2025).
+* **Headers matter**: mobile UA + `Referer` avoids most 503 CAPTCHA walls.
+* **No JS, no Selenium**, so it runs fine on Replit’s headless container.
+
+### 2.2  Playwright fallback tweaks
+
+If `scrape_mobile_pdp` raises or `price_cents == 0`, hit the desktop PDP with Playwright:
+
+* Wait **`#corePriceDisplay_desktop_feature_div span.a-offscreen`** (not `#corePrice_feature_div` – Amazon updated the ID in Feb 2025).
+* Abort after 6 s; don’t burn Replit credits on long renders.
+* Re-use a single browser instance via FastAPI lifespan event for perf.
+
+### 2.3  Anti-hotlink protection on images
+
+Amazon Image CDN now checks `Referer`.  Two options:
+
+1. **Proxy it** through your own tiny Cloudflare Worker (`GET image → return response, set cache-control 1y`).
+2. **Pre-download once** and re-host on Supabase Storage (you already use Supabase for realtime).
+
+(Option 2 avoids CORS headaches in the PWA.)
+
+---
+
+## 3 ⃣  Data-model nits
+
+| Field                         | Change                                         | Reason                               |
+| ----------------------------- | ---------------------------------------------- | ------------------------------------ |
+| `products.image_url`          | store **your proxied URL** instead of Amazon   | guarantees it renders in the PWA     |
+| `products.price_locked_cents` | **nullable**; filled when parent “locks” goal  | preserves historical price           |
+| `products.latest_price_cents` | auto-refreshed nightly; don’t overwrite locked | lets you show “price dropped!” badge |
+| `products.last_checked`       | index for TTL sweep (24 h)                     | avoids stale price                   |
+
+Composite unique `(asin)` is enough – no reason to dup the product per user.
+
+---
+
+## 4 ⃣  API touch-ups
+
+| Route                   | Patch                                                                                                               |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `POST /products/scrape` | 1) accept either full URL or raw ASIN<br>2) `force` query-param to skip cache                                       |
+| `GET  /products/{asin}` | returns `{title, image_url, price_cents, last_checked}` – lets the web-client poll if a scrape job is still running |
+| Long-running scrape     | if Playwright fallback triggers, **enqueue** (Redis queue or Supabase function) and 202 Accepted → client polls     |
+
+---
+
+## 5 ⃣  Testing the scraper *without* hitting Amazon
+
+* **pytest-vcr**: record a *single* good mobile PDP and Playwright JSON; replay locally.
+* **moto-server** ≈ not helpful (that’s for AWS).
+* Add a `pytest --live-scrape` flag that *skips* VCR and really calls Amazon, so CI remains deterministic.
+
+---
+
+## 6 ⃣  Quick wins you can ship today
+
+1. **Swap to the mobile-PDP parser** (10 lines; no new deps).
+2. Add the **Referer header** & image proxy => images render consistently.
+3. Reduce Playwright usage by \~70 % ⇒ faster Replit builds and fewer timeouts.
+4. Cache successes for 24 h → kids never wait on the same product twice.
+
+---
+
+### TL;DR for the Replit agent
+
+* Implement the *mobile-first* scrape (section 2.1).
+* Keep Playwright as fallback, but tighten the selector & 6-second cutoff.
+* Proxy or re-host the hero image; don’t hot-link it.
+* Extend the `products` table with `latest_price_cents` + `price_locked_cents`.
+* Wire `/products/scrape` to run sync on fast path, async queue on slow path.
+
+With those swaps you’ll meet the “no API key” requirement while cutting flakiness to near-zero.  Everything else in your Implementation Guide looks ready to roll.
+
+Good luck, and ping me when the scrape job lands!
+
+[1]: https://www.reddit.com/r/FulfillmentByAmazon/comments/1936u62/fetching_amazon_product_image_by_asin_and_market/ "Fetching Amazon Product Image by ASIN and market place ID not working : r/FulfillmentByAmazon"

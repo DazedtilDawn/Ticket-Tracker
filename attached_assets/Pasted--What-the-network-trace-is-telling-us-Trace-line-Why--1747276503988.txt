@@ -1,0 +1,90 @@
+### What the network trace is telling us
+
+| Trace line                                      | Why it’s a red-flag                                                                                                                                                                                                                                                                                                                                                                        |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Request 1**<br>`GET /wishlist` → **200 HTML** | Just the page itself – fine.                                                                                                                                                                                                                                                                                                                                                               |
+| **Request 2**<br>`GET /POST` → **200 HTML**     | Uh-oh.  When you click **“Add to Wishlist”** the browser is **navigating** to a *path literally called* “/POST”.<br>That means the button / link isn’t doing an AJAX *POST* at all – it’s a plain anchor (or a form with `method="GET"` and `action="/POST"`).  The Express fallback hands you the Spa index again, so the request “succeeds” with HTML, but nothing is written to the DB. |
+
+In other words, the frontend never hits your real API (`POST /api/wishlist-item`, `POST /api/goals`, or whatever route you exposed). That’s why nothing shows up on the child’s list.
+
+---
+
+## Quick way to confirm
+
+1. **Open DevTools → Network tab**
+2. Click “Add to Wishlist” again.
+   *You should not see any `POST` requests – only that bizarre `GET /POST`.*
+3. Switch the filter to “XHR/Fetch” – it will be empty.
+
+---
+
+## How to fix
+
+### 1  Hook the button to the correct API call
+
+```tsx
+// CatalogueItemCard.tsx  (or whatever file renders the “Add” button)
+
+const handleAdd = async () => {
+  const body = {
+    product_id: product.id,
+    // if parent is adding for a specific child
+    user_id: activeChildId,          // <-  grab from auth-store
+  };
+
+  try {
+    await apiRequest("/api/wishlist-items", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+
+    toast({ title: "Added!", description: "Item is on the wishlist." });
+  } catch (err: any) {
+    toast({
+      title: "Error",
+      description: err.message ?? "Could not add item",
+      variant: "destructive",
+    });
+  }
+};
+
+<Button onClick={handleAdd} className="...">
+  Add&nbsp;to&nbsp;Wishlist
+</Button>
+```
+
+* **No `href`** attribute on the button.
+* Make sure `method:"POST"` and **the URL is the real API route**, not `"/POST"`.
+
+### 2  (If parents pick *which* child)
+
+If the same catalogue is shown to parents, pass the chosen child ID:
+
+```tsx
+const activeChildId = useAuthStore.getState().getActiveChildId(); // or prop
+```
+
+…and include it in the payload so the server knows whose wishlist to append to.
+
+### 3  Server-side route check
+
+```ts
+// server/routes.ts
+app.post("/api/wishlist-items", authParentOrChild, zodBody(WishlistItemSchema), async (req, res) => {
+  const { user_id, product_id } = req.body;
+  await db.wishlistItem.create({ data: { user_id, product_id } });
+  res.json({ success: true });
+});
+```
+
+*If you already have something like `/api/wishlist`, keep using that – the point is: the **frontend path must exactly match** the backend route.*
+
+---
+
+## After you patch it
+
+1. **Reload the page**, open the Network tab.
+2. Click “Add to Wishlist” – you should now see: `POST /api/wishlist-items` (status 201/200).
+3. Switch to the child’s dashboard – the item should appear (or the goal modal should open).
+
+If you still hit a 4xx/500 error, grab the **new** network entry (Request & Response JSON) and the snippet of the click-handler you changed, and I’ll dig further.

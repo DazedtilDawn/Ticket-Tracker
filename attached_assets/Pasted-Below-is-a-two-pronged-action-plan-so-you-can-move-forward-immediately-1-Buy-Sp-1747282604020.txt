@@ -1,0 +1,132 @@
+Below is a **two-pronged action plan** so you can move forward immediately:
+
+---
+
+## 1 “Buy / Spend-tickets” button (fast feature)
+
+> identical mechanics to *Bad Behavior* → negative‐ticket **spend** transaction, but friendlier label & colour
+
+### Front-end – new dialog
+
+```tsx
+// client/src/components/purchase-dialog.tsx
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { apiRequest } from "@/lib/queryClient";
+import { useAuthStore } from "@/store/auth-store";
+import { toast } from "@/hooks/use-toast";
+
+export function PurchaseDialog({ children }: { children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const [tickets, setTickets] = useState<number>(0);
+  const { getActiveChildId } = useAuthStore();
+
+  const handleSubmit = async () => {
+    try {
+      await apiRequest("/api/spend", {
+        method: "POST",
+        body: JSON.stringify({
+          user_id: getActiveChildId(),
+          tickets,                         // positive integer
+          reason: "purchase"
+        })
+      });
+      toast({ title: "Purchase complete", description: `-${tickets} tickets spent` });
+      setOpen(false);
+      setTickets(0);
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <span onClick={() => setOpen(true)}>{children}</span>
+
+      <DialogContent>
+        <DialogHeader>Spend tickets on a purchase</DialogHeader>
+
+        <label className="space-y-1">
+          <span className="text-sm font-medium">Tickets to spend</span>
+          <Input type="number" min={1} value={tickets} onChange={e => setTickets(+e.target.value)} />
+        </label>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button disabled={tickets <= 0} onClick={handleSubmit}>Confirm purchase</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+```
+
+### Add button on the Dashboard
+
+```tsx
+{/* under Good-/Bad-behavior buttons */}
+<PurchaseDialog>
+  <Button variant="outline" size="sm"
+    className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700
+               dark:text-indigo-400 dark:border-indigo-900 dark:hover:bg-indigo-950">
+    💸 Purchase
+  </Button>
+</PurchaseDialog>
+```
+
+### Back-end – “spend” route (if you don’t already have one)
+
+```ts
+// server/routes.ts
+app.post("/api/spend", authParentOrChild, async (req, res) => {
+  const { user_id, tickets, reason } = req.body;
+  if (!tickets || tickets <= 0) return res.status(400).json({ message: "tickets must be > 0" });
+
+  const tx = await storage.createTransaction({
+    user_id,
+    delta_tickets: -tickets,
+    type: "spend",
+    note: reason || "purchase"
+  });
+
+  res.json(tx);
+});
+```
+
+> **Important:** your `createTransaction` already updates balance + goal progress; spend uses exactly the same path, so no extra goal logic needed.
+
+---
+
+## 2 Bonus-Management page still shows “No bonus assignments”
+
+Below is a condensed version of the diagnostic check-list you asked for.  Work through **in order** – you’ll spot the break immediately.
+
+| Step                                                 | What to log / call                                  | Expected if healthy                                      |
+| ---------------------------------------------------- | --------------------------------------------------- | -------------------------------------------------------- |
+| **1. Creation** <br/>`storage.assignDailyBonusChore` | `console.log('[ASSIGN_BONUS]', bonus)` after upsert | One row per child, `is_spun:false`, today’s `bonus_date` |
+| **2. Parent-login loop**                             | log list of returned bonuses                        | IDs for Bryce & Kiki                                     |
+| **3. API** `/api/daily-bonus/assignments`            | add logs at start & before `res.json`               | JSON array length = number of kids                       |
+| **4. cURL** as parent                                | `curl -H "Authorization: Bearer …"`                 | Same JSON back in terminal                               |
+| **5. React Query** in `bonus-management.tsx`         | `console.log('[BONUS_MGMT_FETCH]', {data,isError})` | `data` is that same array                                |
+| **6. Render map()**                                  | inside map log each assignment                      | Browser console prints two logs, rows render             |
+
+**Where it breaks:**
+
+* Fails at **1–2** → creation logic or date handling.
+* Passes 2 but fails at **3** → query joins wrong / filter wrong.
+* Passes 3–4 but fails at **5** → query key wrong or 401.
+* Passes 5 but fails at **6** → JSX conditional (`!data.length` vs `!data`).
+
+Once assignments render, the override / reset buttons will work again.
+
+---
+
+### Quick tips while you test
+
+* Use **today’s date** directly in SQL (`bonus_date = CURRENT_DATE`) to avoid TZ off-by-one.
+* Front-end can pass `?date=YYYY-MM-DD` to API for easier day-switch debugging.
+* If you’re nervous about WebSocket spam, add `console.count('bonus assignments fetch')` in React so you know how often the query fires.
+
+That’s it—drop the new **Purchase** dialog in, run the six console checks, and the two outstanding issues should be closed.  Let me know which step (if any) still fails and paste the console snippet—then we can zero-in instantly.

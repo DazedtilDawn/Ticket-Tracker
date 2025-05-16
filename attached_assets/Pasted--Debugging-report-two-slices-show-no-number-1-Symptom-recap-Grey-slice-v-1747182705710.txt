@@ -1,0 +1,88 @@
+## Debugging report – “two slices show no number”
+
+---
+
+### 1  Symptom recap
+
+* Grey slice ( value = 1 ) and the big butter-yellow slice ( value = 2 ) render **without any text**, while all other wedges show their ticket value.
+
+### 2  Root-cause analysis
+
+| Observation                                                                                                         | Evidence                                                                                | Explanation                                                                                                                                                                                                                                                                                                                                      |
+| ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Their `<text>` elements are **generated** (inspect the DOM – they’re there) but **sit outside the visible circle**. | DevTools shows the missing labels at coordinates like **(11 , −5)** and **(107 , 66)**. | Our current “rotate → translate → counter-rotate” trick moves the label **radially outward** by a fixed 42 units. For wedges whose centre line points far left ( ≈ 225–270 ° ) or far right ( ≈ 45–90 ° ) that translation sends the label **beyond the SVG viewBox**. Off-canvas text isn’t clipped by the wheel’s mask, it just never appears. |
+
+So it isn’t a colour clash or z-index issue – it’s pure geometry: the label vectors for those two wedges overshoot the 100×100 viewBox.
+
+### 3  Targeted fix – explicit polar co-ordinates
+
+1. **Compute the label’s (x, y) once** – no double rotate / translate dance.
+2. **Clamp the radius** to something that’s always inside the rim (≈ 38 % of the wheel).
+3. Flip labels that would end up upside-down (south hemisphere) so they’re still readable.
+
+```tsx
+/* --------------------------------------------- */
+/* put this just above the <svg> inside the map  */
+/* --------------------------------------------- */
+
+const LABEL_RADIUS = 38;                   // % of SVG radius
+
+WHEEL_SEGMENTS.map((seg, i) => {
+  const start = i * SEGMENT_ANGLE - 90;
+  const mid   = start + SEGMENT_ANGLE / 2;
+
+  /* ➊ polar → cartesian */
+  const rad   = (mid * Math.PI) / 180;
+  const x     = 50 + LABEL_RADIUS * Math.cos(rad);
+  const y     = 50 + LABEL_RADIUS * Math.sin(rad);
+
+  /* ➋ keep text upright: flip anything in the lower half-circle */
+  const flip  = mid > 90 && mid < 270 ? 180 : 0;
+
+  return (
+    <g key={i} data-slice>
+      <path
+        d={describeSlice(start, start + SEGMENT_ANGLE)}
+        fill={seg.color}
+        stroke="#ffffff"
+        strokeWidth={0.4}
+      />
+      <text
+        x={x}
+        y={y}
+        fontWeight="700"
+        fontSize="9"
+        textAnchor="middle"
+        dominantBaseline="middle"
+        fill={seg.text}
+        transform={`rotate(${flip} ${x} ${y})`}
+      >
+        {seg.label}
+      </text>
+    </g>
+  );
+});
+```
+
+#### Why this works
+
+* **LABEL\_RADIUS (38 %)** keeps every number safely inside the wheel’s white border, irrespective of angle.
+* By computing **x/y directly** we avoid the cumulative rounding that crept in with nested transforms.
+* The 180° flip keeps digits readable for slices in the bottom half.
+
+### 4  Verification checklist
+
+| Test                    | Expected                                                                   |
+| ----------------------- | -------------------------------------------------------------------------- |
+| Reload without spinning | All eight slices immediately show their value.                             |
+| Spin 20×                | No slice ever loses its number; winning slice still aligns to the pointer. |
+| Resize / zoom browser   | Text remains inside the rim at every size.                                 |
+| Lighthouse a11y         | No contrast or overflow warnings.                                          |
+
+### 5  Preventive tips
+
+* **Unit test the label solver**: given an index, confirm returned `x/y` are both `∈ [5, 95]` (inside the circle).
+* Keep geometry helpers (`describeSlice`, `labelPosition`) in a tiny utility so they can be fuzz-tested with hundreds of random angles.
+* Document the “50, 50 viewBox convention” in a comment – future contributors will know all math is relative to that origin.
+
+Patch those few lines and the grey & yellow slices will proudly display their numbers again. 🎉

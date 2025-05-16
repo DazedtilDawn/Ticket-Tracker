@@ -1,0 +1,91 @@
+## Debug-ging report – “Can’t complete a chore”
+
+## *(WebSocket tries `wss://localhost:undefined`)*
+
+### 1  Information summary
+
+Console output while clicking **“Complete chore”**:
+
+```
+WebSocket connection to 'wss://32734c3e-d439…riker.replit.dev/?token=…' failed      (first try)
+Uncaught SyntaxError: Failed to construct 'WebSocket':
+The URL 'wss://localhost:undefined/?token=…' is invalid.        (fallback)
+```
+
+* Your code falls back to **`wss://localhost:${port}`** after the first remote WS fails.
+* `port` is **`undefined`**, so the constructed URL is invalid ⇒ second exception.
+* Subsequent Supabase `realtime` calls never finish → mutation that marks a chore as *done* is never acknowledged, so the UI remains “incomplete”.
+
+### 2  Root cause(s)
+
+| # | Cause                                                                       | Evidence                                                                                                       | Impact                                                                                   |
+| - | --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| 1 | **Incorrect WebSocket base URL** pulled from `.env` or `supabase.js`.       | Remote attempt is a Replit proxy (`riker.replit.dev`) – OK. Fallback points to *localhost* even in production. | Front-end loses its realtime channel, so the DB trigger that grants tickets never fires. |
+| 2 | **`window.location.port` (or `process.env.PORT`) is `undefined` under SSL** | The template code concatenates `:${port}` without checking.                                                    | Produces `wss://localhost:undefined` – browser rejects the URL immediately.              |
+
+### 3  Immediate fix: guard & configure once
+
+```ts
+// supabase.ts  (or wherever you set up real-time WS)
+
+const PUBLIC_WS  = 'wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/ws';
+const LOCAL_WS   = `ws://${location.hostname}${location.port ? ':' + location.port : ''}/ws`;
+
+const realtimeUrl =
+  import.meta.env.VITE_FORCE_LOCAL_WS   // ⇐ easy dev toggle
+    ? LOCAL_WS
+    : PUBLIC_WS;
+
+// 💡 ALWAYS validate before constructing WebSocket
+function safeWebSocket(url: string, token: string) {
+  try {
+    return new WebSocket(`${url}?token=${token}`);
+  } catch (e) {
+    console.error('WebSocket init failed:', url, e);
+    return null;                         // let caller fall back or show toast
+  }
+}
+```
+
+* added **port check** so the string never contains “`:undefined`”.
+* single **feature flag** to force local WS when you actually run the Supabase emulator or Realtime server locally.
+
+### 4  Server-side / environment sanity
+
+| Environment     | `VITE_SUPABASE_URL`        | `VITE_SUPABASE_ANON_KEY`           | WS URL you should use                        |
+| --------------- | -------------------------- | ---------------------------------- | -------------------------------------------- |
+| **Replit prod** | `https://32734…replit.dev` | *(long JWT)*                       | `wss://32734…replit.dev/ws`                  |
+| **Local dev**   | `http://localhost:54321`   | *(anon key from `supabase start`)* | `ws://localhost:54321/realtime/v1/websocket` |
+
+Make sure the **same** base is passed to `createClient( supabaseUrl, supabaseKey, { realtime: { websocket: wsUrl } } )`.
+
+### 5  Avoid landing on this again
+
+1. **Centralise WS URL** (one source of truth).
+2. **Assert** before connecting:
+
+```ts
+if (!/^wss?:\/\/.+/.test(wsUrl)) {
+  throw new Error(`Invalid WebSocket URL: ${wsUrl}`);
+}
+```
+
+3. Add a **toast** when realtime goes offline:
+
+```ts
+supabase.realtime
+  .on('error', () => toast({title:'Realtime disconnected',variant:'destructive'}))
+  .connect();
+```
+
+4. **CI check** – fail build if `.env.production` has `localhost` anywhere.
+
+### 6  Verify the fix
+
+| Step                                                   | Expected                                            |
+| ------------------------------------------------------ | --------------------------------------------------- |
+| Open Network-tab, reload, click “Complete chore”       | One `wss://…/ws` shows **101 Switching Protocols**. |
+| DB row `chores.completed_at` updates & tickets granted | UI swaps to ✅ within 1-2 s, toast appears.          |
+| No “wss\://localhost\:undefined” lines in console      | —                                                   |
+
+Patch the WS constructor & env, redeploy, and chore-completion should work instantly. 🚀

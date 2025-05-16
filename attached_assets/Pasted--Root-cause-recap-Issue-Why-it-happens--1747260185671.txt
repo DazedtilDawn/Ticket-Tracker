@@ -1,0 +1,69 @@
+## Root-cause recap
+
+| Issue                                                     | Why it happens                                                                                                                                                                                             | Fix                                                                                                                      |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **Two slices show garbled / missing numbers**             | We rotate the bottom-half labels by **180 °** (`flip`), which keeps them upright but—because the anchor point is the text’s centre—also reverses the character order. So `10 → 01`, `3 → Ɛ`, `5 → Ƨ`, etc. | **Stop rotating glyphs.** They already render inside the wheel right-side-up; the extra flip mangles multi-digit values. |
+| **Wheel isn’t using `wheelspin.mp3` / `celebration.mp3`** | `SOURCES.wheel` and `SOURCES.cheer` still reference the *old* filenames (`wheel.mp3`, `cheer.mp3`). `pickAudio` therefore returns `null`, triggering the sine-wave fallback.                               | Point the source array at the new files **or** pass them directly when you create the player.                            |
+
+Below are the two minimal patches you need; everything else can stay exactly as is.
+
+---
+
+### 1  — Label patch (remove the flip)
+
+```diff
+ /* keep text upright: flip anything in the lower half-circle */
+-const flip  = mid > 90 && mid < 270 ? 180 : 0;
++const flip  = 0;                     // ← no rotation needed
+
+ …
+ <text
+   x={x}
+   y={y}
+   dominantBaseline="middle"
+   textAnchor="middle"
+   fontWeight="700"
+   fontSize="9"
+   fill={seg.text}
+-  transform={`rotate(${flip} ${x} ${y})`}
++  /* no transform → digits stay legible and in correct order */
+ >
+   {seg.label}
+ </text>
+```
+
+Result: every slice now shows **1 2 3 5 2 3 10 1** exactly as in the data,
+with no weird glyphs.
+
+---
+
+### 2  — Audio sources patch
+
+`/src/utils/audio.ts`
+
+```diff
+export const SOURCES = {
+-  wheel: ['/sounds/wheel.mp3', '/sounds/wheel.ogg'],
+-  cheer: ['/sounds/cheer.mp3', '/sounds/cheer.ogg'],
++  wheel: ['/sounds/wheelspin.mp3', '/sounds/wheelspin.ogg'],
++  cheer: ['/sounds/celebration.mp3', '/sounds/celebration.ogg'],
+};
+```
+
+> **Tip:** keep both `.mp3` and `.ogg` so `pickAudio()` can still fall back
+> to whichever codec the browser prefers.
+
+No other code changes are needed; your existing `createLoopingAudio` and
+`playOnce` calls will now find the new files and play them.
+
+---
+
+### 3  — Quick verification
+
+| Test                               | Expected                                                                                                                      |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Reload page                        | All eight slice labels show correct numbers.                                                                                  |
+| Spin wheel                         | You hear the full `wheelspin.mp3` loop, then `celebration.mp3` once the wheel stops. No console “NotSupportedError” messages. |
+| Bottom-half slices (`idx=4,5,6,7`) | Labels display as *2 3 10 1* (not Ƨ Ɛ 01 L).                                                                                  |
+
+Apply those two tiny patches and the Fun-Wheel is back to 100 % — visually crisp, fully voiced, and ready for happy spins. 🛞🎉

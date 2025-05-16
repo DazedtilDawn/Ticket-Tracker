@@ -1,0 +1,53 @@
+(index):53 [DEBUG_HTML] Pre-bundle WebSocket override script executing.
+(index):103 [DEBUG_HTML] window.WebSocket has been overridden from HTML.
+(index):64  [DEBUG_HTML] BLOCKING WebSocket attempt (HTML override): wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev:/?token=wbRccHeZ3Irg
+value @ (index):64
+setupWebSocket @ client:536
+(anonymous) @ client:531
+[NEW] Explain Console errors by using Copilot in Edge: click
+         
+         to explain an error. 
+        Learn more
+        Don't show again
+react-dom.development.js:29895 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+main.tsx:3 [DEBUG] Main.tsx: Relying on the HTML WebSocket override.
+supabase.ts:40 Connecting to WebSocket at: wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/ws
+supabase.ts:54 Using global WebSocket constructor (with HTML overrides)
+App.tsx:75 Checking authentication status, auto-login: true
+dashboard.tsx:52 Setting up WebSocket listeners for transaction events
+supabase.ts:40 Connecting to WebSocket at: wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/ws
+supabase.ts:54 Using global WebSocket constructor (with HTML overrides)
+supabase.ts:180 Subscribing to WebSocket channel: 
+supabase.ts:180 Subscribing to WebSocket channel: transaction:
+supabase.ts:180 Subscribing to WebSocket channel: transaction:earn
+supabase.ts:180 Subscribing to WebSocket channel: transaction:spend
+supabase.ts:180 Subscribing to WebSocket channel: transaction:deduct
+supabase.ts:180 Subscribing to WebSocket channel: transaction:reward
+content.js:260 Prompt Manager content script loaded
+supabase.ts:57 WebSocket connection established
+supabase.ts:57 WebSocket connection established
+supabase.ts:91 WebSocket message received: {event: 'server:welcome', data: {…}}
+supabase.ts:94 WebSocket message details - Event: server:welcome {timestamp: '2025-05-14T05:31:09.374Z', eventType: 'server:welcome', fullData: {…}, rawMessage: '{"event":"server:welcome","data":{"message":"Welco…service","timestamp":"2025-05-14T05:31:09.223Z"}}'}
+supabase.ts:199 Caught all-events subscriber for "server:welcome"
+supabase.ts:91 WebSocket message received: {event: 'server:welcome', data: {…}}
+supabase.ts:94 WebSocket message details - Event: server:welcome {timestamp: '2025-05-14T05:31:09.528Z', eventType: 'server:welcome', fullData: {…}, rawMessage: '{"event":"server:welcome","data":{"message":"Welco…service","timestamp":"2025-05-14T05:31:09.366Z"}}'}
+supabase.ts:199 Caught all-events subscriber for "server:welcome"
+supabase.ts:223 Attempting to send WebSocket message - Event: client:ping {data: {…}, wsReadyState: 1, wsOpen: true, timestamp: '2025-05-14T05:31:11.619Z'}
+supabase.ts:232 Sending WebSocket message: {"event":"client:ping","data":{"timestamp":"2025-05-14T05:31:11.619Z"}}
+supabase.ts:91 WebSocket message received: {event: 'server:pong', data: {…}}
+supabase.ts:94 WebSocket message details - Event: server:pong {timestamp: '2025-05-14T05:31:11.664Z', eventType: 'server:pong', fullData: {…}, rawMessage: '{"event":"server:pong","data":{"received":{"timest…11.717Z","message":"Connection test successful"}}'}
+supabase.ts:199 Caught all-events subscriber for "server:pong"
+supabase.ts:91 WebSocket message received: {event: 'transaction:reward', data: {…}}
+supabase.ts:94 WebSocket message details - Event: transaction:reward {timestamp: '2025-05-14T05:31:11.729Z', eventType: 'transaction:reward', fullData: {…}, rawMessage: '{"event":"transaction:reward","data":{"id":5,"type…cket test reward (connection test)","user_id":1}}'}
+supabase.ts:199 Caught all-events subscriber for "transaction:reward"
+supabase.ts:201 Event match for "transaction:" - received "transaction:reward"
+dashboard.tsx:66 Received any transaction event - general handler: {event: 'transaction:reward', data: {…}}
+supabase.ts:201 Event match for "transaction:reward" - received "transaction:reward"
+dashboard.tsx:129 Received transaction:reward event: {event: 'transaction:reward', data: {…}}
+supabase.ts:91 WebSocket message received: {event: 'transaction:reward', data: {…}}
+supabase.ts:94 WebSocket message details - Event: transaction:reward {timestamp: '2025-05-14T05:31:11.733Z', eventType: 'transaction:reward', fullData: {…}, rawMessage: '{"event":"transaction:reward","data":{"id":5,"type…cket test reward (connection test)","user_id":1}}'}
+supabase.ts:199 Caught all-events subscriber for "transaction:reward"
+supabase.ts:201 Event match for "transaction:" - received "transaction:reward"
+dashboard.tsx:66 Received any transaction event - general handler: {event: 'transaction:reward', data: {…}}
+supabase.ts:201 Event match for "transaction:reward" - received "transaction:reward"
+dashboard.tsx:129 Received transaction:reward event: {event: 'transaction:reward', data: {…}}

@@ -1,0 +1,32 @@
+[DEBUG_HTML] Pre-bundle WebSocket override script executing.
+(index):103 [DEBUG_HTML] window.WebSocket has been overridden from HTML.
+(index):64  [DEBUG_HTML] BLOCKING WebSocket attempt (HTML override): wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev:/?token=StG682j-nVnL
+value @ (index):64
+react-dom.development.js:29895 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+main.tsx:3 [DEBUG] Main.tsx: Relying on the HTML WebSocket override.
+supabase.ts:40 Connecting to WebSocket at: wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/ws
+supabase.ts:54 Using original WebSocket constructor
+App.tsx:75 Checking authentication status, auto-login: true
+dashboard.tsx:52 Setting up WebSocket listeners for transaction events
+supabase.ts:40 Connecting to WebSocket at: wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/ws
+supabase.ts:54 Using original WebSocket constructor
+supabase.ts:184 Subscribing to WebSocket channel: 
+supabase.ts:184 Subscribing to WebSocket channel: transaction:
+supabase.ts:184 Subscribing to WebSocket channel: transaction:earn
+supabase.ts:184 Subscribing to WebSocket channel: transaction:spend
+supabase.ts:184 Subscribing to WebSocket channel: transaction:deduct
+supabase.ts:184 Subscribing to WebSocket channel: transaction:reward
+supabase.ts:61 WebSocket connection established
+content.js:260 Prompt Manager content script loaded
+supabase.ts:95 WebSocket message received: Object
+supabase.ts:98 WebSocket message details - Event: server:welcome Object
+supabase.ts:203 Caught all-events subscriber for "server:welcome"
+supabase.ts:61 WebSocket connection established
+supabase.ts:95 WebSocket message received: Object
+supabase.ts:98 WebSocket message details - Event: server:welcome Object
+supabase.ts:203 Caught all-events subscriber for "server:welcome"
+[NEW] Explain Console errors by using Copilot in Edge: click
+         
+         to explain an error. 
+        Learn more
+        Don't show again

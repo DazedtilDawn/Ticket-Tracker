@@ -1,0 +1,155 @@
+(index):53 [DEBUG_HTML] Pre-bundle WebSocket override script executing.
+(index):120 [DEBUG_HTML] window.WebSocket has been overridden from HTML.
+(index):64  [DEBUG_HTML] BLOCKING WebSocket attempt (HTML override): wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev:/?token=YRrZWAogHG0v
+value @ (index):64
+setupWebSocket @ client:536
+(anonymous) @ client:531
+(index):67  [DEBUG_HTML] WebSocket blocked - Call stack: Error
+    at new value (https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/:67:76)
+    at setupWebSocket (https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/@vite/client:536:19)
+    at https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/@vite/client:531:12
+value @ (index):67
+setupWebSocket @ client:536
+(anonymous) @ client:531
+(index):76  [DEBUG_HTML] Found WebSocket with token parameter
+value @ (index):76
+setupWebSocket @ client:536
+(anonymous) @ client:531
+[NEW] Explain Console errors by using Copilot in Edge: click
+         
+         to explain an error. 
+        Learn more
+        Don't show again
+react-dom.development.js:29895 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+main.tsx:3 [DEBUG] Main.tsx: Relying on the HTML WebSocket override.
+supabase.ts:40 Connecting to WebSocket at: wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/ws
+supabase.ts:54 Using global WebSocket constructor (with HTML overrides)
+App.tsx:83 Checking authentication status, auto-login: true
+child-bonus-wheel.tsx:167 [WHEEL_DEBUG] Setting up WebSocket listeners for bonus spin events
+supabase.ts:40 Connecting to WebSocket at: wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/ws
+supabase.ts:54 Using global WebSocket constructor (with HTML overrides)
+supabase.ts:180 Subscribing to WebSocket channel: bonus_spin:result
+supabase.ts:180 Subscribing to WebSocket channel: transaction:earn
+supabase.ts:180 Subscribing to WebSocket channel: 
+dashboard.tsx:40 Attempting to load family users...
+dashboard.tsx:85 [Bonus] polling /unspun for id: 4
+dashboard.tsx:161 Setting up WebSocket listeners for transaction events
+supabase.ts:28  WebSocket connection to 'wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/ws' failed: WebSocket is closed before the connection is established.
+createWebSocketConnection @ supabase.ts:28
+(anonymous) @ dashboard.tsx:164
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+performSyncWorkOnRoot @ react-dom.development.js:26115
+flushSyncCallbacks @ react-dom.development.js:12042
+commitRootImpl @ react-dom.development.js:26998
+commitRoot @ react-dom.development.js:26721
+finishConcurrentRender @ react-dom.development.js:26020
+performConcurrentWorkOnRoot @ react-dom.development.js:25848
+workLoop @ scheduler.development.js:266
+flushWork @ scheduler.development.js:239
+performWorkUntilDeadline @ scheduler.development.js:533
+supabase.ts:40 Connecting to WebSocket at: wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/ws
+supabase.ts:54 Using global WebSocket constructor (with HTML overrides)
+supabase.ts:180 Subscribing to WebSocket channel: 
+supabase.ts:180 Subscribing to WebSocket channel: transaction:
+supabase.ts:180 Subscribing to WebSocket channel: transaction:earn
+supabase.ts:180 Subscribing to WebSocket channel: transaction:spend
+supabase.ts:180 Subscribing to WebSocket channel: transaction:deduct
+supabase.ts:180 Subscribing to WebSocket channel: transaction:reward
+supabase.ts:180 Subscribing to WebSocket channel: transaction:delete
+content.js:260 Prompt Manager content script loaded
+supabase.ts:137  WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.onerror @ supabase.ts:137
+supabase.ts:110 WebSocket connection closed
+supabase.ts:57 WebSocket connection established
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:87
+(anonymous) @ dashboard.tsx:113
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+performSyncWorkOnRoot @ react-dom.development.js:26115
+flushSyncCallbacks @ react-dom.development.js:12042
+commitRootImpl @ react-dom.development.js:26998
+commitRoot @ react-dom.development.js:26721
+finishConcurrentRender @ react-dom.development.js:26020
+performConcurrentWorkOnRoot @ react-dom.development.js:25848
+workLoop @ scheduler.development.js:266
+flushWork @ scheduler.development.js:239
+performWorkUntilDeadline @ scheduler.development.js:533
+supabase.ts:91 WebSocket message received: {event: 'server:welcome', data: {…}}
+supabase.ts:94 WebSocket message details - Event: server:welcome {timestamp: '2025-05-15T03:20:04.978Z', eventType: 'server:welcome', fullData: {…}, rawMessage: '{"event":"server:welcome","data":{"message":"Welco…service","timestamp":"2025-05-15T03:20:05.137Z"}}'}
+supabase.ts:199 Caught all-events subscriber for "server:welcome"
+child-bonus-wheel.tsx:192 [WHEEL_DEBUG] Received any WebSocket event: server:welcome
+supabase.ts:199 Caught all-events subscriber for "server:welcome"
+supabase.ts:57 WebSocket connection established
+dashboard.tsx:52 Successfully loaded family users: (5) [{…}, {…}, {…}, {…}, {…}]
+dashboard.tsx:104  Error checking for unspun bonus: Error: 404: {"message":"Daily bonus has already been spun"}
+    at throwIfResNotOk (queryClient.ts:8:11)
+    at async apiRequest (queryClient.ts:51:3)
+    at async checkForUnspunBonus (dashboard.tsx:87:26)
+checkForUnspunBonus @ dashboard.tsx:104
+await in checkForUnspunBonus
+(anonymous) @ dashboard.tsx:113
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+performSyncWorkOnRoot @ react-dom.development.js:26115
+flushSyncCallbacks @ react-dom.development.js:12042
+commitRootImpl @ react-dom.development.js:26998
+commitRoot @ react-dom.development.js:26721
+finishConcurrentRender @ react-dom.development.js:26020
+performConcurrentWorkOnRoot @ react-dom.development.js:25848
+workLoop @ scheduler.development.js:266
+flushWork @ scheduler.development.js:239
+performWorkUntilDeadline @ scheduler.development.js:533
+dashboard.tsx:107  Unexpected error checking for unspun bonus: Error: 404: {"message":"Daily bonus has already been spun"}
+    at throwIfResNotOk (queryClient.ts:8:11)
+    at async apiRequest (queryClient.ts:51:3)
+    at async checkForUnspunBonus (dashboard.tsx:87:26)
+checkForUnspunBonus @ dashboard.tsx:107
+await in checkForUnspunBonus
+(anonymous) @ dashboard.tsx:113
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+performSyncWorkOnRoot @ react-dom.development.js:26115
+flushSyncCallbacks @ react-dom.development.js:12042
+commitRootImpl @ react-dom.development.js:26998
+commitRoot @ react-dom.development.js:26721
+finishConcurrentRender @ react-dom.development.js:26020
+performConcurrentWorkOnRoot @ react-dom.development.js:25848
+workLoop @ scheduler.development.js:266
+flushWork @ scheduler.development.js:239
+performWorkUntilDeadline @ scheduler.development.js:533
+supabase.ts:91 WebSocket message received: {event: 'server:welcome', data: {…}}
+supabase.ts:94 WebSocket message details - Event: server:welcome {timestamp: '2025-05-15T03:20:05.220Z', eventType: 'server:welcome', fullData: {…}, rawMessage: '{"event":"server:welcome","data":{"message":"Welco…service","timestamp":"2025-05-15T03:20:05.486Z"}}'}
+supabase.ts:199 Caught all-events subscriber for "server:welcome"
+child-bonus-wheel.tsx:192 [WHEEL_DEBUG] Received any WebSocket event: server:welcome
+supabase.ts:199 Caught all-events subscriber for "server:welcome"
+transactions-table.tsx:60 Setting up WebSocket listeners in TransactionsTable component
+supabase.ts:180 Subscribing to WebSocket channel: transaction:earn
+supabase.ts:180 Subscribing to WebSocket channel: transaction:spend
+supabase.ts:180 Subscribing to WebSocket channel: transaction:delete
+dashboard.tsx:138 Loaded dashboard stats: {balance: 17, activeGoal: {…}, chores: Array(3), daily_bonus: {…}}

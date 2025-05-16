@@ -1,0 +1,268 @@
+You are absolutely persistent, and that's great! My apologies for the continued oversight on the core issue of the numbers not appearing on the wheel segments. I was getting carried away with the surrounding flair.
+
+The image you provided is a *huge* help. It clearly shows that the segments themselves are rendered, but the text labels are indeed missing.
+
+Let's get to the root of why the labels aren't rendering on the segments in your provided code and how to fix it, then we'll ensure the styling makes them pop.
+
+The most likely culprits for the labels not appearing, given your code structure:
+
+1.  **`clip-path` Interaction:** The `clip-path` on the segment's content `div` might be clipping away the label `div` if the label is positioned outside the clipped wedge or if the coordinate systems are misaligned.
+2.  **`z-index` Issues:** The labels might be rendered *behind* other elements (like the hub or other segments).
+3.  **Transform Origin & Positioning Complexity:** The combination of rotations and translations for the labels needs to be precise.
+
+**Let's Try a More Robust and Simplified Approach for Segment and Label Rendering:**
+
+The key is to simplify how each segment and its label are constructed and rotated. Instead of rotating the label *within* a clipped path that's also trying to be positioned, we can:
+
+1.  Create a container for each segment that is rotated.
+2.  Draw the segment wedge within that container.
+3.  Position and rotate the label *relative to the center of this rotated container*, ensuring it's drawn on top.
+
+Here's the revised JSX for the wheel rendering. **Pay close attention to the `WHEEL_SEGMENTS.map` block:**
+
+```tsx
+// ... (imports and other state/logic remain the same) ...
+
+export function DailyBonusWheel() {
+  // ... (state, refs, mutations, etc. remain the same) ...
+
+  // Get all child users
+  const childUsers = getChildUsers ? getChildUsers() : []; // Ensure getChildUsers is callable
+
+  // Get all chores for selection
+  const { data: choresData } = useQuery({ // Renamed to choresData to avoid conflict
+    queryKey: ["/api/chores"],
+    enabled: !isViewingAsChild()
+  });
+  const chores = Array.isArray(choresData) ? choresData : [];
+
+
+  // ... (handleSpinWheel and other functions remain mostly the same,
+  // ensure API response for spinMutation.onSuccess matches data.daily_bonus.bonus_tickets) ...
+
+  return (
+    <Card className="w-full">
+      {/* ... (CardHeader and CardDescription remain the same) ... */}
+      <CardContent className="flex flex-col items-center">
+        <div className="relative w-72 h-72 mb-6">
+          {/* Enhanced Pointer (remains the same) */}
+          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -mt-6 z-20"> {/* Increased z-index for pointer */}
+            <div className="relative">
+              <div className="w-7 h-7 bg-gradient-to-b from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center animate-bob drop-shadow-lg border-2 border-yellow-300">
+                <Star className="w-4 h-4 text-white" />
+              </div>
+              <div className="absolute top-5 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[8px] border-r-[8px] border-t-[12px] border-l-transparent border-r-transparent border-t-yellow-600"></div>
+            </div>
+          </div>
+
+          {/* Enhanced Wheel with border and definition */}
+          <div
+            ref={wheelRef}
+            className={cn(
+              "w-full h-full rounded-full shadow-xl relative overflow-hidden transition-transform ease-out",
+              isSpinning ? "cursor-not-allowed" : "cursor-pointer hover:scale-[1.02] transition-transform duration-200"
+            )}
+            style={{
+              transform: `rotate(${rotationDegrees}deg)`,
+              transitionDuration: isSpinning ? '8s' : '0s',
+              transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)', // Smoother spin
+              transformOrigin: 'center center',
+              boxShadow: '0px 0px 25px rgba(0,0,0,0.4), inset 0px 0px 10px rgba(0,0,0,0.2)',
+              border: '6px solid #FFF',
+              outline: '2px solid #DDD'
+            }}
+            onClick={!isSpinning ? handleSpinWheel : undefined}
+          >
+            {/*Segments Container - this div doesn't rotate with the wheel, segments are positioned absolutely inside it */}
+            <div className="absolute inset-0">
+              {WHEEL_SEGMENTS.map((segment, index) => {
+                const segmentCount = WHEEL_SEGMENTS.length;
+                const segmentAngleDegrees = 360 / segmentCount;
+                // Calculate the rotation for the *middle* of the segment for text alignment
+                const segmentMiddleRotationDegrees = (index * segmentAngleDegrees) + (segmentAngleDegrees / 2);
+
+                // --- Segment SVG Path Approach (More robust for shapes and future effects) ---
+                // This is an alternative, more complex but powerful way.
+                // For now, let's stick to fixing the clip-path if possible, but keep this in mind.
+                // const radius = 50; // Assuming percentage units for a 100x100 viewBox
+                // const startAngleRad = (index * segmentAngleDegrees - 90) * Math.PI / 180; // -90 to start from top
+                // const endAngleRad = ((index + 1) * segmentAngleDegrees - 90) * Math.PI / 180;
+                // const x1 = radius + radius * Math.cos(startAngleRad);
+                // const y1 = radius + radius * Math.sin(startAngleRad);
+                // const x2 = radius + radius * Math.cos(endAngleRad);
+                // const y2 = radius + radius * Math.sin(endAngleRad);
+                // const largeArcFlag = segmentAngleDegrees > 180 ? 1 : 0;
+                // const pathData = `M ${radius},${radius} L ${x1},${y1} A ${radius},${radius} 0 ${largeArcFlag},1 ${x2},${y2} Z`;
+                // --- End SVG Path Approach ---
+
+
+                // --- Using CSS `clip-path` by rotating individual segment containers ---
+                const individualSegmentRotation = index * segmentAngleDegrees;
+
+                return (
+                  <div
+                    key={segment.label + '-' + index} // More unique key
+                    className="absolute w-full h-full origin-center" // Each segment container rotates
+                    style={{
+                      transform: `rotate(${individualSegmentRotation}deg)`,
+                      zIndex: 1, // Base z-index for segments
+                    }}
+                  >
+                    {/* This div creates the actual colored wedge */}
+                    <div
+                      className="absolute w-full h-full"
+                      style={{
+                        background: segment.pattern || segment.color,
+                        // This clip-path creates a wedge pointing to the "right" (0 degrees)
+                        // Its rotation is handled by the parent container
+                        clipPath: `polygon(50% 50%, 100% 0, 100% 100%)`, // A triangle wedge
+                        // A more precise wedge (ensure this works with your browser):
+                        // clipPath: `path('M 50,50 L 100,${50 - Math.tan(segmentAngleDegrees / 2 * Math.PI / 180) * 50} L 100,${50 + Math.tan(segmentAngleDegrees / 2 * Math.PI / 180) * 50} Z')`,
+                        // Let's try your original clip path concept but simplified for a single segment before rotation
+                        // clipPath: `polygon(50% 50%, 100% 50%, ${50 + 50 * Math.cos(segmentAngleDegrees * Math.PI / 180)}% ${50 + 50 * Math.sin(segmentAngleDegrees * Math.PI / 180)}%)`
+                        // The above was trying to calculate absolute points, let's simplify:
+                        // We want a wedge from the center, extending out for segmentAngleDegrees
+                        // Simplest for CSS clip-path: create a pie slice pointing right, then rotate its container
+                        // The width of the wedge at its widest point (100% from center)
+                        // is 2 * 50 * tan(segmentAngleDegrees / 2).
+                        // The y-coordinates for the polygon points at 100% x would be 50% ± (50 * tan(segmentAngle/2)).
+                        clipPath: `polygon(50% 50%, 100% ${50 - Math.tan(segmentAngleDegrees/2 * Math.PI/180) * 50}%, 100% ${50 + Math.tan(segmentAngleDegrees/2 * Math.PI/180) * 50}%)`,
+
+                        borderRight: '1px solid rgba(0,0,0,0.1)', // Subtle border between segments
+                      }}
+                    />
+                    {/* Label for the segment */}
+                    <div
+                      className="absolute w-full h-full flex items-center justify-center pointer-events-none" // pointer-events-none so it doesn't interfere with wheel click
+                      style={{
+                        // Counter-rotate the label to keep it upright, aligned with the segment's center line
+                        transform: `rotate(${-segmentAngleDegrees / 2}deg)`,
+                        color: segment.textColor || '#FFFFFF',
+                        zIndex: 5, // Ensure label is above its segment
+                      }}
+                    >
+                      <div
+                        className="text-center font-extrabold"
+                        style={{
+                          // Position text radially outwards. Adjust translateY for distance from center.
+                          transform: 'translateY(-30%)', // Pushes text towards the outer edge
+                          textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
+                        }}
+                      >
+                        <div className="flex flex-col items-center">
+                           <div
+                            className="bg-black bg-opacity-70 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md border border-white border-opacity-50 shadow-md text-center"
+                            style={{
+                              minWidth: '40px', // Smaller for numbers
+                            }}
+                          >
+                            <span style={{
+                              fontSize: '18px', // Adjust for legibility
+                              lineHeight: '1.1',
+                              fontFamily: '"Arial Rounded MT Bold", "Helvetica Neue", Helvetica, Arial, sans-serif',
+                            }}>{segment.label}</span>
+                            <div className="text-[0.5rem] font-medium text-gray-300 tracking-tighter">TICKETS</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Enhanced Center hub */}
+            <div
+              className="absolute top-1/2 left-1/2 w-16 h-16 rounded-full bg-gradient-to-b from-white to-gray-200 shadow-lg transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center border-2 border-gray-300"
+              style={{
+                boxShadow: 'inset 0 0 10px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.2)',
+                zIndex: 10 // Hub above segments but below pointer
+              }}
+            >
+              <div className="font-bold text-base text-center flex flex-col items-center">
+                <Star className="w-4 h-4 text-yellow-500 mb-0.5" />
+                <span className="text-gray-800">SPIN!</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ... (Result Display, Controls, Footer - needs Tailwind keyframes for confetti) ... */}
+      </CardContent>
+      <CardFooter>
+      {/* ... Button ... */}
+      <style dangerouslySetInnerHTML={{ __html: `
+            @keyframes shimmer {
+              0% { background-position: 0% 50%; }
+              50% { background-position: 100% 50%; }
+              100% { background-position: 0% 50%; }
+            }
+            @keyframes confetti-pop {
+              0% { transform: translate(-50%, -50%) scale(0) rotate(var(--r, 0deg)); opacity: 0; }
+              50% { transform: translate(calc(-50% + var(--tx, 0px)), calc(-50% + var(--ty, 0px))) scale(1.2) rotate(var(--r, 0deg)); opacity: 1; }
+              100% { transform: translate(calc(-50% + var(--tx, 0px) * 2), calc(-50% + var(--ty, 0px) * 2)) scale(0) rotate(calc(var(--r, 0deg) + 180deg)); opacity: 0; }
+            }
+            .animate-confetti-pop {
+              animation-name: confetti-pop;
+              animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+              animation-fill-mode: forwards;
+            }
+            @keyframes wheel-result-appear {
+              0% { transform: scale(0.5); opacity: 0; }
+              70% { transform: scale(1.1); opacity: 1; }
+              100% { transform: scale(1); opacity: 1; }
+            }
+            .animate-wheel-result-appear {
+              animation: wheel-result-appear 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            }
+            @keyframes bob {
+              0%, 100% { transform: translateY(-3px) translateX(-50%); }
+              50% { transform: translateY(3px) translateX(-50%); }
+            }
+            .animate-bob {
+              animation: bob 1.5s ease-in-out infinite;
+            }
+          `}} />
+      </CardFooter>
+    </Card>
+  );
+}
+
+```
+
+**Explanation of the Fixes for Label Visibility:**
+
+1.  **Simplified Segment Rotation & Clip-Path:**
+    *   Each segment now has an outer `div` that is rotated around the wheel's center (`origin-center` and `transform: rotate(${individualSegmentRotation}deg)`).
+    *   Inside this rotated container, the actual colored wedge is drawn using a *standardized* `clip-path: polygon(50% 50%, 100% ${50 - Math.tan(segmentAngleDegrees/2 * Math.PI/180) * 50}%, 100% ${50 + Math.tan(segmentAngleDegrees/2 * Math.PI/180) * 50}%)`. This creates a wedge that always points to the "right" (0 degrees) *before* its container rotates it into its final position. This is generally more reliable than calculating absolute polygon points for each segment.
+    *   `borderRight: '1px solid rgba(0,0,0,0.1)'`: Added a subtle border on one edge of the clipped segment to visually separate them. You might need to adjust which edge or use a different border technique for perfect seams.
+
+2.  **Label Container and Counter-Rotation:**
+    *   The label `div` is a direct child of the *rotated segment container*.
+    *   `transform: rotate(${-segmentAngleDegrees / 2}deg)`: This is applied to the label's *immediate parent `div` (the one with flex centering)*. It rotates the label *back* so that it appears upright and aligned with the center radius of its segment.
+    *   `transform: 'translateY(-30%)'` on the inner label content `div` pushes it radially outwards. **This is the primary value you'll need to tweak** to get the labels visually centered within each segment's depth. Try values like `-25%`, `-35%`, `-40%`.
+    *   `pointer-events-none` on the label container ensures it doesn't block clicks on the wheel itself.
+
+3.  **Z-Indexing:**
+    *   Segment containers: `zIndex: 1`
+    *   Labels: `zIndex: 5` (ensures labels are on top of their segment's background)
+    *   Hub: `zIndex: 10`
+    *   Pointer: `zIndex: 20` (highest, so it's always on top)
+
+4.  **Styling for Labels:**
+    *   Reduced `fontSize` (`18px`) and `minWidth` (`40px`) for the label background box.
+    *   Adjusted `lineHeight` and `fontFamily` for better visual appeal and legibility.
+    *   Changed "TICKETS" text to `text-[0.5rem] font-medium text-gray-300 tracking-tighter` for a more subdued but still readable look.
+
+5.  **Keyframes:**
+    *   Moved the `@keyframes` for `shimmer`, `confetti-pop`, `wheel-result-appear`, and `bob` into a `<style dangerouslySetInnerHTML={{ __html: \`...\`}} />` block within the `CardFooter` (or anywhere in the component) because Tailwind's JIT compiler might not pick them up correctly if they use CSS custom properties (`--tx`, `--ty`, `--r`) in this dynamic way within `style` attributes. This ensures they are globally available to the component.
+
+**To Make This Work:**
+
+1.  **Replace** the entire `WHEEL_SEGMENTS.map(...)` block in your `DailyBonusWheel.tsx` with the updated version provided above.
+2.  **Ensure Keyframes are Defined:**
+    *   The `shimmer`, `confetti-pop`, `wheel-result-appear`, and `bob` keyframes need to be defined. I've included them in a `<style>` tag at the end of the `CardFooter` for simplicity. Alternatively, add them to your global CSS file (`client/src/index.css`) or `tailwind.config.js` (though dynamic CSS variables in Tailwind keyframes can be tricky).
+3.  **`getChildUsers`:** Make sure `getChildUsers` is actually defined and callable in your `useAuthStore`. If it's meant to be a selector, it should be `const childUsers = useAuthStore(state => state.childUsers);` (assuming `childUsers` is part of your auth store state). I added a fallback `getChildUsers ? getChildUsers() : []`.
+4.  **API Response for Spin:** Double-check that your `/api/spin-wheel` backend endpoint returns a JSON object like `{ daily_bonus: { bonus_tickets: 5 } }` for the `onSuccess` handler of `spinMutation` to work correctly.
+
+After these changes, the labels should now be visible on the wheel. You'll likely need to fine-tune the `translateY(-30%)` value and font sizes to get the perfect visual placement for your specific wheel design.

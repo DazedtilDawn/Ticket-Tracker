@@ -1,0 +1,203 @@
+## 1  Information Review & Gap Check
+
+You supplied:
+
+* **Problem statement** – any chore completion → `POST /api/earn` always returns
+  `{ bonus_triggered: false, daily_bonus_id: null }`, so the spin-wheel modal never opens.
+* **Evidence** – repeated console logs from **client** and **server** show that
+  `dailyBonus.is_spun` is already `true` when `/api/earn` runs.
+* **Suspected fault domain** – server-side bonus lifecycle (assignment ⇾ reset ⇾ earn).
+* **Environment** – Node/Express API, Postgres (Neon), Supabase real-time channel, React front-end.
+
+No further data is needed to proceed, so I will move directly to hypothesis and diagnostic strategy.
+
+---
+
+## 2  Hypotheses & Diagnostic Strategy
+
+| #      | Plausible Root Cause                                                                                                                                     | Why It Fits the Evidence                                                                | Targeted Diagnostic Approach                                                                                                                   |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **H1** | **Bonus records created with `is_spun = true`** during initial assignment or reset.                                                                      | `/api/earn` invariably finds a “spun” record even before the child completes the chore. | *Static review* of `assignDailyBonusChore` & callers → instrument *write path* with structured logging showing the exact row values persisted. |
+| **H2** | **Date mismatch / timezone drift** means `/api/earn` fetches yesterday’s spun record instead of today’s.                                                 | Could explain valid `is_spun` true but wrong date.                                      | Inject log of `today` calc in *every* path (`Date.toISOString()` etc.) + isolate Postgres query parameters → compare.                          |
+| **H3** | **Chore-ID mismatch**: assignment chooses Chore X but UI completes Chore Y, so `/api/earn` never hits the same row and falls back to “no un-spun bonus.” | Would still return `false`, but only when chore IDs differ.                             | Capture logs of `assigned_chore_id` at assignment, and log chore ID arriving in `/api/earn` for comparison.                                    |
+| **H4** | **Reset endpoint** deletes the wrong row then immediately re-creates a new row but erroneously sets `is_spun = true`.                                    | Fits symptoms seen after manual resets.                                                 | Structured logging around `/api/reset-daily-bonus` and `deleteDailyBonus`.                                                                     |
+
+**Prioritisation:** H1 ≥ H4 » H2 ≥ H3, because the simplest path-logic bug in `assignDailyBonusChore` or reset is most consistent with *every* test returning `false`.
+
+**State-of-the-art tools leveraged**
+
+* **Dynamic instrumentation** – temporary **Pino**/**Winston** JSON logging at critical write/read locations (better than raw `console.log` for searching).
+* **Time-zone sanity** – use **luxon** or **date-fns-tz** inside logs to output both UTC and local.
+* **Log diffing** – pipe JSON logs into **jq** or **Lens** query in VS Code for quick correlation.
+* **Fault-localisation assist** – a tiny **Spectrum-based fault localisation** script (e.g., PySFL) can later highlight suspicious lines once multiple passing/failing traces exist, but immediate human inspection is faster here.
+
+---
+
+## 3  Instrumentation Patch (surgical logging)
+
+Below are minimal, **copy-pastable** modifications.
+*Assumes Pino logger is already configured as `logger`; replace with `console.log` if not.*
+
+### 3.1 `server/storage.ts`
+
+```typescript
+// ↑ existing imports
+import { DateTime } from "luxon";   // only if you want robust tz logging
+
+// …in assignDailyBonusChore()
+export async function assignDailyBonusChore(childId: number, date: string) {
+  const now = DateTime.local().toISO();      // ISO in local tz
+  logger.debug({
+    tag: "ASSIGN_BONUS_CHORE:start",
+    childId,
+    date,
+    now
+  });
+
+  // 1. check for existing record
+  const existing = await prisma.dailyBonus.findFirst({
+    where: { user_id: childId, date },
+  });
+  logger.debug({ tag: "ASSIGN_BONUS_CHORE:existing", existing });
+
+  if (existing) return existing;   // early-return path
+
+  // 2. pick eligible chore
+  const chores = await prisma.chore.findMany({ where: { user_id: childId } });
+  logger.debug({ tag: "ASSIGN_BONUS_CHORE:eligible", choresCount: chores.length });
+  const selected = chores[Math.floor(Math.random() * chores.length)];
+
+  const record = await prisma.dailyBonus.create({
+    data: {
+      user_id: childId,
+      date,
+      assigned_chore_id: selected.id,
+      is_spun: false,               // ← **critical field**
+      trigger_type: "chore_completion",
+    },
+  });
+  logger.info({ tag: "ASSIGN_BONUS_CHORE:created", record });
+  return record;
+}
+```
+
+### 3.2 `server/routes.ts` – `POST /api/earn`
+
+```typescript
+router.post("/api/earn", async (req, res) => {
+  const { user_id, chore_id } = req.body;
+  const date = new Date().toISOString().split("T")[0];
+
+  logger.debug({
+    tag: "API_EARN:start",
+    user_id,
+    chore_id,
+    date,
+  });
+
+  const bonus = await storage.getDailyBonus(user_id, date);
+
+  logger.debug({ tag: "API_EARN:bonusLookup", bonus });
+
+  if (bonus && !bonus.is_spun && bonus.assigned_chore_id === chore_id) {
+    // mark spun
+    const updated = await prisma.dailyBonus.update({
+      where: { id: bonus.id },
+      data: { is_spun: true },
+    });
+    logger.info({ tag: "API_EARN:bonusTriggered", updated });
+    return res.json({ bonus_triggered: true, daily_bonus_id: bonus.id });
+  }
+  logger.info({ tag: "API_EARN:noBonus", reason: "not found or already spun" });
+  return res.json({ bonus_triggered: false, daily_bonus_id: null });
+});
+```
+
+### 3.3 `server/routes.ts` – `POST /api/reset-daily-bonus`
+
+```typescript
+router.post("/api/reset-daily-bonus", async (req, res) => {
+  const { user_id } = req.body;
+  const date = new Date().toISOString().split("T")[0];
+
+  logger.warn({ tag: "API_RESET_BONUS:start", user_id, date });
+
+  await storage.deleteDailyBonus(user_id, date);
+  logger.warn({ tag: "API_RESET_BONUS:afterDelete" });
+
+  const record = await storage.assignDailyBonusChore(user_id, date);
+  logger.warn({ tag: "API_RESET_BONUS:newBonus", record });
+
+  res.json({ ok: true, new_bonus: record });
+});
+```
+
+*(Add analogous logs inside `deleteDailyBonus`.)*
+
+---
+
+## 4  Execution Plan
+
+1. **Apply patches** above (or equivalent raw `console.log` lines).
+
+2. **Restart** backend with a clean log sink (e.g., `pnpm dev | tee debug.log`).
+
+3. **Truncate** today’s rows in `dailyBonus` for a clean slate:
+
+   ```sql
+   DELETE FROM dailyBonus WHERE date = CURRENT_DATE;
+   ```
+
+4. **Scenario walk-through** *(mirrors your outlined steps)*
+
+   1. Parent login → observe `[PARENT_LOGIN_BONUS_TRIGGER]…` + `ASSIGN_BONUS_CHORE:*`.
+   2. Confirm `record.is_spun === false`.
+   3. Child completes *that exact chore* → `/api/earn` logs should now hit the `bonusTriggered` path and return `bonus_triggered: true`.
+   4. If still `false`, immediately inspect log pairs:
+
+      * Was `bonus.assigned_chore_id` ≠ `chore_id`? ⇒ H3.
+      * Was `bonus.date` ≠ today? ⇒ H2.
+      * Was `bonus.is_spun` already true? ⇒ H1/H4.
+
+5. Iterate once; the guilty path will surface quickly.
+
+---
+
+## 5  Follow-up Fix (after evidence)
+
+* **If H1/H4 confirmed** – trace caller that sets `is_spun` prematurely; patch to `false`.
+* **If H2** – normalise date creation via `DateTime.now().setZone("UTC").toISODate()` project-wide.
+* **If H3** – sync chore ID  mapping on client or adjust `/api/earn` logic to accept aliases.
+
+---
+
+## 6  Verification Suite
+
+* **Unit tests** (Jest + Prisma test DB):
+
+  1. *assign* → row `is_spun=false`.
+  2. *earn matching chore* → response `true`, row updated `is_spun=true`.
+  3. *earn non-matching chore* → response `false`.
+  4. *reset* → old row removed; new row `is_spun=false`.
+
+* **Integration test** – Cypress flow: parent login → child completes correct chore → spin modal visible.
+
+---
+
+## 7  Preventative Measures
+
+| Layer               | Recommendation                                                                                                                            |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| **Code-quality**    | *Enable type-safe schema diffing* (e.g., `prisma db push --preview-feature`) in CI to catch field-name drift like `is_spun`.              |
+| **Static analysis** | Add **ESLint rule** forbidding direct writes to `dailyBonus.is_spun` outside the dedicated service function.                              |
+| **Runtime guards**  | Wrap DB writes in **Zod**-validated DTOs; invalid `is_spun` default would be rejected early.                                              |
+| **Observability**   | Promote these debug logs to **structured info** logs with unique `trace_id` so future regressions are one-query away in Grafana/Loki.     |
+| **Team practice**   | Document “bonus lifecycle” sequence diagram in repo wiki; add *pre-merge checklist* line “✅ /api/earn happy-path integration test green.” |
+
+---
+
+### Bottom Line
+
+Instrument first, *prove* exactly why `is_spun` is set (or why date/IDs diverge), then the corrective patch will be one-line obvious. Once `/api/earn` returns `bonus_triggered: true` in the happy path, we can safely move on to the spin-wheel UI.
+
+Let me know once you have the new logs, and we’ll zero in on the definitive culprit.

@@ -1,0 +1,730 @@
+(index):53 [DEBUG_HTML] Pre-bundle WebSocket override script executing.
+(index):120 [DEBUG_HTML] window.WebSocket has been overridden from HTML.
+(index):64  [DEBUG_HTML] BLOCKING WebSocket attempt (HTML override): wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev:/?token=8Cjge7n6uumV
+value @ (index):64
+setupWebSocket @ client:536
+(anonymous) @ client:531
+(index):67  [DEBUG_HTML] WebSocket blocked - Call stack: Error
+    at new value (https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/:67:76)
+    at setupWebSocket (https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/@vite/client:536:19)
+    at https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/@vite/client:531:12
+value @ (index):67
+setupWebSocket @ client:536
+(anonymous) @ client:531
+(index):76  [DEBUG_HTML] Found WebSocket with token parameter
+value @ (index):76
+setupWebSocket @ client:536
+(anonymous) @ client:531
+[NEW] Explain Console errors by using Copilot in Edge: click
+         
+         to explain an error. 
+        Learn more
+        Don't show again
+react-dom.development.js:29895 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+main.tsx:3 [DEBUG] Main.tsx: Relying on the HTML WebSocket override.
+supabase.ts:40 Connecting to WebSocket at: wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/ws
+supabase.ts:54 Using global WebSocket constructor (with HTML overrides)
+App.tsx:83 Checking authentication status, auto-login: true
+supabase.ts:57 WebSocket connection established
+child-bonus-wheel.tsx:167 [WHEEL_DEBUG] Setting up WebSocket listeners for bonus spin events
+supabase.ts:40 Connecting to WebSocket at: wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/ws
+supabase.ts:54 Using global WebSocket constructor (with HTML overrides)
+supabase.ts:180 Subscribing to WebSocket channel: bonus_spin:result
+supabase.ts:180 Subscribing to WebSocket channel: transaction:earn
+supabase.ts:180 Subscribing to WebSocket channel: 
+dashboard.tsx:41 Attempting to load family users...
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+dashboard.tsx:162 Setting up WebSocket listeners for transaction events
+supabase.ts:28  WebSocket connection to 'wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/ws' failed: WebSocket is closed before the connection is established.
+createWebSocketConnection @ supabase.ts:28
+(anonymous) @ dashboard.tsx:165
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+performSyncWorkOnRoot @ react-dom.development.js:26115
+flushSyncCallbacks @ react-dom.development.js:12042
+commitRootImpl @ react-dom.development.js:26998
+commitRoot @ react-dom.development.js:26721
+finishConcurrentRender @ react-dom.development.js:26020
+performConcurrentWorkOnRoot @ react-dom.development.js:25848
+workLoop @ scheduler.development.js:266
+flushWork @ scheduler.development.js:239
+performWorkUntilDeadline @ scheduler.development.js:533
+supabase.ts:40 Connecting to WebSocket at: wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/ws
+supabase.ts:54 Using global WebSocket constructor (with HTML overrides)
+supabase.ts:180 Subscribing to WebSocket channel: 
+supabase.ts:180 Subscribing to WebSocket channel: transaction:
+supabase.ts:180 Subscribing to WebSocket channel: transaction:earn
+supabase.ts:180 Subscribing to WebSocket channel: transaction:spend
+supabase.ts:180 Subscribing to WebSocket channel: transaction:deduct
+supabase.ts:180 Subscribing to WebSocket channel: transaction:reward
+supabase.ts:180 Subscribing to WebSocket channel: transaction:delete
+content.js:260 Prompt Manager content script loaded
+supabase.ts:91 WebSocket message received: {event: 'server:welcome', data: {…}}
+supabase.ts:94 WebSocket message details - Event: server:welcome {timestamp: '2025-05-15T04:06:37.744Z', eventType: 'server:welcome', fullData: {…}, rawMessage: '{"event":"server:welcome","data":{"message":"Welco…service","timestamp":"2025-05-15T04:06:37.896Z"}}'}
+supabase.ts:199 Caught all-events subscriber for "server:welcome"
+child-bonus-wheel.tsx:192 [WHEEL_DEBUG] Received any WebSocket event: server:welcome
+supabase.ts:199 Caught all-events subscriber for "server:welcome"
+supabase.ts:137  WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.onerror @ supabase.ts:137
+supabase.ts:110 WebSocket connection closed
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+(anonymous) @ dashboard.tsx:114
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+performSyncWorkOnRoot @ react-dom.development.js:26115
+flushSyncCallbacks @ react-dom.development.js:12042
+commitRootImpl @ react-dom.development.js:26998
+commitRoot @ react-dom.development.js:26721
+finishConcurrentRender @ react-dom.development.js:26020
+performConcurrentWorkOnRoot @ react-dom.development.js:25848
+workLoop @ scheduler.development.js:266
+flushWork @ scheduler.development.js:239
+performWorkUntilDeadline @ scheduler.development.js:533
+supabase.ts:57 WebSocket connection established
+supabase.ts:91 WebSocket message received: {event: 'server:welcome', data: {…}}
+supabase.ts:94 WebSocket message details - Event: server:welcome {timestamp: '2025-05-15T04:06:38.254Z', eventType: 'server:welcome', fullData: {…}, rawMessage: '{"event":"server:welcome","data":{"message":"Welco…service","timestamp":"2025-05-15T04:06:38.515Z"}}'}
+supabase.ts:199 Caught all-events subscriber for "server:welcome"
+child-bonus-wheel.tsx:192 [WHEEL_DEBUG] Received any WebSocket event: server:welcome
+supabase.ts:199 Caught all-events subscriber for "server:welcome"
+dashboard.tsx:53 Successfully loaded family users: (5) [{…}, {…}, {…}, {…}, {…}]
+dashboard.tsx:105  Error checking for unspun bonus: Error: 404: {"message":"Daily bonus has already been spun"}
+    at throwIfResNotOk (queryClient.ts:8:11)
+    at async apiRequest (queryClient.ts:51:3)
+    at async checkForUnspunBonus (dashboard.tsx:88:26)
+checkForUnspunBonus @ dashboard.tsx:105
+await in checkForUnspunBonus
+(anonymous) @ dashboard.tsx:114
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+performSyncWorkOnRoot @ react-dom.development.js:26115
+flushSyncCallbacks @ react-dom.development.js:12042
+commitRootImpl @ react-dom.development.js:26998
+commitRoot @ react-dom.development.js:26721
+finishConcurrentRender @ react-dom.development.js:26020
+performConcurrentWorkOnRoot @ react-dom.development.js:25848
+workLoop @ scheduler.development.js:266
+flushWork @ scheduler.development.js:239
+performWorkUntilDeadline @ scheduler.development.js:533
+dashboard.tsx:108  Unexpected error checking for unspun bonus: Error: 404: {"message":"Daily bonus has already been spun"}
+    at throwIfResNotOk (queryClient.ts:8:11)
+    at async apiRequest (queryClient.ts:51:3)
+    at async checkForUnspunBonus (dashboard.tsx:88:26)
+checkForUnspunBonus @ dashboard.tsx:108
+await in checkForUnspunBonus
+(anonymous) @ dashboard.tsx:114
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+performSyncWorkOnRoot @ react-dom.development.js:26115
+flushSyncCallbacks @ react-dom.development.js:12042
+commitRootImpl @ react-dom.development.js:26998
+commitRoot @ react-dom.development.js:26721
+finishConcurrentRender @ react-dom.development.js:26020
+performConcurrentWorkOnRoot @ react-dom.development.js:25848
+workLoop @ scheduler.development.js:266
+flushWork @ scheduler.development.js:239
+performWorkUntilDeadline @ scheduler.development.js:533
+transactions-table.tsx:60 Setting up WebSocket listeners in TransactionsTable component
+supabase.ts:180 Subscribing to WebSocket channel: transaction:earn
+supabase.ts:180 Subscribing to WebSocket channel: transaction:spend
+supabase.ts:180 Subscribing to WebSocket channel: transaction:delete
+dashboard.tsx:139 Loaded dashboard stats: {balance: 0, activeGoal: {…}, chores: Array(3), daily_bonus: {…}}
+supabase.ts:91 WebSocket message received: {event: 'transaction:delete', data: {…}}
+supabase.ts:94 WebSocket message details - Event: transaction:delete {timestamp: '2025-05-15T04:06:44.768Z', eventType: 'transaction:delete', fullData: {…}, rawMessage: '{"event":"transaction:delete","data":{"transaction…5-13T20:26:48.045Z","camel_last_checked":null}}}}'}
+supabase.ts:199 Caught all-events subscriber for "transaction:delete"
+child-bonus-wheel.tsx:192 [WHEEL_DEBUG] Received any WebSocket event: transaction:delete
+supabase.ts:199 Caught all-events subscriber for "transaction:delete"
+supabase.ts:201 Event match for "transaction:" - received "transaction:delete"
+dashboard.tsx:176 Received any transaction event - general handler: {event: 'transaction:delete', data: {…}}
+dashboard.tsx:191 General transaction handler - Current user ID: 4, transaction for user ID: 4
+dashboard.tsx:195 Transaction is for current user, showing toast and updating UI
+dashboard.tsx:206 Updating balance directly in the cache: -5
+dashboard.tsx:217 Invalidating and refreshing ALL transaction and stats queries
+supabase.ts:201 Event match for "transaction:delete" - received "transaction:delete"
+dashboard.tsx:407 Received transaction:delete event: {event: 'transaction:delete', data: {…}}
+dashboard.tsx:414 Transaction delete - Current user ID: 4, affected user ID: 4
+dashboard.tsx:418 Transaction delete is for current user, updating UI with new balance and goal data
+dashboard.tsx:438 Updating goal data in stats cache: {id: 3, user_id: 4, product_id: 10, tickets_saved: 0, is_active: true, …}
+dashboard.tsx:452 Transaction:delete event - forcing complete data refresh cycle
+supabase.ts:201 Event match for "transaction:delete" - received "transaction:delete"
+transactions-table.tsx:103 TransactionsTable received delete event: {event: 'transaction:delete', data: {…}}
+transactions-table.tsx:106 TransactionsTable: transaction:delete event - forcing complete refresh
+dashboard.tsx:139 Loaded dashboard stats: {balance: -5, activeGoal: {…}, chores: Array(3), daily_bonus: {…}}
+supabase.ts:91 WebSocket message received: {event: 'transaction:delete', data: {…}}
+supabase.ts:94 WebSocket message details - Event: transaction:delete {timestamp: '2025-05-15T04:06:44.793Z', eventType: 'transaction:delete', fullData: {…}, rawMessage: '{"event":"transaction:delete","data":{"transaction…5-13T20:26:48.045Z","camel_last_checked":null}}}}'}
+supabase.ts:199 Caught all-events subscriber for "transaction:delete"
+child-bonus-wheel.tsx:192 [WHEEL_DEBUG] Received any WebSocket event: transaction:delete
+supabase.ts:199 Caught all-events subscriber for "transaction:delete"
+supabase.ts:201 Event match for "transaction:" - received "transaction:delete"
+dashboard.tsx:176 Received any transaction event - general handler: {event: 'transaction:delete', data: {…}}
+dashboard.tsx:191 General transaction handler - Current user ID: 4, transaction for user ID: 4
+dashboard.tsx:195 Transaction is for current user, showing toast and updating UI
+dashboard.tsx:206 Updating balance directly in the cache: -5
+dashboard.tsx:217 Invalidating and refreshing ALL transaction and stats queries
+supabase.ts:201 Event match for "transaction:delete" - received "transaction:delete"
+dashboard.tsx:407 Received transaction:delete event: {event: 'transaction:delete', data: {…}}
+dashboard.tsx:414 Transaction delete - Current user ID: 4, affected user ID: 4
+dashboard.tsx:418 Transaction delete is for current user, updating UI with new balance and goal data
+dashboard.tsx:438 Updating goal data in stats cache: {id: 3, user_id: 4, product_id: 10, tickets_saved: 0, is_active: true, …}
+dashboard.tsx:452 Transaction:delete event - forcing complete data refresh cycle
+supabase.ts:201 Event match for "transaction:delete" - received "transaction:delete"
+transactions-table.tsx:103 TransactionsTable received delete event: {event: 'transaction:delete', data: {…}}
+transactions-table.tsx:106 TransactionsTable: transaction:delete event - forcing complete refresh
+transactions-table.tsx:156 Forcing immediate refetch after transaction deletion
+dashboard.tsx:458 Executing delayed refetch for transaction:delete event
+transactions-table.tsx:117 TransactionsTable: executing delayed refetch after transaction:delete
+dashboard.tsx:458 Executing delayed refetch for transaction:delete event
+transactions-table.tsx:117 TransactionsTable: executing delayed refetch after transaction:delete
+transactions-table.tsx:124 TransactionsTable: executing final delayed refetch after transaction:delete
+transactions-table.tsx:124 TransactionsTable: executing final delayed refetch after transaction:delete
+dashboard.tsx:139 Loaded dashboard stats: {balance: -5, activeGoal: {…}, chores: Array(3), daily_bonus: {…}}
+supabase.ts:91 WebSocket message received: {event: 'transaction:delete', data: {…}}
+supabase.ts:94 WebSocket message details - Event: transaction:delete {timestamp: '2025-05-15T04:06:48.031Z', eventType: 'transaction:delete', fullData: {…}, rawMessage: '{"event":"transaction:delete","data":{"transaction_id":93,"user_id":4,"balance":0,"goal":null}}'}
+supabase.ts:199 Caught all-events subscriber for "transaction:delete"
+child-bonus-wheel.tsx:192 [WHEEL_DEBUG] Received any WebSocket event: transaction:delete
+supabase.ts:199 Caught all-events subscriber for "transaction:delete"
+supabase.ts:201 Event match for "transaction:" - received "transaction:delete"
+dashboard.tsx:176 Received any transaction event - general handler: {event: 'transaction:delete', data: {…}}
+dashboard.tsx:191 General transaction handler - Current user ID: 4, transaction for user ID: 4
+dashboard.tsx:195 Transaction is for current user, showing toast and updating UI
+dashboard.tsx:206 Updating balance directly in the cache: 0
+dashboard.tsx:217 Invalidating and refreshing ALL transaction and stats queries
+supabase.ts:201 Event match for "transaction:delete" - received "transaction:delete"
+dashboard.tsx:407 Received transaction:delete event: {event: 'transaction:delete', data: {…}}
+dashboard.tsx:414 Transaction delete - Current user ID: 4, affected user ID: 4
+dashboard.tsx:418 Transaction delete is for current user, updating UI with new balance and goal data
+dashboard.tsx:452 Transaction:delete event - forcing complete data refresh cycle
+supabase.ts:201 Event match for "transaction:delete" - received "transaction:delete"
+transactions-table.tsx:103 TransactionsTable received delete event: {event: 'transaction:delete', data: {…}}
+transactions-table.tsx:106 TransactionsTable: transaction:delete event - forcing complete refresh
+supabase.ts:91 WebSocket message received: {event: 'transaction:delete', data: {…}}
+supabase.ts:94 WebSocket message details - Event: transaction:delete {timestamp: '2025-05-15T04:06:48.037Z', eventType: 'transaction:delete', fullData: {…}, rawMessage: '{"event":"transaction:delete","data":{"transaction_id":93,"user_id":4,"balance":0,"goal":null}}'}
+supabase.ts:199 Caught all-events subscriber for "transaction:delete"
+child-bonus-wheel.tsx:192 [WHEEL_DEBUG] Received any WebSocket event: transaction:delete
+supabase.ts:199 Caught all-events subscriber for "transaction:delete"
+supabase.ts:201 Event match for "transaction:" - received "transaction:delete"
+dashboard.tsx:176 Received any transaction event - general handler: {event: 'transaction:delete', data: {…}}
+dashboard.tsx:191 General transaction handler - Current user ID: 4, transaction for user ID: 4
+dashboard.tsx:195 Transaction is for current user, showing toast and updating UI
+dashboard.tsx:206 Updating balance directly in the cache: 0
+dashboard.tsx:217 Invalidating and refreshing ALL transaction and stats queries
+supabase.ts:201 Event match for "transaction:delete" - received "transaction:delete"
+dashboard.tsx:407 Received transaction:delete event: {event: 'transaction:delete', data: {…}}
+dashboard.tsx:414 Transaction delete - Current user ID: 4, affected user ID: 4
+dashboard.tsx:418 Transaction delete is for current user, updating UI with new balance and goal data
+dashboard.tsx:452 Transaction:delete event - forcing complete data refresh cycle
+supabase.ts:201 Event match for "transaction:delete" - received "transaction:delete"
+transactions-table.tsx:103 TransactionsTable received delete event: {event: 'transaction:delete', data: {…}}
+transactions-table.tsx:106 TransactionsTable: transaction:delete event - forcing complete refresh
+dashboard.tsx:139 Loaded dashboard stats: {balance: undefined, activeGoal: {…}, chores: Array(3), daily_bonus: {…}}
+transactions-table.tsx:156 Forcing immediate refetch after transaction deletion
+dashboard.tsx:458 Executing delayed refetch for transaction:delete event
+transactions-table.tsx:117 TransactionsTable: executing delayed refetch after transaction:delete
+dashboard.tsx:458 Executing delayed refetch for transaction:delete event
+transactions-table.tsx:117 TransactionsTable: executing delayed refetch after transaction:delete
+transactions-table.tsx:124 TransactionsTable: executing final delayed refetch after transaction:delete
+transactions-table.tsx:124 TransactionsTable: executing final delayed refetch after transaction:delete
+dashboard.tsx:139 Loaded dashboard stats: {balance: 0, activeGoal: {…}, chores: Array(3), daily_bonus: {…}}
+dashboard.tsx:490 Adding user_id to chore completion payload: 4
+dashboard.tsx:494 Submitting chore completion with payload: {chore_id: 1, user_id: 4}
+supabase.ts:91 WebSocket message received: {event: 'transaction:earn', data: {…}}
+supabase.ts:94 WebSocket message details - Event: transaction:earn {timestamp: '2025-05-15T04:06:53.424Z', eventType: 'transaction:earn', fullData: {…}, rawMessage: '{"event":"transaction:earn","data":{"data":{"id":9…,"bonus_triggered":false,"daily_bonus_id":null}}}'}
+supabase.ts:201 Event match for "transaction:earn" - received "transaction:earn"
+supabase.ts:199 Caught all-events subscriber for "transaction:earn"
+child-bonus-wheel.tsx:192 [WHEEL_DEBUG] Received any WebSocket event: transaction:earn
+supabase.ts:199 Caught all-events subscriber for "transaction:earn"
+supabase.ts:201 Event match for "transaction:" - received "transaction:earn"
+dashboard.tsx:176 Received any transaction event - general handler: {event: 'transaction:earn', data: {…}}
+dashboard.tsx:191 General transaction handler - Current user ID: 4, transaction for user ID: undefined
+dashboard.tsx:230 Transaction is for a different user, not updating current user's UI
+supabase.ts:201 Event match for "transaction:earn" - received "transaction:earn"
+dashboard.tsx:236 Received transaction:earn event: {event: 'transaction:earn', data: {…}}
+dashboard.tsx:243 Current user ID: 4, transaction for user ID: undefined
+dashboard.tsx:244 Transaction data: {tickets: 0, userId: undefined, balance: undefined, note: ''}
+dashboard.tsx:286 Transaction is for a different user, not updating current user's balance
+supabase.ts:201 Event match for "transaction:earn" - received "transaction:earn"
+transactions-table.tsx:64 TransactionsTable received earn event: {event: 'transaction:earn', data: {…}}
+transactions-table.tsx:68 TransactionsTable: transaction:earn event - forcing complete refresh
+supabase.ts:91 WebSocket message received: {event: 'transaction:earn', data: {…}}
+supabase.ts:94 WebSocket message details - Event: transaction:earn {timestamp: '2025-05-15T04:06:53.429Z', eventType: 'transaction:earn', fullData: {…}, rawMessage: '{"event":"transaction:earn","data":{"data":{"id":9…,"bonus_triggered":false,"daily_bonus_id":null}}}'}
+supabase.ts:201 Event match for "transaction:earn" - received "transaction:earn"
+supabase.ts:199 Caught all-events subscriber for "transaction:earn"
+child-bonus-wheel.tsx:192 [WHEEL_DEBUG] Received any WebSocket event: transaction:earn
+supabase.ts:199 Caught all-events subscriber for "transaction:earn"
+supabase.ts:201 Event match for "transaction:" - received "transaction:earn"
+dashboard.tsx:176 Received any transaction event - general handler: {event: 'transaction:earn', data: {…}}
+dashboard.tsx:191 General transaction handler - Current user ID: 4, transaction for user ID: undefined
+dashboard.tsx:230 Transaction is for a different user, not updating current user's UI
+supabase.ts:201 Event match for "transaction:earn" - received "transaction:earn"
+dashboard.tsx:236 Received transaction:earn event: {event: 'transaction:earn', data: {…}}
+dashboard.tsx:243 Current user ID: 4, transaction for user ID: undefined
+dashboard.tsx:244 Transaction data: {tickets: 0, userId: undefined, balance: undefined, note: ''}
+dashboard.tsx:286 Transaction is for a different user, not updating current user's balance
+supabase.ts:201 Event match for "transaction:earn" - received "transaction:earn"
+transactions-table.tsx:64 TransactionsTable received earn event: {event: 'transaction:earn', data: {…}}
+transactions-table.tsx:68 TransactionsTable: transaction:earn event - forcing complete refresh
+dashboard.tsx:499 Chore completion response: {transaction: {…}, chore: {…}, balance: 5, activeGoal: {…}, boostPercent: 1.8, …}
+dashboard.tsx:503 Updating balance from chore completion: 5
+chore-card.tsx:49 Chore completion result: undefined
+transactions-table.tsx:79 TransactionsTable: executing delayed refetch after transaction:earn
+transactions-table.tsx:79 TransactionsTable: executing delayed refetch after transaction:earn
+dashboard.tsx:139 Loaded dashboard stats: {balance: 5, activeGoal: {…}, chores: Array(3), daily_bonus: {…}}
+supabase.ts:91 WebSocket message received: {event: 'transaction:spend', data: {…}}
+supabase.ts:94 WebSocket message details - Event: transaction:spend {timestamp: '2025-05-15T04:07:01.266Z', eventType: 'transaction:spend', fullData: {…}, rawMessage: '{"event":"transaction:spend","data":{"data":{"id":…rchase","user_id":4,"type":"spend","balance":0}}}'}
+supabase.ts:199 Caught all-events subscriber for "transaction:spend"
+child-bonus-wheel.tsx:192 [WHEEL_DEBUG] Received any WebSocket event: transaction:spend
+supabase.ts:199 Caught all-events subscriber for "transaction:spend"
+supabase.ts:201 Event match for "transaction:" - received "transaction:spend"
+dashboard.tsx:176 Received any transaction event - general handler: {event: 'transaction:spend', data: {…}}
+dashboard.tsx:191 General transaction handler - Current user ID: 4, transaction for user ID: undefined
+dashboard.tsx:230 Transaction is for a different user, not updating current user's UI
+supabase.ts:201 Event match for "transaction:spend" - received "transaction:spend"
+dashboard.tsx:291 Received transaction:spend event: {event: 'transaction:spend', data: {…}}
+dashboard.tsx:296 Current user ID: 4, transaction for user ID: undefined
+dashboard.tsx:319 Transaction is for a different user, not updating current user's balance
+dashboard.tsx:324 Transaction:spend event - forcing complete data refresh cycle
+supabase.ts:201 Event match for "transaction:spend" - received "transaction:spend"
+transactions-table.tsx:85 TransactionsTable received spend event: {event: 'transaction:spend', data: {…}}
+transactions-table.tsx:86 TransactionsTable: transaction:spend event - forcing complete refresh
+supabase.ts:91 WebSocket message received: {event: 'transaction:spend', data: {…}}
+supabase.ts:94 WebSocket message details - Event: transaction:spend {timestamp: '2025-05-15T04:07:01.277Z', eventType: 'transaction:spend', fullData: {…}, rawMessage: '{"event":"transaction:spend","data":{"data":{"id":…rchase","user_id":4,"type":"spend","balance":0}}}'}
+supabase.ts:199 Caught all-events subscriber for "transaction:spend"
+child-bonus-wheel.tsx:192 [WHEEL_DEBUG] Received any WebSocket event: transaction:spend
+supabase.ts:199 Caught all-events subscriber for "transaction:spend"
+supabase.ts:201 Event match for "transaction:" - received "transaction:spend"
+dashboard.tsx:176 Received any transaction event - general handler: {event: 'transaction:spend', data: {…}}
+dashboard.tsx:191 General transaction handler - Current user ID: 4, transaction for user ID: undefined
+dashboard.tsx:230 Transaction is for a different user, not updating current user's UI
+supabase.ts:201 Event match for "transaction:spend" - received "transaction:spend"
+dashboard.tsx:291 Received transaction:spend event: {event: 'transaction:spend', data: {…}}
+dashboard.tsx:296 Current user ID: 4, transaction for user ID: undefined
+dashboard.tsx:319 Transaction is for a different user, not updating current user's balance
+dashboard.tsx:324 Transaction:spend event - forcing complete data refresh cycle
+supabase.ts:201 Event match for "transaction:spend" - received "transaction:spend"
+transactions-table.tsx:85 TransactionsTable received spend event: {event: 'transaction:spend', data: {…}}
+transactions-table.tsx:86 TransactionsTable: transaction:spend event - forcing complete refresh
+dashboard.tsx:331 Executing delayed refetch for transaction:spend event
+dashboard.tsx:331 Executing delayed refetch for transaction:spend event
+transactions-table.tsx:97 TransactionsTable: executing delayed refetch after transaction:spend
+transactions-table.tsx:97 TransactionsTable: executing delayed refetch after transaction:spend
+dashboard.tsx:139 Loaded dashboard stats: {balance: 0, activeGoal: {…}, chores: Array(3), daily_bonus: {…}}
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+dashboard.tsx:105  Error checking for unspun bonus: Error: 404: {"message":"Daily bonus has already been spun"}
+    at throwIfResNotOk (queryClient.ts:8:11)
+    at async apiRequest (queryClient.ts:51:3)
+    at async checkForUnspunBonus (dashboard.tsx:88:26)
+checkForUnspunBonus @ dashboard.tsx:105
+dashboard.tsx:108  Unexpected error checking for unspun bonus: Error: 404: {"message":"Daily bonus has already been spun"}
+    at throwIfResNotOk (queryClient.ts:8:11)
+    at async apiRequest (queryClient.ts:51:3)
+    at async checkForUnspunBonus (dashboard.tsx:88:26)
+checkForUnspunBonus @ dashboard.tsx:108
+supabase.ts:91 WebSocket message received: {event: 'transaction:delete', data: {…}}
+supabase.ts:94 WebSocket message details - Event: transaction:delete {timestamp: '2025-05-15T04:07:17.507Z', eventType: 'transaction:delete', fullData: {…}, rawMessage: '{"event":"transaction:delete","data":{"transaction_id":95,"user_id":4,"balance":5,"goal":null}}'}
+supabase.ts:199 Caught all-events subscriber for "transaction:delete"
+child-bonus-wheel.tsx:192 [WHEEL_DEBUG] Received any WebSocket event: transaction:delete
+supabase.ts:199 Caught all-events subscriber for "transaction:delete"
+supabase.ts:201 Event match for "transaction:" - received "transaction:delete"
+dashboard.tsx:176 Received any transaction event - general handler: {event: 'transaction:delete', data: {…}}
+dashboard.tsx:191 General transaction handler - Current user ID: 4, transaction for user ID: 4
+dashboard.tsx:195 Transaction is for current user, showing toast and updating UI
+dashboard.tsx:206 Updating balance directly in the cache: 5
+dashboard.tsx:217 Invalidating and refreshing ALL transaction and stats queries
+supabase.ts:201 Event match for "transaction:delete" - received "transaction:delete"
+dashboard.tsx:407 Received transaction:delete event: {event: 'transaction:delete', data: {…}}
+dashboard.tsx:414 Transaction delete - Current user ID: 4, affected user ID: 4
+dashboard.tsx:418 Transaction delete is for current user, updating UI with new balance and goal data
+dashboard.tsx:452 Transaction:delete event - forcing complete data refresh cycle
+supabase.ts:201 Event match for "transaction:delete" - received "transaction:delete"
+transactions-table.tsx:103 TransactionsTable received delete event: {event: 'transaction:delete', data: {…}}
+transactions-table.tsx:106 TransactionsTable: transaction:delete event - forcing complete refresh
+dashboard.tsx:139 Loaded dashboard stats: {balance: 5, activeGoal: {…}, chores: Array(3), daily_bonus: {…}}
+supabase.ts:91 WebSocket message received: {event: 'transaction:delete', data: {…}}
+supabase.ts:94 WebSocket message details - Event: transaction:delete {timestamp: '2025-05-15T04:07:17.520Z', eventType: 'transaction:delete', fullData: {…}, rawMessage: '{"event":"transaction:delete","data":{"transaction_id":95,"user_id":4,"balance":5,"goal":null}}'}
+supabase.ts:199 Caught all-events subscriber for "transaction:delete"
+child-bonus-wheel.tsx:192 [WHEEL_DEBUG] Received any WebSocket event: transaction:delete
+supabase.ts:199 Caught all-events subscriber for "transaction:delete"
+supabase.ts:201 Event match for "transaction:" - received "transaction:delete"
+dashboard.tsx:176 Received any transaction event - general handler: {event: 'transaction:delete', data: {…}}
+dashboard.tsx:191 General transaction handler - Current user ID: 4, transaction for user ID: 4
+dashboard.tsx:195 Transaction is for current user, showing toast and updating UI
+dashboard.tsx:206 Updating balance directly in the cache: 5
+dashboard.tsx:217 Invalidating and refreshing ALL transaction and stats queries
+supabase.ts:201 Event match for "transaction:delete" - received "transaction:delete"
+dashboard.tsx:407 Received transaction:delete event: {event: 'transaction:delete', data: {…}}
+dashboard.tsx:414 Transaction delete - Current user ID: 4, affected user ID: 4
+dashboard.tsx:418 Transaction delete is for current user, updating UI with new balance and goal data
+dashboard.tsx:452 Transaction:delete event - forcing complete data refresh cycle
+supabase.ts:201 Event match for "transaction:delete" - received "transaction:delete"
+transactions-table.tsx:103 TransactionsTable received delete event: {event: 'transaction:delete', data: {…}}
+transactions-table.tsx:106 TransactionsTable: transaction:delete event - forcing complete refresh
+transactions-table.tsx:156 Forcing immediate refetch after transaction deletion
+dashboard.tsx:458 Executing delayed refetch for transaction:delete event
+transactions-table.tsx:117 TransactionsTable: executing delayed refetch after transaction:delete
+dashboard.tsx:458 Executing delayed refetch for transaction:delete event
+transactions-table.tsx:117 TransactionsTable: executing delayed refetch after transaction:delete
+transactions-table.tsx:124 TransactionsTable: executing final delayed refetch after transaction:delete
+transactions-table.tsx:124 TransactionsTable: executing final delayed refetch after transaction:delete
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+dashboard.tsx:105  Error checking for unspun bonus: Error: 404: {"message":"Daily bonus has already been spun"}
+    at throwIfResNotOk (queryClient.ts:8:11)
+    at async apiRequest (queryClient.ts:51:3)
+    at async checkForUnspunBonus (dashboard.tsx:88:26)
+checkForUnspunBonus @ dashboard.tsx:105
+dashboard.tsx:108  Unexpected error checking for unspun bonus: Error: 404: {"message":"Daily bonus has already been spun"}
+    at throwIfResNotOk (queryClient.ts:8:11)
+    at async apiRequest (queryClient.ts:51:3)
+    at async checkForUnspunBonus (dashboard.tsx:88:26)
+checkForUnspunBonus @ dashboard.tsx:108
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+dashboard.tsx:105  Error checking for unspun bonus: Error: 404: {"message":"Daily bonus has already been spun"}
+    at throwIfResNotOk (queryClient.ts:8:11)
+    at async apiRequest (queryClient.ts:51:3)
+    at async checkForUnspunBonus (dashboard.tsx:88:26)
+checkForUnspunBonus @ dashboard.tsx:105
+dashboard.tsx:108  Unexpected error checking for unspun bonus: Error: 404: {"message":"Daily bonus has already been spun"}
+    at throwIfResNotOk (queryClient.ts:8:11)
+    at async apiRequest (queryClient.ts:51:3)
+    at async checkForUnspunBonus (dashboard.tsx:88:26)
+checkForUnspunBonus @ dashboard.tsx:108
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+dashboard.tsx:105  Error checking for unspun bonus: Error: 404: {"message":"Daily bonus has already been spun"}
+    at throwIfResNotOk (queryClient.ts:8:11)
+    at async apiRequest (queryClient.ts:51:3)
+    at async checkForUnspunBonus (dashboard.tsx:88:26)
+checkForUnspunBonus @ dashboard.tsx:105
+dashboard.tsx:108  Unexpected error checking for unspun bonus: Error: 404: {"message":"Daily bonus has already been spun"}
+    at throwIfResNotOk (queryClient.ts:8:11)
+    at async apiRequest (queryClient.ts:51:3)
+    at async checkForUnspunBonus (dashboard.tsx:88:26)
+checkForUnspunBonus @ dashboard.tsx:108
+32734c3e-d439-4087-a…riker.replit.dev/:1  Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+dashboard.tsx:105  Error checking for unspun bonus: Error: 404: {"message":"Daily bonus has already been spun"}
+    at throwIfResNotOk (queryClient.ts:8:11)
+    at async apiRequest (queryClient.ts:51:3)
+    at async checkForUnspunBonus (dashboard.tsx:88:26)
+checkForUnspunBonus @ dashboard.tsx:105
+dashboard.tsx:108  Unexpected error checking for unspun bonus: Error: 404: {"message":"Daily bonus has already been spun"}
+    at throwIfResNotOk (queryClient.ts:8:11)
+    at async apiRequest (queryClient.ts:51:3)
+    at async checkForUnspunBonus (dashboard.tsx:88:26)
+checkForUnspunBonus @ dashboard.tsx:108
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+dashboard.tsx:105  Error checking for unspun bonus: Error: 404: {"message":"Daily bonus has already been spun"}
+    at throwIfResNotOk (queryClient.ts:8:11)
+    at async apiRequest (queryClient.ts:51:3)
+    at async checkForUnspunBonus (dashboard.tsx:88:26)
+checkForUnspunBonus @ dashboard.tsx:105
+dashboard.tsx:108  Unexpected error checking for unspun bonus: Error: 404: {"message":"Daily bonus has already been spun"}
+    at throwIfResNotOk (queryClient.ts:8:11)
+    at async apiRequest (queryClient.ts:51:3)
+    at async checkForUnspunBonus (dashboard.tsx:88:26)
+checkForUnspunBonus @ dashboard.tsx:108
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+dashboard.tsx:105  Error checking for unspun bonus: Error: 404: {"message":"Daily bonus has already been spun"}
+    at throwIfResNotOk (queryClient.ts:8:11)
+    at async apiRequest (queryClient.ts:51:3)
+    at async checkForUnspunBonus (dashboard.tsx:88:26)
+checkForUnspunBonus @ dashboard.tsx:105
+dashboard.tsx:108  Unexpected error checking for unspun bonus: Error: 404: {"message":"Daily bonus has already been spun"}
+    at throwIfResNotOk (queryClient.ts:8:11)
+    at async apiRequest (queryClient.ts:51:3)
+    at async checkForUnspunBonus (dashboard.tsx:88:26)
+checkForUnspunBonus @ dashboard.tsx:108
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+dashboard.tsx:105  Error checking for unspun bonus: Error: 404: {"message":"Daily bonus has already been spun"}
+    at throwIfResNotOk (queryClient.ts:8:11)
+    at async apiRequest (queryClient.ts:51:3)
+    at async checkForUnspunBonus (dashboard.tsx:88:26)
+checkForUnspunBonus @ dashboard.tsx:105
+dashboard.tsx:108  Unexpected error checking for unspun bonus: Error: 404: {"message":"Daily bonus has already been spun"}
+    at throwIfResNotOk (queryClient.ts:8:11)
+    at async apiRequest (queryClient.ts:51:3)
+    at async checkForUnspunBonus (dashboard.tsx:88:26)
+checkForUnspunBonus @ dashboard.tsx:108
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+dashboard.tsx:105  Error checking for unspun bonus: Error: 404: {"message":"Daily bonus has already been spun"}
+    at throwIfResNotOk (queryClient.ts:8:11)
+    at async apiRequest (queryClient.ts:51:3)
+    at async checkForUnspunBonus (dashboard.tsx:88:26)
+checkForUnspunBonus @ dashboard.tsx:105
+dashboard.tsx:108  Unexpected error checking for unspun bonus: Error: 404: {"message":"Daily bonus has already been spun"}
+    at throwIfResNotOk (queryClient.ts:8:11)
+    at async apiRequest (queryClient.ts:51:3)
+    at async checkForUnspunBonus (dashboard.tsx:88:26)
+checkForUnspunBonus @ dashboard.tsx:108
+supabase.ts:91 WebSocket message received: {event: 'transaction:delete', data: {…}}
+supabase.ts:94 WebSocket message details - Event: transaction:delete {timestamp: '2025-05-15T04:11:26.143Z', eventType: 'transaction:delete', fullData: {…}, rawMessage: '{"event":"transaction:delete","data":{"transaction…5-13T20:26:48.045Z","camel_last_checked":null}}}}'}
+supabase.ts:199 Caught all-events subscriber for "transaction:delete"
+child-bonus-wheel.tsx:192 [WHEEL_DEBUG] Received any WebSocket event: transaction:delete
+supabase.ts:199 Caught all-events subscriber for "transaction:delete"
+supabase.ts:201 Event match for "transaction:" - received "transaction:delete"
+dashboard.tsx:176 Received any transaction event - general handler: {event: 'transaction:delete', data: {…}}
+dashboard.tsx:191 General transaction handler - Current user ID: 4, transaction for user ID: 4
+dashboard.tsx:195 Transaction is for current user, showing toast and updating UI
+dashboard.tsx:206 Updating balance directly in the cache: 0
+dashboard.tsx:217 Invalidating and refreshing ALL transaction and stats queries
+supabase.ts:201 Event match for "transaction:delete" - received "transaction:delete"
+dashboard.tsx:407 Received transaction:delete event: {event: 'transaction:delete', data: {…}}
+dashboard.tsx:414 Transaction delete - Current user ID: 4, affected user ID: 4
+dashboard.tsx:418 Transaction delete is for current user, updating UI with new balance and goal data
+dashboard.tsx:438 Updating goal data in stats cache: {id: 3, user_id: 4, product_id: 10, tickets_saved: 0, is_active: true, …}
+dashboard.tsx:452 Transaction:delete event - forcing complete data refresh cycle
+supabase.ts:201 Event match for "transaction:delete" - received "transaction:delete"
+transactions-table.tsx:103 TransactionsTable received delete event: {event: 'transaction:delete', data: {…}}
+transactions-table.tsx:106 TransactionsTable: transaction:delete event - forcing complete refresh
+dashboard.tsx:139 Loaded dashboard stats: {balance: undefined, activeGoal: {…}, chores: Array(3), daily_bonus: {…}}
+supabase.ts:91 WebSocket message received: {event: 'transaction:delete', data: {…}}
+supabase.ts:94 WebSocket message details - Event: transaction:delete {timestamp: '2025-05-15T04:11:26.158Z', eventType: 'transaction:delete', fullData: {…}, rawMessage: '{"event":"transaction:delete","data":{"transaction…5-13T20:26:48.045Z","camel_last_checked":null}}}}'}
+supabase.ts:199 Caught all-events subscriber for "transaction:delete"
+child-bonus-wheel.tsx:192 [WHEEL_DEBUG] Received any WebSocket event: transaction:delete
+supabase.ts:199 Caught all-events subscriber for "transaction:delete"
+supabase.ts:201 Event match for "transaction:" - received "transaction:delete"
+dashboard.tsx:176 Received any transaction event - general handler: {event: 'transaction:delete', data: {…}}
+dashboard.tsx:191 General transaction handler - Current user ID: 4, transaction for user ID: 4
+dashboard.tsx:195 Transaction is for current user, showing toast and updating UI
+dashboard.tsx:206 Updating balance directly in the cache: 0
+dashboard.tsx:217 Invalidating and refreshing ALL transaction and stats queries
+supabase.ts:201 Event match for "transaction:delete" - received "transaction:delete"
+dashboard.tsx:407 Received transaction:delete event: {event: 'transaction:delete', data: {…}}
+dashboard.tsx:414 Transaction delete - Current user ID: 4, affected user ID: 4
+dashboard.tsx:418 Transaction delete is for current user, updating UI with new balance and goal data
+dashboard.tsx:438 Updating goal data in stats cache: {id: 3, user_id: 4, product_id: 10, tickets_saved: 0, is_active: true, …}
+dashboard.tsx:452 Transaction:delete event - forcing complete data refresh cycle
+supabase.ts:201 Event match for "transaction:delete" - received "transaction:delete"
+transactions-table.tsx:103 TransactionsTable received delete event: {event: 'transaction:delete', data: {…}}
+transactions-table.tsx:106 TransactionsTable: transaction:delete event - forcing complete refresh
+dashboard.tsx:139 Loaded dashboard stats: {balance: undefined, activeGoal: {…}, chores: Array(3), daily_bonus: {…}}
+transactions-table.tsx:156 Forcing immediate refetch after transaction deletion
+dashboard.tsx:458 Executing delayed refetch for transaction:delete event
+transactions-table.tsx:117 TransactionsTable: executing delayed refetch after transaction:delete
+dashboard.tsx:458 Executing delayed refetch for transaction:delete event
+transactions-table.tsx:117 TransactionsTable: executing delayed refetch after transaction:delete
+transactions-table.tsx:124 TransactionsTable: executing final delayed refetch after transaction:delete
+transactions-table.tsx:124 TransactionsTable: executing final delayed refetch after transaction:delete
+dashboard.tsx:139 Loaded dashboard stats: {balance: 0, activeGoal: {…}, chores: Array(3), daily_bonus: {…}}
+dashboard.tsx:490 Adding user_id to chore completion payload: 4
+dashboard.tsx:494 Submitting chore completion with payload: {chore_id: 1, user_id: 4}
+supabase.ts:91 WebSocket message received: {event: 'transaction:earn', data: {…}}
+supabase.ts:94 WebSocket message details - Event: transaction:earn {timestamp: '2025-05-15T04:11:32.233Z', eventType: 'transaction:earn', fullData: {…}, rawMessage: '{"event":"transaction:earn","data":{"data":{"id":9…,"bonus_triggered":false,"daily_bonus_id":null}}}'}
+supabase.ts:201 Event match for "transaction:earn" - received "transaction:earn"
+supabase.ts:199 Caught all-events subscriber for "transaction:earn"
+child-bonus-wheel.tsx:192 [WHEEL_DEBUG] Received any WebSocket event: transaction:earn
+supabase.ts:199 Caught all-events subscriber for "transaction:earn"
+supabase.ts:201 Event match for "transaction:" - received "transaction:earn"
+dashboard.tsx:176 Received any transaction event - general handler: {event: 'transaction:earn', data: {…}}
+dashboard.tsx:191 General transaction handler - Current user ID: 4, transaction for user ID: undefined
+dashboard.tsx:230 Transaction is for a different user, not updating current user's UI
+supabase.ts:201 Event match for "transaction:earn" - received "transaction:earn"
+dashboard.tsx:236 Received transaction:earn event: {event: 'transaction:earn', data: {…}}
+dashboard.tsx:243 Current user ID: 4, transaction for user ID: undefined
+dashboard.tsx:244 Transaction data: {tickets: 0, userId: undefined, balance: undefined, note: ''}
+dashboard.tsx:286 Transaction is for a different user, not updating current user's balance
+supabase.ts:201 Event match for "transaction:earn" - received "transaction:earn"
+transactions-table.tsx:64 TransactionsTable received earn event: {event: 'transaction:earn', data: {…}}
+transactions-table.tsx:68 TransactionsTable: transaction:earn event - forcing complete refresh
+supabase.ts:91 WebSocket message received: {event: 'transaction:earn', data: {…}}
+supabase.ts:94 WebSocket message details - Event: transaction:earn {timestamp: '2025-05-15T04:11:32.240Z', eventType: 'transaction:earn', fullData: {…}, rawMessage: '{"event":"transaction:earn","data":{"data":{"id":9…,"bonus_triggered":false,"daily_bonus_id":null}}}'}
+supabase.ts:201 Event match for "transaction:earn" - received "transaction:earn"
+supabase.ts:199 Caught all-events subscriber for "transaction:earn"
+child-bonus-wheel.tsx:192 [WHEEL_DEBUG] Received any WebSocket event: transaction:earn
+supabase.ts:199 Caught all-events subscriber for "transaction:earn"
+supabase.ts:201 Event match for "transaction:" - received "transaction:earn"
+dashboard.tsx:176 Received any transaction event - general handler: {event: 'transaction:earn', data: {…}}
+dashboard.tsx:191 General transaction handler - Current user ID: 4, transaction for user ID: undefined
+dashboard.tsx:230 Transaction is for a different user, not updating current user's UI
+supabase.ts:201 Event match for "transaction:earn" - received "transaction:earn"
+dashboard.tsx:236 Received transaction:earn event: {event: 'transaction:earn', data: {…}}
+dashboard.tsx:243 Current user ID: 4, transaction for user ID: undefined
+dashboard.tsx:244 Transaction data: {tickets: 0, userId: undefined, balance: undefined, note: ''}
+dashboard.tsx:286 Transaction is for a different user, not updating current user's balance
+supabase.ts:201 Event match for "transaction:earn" - received "transaction:earn"
+transactions-table.tsx:64 TransactionsTable received earn event: {event: 'transaction:earn', data: {…}}
+transactions-table.tsx:68 TransactionsTable: transaction:earn event - forcing complete refresh
+dashboard.tsx:499 Chore completion response: {transaction: {…}, chore: {…}, balance: 5, activeGoal: {…}, boostPercent: 1.8, …}
+dashboard.tsx:503 Updating balance from chore completion: 5
+chore-card.tsx:49 Chore completion result: undefined
+dashboard.tsx:139 Loaded dashboard stats: {balance: 5, activeGoal: {…}, chores: Array(3), daily_bonus: {…}}
+transactions-table.tsx:79 TransactionsTable: executing delayed refetch after transaction:earn
+transactions-table.tsx:79 TransactionsTable: executing delayed refetch after transaction:earn
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+dashboard.tsx:105  Error checking for unspun bonus: Error: 404: {"message":"Daily bonus has already been spun"}
+    at throwIfResNotOk (queryClient.ts:8:11)
+    at async apiRequest (queryClient.ts:51:3)
+    at async checkForUnspunBonus (dashboard.tsx:88:26)
+checkForUnspunBonus @ dashboard.tsx:105
+dashboard.tsx:108  Unexpected error checking for unspun bonus: Error: 404: {"message":"Daily bonus has already been spun"}
+    at throwIfResNotOk (queryClient.ts:8:11)
+    at async apiRequest (queryClient.ts:51:3)
+    at async checkForUnspunBonus (dashboard.tsx:88:26)
+checkForUnspunBonus @ dashboard.tsx:108
+supabase.ts:91 WebSocket message received: {event: 'transaction:spend', data: {…}}
+supabase.ts:94 WebSocket message details - Event: transaction:spend {timestamp: '2025-05-15T04:11:40.142Z', eventType: 'transaction:spend', fullData: {…}, rawMessage: '{"event":"transaction:spend","data":{"data":{"id":…rchase","user_id":4,"type":"spend","balance":0}}}'}
+supabase.ts:199 Caught all-events subscriber for "transaction:spend"
+child-bonus-wheel.tsx:192 [WHEEL_DEBUG] Received any WebSocket event: transaction:spend
+supabase.ts:199 Caught all-events subscriber for "transaction:spend"
+supabase.ts:201 Event match for "transaction:" - received "transaction:spend"
+dashboard.tsx:176 Received any transaction event - general handler: {event: 'transaction:spend', data: {…}}
+dashboard.tsx:191 General transaction handler - Current user ID: 4, transaction for user ID: undefined
+dashboard.tsx:230 Transaction is for a different user, not updating current user's UI
+supabase.ts:201 Event match for "transaction:spend" - received "transaction:spend"
+dashboard.tsx:291 Received transaction:spend event: {event: 'transaction:spend', data: {…}}
+dashboard.tsx:296 Current user ID: 4, transaction for user ID: undefined
+dashboard.tsx:319 Transaction is for a different user, not updating current user's balance
+dashboard.tsx:324 Transaction:spend event - forcing complete data refresh cycle
+supabase.ts:201 Event match for "transaction:spend" - received "transaction:spend"
+transactions-table.tsx:85 TransactionsTable received spend event: {event: 'transaction:spend', data: {…}}
+transactions-table.tsx:86 TransactionsTable: transaction:spend event - forcing complete refresh
+supabase.ts:91 WebSocket message received: {event: 'transaction:spend', data: {…}}
+supabase.ts:94 WebSocket message details - Event: transaction:spend {timestamp: '2025-05-15T04:11:40.145Z', eventType: 'transaction:spend', fullData: {…}, rawMessage: '{"event":"transaction:spend","data":{"data":{"id":…rchase","user_id":4,"type":"spend","balance":0}}}'}
+supabase.ts:199 Caught all-events subscriber for "transaction:spend"
+child-bonus-wheel.tsx:192 [WHEEL_DEBUG] Received any WebSocket event: transaction:spend
+supabase.ts:199 Caught all-events subscriber for "transaction:spend"
+supabase.ts:201 Event match for "transaction:" - received "transaction:spend"
+dashboard.tsx:176 Received any transaction event - general handler: {event: 'transaction:spend', data: {…}}
+dashboard.tsx:191 General transaction handler - Current user ID: 4, transaction for user ID: undefined
+dashboard.tsx:230 Transaction is for a different user, not updating current user's UI
+supabase.ts:201 Event match for "transaction:spend" - received "transaction:spend"
+dashboard.tsx:291 Received transaction:spend event: {event: 'transaction:spend', data: {…}}
+dashboard.tsx:296 Current user ID: 4, transaction for user ID: undefined
+dashboard.tsx:319 Transaction is for a different user, not updating current user's balance
+dashboard.tsx:324 Transaction:spend event - forcing complete data refresh cycle
+supabase.ts:201 Event match for "transaction:spend" - received "transaction:spend"
+transactions-table.tsx:85 TransactionsTable received spend event: {event: 'transaction:spend', data: {…}}
+transactions-table.tsx:86 TransactionsTable: transaction:spend event - forcing complete refresh
+dashboard.tsx:331 Executing delayed refetch for transaction:spend event
+dashboard.tsx:331 Executing delayed refetch for transaction:spend event
+transactions-table.tsx:97 TransactionsTable: executing delayed refetch after transaction:spend
+transactions-table.tsx:97 TransactionsTable: executing delayed refetch after transaction:spend
+dashboard.tsx:139 Loaded dashboard stats: {balance: 0, activeGoal: {…}, chores: Array(3), daily_bonus: {…}}
+supabase.ts:91 WebSocket message received: {event: 'transaction:delete', data: {…}}
+supabase.ts:94 WebSocket message details - Event: transaction:delete {timestamp: '2025-05-15T04:11:49.892Z', eventType: 'transaction:delete', fullData: {…}, rawMessage: '{"event":"transaction:delete","data":{"transaction_id":97,"user_id":4,"balance":5,"goal":null}}'}
+supabase.ts:199 Caught all-events subscriber for "transaction:delete"
+child-bonus-wheel.tsx:192 [WHEEL_DEBUG] Received any WebSocket event: transaction:delete
+supabase.ts:199 Caught all-events subscriber for "transaction:delete"
+supabase.ts:201 Event match for "transaction:" - received "transaction:delete"
+dashboard.tsx:176 Received any transaction event - general handler: {event: 'transaction:delete', data: {…}}
+dashboard.tsx:191 General transaction handler - Current user ID: 4, transaction for user ID: 4
+dashboard.tsx:195 Transaction is for current user, showing toast and updating UI
+dashboard.tsx:206 Updating balance directly in the cache: 5
+dashboard.tsx:217 Invalidating and refreshing ALL transaction and stats queries
+supabase.ts:201 Event match for "transaction:delete" - received "transaction:delete"
+dashboard.tsx:407 Received transaction:delete event: {event: 'transaction:delete', data: {…}}
+dashboard.tsx:414 Transaction delete - Current user ID: 4, affected user ID: 4
+dashboard.tsx:418 Transaction delete is for current user, updating UI with new balance and goal data
+dashboard.tsx:452 Transaction:delete event - forcing complete data refresh cycle
+supabase.ts:201 Event match for "transaction:delete" - received "transaction:delete"
+transactions-table.tsx:103 TransactionsTable received delete event: {event: 'transaction:delete', data: {…}}
+transactions-table.tsx:106 TransactionsTable: transaction:delete event - forcing complete refresh
+dashboard.tsx:139 Loaded dashboard stats: {balance: 5, activeGoal: {…}, chores: Array(3), daily_bonus: {…}}
+supabase.ts:91 WebSocket message received: {event: 'transaction:delete', data: {…}}
+supabase.ts:94 WebSocket message details - Event: transaction:delete {timestamp: '2025-05-15T04:11:49.902Z', eventType: 'transaction:delete', fullData: {…}, rawMessage: '{"event":"transaction:delete","data":{"transaction_id":97,"user_id":4,"balance":5,"goal":null}}'}
+supabase.ts:199 Caught all-events subscriber for "transaction:delete"
+child-bonus-wheel.tsx:192 [WHEEL_DEBUG] Received any WebSocket event: transaction:delete
+supabase.ts:199 Caught all-events subscriber for "transaction:delete"
+supabase.ts:201 Event match for "transaction:" - received "transaction:delete"
+dashboard.tsx:176 Received any transaction event - general handler: {event: 'transaction:delete', data: {…}}
+dashboard.tsx:191 General transaction handler - Current user ID: 4, transaction for user ID: 4
+dashboard.tsx:195 Transaction is for current user, showing toast and updating UI
+dashboard.tsx:206 Updating balance directly in the cache: 5
+dashboard.tsx:217 Invalidating and refreshing ALL transaction and stats queries
+supabase.ts:201 Event match for "transaction:delete" - received "transaction:delete"
+dashboard.tsx:407 Received transaction:delete event: {event: 'transaction:delete', data: {…}}
+dashboard.tsx:414 Transaction delete - Current user ID: 4, affected user ID: 4
+dashboard.tsx:418 Transaction delete is for current user, updating UI with new balance and goal data
+dashboard.tsx:452 Transaction:delete event - forcing complete data refresh cycle
+supabase.ts:201 Event match for "transaction:delete" - received "transaction:delete"
+transactions-table.tsx:103 TransactionsTable received delete event: {event: 'transaction:delete', data: {…}}
+transactions-table.tsx:106 TransactionsTable: transaction:delete event - forcing complete refresh
+transactions-table.tsx:156 Forcing immediate refetch after transaction deletion
+dashboard.tsx:458 Executing delayed refetch for transaction:delete event
+transactions-table.tsx:117 TransactionsTable: executing delayed refetch after transaction:delete
+dashboard.tsx:458 Executing delayed refetch for transaction:delete event
+transactions-table.tsx:117 TransactionsTable: executing delayed refetch after transaction:delete
+transactions-table.tsx:124 TransactionsTable: executing final delayed refetch after transaction:delete
+transactions-table.tsx:124 TransactionsTable: executing final delayed refetch after transaction:delete

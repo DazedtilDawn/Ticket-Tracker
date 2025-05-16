@@ -1,0 +1,126 @@
+The agent is moving at an impressive pace and has reported completion of two significant frontend tasks for Sprint 1: the initial UI for parental bonus management and the emoji support for chores!
+
+This is great progress. Let's conduct a detailed review of these reported frontend changes.
+
+---
+
+### Sprint 1: Frontend Progress Review (Parental Bonus UI & Emoji Support)
+
+**Agent's Reported Accomplishments:**
+
+**A. Parent UI for Daily Bonus Management:**
+1.  **✓ Created `client/src/components/daily-bonus-assignments.tsx`**
+2.  **✓ Created `client/src/pages/bonus-management.tsx`**
+3.  **✓ Updated `client/src/App.tsx` (Router) to include the new page.**
+4.  **✓ Updated `client/src/components/layout/sidebar.tsx` to include a link to the new page (parent-only).**
+
+**B. Emoji Support:**
+1.  **✓ Updated emoji field in chore schema (server-side, assumed from prior work).**
+2.  **✓ Added emoji input to `NewChoreDialog.tsx` component (with live preview).**
+3.  **✓ Updated `ChoreCard.tsx` to display emoji with chore name.**
+4.  **✓ Enhanced admin chore table in `client/src/pages/chores.tsx` to show emoji column.**
+
+---
+
+### Detailed Assessment & Areas for Verification:
+
+**A. Parent UI for Daily Bonus Management (`bonus-management.tsx` & `daily-bonus-assignments.tsx`):**
+
+*   **Functionality to Verify:**
+    1.  **Data Fetching:**
+        *   Does `bonus-management.tsx` (or `daily-bonus-assignments.tsx`) correctly fetch data from `GET /api/daily-bonus/assignments` using React Query (`useQuery`)?
+        *   Does it default to fetching for *today's date*? (Date picker for other dates can be a polish item).
+    2.  **Display:**
+        *   For each child (Bryce, Kiki), does it clearly display:
+            *   Child's Name.
+            *   Currently Assigned Bonus Chore Name (and its Emoji, now that emoji support is in).
+            *   A visual indicator if the assignment was a parent override (based on `is_override` flag from API).
+    3.  **"Change Chore" (Override) Functionality:**
+        *   Is there a "Change Chore" button/dropdown next to each child's assignment?
+        *   When clicked, does it present a list of *other, active, and eligible (cooldown-respected)* chores for that child?
+            *   How is this list of eligible chores populated? Does the client fetch all active chores (`GET /api/chores`) and filter, or does a backend endpoint provide this eligible list specifically for override? (Client-side filtering based on all active chores is acceptable for v1 if cooldown logic isn't too complex to replicate).
+        *   Selecting a new chore from the list should trigger a `useMutation` to call `PUT /api/daily-bonus/assign` with `{ user_id (child), new_chore_id, date }`.
+        *   After a successful override, does the displayed assignment list refresh (via React Query invalidation of `['/api/daily-bonus/assignments']`) to show the new chore and the "override" status?
+    4.  **Error Handling:** How are API errors handled (e.g., if fetching assignments fails, or if an override attempt fails)? Are user-friendly toasts shown?
+    5.  **Parent-Only Access:** Is the route `/bonus-management` correctly protected by `ProtectedRoute` in `App.tsx` and the sidebar link only visible to parents?
+
+*   **Code Review Pointers (Agent should have considered these):**
+    *   Loading states while fetching data.
+    *   Empty states (e.g., if no bonus chores are assigned yet for the day, or if a child has no active chores to be assigned).
+    *   Disabling the "Change Chore" button or chore selection options appropriately (e.g., if an API call is in progress).
+
+**B. Emoji Support:**
+
+*   **`NewChoreDialog.tsx`:**
+    *   **Verification:**
+        *   Is there a new text input field for "Emoji"?
+        *   Does it have a reasonable max length (e.g., 4 chars as discussed, or even 1-2 if strictly single emojis)?
+        *   Is there a "live preview" of the entered emoji next to the input? This is a nice UX touch.
+        *   When the form is submitted (for create or edit), is the `emoji` value correctly included in the payload sent to `POST/PUT /api/chores`?
+*   **`ChoreCard.tsx`:**
+    *   **Verification:**
+        *   If a chore has an `emoji` value (from `/api/stats` or `/api/chores` data), is it displayed prominently alongside or before the chore name? (e.g., "🧹 Clean Room").
+        *   Does it handle cases where `emoji` is null or empty gracefully (i.e., just shows the name)?
+*   **`client/src/pages/chores.tsx` (Admin Table):**
+    *   **Verification:**
+        *   Is there a new "Emoji" column in the parent's chore management table?
+        *   Does it display the chore's emoji correctly?
+        *   Does it look okay if a chore has no emoji?
+
+---
+
+### Overall Status & Next Steps:
+
+The agent has tackled two significant frontend areas for Sprint 1. The emoji support seems relatively straightforward to verify. The Parental Bonus Management UI is more complex and requires careful testing of its data flow and interactions.
+
+**Your Question: "What would you like me to work on next?"**
+
+Before the agent moves to the *next set of completely new features* (like the child-facing `BonusBadge.tsx` or the `DailyBonusWheel.tsx` UI integration), it's crucial to:
+
+1.  **Thoroughly Test the Agent's Current Frontend Work (You & Agent):**
+    *   **Parental Bonus Management UI:**
+        *   Navigate to `/bonus-management`.
+        *   Does it load and display assignments for Bryce and Kiki for today?
+        *   Test the "Change Chore" functionality:
+            *   Does it list eligible chores?
+            *   Can you successfully override a bonus chore for Bryce?
+            *   Does the UI update to reflect the override?
+            *   Check the database (`dailyBonus` table) to confirm the `assigned_chore_id` and `is_override` flag are correctly updated.
+            *   Check `/api/stats` for Bryce to see if *his* bonus chore information reflects the override.
+            *   Test edge cases: What if a child has no other eligible chores for an override?
+    *   **Emoji Support:**
+        *   Create a new chore with an emoji. Verify it saves and displays correctly in the admin table and on `ChoreCard.tsx`.
+        *   Edit an existing chore to add/change an emoji. Verify.
+        *   Create a chore without an emoji. Verify it displays gracefully.
+2.  **Address any bugs or UI/UX issues found during the testing of the above.** The agent should fix these before proceeding.
+
+**Once the Parental Bonus Management UI and Emoji Support are confirmed stable and working as expected:**
+
+**Recommended Next Task for the Agent (Continuing with Sprint 1 Frontend):**
+
+**Task: Frontend - Child UI for Bonus Indication (`BonusBadge.tsx`) & Spin Prompt Modal**
+
+*   **Objective:** Let the child know which chore is their special bonus chore and prompt them to spin the wheel when they complete it.
+*   **Detailed Actions for Agent:**
+    1.  **Create `BonusBadge.tsx`:**
+        *   A small component that displays a distinctive icon (e.g., 🎡 or ⭐).
+        *   It will be conditionally rendered on `ChoreCard.tsx`.
+    2.  **Enhance `ChoreCard.tsx` (and data flow from `/api/stats`):**
+        *   The `/api/stats` endpoint (for a child) now returns details about their assigned bonus chore for the day (e.g., `assigned_bonus_chore_id`, `is_bonus_spin_available_today`, `daily_bonus_id`).
+        *   `ChoreCard.tsx` receives a prop like `isBonusAssignmentForToday: boolean`. If true, it renders `BonusBadge.tsx` on the card.
+    3.  **Implement "Spin the Wheel!" Prompt:**
+        *   In `client/src/pages/dashboard.tsx` (or wherever parent marks chore complete for child):
+            *   When the parent successfully completes a chore via `POST /api/earn`, the API response now includes `bonus_triggered: true` and `daily_bonus_id` if it was the child's assigned, unspun bonus chore.
+            *   If `bonus_triggered: true`:
+                *   After the UPX animation for base tickets (if implemented, otherwise immediately), display a prominent modal dialog.
+                *   Modal Title: "🌟 BONUS TIME, [Child's Name]! 🌟"
+                *   Modal Message: "You completed your special bonus chore: '[Chore Name]'! Spin the wheel for extra tickets!"
+                *   Modal Button: "Spin Now!"
+                *   This "Spin Now!" button will, in the *next* task, be wired to open/show the `DailyBonusWheel.tsx` component. For now, it can just log "Spin Now clicked for daily_bonus_id: [ID]".
+*   **Acceptance Criteria:**
+    *   The child's dashboard correctly shows a visual badge on their assigned daily bonus chore.
+    *   When a parent marks that specific bonus chore as complete for the child, a modal appears prompting the child to spin the wheel.
+    *   The modal correctly identifies the chore and the child.
+    *   The `daily_bonus_id` is available to be passed to the wheel spinning mechanism.
+
+This sets the stage perfectly for integrating the actual `DailyBonusWheel.tsx` component in the subsequent task.

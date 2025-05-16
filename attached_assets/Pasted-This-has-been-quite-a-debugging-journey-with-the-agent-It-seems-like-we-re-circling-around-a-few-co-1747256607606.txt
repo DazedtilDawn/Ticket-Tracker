@@ -1,0 +1,120 @@
+This has been quite a debugging journey with the agent! It seems like we're circling around a few core issues, and while progress is being made, the complete end-to-end flow for the Daily Bonus System isn't quite there yet.
+
+Your latest feedback is: **"Still not working in all aspects."**
+The agent's latest report focuses on fixing the "Reset" functionality on the Bonus Management page and claims the critical issue with `is_spun: true` is solved by allowing parents to reset.
+
+Let's consolidate what we know from the logs and the agent's actions, and then pinpoint what needs to be **systematically verified by you** to confirm the current state before the agent attempts more fixes.
+
+---
+
+### Current State Analysis (Based on Logs & Agent Reports)
+
+**Positive Developments:**
+
+1.  **WebSocket `localhost:undefined` `SyntaxError`:** The console logs you provided show `[DEBUG_HTML] BLOCKING WebSocket attempt (HTML override): wss://.../?token=...`. This is **GOOD**. It means our HTML override *is* catching and blocking the Neon DB WebSocket attempt. The critical `SyntaxError` that was previously crashing or polluting the console due to an invalid URL (`localhost:undefined`) seems to be gone. This is a major win for Sprint 0 stabilization.
+2.  **Application WebSocket (`/ws`):** Multiple `WebSocket connection established` logs for `/ws` confirm your application's own real-time communication channel is working.
+3.  **Bonus Assignment on Parent Login:** Logs like `daily_bonus:assigned` suggest the "first parent login" logic (or a manual trigger by the agent via `curl`) *is* creating records in the `dailyBonus` table.
+4.  **`/api/earn` Response Structure (Partial Progress):** The log `dashboard.tsx:453 Chore completion response: {..., bonus_triggered: false, daily_bonus_id: null}` shows the backend *is* returning these flags. The problem is *why* they are `false`/`null` when they should be `true`/`<ID>`.
+5.  **Reset Functionality (Agent's Focus):** The agent has heavily focused on making the "Reset Bonus" on the Bonus Management page work, particularly by ensuring `user_id` is passed correctly. This reset is intended to clear the `is_spun: true` state for a child.
+
+**Persistent Core Issues & What Needs Verification:**
+
+1.  **Why is `/api/earn` returning `bonus_triggered: false` when a known bonus chore is completed?**
+    *   The agent's debugging log `[API_EARN] Daily bonus record found. Assigned chore: ${dailyBonusRecord.assigned_chore_id}, Completed chore: ${chore_id}, Is spun: ${dailyBonusRecord.is_spun}, Trigger type: ${dailyBonusRecord.trigger_type}` (or similar detailed logging requested previously) is **absolutely critical**. We need to see this server-side log for a specific test case.
+    *   The log you provided: `/api/earn: Daily bonus lookup result: { ..., is_spun: true, ... }` clearly shows `is_spun: true` was the problem in *that specific instance*. The agent's fix was to improve the reset.
+    *   **We need to verify if the "Reset Bonus" now correctly sets `is_spun = false` AND that the *initial assignment* (on parent login or via a fresh reset) correctly sets `is_spun = false`.**
+
+2.  **Actual Wheel Spin Interaction Flow (Client-Side):**
+    *   Even if `/api/earn` *were* to return `bonus_triggered: true`, is the client-side flow ( `handleChoreComplete` in Dashboard/Chores -> sets state -> `SpinPromptModal` appears -> "Spin Now!" click -> sets state -> `ChildBonusWheel` modal appears -> `ChildBonusWheel`'s spin button calls `/api/bonus-spin`) fully and correctly implemented?
+    *   Your feedback "a bonus wheel spin notification pops up now but interacting with it doesn't trigger the actual wheel component" from *before* the agent's latest batch of fixes suggests this client flow was broken. The agent *then* worked on creating `ChildBonusWheel.tsx` and wiring it up. This needs re-testing.
+
+3.  **Bonus Management Page - Display of Assignments:**
+    *   While the agent worked on the "Reset" button, does the page now correctly *display* for each child (Bryce, Kiki):
+        *   Their Name
+        *   The **Currently Assigned Bonus Chore Name** (and Emoji) for today?
+        *   Whether it was a system default or a parent override?
+    *   This visibility is crucial for you to even know which chore to test for bonus triggering.
+
+4.  **Random Bonus Chore Selection Criteria (`recurrence = 'daily'`):**
+    *   Did the agent confirm modification of `storage.assignDailyBonusChore` to only select 'daily' chores? This was a specific requirement.
+
+---
+
+### Action Plan: Systematic Verification (YOU and the Agent)
+
+We need to stop the cycle of the agent making broad fixes and instead test specific parts of the flow meticulously.
+
+**Step 1: Verify Daily Bonus Assignment & `is_spun` State (Server-Side & DB)**
+
+*   **Action (You, with Agent's help if needed for DB access/logs):**
+    1.  Ensure no child has a `dailyBonus` record for *today*. (Use the "Reset Bonus" on the Bonus Management page for both Bryce and Kiki if it's working, or ask the agent to clear today's `dailyBonus` records via SQL).
+    2.  Log out and log back in as "Parent".
+    3.  **Check Server Logs:** Look for the detailed `[BONUS_ASSIGN]` logs that the agent was asked to add.
+        *   Does it log attempts to assign bonuses for Bryce and Kiki for today's date?
+        *   What `assigned_chore_id` is selected for each? Note these down.
+        *   What does it log as the result of the assignment (the created `dailyBonus` record)?
+    4.  **Check Database (`dailyBonus` table):**
+        *   Are there new records for Bryce and Kiki for today?
+        *   For these new records, is `is_spun` **definitely `FALSE`**?
+        *   Is `trigger_type` set to `'chore_completion'`?
+        *   Is `assigned_chore_id` a valid ID of a chore that has `recurrence = 'daily'`?
+*   **If `is_spun` is `TRUE` on initial assignment, or no assignment happens, or a non-daily chore is assigned, this is a BUG in `storage.assignDailyBonusChore` or the login trigger logic. The agent needs to fix this first.**
+
+**Step 2: Verify Bonus Management Page Display (You)**
+
+*   **Action (You):**
+    1.  After Step 1 (and bonuses *are* assigned with `is_spun=false`), navigate to the "Bonus Management" page as Parent.
+    2.  **Observe:** Does the page correctly list:
+        *   Bryce | [Emoji] Name of Bryce's Assigned Bonus Chore | "System Assigned" | [Change Button] | [Reset Button]
+        *   Kiki  | [Emoji] Name of Kiki's Assigned Bonus Chore  | "System Assigned" | [Change Button] | [Reset Button]
+*   **If this information is NOT displayed correctly, the agent needs to fix `daily-bonus-assignments.tsx` and/or the `GET /api/daily-bonus/assignments` endpoint.**
+
+**Step 3: Test Bonus Chore Completion and Spin Prompt (You)**
+
+*   **Prerequisite:** Steps 1 & 2 must be successful. You must know which chore is the bonus for (e.g.) Bryce, and that its `is_spun` is `false`.
+*   **Action (You):**
+    1.  As Parent, switch to view as Bryce.
+    2.  Mark Bryce's *specific assigned bonus chore* (identified in Step 1 & 2) as complete.
+    3.  **Observe Client Console:** Look for the log from `handleChoreComplete` in `Dashboard.tsx` showing the JSON response from `/api/earn`.
+        *   **Crucially, what are `response.bonus_triggered` and `response.daily_bonus_id` in this logged response?**
+    4.  **Observe UI:** Does the `SpinPromptModal.tsx` appear?
+*   **If `bonus_triggered` is `false` in the API response, or the modal doesn't appear:** The issue is still in `/api/earn` correctly identifying the bonus condition or in `Dashboard.tsx`'s `handleChoreComplete` reacting to the response. Agent needs server logs from `/api/earn` for *this specific completion attempt*.
+*   **If the modal *does* appear:** Proceed to Step 4.
+
+**Step 4: Test "Spin Now!" from Prompt to Wheel Display (You)**
+
+*   **Prerequisite:** Step 3 successful, `SpinPromptModal` is showing.
+*   **Action (You):**
+    1.  Click "Spin Now!" in the `SpinPromptModal`.
+    2.  **Observe UI:**
+        *   Does the `SpinPromptModal` close?
+        *   Does the `ChildBonusWheel.tsx` component (likely in another modal) appear?
+*   **If the wheel doesn't appear:** The issue is in `Dashboard.tsx`'s `handleUserInitiatesSpin` function (or whatever `SpinPromptModal` calls) not correctly setting the state to display the `ChildBonusWheel`. Agent needs to debug this client-side state transition.
+*   **If the wheel *does* appear:** Proceed to Step 5.
+
+**Step 5: Test Actual Wheel Spin (You)**
+
+*   **Prerequisite:** Step 4 successful, `ChildBonusWheel` is showing.
+*   **Action (You):**
+    1.  Click the "SPIN" button on the `ChildBonusWheel`.
+    2.  **Observe Client & Server:**
+        *   Does the client call `POST /api/bonus-spin` with the correct `daily_bonus_id`? (Check browser network tab, server logs).
+        *   Does the server `/api/bonus-spin` endpoint:
+            *   Perform the weighted RNG?
+            *   Create a *new transaction only for the bonus tickets* (`source: 'bonus_spin'`)?
+            *   Update `dailyBonus.is_spun = true` and `dailyBonus.spin_result_tickets`?
+        *   Does the client UI update to show tickets won and new balance?
+        *   Does the wheel modal close after the spin?
+*   **If any part of this fails, the agent needs to debug the `ChildBonusWheel.tsx` and/or `/api/bonus-spin` endpoint.**
+
+---
+
+**Request for Agent's Immediate Focus (after you provide results for Step 1 & 2):**
+
+**"Agent, we need to systematically verify the daily bonus flow.**
+
+1.  **Confirm `storage.assignDailyBonusChore` (and the parent login trigger) correctly creates `dailyBonus` records for each child for today with `is_spun = false`, `trigger_type = 'chore_completion'`, and assigns a chore that has `recurrence = 'daily'` and respects cooldowns. Provide server logs for the assignment process when a parent logs in on a new day.**
+2.  **Ensure the `/bonus-management` page accurately fetches and displays these assignments for each child (chore name, emoji, override status). Provide a screenshot of this page after bonuses have been assigned.**
+3.  **Ensure the `/api/earn` endpoint logs the `dailyBonusRecord` it fetches and the conditions it checks before setting `bonus_triggered`. When a known, unspun, chore-triggered bonus chore is completed, this endpoint *must* return `bonus_triggered: true` and the `daily_bonus_id` in its JSON response."**
+
+Let's do this step-by-step. We need confirmed success at each stage of the data flow before moving to the next UI interaction. Your detailed testing and provision of logs after the agent makes these specific logging enhancements/fixes will be key.

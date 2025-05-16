@@ -1,0 +1,105 @@
+Excellent! The agent has reported fixes for the backend `/api/earn` endpoint and verified the `/api/bonus-spin` logic, and also confirmed the Bonus Management page display. This is significant progress in aligning with the correct bonus flow.
+
+Your latest feedback is crucial: **"a bonus wheel spin notification pops up now but interacting with it doesn't trigger the actual wheel component, it should take us to a wheel page or some way for them to see the wheel and spin it for the bonus."**
+
+This means the `SpinPromptModal.tsx` is appearing correctly (which is great – `/api/earn` is doing its job!), but the action of clicking "Spin Now!" within that modal is not yet correctly launching or interacting with the `DailyBonusWheel.tsx` component.
+
+Let's focus on bridging this gap.
+
+---
+
+### Sprint 1: Bonus Wheel Interaction - Frontend Flow Correction
+
+**Current State (as per your feedback):**
+
+1.  Parent marks assigned bonus chore complete.
+2.  `/api/earn` correctly returns `bonus_triggered: true` and `daily_bonus_id`.
+3.  Client (`Dashboard.tsx` / `Chores.tsx`) receives this and correctly opens `SpinPromptModal.tsx`.
+4.  **Breakdown Point:** Clicking "Spin Now!" in `SpinPromptModal.tsx` does not yet show/activate the `DailyBonusWheel.tsx` for the user to visually spin.
+
+**Intended Flow for Modal Interaction:**
+
+1.  `SpinPromptModal.tsx` is displayed with a "Spin Now!" button.
+2.  This button, when clicked, should trigger a state change in its parent component (`Dashboard.tsx` or `Chores.tsx`) to:
+    *   Close the `SpinPromptModal.tsx`.
+    *   Open/display the `DailyBonusWheel.tsx` component, likely within another modal (a larger one for the wheel itself) or by navigating to a dedicated wheel page.
+    *   The `daily_bonus_id` (captured when the prompt modal was opened) must be available to the `DailyBonusWheel.tsx` component or the function that handles its spin action.
+
+---
+
+### Plan for Correction (Client-Side Logic)
+
+The agent needs to wire up the "Spin Now!" action from the prompt modal to the display and activation of the actual wheel.
+
+**Task 1: State Management for Wheel Display (Agent - `Dashboard.tsx` & `Chores.tsx`)**
+
+*   **Objective:** Add state to control the visibility of the `DailyBonusWheel.tsx` modal.
+*   **Action for Agent:**
+    *   **"Agent, in both `client/src/pages/dashboard.tsx` and `client/src/pages/chores.tsx`:**
+        1.  Add a new state variable: `const [isBonusWheelModalOpen, setIsBonusWheelModalOpen] = useState(false);`
+        2.  The `dailyBonusIdForSpin` state (which should already exist to store the ID for the spin) will be used by the wheel.
+*   **Acceptance Criteria:** State variables are defined in both parent pages.
+
+**Task 2: Connect `SpinPromptModal` Action to Open `DailyBonusWheel` Modal (Agent - `Dashboard.tsx` & `Chores.tsx`)**
+
+*   **Objective:** When "Spin Now!" is clicked in the prompt, close the prompt and open the wheel.
+*   **Action for Agent:**
+    *   **"Agent, modify the `handleSpinWheel` function (or whatever function is passed as the `onSpin` prop to `SpinPromptModal.tsx`) in both `Dashboard.tsx` and `Chores.tsx`:**
+        *   This function is currently intended to call `/api/bonus-spin`. **This is slightly premature.** The `handleSpinWheel` function triggered by the *prompt modal* should primarily be responsible for *showing the actual wheel*. The actual API call to `/api/bonus-spin` will be triggered by an interaction *within* the `DailyBonusWheel.tsx` component itself.
+        *   **Revised `handleSpinWheel` (from prompt modal's `onSpin`):**
+            ```typescript
+            // In Dashboard.tsx / Chores.tsx
+            const handleUserInitiatesSpin = (bonusIdFromPrompt: number) => {
+              console.log(`User initiated spin for daily_bonus_id: ${bonusIdFromPrompt}`);
+              // We already have dailyBonusIdForSpin in state, ensure it matches or was set correctly
+              // setDailyBonusIdForSpin(bonusIdFromPrompt); // Should already be set when prompt opened
+              setIsSpinPromptOpen(false); // Close the small prompt modal
+              setIsBonusWheelModalOpen(true); // Open the main wheel modal
+            };
+            ```
+        *   Pass this `handleUserInitiatesSpin` function to `SpinPromptModal.tsx` as its `onSpin` prop.
+        *   The `SpinPromptModal.tsx` will call `props.onSpin(props.dailyBonusId)` when its button is clicked.
+*   **Acceptance Criteria:**
+    *   Clicking "Spin Now!" in `SpinPromptModal.tsx` closes the prompt modal.
+    *   It sets `isBonusWheelModalOpen = true`.
+    *   The `dailyBonusIdForSpin` is correctly maintained in the parent page's state.
+
+**Task 3: Render and Wire Up `DailyBonusWheel.tsx` (Agent - `Dashboard.tsx` & `Chores.tsx`)**
+
+*   **Objective:** Display the actual bonus wheel when requested and allow it to perform the spin.
+*   **Action for Agent:**
+    *   **"Agent, in both `Dashboard.tsx` and `Chores.tsx`:**
+        1.  **Render `DailyBonusWheel.tsx`:**
+            *   Conditionally render it, perhaps within a large modal dialog (e.g., using `Dialog` from `shadcn/ui`).
+            *   The visibility of this modal will be controlled by `isBonusWheelModalOpen`.
+            *   `DailyBonusWheel.tsx` will need access to the `dailyBonusIdForSpin` (pass as a prop if it's a direct child, or it can consume from a context/store if that's how state is managed, but prop is simpler here).
+            *   It will also need an `onSpinComplete` or `onClose` prop to tell the parent page to set `setIsBonusWheelModalOpen(false)`.
+        2.  **Modify `DailyBonusWheel.tsx` (`updated_daily_bonus_wheel.tsx` / `client/src/components/daily-bonus-wheel.tsx`):**
+            *   It currently has its own `selectedChild` and `selectedChore` logic. This is for the *old* way of manually initiating a bonus by a parent.
+            *   **New Mode of Operation:** When opened via the "Spin Prompt" for a child, it should operate in a "direct spin" mode.
+            *   It should receive the `dailyBonusIdToSpin: number` as a prop.
+            *   The "SPIN THE WHEEL!" button's `onClick` handler (`handleSpin` inside the wheel component) should:
+                *   Set its internal `isSpinning = true`.
+                *   Play animations/sounds.
+                *   **Directly call `POST /api/bonus-spin` with `{ daily_bonus_id: props.dailyBonusIdToSpin }`.** (This part is already handled by its internal `spinMutation`).
+                *   On success from `spinMutation`:
+                    *   Display the result (tickets won).
+                    *   After a short delay, call `props.onSpinComplete()` (or `props.onClose()`) to close the wheel modal.
+                    *   React Query invalidations (for `/api/stats`) within the `spinMutation`'s `onSuccess` will update the balance.
+            *   The child/chore selectors within `DailyBonusWheel.tsx` should be *hidden or disabled* when it's opened in this "direct spin for child" mode. They are only relevant if a parent is using the wheel page to *assign* a bonus, which is now handled by the Bonus Management page. Consider if the `DailyBonusWheel.tsx` component needs to be refactored to support these two modes, or if the version used by the child spin prompt is a simpler variant. For now, let's assume the existing wheel component can be adapted.
+*   **Acceptance Criteria:**
+    *   When `isBonusWheelModalOpen` is true, the `DailyBonusWheel` (inside a modal) is displayed.
+    *   Clicking "SPIN THE WHEEL!" inside `DailyBonusWheel.tsx` correctly calls `POST /api/bonus-spin` with the correct `daily_bonus_id`.
+    *   The wheel animates (or at least shows the result after the API call).
+    *   The child's balance updates correctly with the *bonus* tickets.
+    *   The wheel modal can be closed.
+    *   The `dailyBonus` record on the server is marked as `is_spun = true`.
+
+---
+
+**Recommendation for Next Agent Actions (in order):**
+
+1.  **"Agent, implement Task 1 & 2: Refactor the client-side flow in `Dashboard.tsx` and `Chores.tsx`. The `handleChoreComplete` (or equivalent) function, after getting a successful response from `/api/earn` with `bonus_triggered: true`, should set state to show `SpinPromptModal.tsx`. The `SpinPromptModal`'s 'Spin Now!' action should then set different state to show the `DailyBonusWheel.tsx` (likely in a new, larger modal), passing the necessary `daily_bonus_id`."**
+2.  **"Agent, implement Task 3: Integrate and adapt `DailyBonusWheel.tsx`. Ensure it can receive a `dailyBonusIdToSpin` prop. When its 'SPIN' button is clicked in this mode, it should use this ID to call `POST /api/bonus-spin`. Hide or disable its internal child/chore selectors when launched this way. On spin completion, it should call a prop function to close itself."**
+
+This plan focuses on getting the interactive wheel spin working for the child after they complete a bonus-triggering chore. We are deferring the full visual animation of the wheel *spinning to a result* if that's complex, focusing first on the correct data flow: Prompt -> User action -> API call -> Display result -> Update balance. The fancy animation can be a polish step.

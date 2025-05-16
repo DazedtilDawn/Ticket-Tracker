@@ -1,0 +1,147 @@
+(index):53 [DEBUG_HTML] Pre-bundle WebSocket override script executing.
+(index):103 [DEBUG_HTML] window.WebSocket has been overridden from HTML.
+(index):64  [DEBUG_HTML] BLOCKING WebSocket attempt (HTML override): wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev:/?token=NAcJha5guOOe
+value @ (index):64
+react-dom.development.js:29895 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+main.tsx:3 [DEBUG] Main.tsx: Relying on the HTML WebSocket override.
+supabase.ts:40 Connecting to WebSocket at: wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/ws
+supabase.ts:54 Using global WebSocket constructor (with HTML overrides)
+App.tsx:75 Checking authentication status, auto-login: true
+dashboard.tsx:32 Attempting to load family users...
+dashboard.tsx:108 Setting up WebSocket listeners for transaction events
+supabase.ts:40 Connecting to WebSocket at: wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/ws
+supabase.ts:54 Using global WebSocket constructor (with HTML overrides)
+supabase.ts:180 Subscribing to WebSocket channel: 
+supabase.ts:180 Subscribing to WebSocket channel: transaction:
+supabase.ts:180 Subscribing to WebSocket channel: transaction:earn
+supabase.ts:180 Subscribing to WebSocket channel: transaction:spend
+supabase.ts:180 Subscribing to WebSocket channel: transaction:deduct
+supabase.ts:180 Subscribing to WebSocket channel: transaction:reward
+content.js:260 Prompt Manager content script loaded
+supabase.ts:57 WebSocket connection established
+supabase.ts:57 WebSocket connection established
+supabase.ts:91 WebSocket message received: Object
+supabase.ts:94 WebSocket message details - Event: server:welcome Object
+supabase.ts:199 Caught all-events subscriber for "server:welcome"
+dashboard.tsx:44 Successfully loaded family users: Array(5)
+supabase.ts:91 WebSocket message received: Object
+supabase.ts:94 WebSocket message details - Event: server:welcome Object
+supabase.ts:199 Caught all-events subscriber for "server:welcome"
+dashboard.tsx:85 Loaded dashboard stats: Object
+dashboard.tsx:344 Adding user_id to chore completion payload: 5
+dashboard.tsx:348 Submitting chore completion with payload: Object
+dashboard.tsx:350 Chore completion response: <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script type="module">
+import { createHotContext } from "/@vite/client";
+const hot = createHotContext("/__dummy__runtime-error-plugin");
+
+function sendError(error) {
+  if (!(error instanceof Error)) {
+    error = new Error("(unknown runtime error)");
+  }
+  const serialized = {
+    message: error.message,
+    stack: error.stack,
+  };
+  hot.send("runtime-error-plugin:error", serialized);
+}
+
+window.addEventListener("error", (evt) => {
+  sendError(evt.error);
+});
+
+window.addEventListener("unhandledrejection", (evt) => {
+  sendError(evt.reason);
+});
+</script>
+
+    <script type="module">
+import RefreshRuntime from "/@react-refresh"
+RefreshRuntime.injectIntoGlobalHook(window)
+window.$RefreshReg$ = () => {}
+window.$RefreshSig$ = () => (type) => type
+window.__vite_plugin_react_preamble_installed__ = true
+</script>
+
+    <script type="module" src="/@vite/client"></script>
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>TicketTracker - Manage Chores and Rewards</title>
+    <meta name="description" content="Track chores, earn tickets, and save for Amazon wishlist goals with this family-friendly task management system.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- Open Graph tags -->
+    <meta property="og:title" content="TicketTracker - Chore & Reward System">
+    <meta property="og:description" content="Manage family chores and track progress toward Amazon wishlist goals with this interactive ticket-based allowance system.">
+    <meta property="og:type" content="website">
+
+    <!-- START PRE-BUNDLE WEBSOCKET OVERRIDE -->
+    <script>
+      console.log('[DEBUG_HTML] Pre-bundle WebSocket override script executing.');
+      const NativeWebSocketOriginalHTML = window.WebSocket;
+      if (NativeWebSocketOriginalHTML) {
+        Object.defineProperty(window, 'WebSocket', {
+          configurable: true,
+          enumerable: false,
+          writable: true,
+          value: function(url, protocols) {
+            const urlString = String(url);
+            // console.log('[DEBUG_HTML] Overridden WebSocket constructor called for:', urlString);
+            if (urlString.includes('token=') || urlString.includes('localhost:undefined')) {
+              console.warn('[DEBUG_HTML] BLOCKING WebSocket attempt (HTML override):', urlString);
+              // Return a minimal mock
+              const mock = { 
+                readyState: 3, 
+                send: function() {}, 
+                close: function() {}, 
+                addEventListener: function() {}, 
+                removeEventListener: function() {},
+                dispatchEvent: () => true,
+                CONNECTING: 0, 
+                OPEN: 1, 
+                CLOSING: 2, 
+                CLOSED: 3,
+                url: '', 
+                protocol: '', 
+                extensions: '', 
+                bufferedAmount: 0,
+                onopen: null, 
+                onerror: null, 
+                onclose: null, 
+                onmessage: null,
+                binaryType: 'blob'
+              };
+              setTimeout(function() {
+                if (typeof mock.onerror === 'function') mock.onerror(new Event('error'));
+                if (typeof mock.onclose === 'function') mock.onclose(new CloseEvent('close', {code:1006}));
+              },0);
+              return mock;
+            }
+            // console.log('[DEBUG_HTML] Allowing NATIVE WebSocket (HTML override) for:', urlString);
+            return new NativeWebSocketOriginalHTML(url, protocols);
+          }
+        });
+        for (const staticProp in NativeWebSocketOriginalHTML) {
+          if (Object.prototype.hasOwnProperty.call(NativeWebSocketOriginalHTML, staticProp)) {
+            try { window.WebSocket[staticProp] = NativeWebSocketOriginalHTML[staticProp]; } catch (e) {}
+          }
+        }
+        window.WebSocket.prototype = NativeWebSocketOriginalHTML.prototype;
+        console.log('[DEBUG_HTML] window.WebSocket has been overridden from HTML.');
+      } else {
+        console.error('[DEBUG_HTML] CRITICAL: Native window.WebSocket not found in HTML script!');
+      }
+    </script>
+    <!-- END PRE-BUNDLE WEBSOCKET OVERRIDE -->
+    <script type="module">"use strict";(()=>{var P="0.1.2";var T={HIGHLIGHT_COLOR:"#0079F2",HIGHLIGHT_BG:"#0079F210",ALLOWED_DOMAIN:".replit.dev"},I={highlighter:{position:"absolute",zIndex:Number.MAX_SAFE_INTEGER-3,boxSizing:"border-box",pointerEvents:"none",border:`2px solid ${T.HIGHLIGHT_COLOR}`,borderRadius:"4px",background:T.HIGHLIGHT_BG,transition:"opacity 0.2s",willChange:"opacity",o
+chore-card.tsx:39 Chore completion result: undefined
+[NEW] Explain Console errors by using Copilot in Edge: click
+         
+         to explain an error. 
+        Learn more
+        Don't show again

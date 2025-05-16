@@ -1,0 +1,151 @@
+Below is a \*\*practical “check-list” for you (or the next dev) that lines up exactly with the four tasks you outlined, plus a quick spec for the new **Buy / Purchase** button.  If you work through it in order you’ll know— with console proof— where the Bonus-Management chain is breaking, and you’ll have the new spend-tickets flow ready to slot in.
+
+---
+
+## A.  “Purchase / Spend-tickets” button (fast win)
+
+| Requirement                                                 | How to implement                                                                                                                                                                                                                                                                                                                                  |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Looks like the *Bad-Behavior* dialog but **spends** tickets | 1. **Duplicate** `BadBehaviorDialog.tsx` → call it `PurchaseDialog.tsx`.<br>2. Change wording to “Purchase – how many tickets do you want to use?”.<br>3. POST to `/api/spend` (or whatever spend route you use now).<br>4. Payload shape: `{ user_id, tickets /* positive int */, reason: 'purchase' }`.<br>5. Toast: “Purchased! – -X tickets”. |
+| Parent chooses child when not in ‘view child’ mode          | Use `getActiveChildId()` the same way the other dialogs do.                                                                                                                                                                                                                                                                                       |
+| Appears in UI                                               | In **dashboard.tsx** where you render Bad / Good dialog buttons: `<PurchaseDialog> <Button …>💸 Purchase</Button></PurchaseDialog>`                                                                                                                                                                                                               |
+| Shows in Transactions table                                 | No extra work—backend broadcast already triggers the `transaction:spend` handlers you fixed earlier.                                                                                                                                                                                                                                              |
+
+*(You can knock this out quickly while the logs for the bonus flow are building—just remember to add the route if it doesn’t exist.)*
+
+---
+
+## B.  Why “No bonus assignments found” is still showing
+
+### Task 1 – Verify **creation** of `dailyBonus` rows
+
+> **Files**: `server/storage.ts` (or `/services/bonus.ts`), `server/routes/auth.ts` (parent-login logic)
+
+1. **Add logging right where the record is written / fetched.**
+
+   ```ts
+   // storage.ts
+   export async function assignDailyBonusChore(childId: number) {
+     const bonus = await prisma.dailyBonus.upsert({ … });
+     console.log('[ASSIGN_BONUS_CHORE_RESULT]', {
+       id: bonus.id,
+       user_id: bonus.user_id,
+       bonus_date: bonus.bonus_date,
+       is_spun: bonus.is_spun,
+       assigned_chore_id: bonus.assigned_chore_id
+     });
+     return bonus;
+   }
+   ```
+
+2. **After the loop that calls it when a parent logs in**:
+
+   ```ts
+   console.log('[PARENT_LOGIN_ASSIGN_SUMMARY]', today,
+     result.map(r => ({ child: r.user_id, bonusId: r.id })));
+   ```
+
+3. **Restart the server**, log-in as parent, grab the console.
+
+   *If no `[ASSIGN_BONUS_CHORE_RESULT]` lines appear, creation is broken—stop here and fix.*
+
+---
+
+### Task 2 – Verify **API response** from `/api/daily-bonus/assignments`
+
+> **File**: `server/routes.ts`
+
+```ts
+app.get('/api/daily-bonus/assignments', authParent, async (req, res) => {
+  const date = req.query.date ? new Date(req.query.date as string) : new Date();
+  console.log('[API_GET_ASSIGNMENTS] Date queried:', date.toISOString().slice(0,10));
+
+  const rows = await storage.getDailyBonusAssignmentsForDate(date);
+  console.log('[API_GET_ASSIGNMENTS] Raw rows:', rows);
+
+  res.json(rows);
+  console.log('[API_GET_ASSIGNMENTS] Sent', rows.length, 'records');
+});
+```
+
+Now **curl** it:
+
+```bash
+curl -H "Authorization: Bearer <parent_token>" \
+     "http://localhost:3000/api/daily-bonus/assignments"
+```
+
+*If the array is empty here, the query is wrong (maybe the date comparison or the JOIN).*
+
+---
+
+### Task 3 – Verify **React Query** fetch on the page
+
+> **File**: `client/src/pages/bonus-management.tsx`
+> (or `daily-bonus-assignments.tsx` if that’s where the `useQuery` lives)
+
+1. Right after the hook:
+
+   ```tsx
+   const { data, isLoading, isError, error } = useQuery({
+     queryKey: ['/api/daily-bonus/assignments'],
+     queryFn: () => apiRequest('/api/daily-bonus/assignments')
+   });
+
+   console.log('[BONUS_MGMT_FETCH]', { isLoading, isError, data, error });
+   ```
+
+2. **Reload the page** and read the browser console.
+
+   *If `data` has rows but the card still says “No assignments”, Task 4 is the culprit.*
+
+---
+
+### Task 4 – Verify **rendering** logic
+
+Inside the component that prints the table/card:
+
+```tsx
+if (!assignments?.length) {
+  console.log('[BONUS_MGMT_RENDER] nothing to render, assignments =', assignments);
+  return <p>No bonus assignments found for today.</p>;
+}
+
+return (
+  assignments.map(b => {
+    console.log('[BONUS_MGMT_RENDER] row:', {
+      child: b.child_name,
+      chore: b.chore_name,
+      override: b.is_override
+    });
+    return (
+      <tr key={b.id}> … </tr>
+    );
+  })
+);
+```
+
+*If those row logs appear but the user still sees “No assignments”, the conditional is wrong (e.g., checking `data === null` instead of `data.length === 0`).*
+
+---
+
+## Expected outcome after the four tasks
+
+* Server logs show two `[ASSIGN_BONUS_CHORE_RESULT]` lines every morning (one per child).
+* `/api/daily-bonus/assignments` returns an array with Bryce and Kiki rows.
+* Browser console’s `[BONUS_MGMT_FETCH] data` prints that same array.
+* The Bonus-Management card renders those two rows (with “Change chore” / “Reset” buttons active).
+
+Once that displays you can tackle the **override** or **reset** buttons knowing the data flow is healthy.
+
+---
+
+### Quick checklist you can hand to the next dev
+
+1. [ ] Add logging in `assignDailyBonusChore` and parent login flow.
+2. [ ] Hit `/api/daily-bonus/assignments` by hand – confirm JSON.
+3. [ ] Add React-Query console logs, reload page.
+4. [ ] If data appears, fix the JSX conditional/rendering.
+5. [ ] Merge `PurchaseDialog` (spend tickets) per spec above.
+
+Ping me with any of those console outputs if something still doesn’t line up—once we see the raw objects it’s usually a two-line fix. Good luck!

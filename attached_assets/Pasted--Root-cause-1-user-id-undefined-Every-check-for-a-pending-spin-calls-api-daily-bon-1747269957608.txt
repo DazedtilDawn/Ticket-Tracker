@@ -1,0 +1,87 @@
+### Root cause #1 – **`user_id=undefined`**
+
+Every check for a pending spin calls
+`/api/daily-bonus/unspun?user_id=undefined → 404`,
+so the modal never appears.
+That happens because **`getActiveChildId()` is evaluated *before* the
+auth-store finishes hydrating** (the store is still `null` for a few
+milliseconds when the dashboard mounts).
+
+### Root cause #2 – the **effect never re-runs** when the child id *does*
+
+become available, because the dependency array holds the *function* reference
+(`getActiveChildId`) instead of the **resolved id**.
+
+---
+
+## 🔧 3-line fix in `Dashboard.tsx`
+
+```diff
+-  useEffect(() => {
+-    if (user?.role === 'child' || viewingChild) {
++  const activeChildId = getActiveChildId();          // <-- resolve once
++
++  useEffect(() => {
++    if (!activeChildId) return;                      // guard until ready
++
+     const checkForUnspunBonus = async () => {
+-      const userId = getActiveChildId();             // ⚠ returns null early
+-      console.log("Checking unspun bonus for userId:", userId);
+-      const response = await apiRequest(`/api/daily-bonus/unspun?user_id=${userId}`);
++      console.log("Checking unspun bonus for userId:", activeChildId);
++      const response = await apiRequest(
++        `/api/daily-bonus/unspun?user_id=${activeChildId}`
++      );
+       …
+     };
+     checkForUnspunBonus();
+     const id = setInterval(checkForUnspunBonus, 30_000);
+     return () => clearInterval(id);
+-  }, [user?.id, user?.role, viewingChild, getActiveChildId]);
++  }, [activeChildId]);                               // rerun when id ready
+```
+
+---
+
+## 🔧 2-line fix in the WS handler (same reason)
+
+```diff
+- const activeChildId = getActiveChildId();
+- console.log("Active child ID:", activeChildId);
++ const activeChildId = getActiveChildId();           // resolve _now_
++ if (!activeChildId) return;                         // ignore early pings
+```
+
+---
+
+## ✅ Verify
+
+1. Reload as Bryce.
+    Console shows `Checking unspun bonus for userId: 4` (not undefined).
+2. Parent assigns / good-behavior spin → WS event arrives → modal pops.
+3. Spin → WS `bonus_spin:result` sets `is_spun=true`; card disappears after
+   next poll (≤30 s) or immediate WS.
+
+---
+
+## Why Bonus-Management blanked out
+
+It fails for the same reason: the first render fires a query before
+`familyUsers` (hence `familyId`) exists.
+Wrap its fetch similarly:
+
+```ts
+const { familyId } = useAuthStore();
+const { data } = useQuery(
+  ['/api/daily-bonus/assignments', familyId],
+  () => apiRequest(`/api/daily-bonus/assignments?family_id=${familyId}`),
+  { enabled: !!familyId }              // <-- only after id is ready
+);
+```
+
+That restores the list.
+
+---
+
+*Apply those guards; the spinner prompt will appear reliably and the Bonus
+Management page will repopulate.* 🎉

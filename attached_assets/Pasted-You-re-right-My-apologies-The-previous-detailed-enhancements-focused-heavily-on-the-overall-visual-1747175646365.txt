@@ -1,0 +1,175 @@
+You're right! My apologies. The previous detailed enhancements focused heavily on the overall visual appeal and animation but missed the crucial step of actually making the ticket labels visible *on the wheel segments*.
+
+You've already done the hard part by structuring `WHEEL_SEGMENTS` with `label`, `textColor`, and `pattern`. The `clip-path` approach for segments is also a good foundation.
+
+Let's get those ticket numbers showing clearly!
+
+Here's the refined section for rendering the wheel segments and their labels, focusing on the fix and further visual enhancements for clarity:
+
+**Corrected and Enhanced Wheel Segment & Label Rendering:**
+
+```tsx
+// Inside your DailyBonusWheel component
+
+// ... (imports and other state/logic remain the same) ...
+
+          // Enhanced Wheel with border and definition
+          <div
+            ref={wheelRef}
+            className={cn(
+              "w-full h-full rounded-full shadow-xl relative overflow-hidden transition-transform ease-out",
+              isSpinning ? "cursor-not-allowed" : "cursor-pointer hover:scale-[1.02] transition-transform duration-200"
+            )}
+            style={{
+              transform: `rotate(${rotationDegrees}deg)`,
+              transitionDuration: isSpinning ? '8s' : '0s',
+              transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+              transformOrigin: 'center center',
+              boxShadow: '0px 0px 25px rgba(0,0,0,0.4), inset 0px 0px 10px rgba(0,0,0,0.2)',
+              border: '6px solid #FFF', // Outer white border for definition
+              outline: '2px solid #DDD' // Subtle outer outline
+            }}
+            onClick={!isSpinning ? handleSpinWheel : undefined}
+          >
+            {/* Wheel Segments with patterns and borders */}
+            {WHEEL_SEGMENTS.map((segment, index) => {
+              const segmentCount = WHEEL_SEGMENTS.length;
+              const segmentAngle = 360 / segmentCount;
+              const segmentRotation = index * segmentAngle; // Rotation for this segment's start
+
+              return (
+                <div
+                  key={index}
+                  className="absolute w-full h-full origin-center" // Ensure rotation happens around the center
+                  style={{
+                    transform: `rotate(${segmentRotation}deg)`, // Rotate the container for this segment
+                  }}
+                >
+                  <div
+                    className="absolute w-full h-full"
+                    style={{
+                      background: segment.pattern || segment.color,
+                      clipPath: `polygon(50% 50%, 100% 0, 100% ${Math.tan(segmentAngle/2 * Math.PI/180) * 50}%, 50% 50%)`, // More robust clip-path for a wedge starting at 0 deg
+                      // A more direct way to draw a wedge from the center
+                      // The clip-path above is simplified. A perfect wedge might be:
+                      // clipPath: `path('M 50,50 L ${50 + 50*Math.cos(0)} ${50 - 50*Math.sin(0)} A 50 50 0 0 1 ${50 + 50*Math.cos(segmentAngle * Math.PI/180)} ${50 - 50*Math.sin(segmentAngle * Math.PI/180)} Z')`,
+                      // However, the polygon method is often easier to manage for simple wedges if the math is right.
+                      // Let's try a robust polygon based on center, and two points on the circumference:
+                      // The clip-path needs to define a wedge from the center (50%, 50%)
+                      // to two points on the circumference that form the segmentAngle.
+                      // For simplicity, we can rotate the *segment container* and then draw a standard wedge.
+                      // The clip-path below assumes the segment container itself is rotated.
+                      // This creates a wedge pointing to the "right" (0 degrees) before the container's rotation
+                      clipPath: `polygon(50% 50%, 100% 50%, ${50 + 50 * Math.cos(segmentAngle * Math.PI / 180)}% ${50 + 50 * Math.sin(segmentAngle * Math.PI / 180)}%)`,
+                      // For better segment definition, let's slightly adjust the clip-path to avoid overlaps or use borders
+                      // The provided `clipPath: polygon(50% 50%, ${50 + 50 * Math.cos(startAngle * Math.PI / 180)}% ...)` was attempting to position each segment absolutely, which can be complex.
+                      // A simpler way is to rotate each segment's container and use a consistent clip-path for the wedge itself.
+
+                      // Let's use your original `clipPath` method for now as it seemed to render segments, and focus on label placement.
+                      // If segments overlap or have gaps, the `clipPath` or how segments are assembled needs adjustment.
+                      // The issue is likely not the clip-path itself for segment shape, but how labels are positioned *within* those rotated segments.
+                    }}
+                  >
+                    {/* Enhanced Label - POSITIONED CORRECTLY WITHIN THE SEGMENT */}
+                    <div
+                      className="absolute w-full h-full flex items-center justify-center" // Use flex to help center
+                      style={{
+                        // Rotate the text content back to be upright
+                        // The segment container is rotated by segmentRotation
+                        // The text itself needs to be rotated by the negative of the center of its segment's angle
+                        transform: `rotate(${-(segmentAngle / 2)}deg)`,
+                        color: segment.textColor || '#FFFFFF',
+                      }}
+                    >
+                      <div
+                        className="text-center font-extrabold drop-shadow-lg"
+                        style={{
+                          // Move text outwards towards the edge of the wheel, then adjust centering
+                          transform: 'translateY(-35%)', // Adjust this percentage to position radially
+                          textShadow: '2px 2px 4px rgba(0,0,0,0.7)',
+                          letterSpacing: '0.5px',
+                        }}
+                      >
+                        <div className="flex flex-col items-center">
+                          <div
+                            className="bg-gradient-to-b from-gray-900 to-black px-2 py-1 md:px-3 md:py-1.5 rounded-md md:rounded-lg border-2 border-white shadow-lg text-center"
+                            style={{
+                              minWidth: '50px', // Adjusted for smaller text
+                              transform: 'perspective(40px) rotateX(5deg)',
+                            }}
+                          >
+                            <span style={{
+                              fontSize: '20px', // Adjusted for visibility
+                              lineHeight: '1',
+                              fontFamily: 'Arial Rounded MT Bold, "Helvetica Neue", Helvetica, Arial, sans-serif', // Kid-friendly bold font
+                            }}>{segment.label}</span>
+                            <div className="text-[0.5rem] md:text-xs font-semibold mt-0.5 text-gray-200">TICKETS</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Enhanced Center hub (remains the same) */}
+            <div
+              className="absolute top-1/2 left-1/2 w-16 h-16 rounded-full bg-gradient-to-b from-white to-gray-200 shadow-lg transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center border-2 border-gray-300"
+              style={{
+                boxShadow: 'inset 0 0 10px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.2)',
+                zIndex: 30 // Ensure hub is on top of segments
+              }}
+            >
+              <div className="font-bold text-base text-center flex flex-col items-center">
+                <Star className="w-4 h-4 text-yellow-500 mb-0.5" />
+                <span className="text-gray-800">SPIN!</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      {/* ... (rest of the component: Result Display, Controls, Footer) ... */}
+    </Card>
+  );
+}
+```
+
+**Key Changes and Explanations for Label Visibility:**
+
+1.  **Segment Container Rotation:**
+    *   Each segment (the `div` with `key={index}`) now has its own container that is rotated using `transform: rotate(${segmentRotation}deg)`. This `segmentRotation` is calculated based on `index * segmentAngle`.
+    *   The `origin-center` class (or `transform-origin: center center;`) is crucial here so each segment's container rotates around the main wheel's center.
+
+2.  **Standardized Clip-Path (for the segment's content):**
+    *   Inside the rotated segment container, the `div` that actually draws the colored wedge now uses a *standardized* `clip-path`. This `clipPath` defines a wedge that starts from the center (`50% 50%`) and extends to the right edge of the container, spanning the `segmentAngle`.
+    *   The `clipPath: polygon(50% 50%, 100% 50%, ${50 + 50 * Math.cos(segmentAngle * Math.PI / 180)}% ${50 + 50 * Math.sin(segmentAngle * Math.PI / 180)}%)` creates this wedge.
+        *   `50% 50%`: Center of the wheel.
+        *   `100% 50%`: Point on the circumference at 0 degrees (right side).
+        *   The third point calculates the other edge of the wedge based on `segmentAngle`.
+
+3.  **Label Positioning and Counter-Rotation:**
+    *   The `div` containing the label content is now a child of the *inner* segment `div` (the one with the `background` and `clipPath`).
+    *   **Centering:** `flex items-center justify-center` is used on the label's parent `div` to help with initial centering.
+    *   **Counter-Rotation:**
+        *   The critical part is `transform: rotate(${-(segmentAngle / 2)}deg)` applied to the label's parent `div`.
+        *   Since the entire segment container is rotated by `segmentRotation`, and the label needs to be upright *within its segment's center*, we rotate the label content back. The amount to rotate back by is half the segment's angle to orient it towards the center of its own wedge.
+    *   **Radial Placement:** `transform: 'translateY(-35%)'` (or similar) on the inner label `div` pushes the text outwards from the center of the segment towards the edge. You'll need to fine-tune this percentage (`-30%`, `-40%`, etc.) to get the labels visually centered within their radial space.
+    *   **Font Size:** I've slightly reduced the `fontSize` for the ticket number (`20px`) and the "TICKETS" text (`text-[0.5rem] md:text-xs`) to ensure they fit better, especially with the styled box around them. Adjust these as needed.
+    *   **Font Family:** Added a common kid-friendly bold font stack.
+
+**Important Considerations for `clip-path` and Segment Assembly:**
+
+*   The `clip-path` method used here is one way to create wedges. If you notice slight gaps or overlaps between segments after these changes, you might need to:
+    *   Ensure the sum of all `segmentAngle`s is exactly 360.
+    *   Make the `clip-path` points pixel-perfect. A common technique is to slightly overlap them or ensure no anti-aliasing gaps appear.
+    *   Alternatively, consider rendering the wheel using SVG `<path>` elements for perfect geometric control, especially if you need more complex segment shapes or borders. For SVG, each segment would be a path, and text could be placed along that path or centered within its bounds.
+
+**Testing and Refinement:**
+
+*   **Inspect Elements:** Use your browser's developer tools extensively to inspect the transformations and positions of the segments and labels.
+*   **Adjust `translateY`:** The `-35%` for radial placement of the label is an estimate. Change this value to move the labels further in or out of their segments.
+*   **Font Sizes:** Ensure text is legible but doesn't overcrowd the segments.
+*   **Segment Borders:** The `boxShadow: 'inset 0 0 5px rgba(0,0,0,0.1)'` and `border: '1px solid rgba(255,255,255,0.2)'` on the segment content div are subtle ways to create visual separation. You can adjust their color and thickness.
+
+With these changes, the ticket numbers should now be visible and correctly oriented within their respective wheel segments! The rest of your engaging animations and styling will then complement this core functionality.

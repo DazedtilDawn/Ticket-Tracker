@@ -1,0 +1,263 @@
+Ticket System Monitoring Tool
+
+Comprehensive Review & Implementation Guide for Replit Coding Agent
+
+Ⅰ. Cohesiveness Review (Current State)
+
+Area
+
+What Works
+
+Potential Gaps / Risks
+
+Recommendation
+
+Data Model
+
+User, Chore, Product, Goal, Transaction tables mapped in SQLAlchemy.
+
+No unique constraint on (user_id, chore_id, day) ⇒ duplicate credits; price_cents is INT but incoming PA‑API price may be string; tier not persisted (re‑computed each request).
+
+Add composite index, parse price to Decimal, persist tier snapshot for audit.
+
+API
+
+RESTful naming; typed pydantic schemas; token auth.
+
+Amazon scrape returns 500 on missing price; /goals/:id/progress forces N+1 queries; no rate‑limit on /earn endpoint.
+
+Wrap scraper in try/except + fallback sentinel, eager‑load product on goal query, add FastAPI Limiter ext.
+
+Business Logic
+
+Tier and progressPercent calculated server‑side; Grace‑pass streak logic drafted.
+
+boostPercent rounds badly on low‑price items (<$5); streak job runs UTC not local; price refresh overwrites locked value.
+
+Clamp boost display ≥0.5 %, convert cron to America/New_York, create price_locked_cents plus optional latest_price_cents.
+
+Frontend
+
+React + Vite; chore/wish cards implemented per spec; Tailwind config present.
+
+State resets on hard refresh (no persistence); non‑reader accessibility pass incomplete; images 404 break layout.
+
+Persist store in localStorage + server hydrate, add aria‑labels + speech API, add onError placeholder image.
+
+Realtime / Sync
+
+Supabase channel pushes transaction:new.
+
+Ledger bulk actions don't broadcast; offline mode not handled.
+
+Trigger function in DB to emit on transaction upserts; cache writes offline and flush on connect.
+
+Testing & CI
+
+Pytest + vitest skeleton; GitHub Action lints.
+
+No E2E tests; scraper tests hit live Amazon (flaky).
+
+Add Playwright / Cypress; mock PA‑API with VCR.
+
+Ⅱ. Implementation Guide for Replit Coding Agent
+
+Goal: deliver a production‑ready web app (PWA) that allows parents to manage a ticket‑based allowance, kids to log chores, and everyone to track progress toward Amazon wishlist goals.
+
+1. Project Setup (≈ 30 min)
+
+Create Replit Nix template with: python 3.12, poetry, node 20, bun, playwright-cli, git.
+
+Enable Secrets tab → add AMZ_PA_ACCESS, AMZ_PA_SECRET, SUPABASE_URL, SUPABASE_ANON, JWT_SECRET.
+
+Scaffold monorepo:
+
+/api           # FastAPI src
+/web           # React client
+/tests         # shared e2e
+poetry.lock
+package.json
+replit.nix
+
+Pre‑commit hooks: black, ruff, isort, prettier, eslint.
+
+2. Database & ORM (≈ 45 min)
+
+Use SQLite (Replit volume) via SQLModel.
+
+DDL in alembic migration.
+
+Tables & fields:
+
+users (id, name, role, email, pw_hash)
+
+chores (id, name, tickets, recurrence, tier, is_active)
+
+products (id, title, asin, image_url, price_cents, price_locked_cents, last_checked)
+
+goals (id, user_id↗, product_id↗, tickets_saved)
+
+transactions (id, user_id↗, chore_id↗, delta_tickets, ts)
+
+Composite unique (user_id,chore_id,date) to prevent dup logs.
+
+3. Backend API (≈ 2 h)
+
+Route
+
+Method
+
+Description
+
+/auth/login
+
+POST
+
+returns JWT
+
+/chores
+
+CRUD
+
+tier re‑calc on create/update
+
+/products/scrape
+
+POST
+
+body:amazonUrl; returns meta; stores product
+
+/goals
+
+POST
+
+attach product to user
+
+/earn
+
+POST
+
+body:chore_id; creates transaction
+
+/spend
+
+POST
+
+body:tickets or goal_id; debits
+
+/ledger
+
+GET
+
+paginated transactions
+
+/stats
+
+GET
+
+returns balances, progress, streaks
+
+Middleware: JWT verify; role guard.
+
+Services: scrape_amazon(url) → {asin,title,img,price_c} using PA‑API else Playwright.
+
+Supabase webhooks: on transactions insert trigger rpc_emit to channel.
+
+4. Business Logic (≈ 30 min)
+
+Tier: fetch median tickets of active chores → assign Common/Rare/Epic.
+
+Progress: percent = tickets_saved*25 / price_locked_cents.
+
+Boost: boost = chore.tickets*25/price_locked_cents (rounded 0.1 %).
+
+Streaks: scheduled task 02:00 ET resets counters; grace‑pass flag.
+
+5. Frontend (≈ 2 h)
+
+Vite + React + Tailwind; Zustand store.
+
+Pages: Login, KidDashboard, ParentDashboard, ChoreAdmin, WishList.
+
+Components: ChoreCard, WishCard, TicketJar, AdminTable, ConfettiModal.
+
+Hooks: useSupabaseChannel, useAuth, useProgress.
+
+State hydration from /stats on load and Supabase events.
+
+Accessibility: add tabIndex, aria‑labels; reader‑mode icon voice.
+
+6. DevOps & CI (≈ 30 min)
+
+GitHub Action matrix: lint → unit tests → build → Cypress.
+
+Replit deployment: poetry run uvicorn api.main:app --port $PORT & bun run web:start.
+
+Nightly cron Replit Scheduler: python -m api.jobs.refresh_prices.
+
+7. Testing Matrix (≈ 1 h)
+
+Layer
+
+Tool
+
+What to cover
+
+Unit
+
+Pytest
+
+tier calc, scraper parsing, auth guard
+
+API
+
+HTTPX + pytest
+
+/earn, duplicate prevention, 401 paths
+
+UI
+
+Vitest + RTL
+
+ChoreCard boost label, progress bar fill
+
+E2E
+
+Playwright
+
+full happy path add goal → earn chore → progress
+
+8. Manual QA Checklist
+
+New user signup → create chores → pick product.
+
+Kid earns chore twice; duplicate prevented.
+
+Progress percent updates realtime on sibling device.
+
+Switch goal; saved tickets divert to general jar.
+
+Price refresh handles Amazon price drop.
+
+Offline device earns chore; sync on reconnect.
+
+9. Post‑MVP Enhancements
+
+Push notifications via Expo.
+
+AR clean‑cam proof‑of‑chore.
+
+Seasonal theme toggle.
+
+Ⅲ. Delivery Expectations
+
+Fully passing CI & E2E tests.
+
+README with env setup + endpoints table.
+
+Loom (≤ 5 min) demo of happy path.
+
+Final code review & hand‑off back to Andy.
+
+Replit Coding Agent: Follow sections 1 → 8 sequentially. Once each milestone is complete, commit & push; CI must stay green.  Ping me (Andy) in PR comments for clarifications.
+

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>TicketTracker - Manage Chores and Rewards</title>
+    <meta name="description" content="Track chores, earn tickets, and save for Amazon wishlist goals with this family-friendly task management system.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- Open Graph tags -->
+    <meta property="og:title" content="TicketTracker - Chore & Reward System">
+    <meta property="og:description" content="Manage family chores and track progress toward Amazon wishlist goals with this interactive ticket-based allowance system.">
+    <meta property="og:type" content="website">
+
+    <!-- START PRE-BUNDLE WEBSOCKET OVERRIDE -->
+    <script>
+      console.log('[DEBUG_HTML] Pre-bundle WebSocket override script executing.');
+      const NativeWebSocketOriginalHTML = window.WebSocket;
+      if (NativeWebSocketOriginalHTML) {
+        Object.defineProperty(window, 'WebSocket', {
+          configurable: true,
+          enumerable: false,
+          writable: true,
+          value: function(url, protocols) {
+            const urlString = String(url);
+            // console.log('[DEBUG_HTML] Overridden WebSocket constructor called for:', urlString);
+            if (urlString.includes('token=') || urlString.includes('localhost:undefined')) {
+              console.warn('[DEBUG_HTML] BLOCKING WebSocket attempt (HTML override):', urlString);
+              
+              // Enhanced debugging to trace the call source
+              console.warn('[DEBUG_HTML] WebSocket blocked - Call stack:', new Error().stack);
+              
+              // Look for patterns in the URL to identify the source
+              if (urlString.includes('localhost:undefined')) {
+                console.error('[DEBUG_HTML] Found problematic localhost:undefined WebSocket attempt');
+                // Most likely from a Neon or other DB client
+              }
+              
+              if (urlString.includes('token=')) {
+                console.error('[DEBUG_HTML] Found WebSocket with token parameter');
+                // Most likely HMR or other dev-related socket
+              }
+              
+              // Add debugger statement to help trace the call stack for debugging
+              // debugger; // Commented out to avoid breaking execution during normal use
+              // Return a minimal mock
+              const mock = { 
+                readyState: 3, 
+                send: function() {}, 
+                close: function() {}, 
+                addEventListener: function() {}, 
+                removeEventListener: function() {},
+                dispatchEvent: () => true,
+                CONNECTING: 0, 
+                OPEN: 1, 
+                CLOSING: 2, 
+                CLOSED: 3,
+                url: '', 
+                protocol: '', 
+                extensions: '', 
+                bufferedAmount: 0,
+                onopen: null, 
+                onerror: null, 
+                onclose: null, 
+                onmessage: null,
+                binaryType: 'blob'
+              };
+              setTimeout(function() {
+                if (typeof mock.onerror === 'function') mock.onerror(new Event('error'));
+                if (typeof mock.onclose === 'function') mock.onclose(new CloseEvent('close', {code:1006}));
+              },0);
+              return mock;
+            }
+            // console.log('[DEBUG_HTML] Allowing NATIVE WebSocket (HTML override) for:', urlString);
+            return new NativeWebSocketOriginalHTML(url, protocols);
+          }
+        });
+        for (const staticProp in NativeWebSocketOriginalHTML) {
+          if (Object.prototype.hasOwnProperty.call(NativeWebSocketOriginalHTML, staticProp)) {
+            try { window.WebSocket[staticProp] = NativeWebSocketOriginalHTML[staticProp]; } catch (e) {}
+          }
+        }
+        window.WebSocket.prototype = NativeWebSocketOriginalHTML.prototype;
+        console.log('[DEBUG_HTML] window.WebSocket has been overridden from HTML.');
+      } else {
+        console.error('[DEBUG_HTML] CRITICAL: Native window.WebSocket not found in HTML script!');
+      }
+    </script>
+    <!-- END PRE-BUNDLE WEBSOCKET OVERRIDE -->
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
+    <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
+  </body>
+</html>

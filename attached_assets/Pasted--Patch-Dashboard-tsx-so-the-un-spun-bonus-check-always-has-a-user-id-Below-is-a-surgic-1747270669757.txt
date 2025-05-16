@@ -1,0 +1,87 @@
+## 🛠 Patch Dashboard.tsx so the **un-spun bonus check** always has a user-id
+
+Below is a **surgical diff** you can paste straight into `client/src/pages/dashboard.tsx`.
+It does three things:
+
+1. **Resolves `activeChildId` once, outside the effect**
+   (avoids the “undefined” first render).
+2. **Skips the effect until the id is ready**.
+3. **Uses that id as the single dependency**, so the effect re-runs when the
+   parent switches children or the auth-store hydrates.
+
+```diff
+@@
+-  // Check for unspun bonuses via dedicated API endpoint when viewing as a child
+-  useEffect(() => {
+-    if (user?.role === 'child' || viewingChild) {
++  /** ----------------------------------------------------------------
++   *  Check for an un-spun daily bonus whenever a child dashboard
++   *  mounts, the viewed child changes, or every 30 s while open.
++   *  ----------------------------------------------------------------*/
++
++  const activeChildId = useAuthStore((s) => s.getActiveChildId()); // ← resolve once
++
++  useEffect(() => {
++    if (!activeChildId) return;        // store not hydrated yet
++
+     const checkForUnspunBonus = async () => {
+-      try {
+-        console.log("Checking for unspun bonus via dedicated API...");
+-        // Get the active child ID 
+-        const userId = getActiveChildId();
+-        console.log("Checking unspun bonus for userId:", userId);
+-        const response = await apiRequest(`/api/daily-bonus/unspun?user_id=${userId}`, {
++      try {
++        console.log("[Bonus] polling /unspun for id:", activeChildId);
++
++        const response = await apiRequest(
++          `/api/daily-bonus/unspun?user_id=${activeChildId}`,
+           method: "GET"
+         });
+@@
+-      // Check on initial load and whenever user changes
+-      checkForUnspunBonus();
+-      
+-      // Also check periodically (every 30 seconds)
+-      const checkInterval = setInterval(checkForUnspunBonus, 30000);
+-      return () => clearInterval(checkInterval);
+-    }
+-  }, [user?.id, user?.role, viewingChild, getActiveChildId]);
++      // Run once now, then every 30 s
++      checkForUnspunBonus();
++      const id = setInterval(checkForUnspunBonus, 30_000);
++      return () => clearInterval(id);
++  }, [activeChildId]);   // ← re-run when child changes or store hydrates
+```
+
+### Why this fixes it
+
+* **Before:** the first render happens while `viewingChildId` is still `null`
+  in `auth-store`. `getActiveChildId()` therefore returns `null → undefined`
+  → the fetch hits `/unspun?user_id=undefined → 404`. The effect never re-fires
+  because its dependency array contained the *function reference*.
+* **After:** we wait until `activeChildId` is truthy; then the same effect will
+  re-run automatically whenever the parent switches children or the store is
+  re-hydrated after page refresh.
+
+---
+
+## 🔬 Minimal verification
+
+1. **Reload Bryce’s dashboard**
+   Console log shows
+   `"[Bonus] polling /unspun for id: 4"` (or Kiki’s id). No 404.
+2. Parent assigns / good-behavior bonus → a pending record appears.
+   Within ≤ 1 s the spin prompt pops automatically.
+3. Child spins → server sets `is_spun=true`; next poll (or WS) hides the card.
+
+---
+
+## 🛡 Prevent it happening again
+
+* Put **`enabled: !!activeChildId`** flags on any React-query that depends on
+  the child id (Bonus-Management list, etc.).
+* In new code, never pass a store **function** to a dependency array—pass the
+  **resolved value**.
+
+Happy spinning 🎉

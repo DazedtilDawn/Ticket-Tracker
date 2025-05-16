@@ -1,0 +1,72 @@
+### 🔍 What’s still wrong — and why only in the child wheel
+
+| Symptom                                                             | Root cause                                                                                                                                                                                                        |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Two bottom-left labels render as **“Ǝ” / “0 L”** or vanish entirely | We’re drawing the text with a *triple rotation* (`rotate(mid)… rotate(-mid)… rotate(flip)`). The browser can’t anti-alias small glyphs after that many sub-pixel transforms, so the outline collapses or mirrors. |
+| Parent wheel is fine                                                | It places every label once, with a **single cartesian (x,y)** and an optional 180 ° flip.                                                                                                                         |
+
+---
+
+## 1 — Make the child wheel use the same robust label routine
+
+Replace the `<text>` block inside the `<svg>` map with the exact logic the parent uses:
+
+```diff
+- {/* label positioned at 42% radius */}
+- <text
+-   x={50}
+-   y={50}
+-   dominantBaseline="middle"
+-   textAnchor="middle"
+-   fontWeight="700"
+-   fontSize="9"
+-   fill={seg.text}
+-   transform={`rotate(${mid} 50 50) translate(0 -42) rotate(${-mid} 50 50) rotate(${flip} 50 50)`}
+- >
+-   {seg.label}
+- </text>
+
++ const LABEL_R = 38;                       // % of SVG radius
++ const rad     = (mid * Math.PI) / 180;
++ const xLab    = 50 + LABEL_R * Math.cos(rad);
++ const yLab    = 50 + LABEL_R * Math.sin(rad);
++
++ <text
++   x={xLab}
++   y={yLab}
++   dominantBaseline="middle"
++   textAnchor="middle"
++   fontWeight="700"
++   fontSize="9"
++   fill={seg.text}
++   transform={`rotate(${flip} ${xLab} ${yLab})`}
++ >
++   {seg.label}
++ </text>
+```
+
+*No nested transforms ⇒ no mirroring, no clipping, always crisp glyphs.*
+
+---
+
+## 2 — Tiny visual upgrades (optional but nice)
+
+| Enhancement                                 | Snippet                                                                                                                                                      |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Pointer glow only while spinning**        | `className={cn("...", isSpinning && "animate-bounce-slow shadow-glow")}`                                                                                     |
+| **Momentum easing** closer to wheel physics | Change transition to `cubic-bezier(.12,.98,.26,1)` for a quick start & long coast.                                                                           |
+| **Progressive tick interval**               | `tickTimer = setInterval(playTick, Math.max(30, 90 - elapsed*8))` inside a `requestAnimationFrame` loop → ticks speed-up then slow-down like a real ratchet. |
+
+---
+
+## 3 — Verification checklist
+
+| Check                  | Expected outcome                                                                      |
+| ---------------------- | ------------------------------------------------------------------------------------- |
+| Spin 8× in child modal | All eight labels readable and upright (“1 2 3 5 2 3 10 4”).                           |
+| Look at console        | No `[WHEEL_DEBUG] FIX APPLIED: Flipping text…` spam (remove that log once confirmed). |
+| Accessibility audit    | Lighthouse passes “text contrast” (all labels ≥ 4.5:1).                               |
+
+---
+
+**Apply the replaced `<text>` block** and the child wheel will match the parent wheel pixel-for-pixel—no missing numbers, no mirrored glyphs, consistent across browsers. 🛞✨

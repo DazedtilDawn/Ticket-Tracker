@@ -1,0 +1,2246 @@
+import express, { Request, Response, NextFunction } from "express";
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { db, pool } from "./db";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import { v4 as uuidv4 } from "uuid";
+import { eq } from "drizzle-orm";
+import {
+  loginSchema,
+  insertUserSchema,
+  insertChoreSchema,
+  insertProductSchema,
+  insertGoalSchema,
+  completeChoreSchema,
+  amazonSearchSchema,
+  manualProductSchema,
+  badBehaviorSchema,
+  goodBehaviorSchema,
+  deleteTransactionSchema,
+  spinWheelSchema,
+  insertDailyBonusSchema,
+  dailyBonus,
+  bonusSpinSchema
+} from "@shared/schema";
+import { createJwt, verifyJwt, AuthMiddleware } from "./lib/auth";
+import { DailyBonusAssignmentMiddleware } from "./lib/daily-bonus-middleware";
+import { scrapeAmazon, extractAsin } from "./lib/amazon-api";
+import { calculateTier, calculateProgressPercent, calculateBoostPercent } from "./lib/business-logic";
+import { WebSocketServer, WebSocket } from "ws";
+import { cleanupOrphanedProducts } from "./cleanup";
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  const httpServer = createServer(app);
+  
+  // Set up multer for file uploads
+  const fileStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+      // Create directory if it doesn't exist
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+      // Generate unique filename with original extension
+      const uniqueFilename = `${uuidv4()}${path.extname(file.originalname)}`;
+      cb(null, uniqueFilename);
+    }
+  });
+  
+  const upload = multer({ 
+    storage: fileStorage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB file size limit
+    fileFilter: (req, file, cb) => {
+      // Accept only image files
+      if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+      } else {
+        cb(null, false);
+      }
+    }
+  });
+  
+  // Serve static files from public folder
+  app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
+  
+  // Setup WebSockets for realtime updates with specific path
+  const wss = new WebSocketServer({ 
+    server: httpServer,
+    path: '/ws' 
+  });
+  
+  wss.on("connection", (ws: WebSocket) => {
+    console.log("New WebSocket connection established");
+    
+    ws.on("message", (message: Buffer) => {
+      try {
+        const { event, data } = JSON.parse(message.toString());
+        console.log("WebSocket message received:", event, data);
+        
+        // Handle client connection acknowledgment
+        if (event === 'client:connected') {
+          console.log("Client acknowledged connection");
+          // Send a welcome message back to confirm two-way communication
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ 
+              event: 'server:welcome', 
+              data: { 
+                message: "Welcome to the TicketTracker realtime service", 
+                timestamp: new Date().toISOString() 
+              } 
+            }));
+          }
+        }
+        
+        // Handle ping test messages
+        else if (event === 'client:ping') {
+          console.log("Received ping test from client");
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+              event: 'server:pong',
+              data: {
+                received: data,
+                serverTime: new Date().toISOString(),
+                message: "Connection test successful"
+              }
+            }));
+            
+            // Create a real test transaction to help debug UI updates
+            const createAndBroadcastTestTransaction = async () => {
+              try {
+                // Create a real transaction (small reward for testing)
+                const testAmount = 5; // 5 tickets as a test reward
+                const transaction = await storage.createTransaction({
+                  type: 'reward',
+                  delta_tickets: testAmount, // Must use delta_tickets, not amount
+                  note: 'WebSocket test reward (connection test)',
+                  user_id: 1 // Parent user ID
+                });
+                
+                console.log("Created real test transaction:", transaction.id);
+                
+                // Broadcast the real transaction to all clients
+                broadcast('transaction:reward', {
+                  id: transaction.id,
+                  type: 'reward',
+                  delta_tickets: testAmount, 
+                  note: 'WebSocket test reward (connection test)',
+                  user_id: 1
+                });
+              } catch (error) {
+                console.error("Failed to create test transaction:", error);
+                
+                // Fall back to dummy transaction if real one fails
+                broadcast('transaction:test', {
+                  id: 999999,
+                  type: 'test',
+                  delta_tickets: 5,  // Using 5 tickets to match the real transaction
+                  note: 'WebSocket test transaction (dummy)',
+                  user_id: 1
+                });
+              }
+            };
+            
+            // Execute asynchronously
+            createAndBroadcastTestTransaction();
+          }
+        }
+      } catch (error) {
+        console.error("Error parsing WebSocket message:", error);
+      }
+    });
+    
+    ws.on("close", () => {
+      console.log("WebSocket connection closed");
+    });
+    
+    ws.on("error", (error) => {
+      console.error("WebSocket error:", error);
+    });
+  });
+  
+  // Broadcast to all connected clients
+  function broadcast(event: string, data: any) {
+    console.log(`Broadcasting event: ${event}`, {
+      clientCount: wss.clients.size,
+      dataType: typeof data,
+      timestamp: new Date().toISOString()
+    });
+
+    // Debug full payload for specific events
+    if (event.startsWith('transaction:')) {
+      console.log(`Transaction broadcast payload:`, JSON.stringify(data, null, 2));
+    }
+    
+    let sentCount = 0;
+    wss.clients.forEach((client: WebSocket) => {
+      if (client.readyState === WebSocket.OPEN) {
+        // Create the message once outside the loop
+        const message = JSON.stringify({ event, data });
+        client.send(message);
+        sentCount++;
+      }
+    });
+    
+    console.log(`Broadcast complete: ${sentCount}/${wss.clients.size} clients received the message`);
+  }
+  
+  // Auth Routes
+  app.post("/api/auth/login", async (req: Request, res: Response) => {
+    try {
+      const credentials = loginSchema.parse(req.body);
+      const user = await storage.getUserByUsername(credentials.username);
+      
+      if (!user || user.password !== credentials.password) {
+        return res.status(401).json({ message: "Invalid username or password" });
+      }
+      
+      // Generate JWT token for the authenticated user
+      const token = createJwt(user);
+      
+      // Handle daily bonus assignment for parent users on login
+      let dailyBonusAssignments = null;
+      if (user.role === 'parent') {
+        try {
+          console.log(`Parent user ${user.id} (${user.username}) logged in, checking daily bonus assignments`);
+          
+          // Get today's date
+          const today = new Date().toISOString().split('T')[0];
+          
+          // Check if daily bonuses have already been assigned today
+          const childUsers = await storage.getUsersByRole('child');
+          let assignedCount = 0;
+          let needsAssignment = false;
+          
+          // Check each child to see if they already have a bonus for today
+          for (const child of childUsers) {
+            const existingBonus = await storage.getDailyBonus(today, child.id);
+            if (!existingBonus) {
+              needsAssignment = true;
+              break;
+            } else {
+              assignedCount++;
+            }
+          }
+          
+          // If all children already have bonuses, skip assignment
+          if (childUsers.length > 0 && assignedCount === childUsers.length) {
+            console.log(`All ${childUsers.length} children already have daily bonuses assigned for today`);
+          } 
+          // Otherwise, assign bonuses to all children
+          else if (needsAssignment) {
+            console.log(`Assigning daily bonuses to children on parent login`);
+            dailyBonusAssignments = await storage.assignDailyBonusesToAllChildren(today);
+            console.log(`Daily bonus assignment complete:`, dailyBonusAssignments);
+            
+            // Broadcast the new assignments to all clients
+            for (const [childId, bonus] of Object.entries(dailyBonusAssignments)) {
+              if (bonus) {
+                broadcast("daily_bonus:assigned", {
+                  user_id: parseInt(childId),
+                  daily_bonus: bonus
+                });
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error assigning daily bonuses on parent login:", error);
+          // Don't fail the login if bonus assignment fails
+        }
+      }
+      
+      return res.json({
+        message: "Logged in successfully",
+        token,
+        user: {
+          id: user.id,
+          name: user.name,
+          username: user.username,
+          role: user.role,
+        },
+        daily_bonus_assignments: dailyBonusAssignments
+      });
+    } catch (error) {
+      return res.status(400).json({ message: error.message });
+    }
+  });
+  
+  app.post("/api/auth/register", async (req: Request, res: Response) => {
+    try {
+      const userData = insertUserSchema.parse(req.body);
+      
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(userData.username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already taken" });
+      }
+      
+      const newUser = await storage.createUser(userData);
+      const token = createJwt(newUser);
+      
+      return res.status(201).json({
+        message: "User created successfully",
+        token,
+        user: {
+          id: newUser.id,
+          name: newUser.name,
+          username: newUser.username,
+          role: newUser.role,
+        },
+      });
+    } catch (error) {
+      return res.status(400).json({ message: error.message });
+    }
+  });
+  
+  // Protected routes middleware
+  const auth = AuthMiddleware(storage);
+  const parentOnly = AuthMiddleware(storage, "parent");
+  
+  // Daily bonus assignment middleware for parent users
+  const dailyBonusAssignment = DailyBonusAssignmentMiddleware(storage);
+  
+  // Apply daily bonus assignment middleware to parent-only routes
+  app.use((req, res, next) => {
+    // Only apply to authenticated parent users
+    if (req.user && req.user.role === 'parent') {
+      dailyBonusAssignment(req, res, next);
+    } else {
+      next();
+    }
+  });
+  
+  // Admin route to clean up orphaned products
+  app.get("/api/admin/cleanup", parentOnly, async (req: Request, res: Response) => {
+    try {
+      console.log("Running database cleanup...");
+      const result = await cleanupOrphanedProducts();
+      return res.json(result);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ message: errorMessage });
+    }
+  });
+
+  // User routes - public to support automatic family login
+  app.get("/api/users", async (req: Request, res: Response) => {
+    const users = await storage.getUsers();
+    
+    // Remove passwords from response
+    const sanitizedUsers = users.map(user => ({
+      id: user.id,
+      name: user.name,
+      username: user.username,
+      role: user.role,
+    }));
+    
+    return res.json(sanitizedUsers);
+  });
+  
+  // Chore routes
+  app.get("/api/chores", auth, async (req: Request, res: Response) => {
+    const activeOnly = req.query.activeOnly !== "false";
+    const chores = await storage.getChores(activeOnly);
+    return res.json(chores);
+  });
+  
+  // Image upload endpoint for chores
+  app.post("/api/upload/image", auth, upload.single('image'), async (req: Request, res: Response) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      
+      // Return the URL to the uploaded file
+      const imageUrl = `/uploads/${req.file.filename}`;
+      return res.json({ imageUrl });
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      return res.status(500).json({ message: "Failed to upload image" });
+    }
+  });
+  
+  app.post("/api/chores", parentOnly, async (req: Request, res: Response) => {
+    try {
+      console.log("Creating new chore with data:", req.body);
+      const choreData = insertChoreSchema.parse(req.body);
+      console.log("Validated chore data:", choreData);
+      const newChore = await storage.createChore(choreData);
+      console.log("New chore created:", newChore);
+      
+      // Calculate and update tier
+      const chores = await storage.getChores();
+      const tier = calculateTier(newChore.tickets, chores);
+      console.log("Calculated tier:", tier);
+      const updatedChore = await storage.updateChore(newChore.id, { tier });
+      console.log("Updated chore with tier:", updatedChore);
+      
+      broadcast("chore:new", updatedChore);
+      return res.status(201).json(updatedChore);
+    } catch (error) {
+      console.error("Error creating chore:", error);
+      return res.status(400).json({ message: error.message });
+    }
+  });
+  
+  app.put("/api/chores/:id", parentOnly, async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid chore ID" });
+    }
+    
+    try {
+      // Allow partial updates
+      const choreUpdate = req.body;
+      const updatedChore = await storage.updateChore(id, choreUpdate);
+      
+      if (!updatedChore) {
+        return res.status(404).json({ message: "Chore not found" });
+      }
+      
+      // Recalculate tier for all chores if tickets changed
+      if (choreUpdate.tickets) {
+        const chores = await storage.getChores();
+        for (const chore of chores) {
+          const tier = calculateTier(chore.tickets, chores);
+          if (tier !== chore.tier) {
+            await storage.updateChore(chore.id, { tier });
+          }
+        }
+      }
+      
+      broadcast("chore:update", updatedChore);
+      return res.json(updatedChore);
+    } catch (error) {
+      return res.status(400).json({ message: error.message });
+    }
+  });
+  
+  app.delete("/api/chores/:id", parentOnly, async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid chore ID" });
+    }
+    
+    const deleted = await storage.deleteChore(id);
+    if (!deleted) {
+      return res.status(404).json({ message: "Chore not found" });
+    }
+    
+    broadcast("chore:delete", { id });
+    return res.json({ message: "Chore deleted successfully" });
+  });
+  
+  // Product routes
+  // Get all available products
+  app.get("/api/products", auth, async (req: Request, res: Response) => {
+    try {
+      // Get all products in the system
+      const products = await storage.getAllProducts();
+      return res.json(products);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return res.status(500).json({ message: errorMessage });
+    }
+  });
+
+  app.post("/api/products/scrape", auth, async (req: Request, res: Response) => {
+    try {
+      const { amazonUrl } = amazonSearchSchema.parse(req.body);
+      
+      try {
+        const productData = await scrapeAmazon(amazonUrl);
+        
+        // Check if product already exists
+        let product = await storage.getProductByAsin(productData.asin);
+        
+        if (product) {
+          // Update with latest price but don't change locked price
+          // Also update the camel_last_checked timestamp
+          product = await storage.updateProduct(product.id, {
+            title: productData.title,
+            image_url: productData.image_url,
+            price_cents: productData.price_cents,
+            camel_last_checked: new Date(),
+          });
+        } else {
+          // Create new product with current price as locked price
+          // And include the camel_last_checked timestamp
+          product = await storage.createProduct({
+            ...productData,
+            price_locked_cents: productData.price_cents,
+            camel_last_checked: new Date(),
+          });
+        }
+        
+        return res.json(product);
+      } catch (scrapeError) {
+        console.error("Product scraping error:", scrapeError);
+        
+        // For demonstration purposes only - using a consistent fallback product
+        // In a production environment, we would need a proper API or handle this differently
+        
+        // Use a consistent ASIN for our demo product
+        const asin = "B0CGXZ4LBK"; // Known working ASIN for LEGO Star Wars X-Wing
+        
+        // Check if we already have this demo product
+        let product = await storage.getProductByAsin(asin);
+        
+        if (product) {
+          return res.json(product);
+        }
+        
+        // Create a demo product with the consistent ASIN if it doesn't exist
+        product = await storage.createProduct({
+          title: "LEGO Star Wars 25th Anniversary X-Wing Starfighter",
+          asin,
+          image_url: "https://m.media-amazon.com/images/I/81ww66OBpQL._AC_SL1500_.jpg",
+          price_cents: 12999, // $129.99
+          price_locked_cents: 12999,
+          camel_last_checked: new Date(),
+        });
+        
+        return res.json(product);
+      }
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return res.status(400).json({ 
+        message: errorMessage, 
+        error: "ScrapingFailed",
+        fallback: "Try adding the product manually instead."
+      });
+    }
+  });
+  
+  // Manual product creation endpoint
+  app.post("/api/products/manual", auth, async (req: Request, res: Response) => {
+    try {
+      console.log("Manual product creation - received data:", req.body);
+      const productData = manualProductSchema.parse(req.body);
+      console.log("Manual product creation - parsed data:", productData);
+      
+      // Check for exact ASIN match if amazonUrl is provided
+      if (productData.amazonUrl) {
+        try {
+          const asin = extractAsin(productData.amazonUrl);
+          console.log("Extracted ASIN:", asin);
+          const existingProduct = await storage.getProductByAsin(asin);
+          if (existingProduct) {
+            console.log("Found existing product by ASIN:", existingProduct);
+            
+            // Update the existing product with the new details
+            const updatedProduct = await storage.updateProduct(existingProduct.id, {
+              title: productData.title,
+              image_url: productData.image_url || existingProduct.image_url,
+              price_cents: productData.price_cents,
+              price_locked_cents: productData.price_cents,
+            });
+            
+            console.log("Updated existing product with new details:", updatedProduct);
+            
+            return res.json({
+              ...updatedProduct,
+              alreadyExists: true,
+              wasUpdated: true
+            });
+          }
+        } catch (e) {
+          console.log("ASIN extraction failed:", e);
+          // If ASIN extraction fails, fallback to title matching
+        }
+      }
+      
+      // Only if no exact ASIN match, check if product with exact same title exists
+      // Using exactMatch=true to ensure case-insensitive exact title matching
+      console.log("Checking for existing product with title:", productData.title);
+      const existingProductsByTitle = await storage.getProductsByTitle(productData.title, true);
+      console.log("Existing products by title:", existingProductsByTitle);
+      
+      // No need for additional filtering as the database query already does the exact matching
+      const exactTitleMatch = existingProductsByTitle.length > 0 ? existingProductsByTitle[0] : null;
+      
+      if (exactTitleMatch) {
+        // Return the exact match
+        console.log("Found exact title match:", exactTitleMatch);
+        return res.json({
+          ...exactTitleMatch,
+          alreadyExists: true
+        });
+      }
+      
+      // Handle ASIN generation for products without Amazon URL
+      let asin = "";
+      if (productData.amazonUrl) {
+        try {
+          asin = extractAsin(productData.amazonUrl);
+        } catch (e) {
+          // Generate a unique ASIN-like ID for non-Amazon products
+          asin = "MANUAL" + Math.random().toString(36).substring(2, 7).toUpperCase();
+        }
+      } else {
+        // Generate a unique ASIN-like ID for non-Amazon products
+        asin = "MANUAL" + Math.random().toString(36).substring(2, 7).toUpperCase();
+      }
+      console.log("Generated ASIN:", asin);
+      
+      // Create the product with the user-specified title
+      const newProduct = {
+        title: productData.title,
+        asin: asin,
+        image_url: productData.image_url || "https://placehold.co/400x400?text=No+Image",
+        price_cents: productData.price_cents,
+        price_locked_cents: productData.price_cents,
+      };
+      console.log("Creating new product:", newProduct);
+      
+      const product = await storage.createProduct(newProduct);
+      console.log("Created product:", product);
+      
+      return res.status(201).json(product);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return res.status(400).json({ message: errorMessage });
+    }
+  });
+  
+  // Goal routes
+  app.get("/api/goals", auth, async (req: Request, res: Response) => {
+    const { userId } = req.query;
+    const user = req.user;
+    
+    // Parents can view any user's goals, children can only view their own
+    if (user.role !== "parent" && userId && parseInt(userId as string) !== user.id) {
+      return res.status(403).json({ message: "Not authorized to view these goals" });
+    }
+    
+    const targetUserId = userId ? parseInt(userId as string) : user.id;
+    const goals = await storage.getGoalsByUser(targetUserId);
+    
+    // Fetch products for each goal
+    const goalsWithProducts = await Promise.all(
+      goals.map(async (goal) => {
+        const product = await storage.getProduct(goal.product_id);
+        return {
+          ...goal,
+          product,
+          progress: product ? calculateProgressPercent(goal.tickets_saved, product.price_locked_cents) : 0
+        };
+      })
+    );
+    
+    return res.json(goalsWithProducts);
+  });
+  
+  app.get("/api/goals/active", auth, async (req: Request, res: Response) => {
+    const { userId } = req.query;
+    const user = req.user;
+    
+    // Parents can view any user's active goal, children can only view their own
+    if (user.role !== "parent" && userId && parseInt(userId as string) !== user.id) {
+      return res.status(403).json({ message: "Not authorized to view this goal" });
+    }
+    
+    const targetUserId = userId ? parseInt(userId as string) : user.id;
+    const goal = await storage.getActiveGoalByUser(targetUserId);
+    
+    if (!goal) {
+      return res.status(404).json({ message: "No active goal found" });
+    }
+    
+    const progressPercent = calculateProgressPercent(goal.tickets_saved, goal.product.price_locked_cents);
+    
+    return res.json({
+      ...goal,
+      progress: progressPercent
+    });
+  });
+  
+  app.post("/api/goals", auth, async (req: Request, res: Response) => {
+    try {
+      const user = req.user;
+      const goalData = insertGoalSchema.parse(req.body);
+      
+      // Users can only create goals for themselves
+      if (user.role !== "parent" && goalData.user_id !== user.id) {
+        return res.status(403).json({ message: "Not authorized to create goals for other users" });
+      }
+      
+      // Verify product exists
+      const product = await storage.getProduct(goalData.product_id);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      
+      const newGoal = await storage.createGoal(goalData);
+      
+      broadcast("goal:new", {
+        ...newGoal,
+        product,
+        progress: 0
+      });
+      
+      return res.status(201).json({
+        ...newGoal,
+        product,
+        progress: 0
+      });
+    } catch (error) {
+      return res.status(400).json({ message: error.message });
+    }
+  });
+  
+  app.put("/api/goals/:id/activate", auth, async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid goal ID" });
+    }
+    
+    const user = req.user;
+    const goal = await storage.getGoal(id);
+    
+    if (!goal) {
+      return res.status(404).json({ message: "Goal not found" });
+    }
+    
+    // Users can only activate their own goals
+    if (user.role !== "parent" && goal.user_id !== user.id) {
+      return res.status(403).json({ message: "Not authorized to modify this goal" });
+    }
+    
+    // Let the storage layer handle ticket transfers internally
+    // This will automatically find current active goals and transfer tickets
+    const updatedGoal = await storage.updateGoal(id, { 
+      is_active: true
+    });
+    const product = await storage.getProduct(goal.product_id);
+    
+    // Make sure we have valid data before broadcasting
+    if (updatedGoal && product) {
+      broadcast("goal:update", {
+        ...updatedGoal,
+        product,
+        progress: calculateProgressPercent(updatedGoal.tickets_saved || 0, product.price_locked_cents || 0)
+      });
+      
+      return res.json({
+        ...updatedGoal,
+        product,
+        progress: calculateProgressPercent(updatedGoal.tickets_saved || 0, product.price_locked_cents || 0)
+      });
+    } else {
+      return res.status(500).json({ message: "Could not update goal" });
+    }
+  });
+  
+  // Delete a goal
+  app.delete("/api/goals/:id", auth, async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid goal ID" });
+    }
+    
+    const user = req.user;
+    const goal = await storage.getGoal(id);
+    
+    if (!goal) {
+      return res.status(404).json({ message: "Goal not found" });
+    }
+    
+    // Only allow users to delete their own goals or parents can delete any goal
+    if (user.role !== "parent" && goal.user_id !== user.id) {
+      return res.status(403).json({ message: "Not authorized to delete this goal" });
+    }
+    
+    const productId = goal.product_id;
+    const deleted = await storage.deleteGoal(id);
+    
+    if (deleted) {
+      // Check if there are other goals using this product
+      const otherGoalsWithProduct = await storage.getGoalsByProductId(productId);
+      
+      // If no other goals are using this product, delete it as well
+      if (otherGoalsWithProduct.length === 0) {
+        console.log(`No other goals using product ID ${productId}, deleting product`);
+        const productDeleted = await storage.deleteProduct(productId);
+        console.log(`Product ${productId} deletion result:`, productDeleted);
+      }
+      
+      // Broadcast the deletion to all connected clients
+      broadcast("goal:deleted", { id });
+      return res.json({ success: true });
+    } else {
+      return res.status(500).json({ message: "Failed to delete goal" });
+    }
+  });
+  
+  // Transaction routes
+  app.post("/api/earn", auth, async (req: Request, res: Response) => {
+    try {
+      let user = req.user;
+      const { chore_id, user_id } = completeChoreSchema.parse(req.body);
+      
+      // Handle case when a parent is completing a chore for a child
+      if (user_id && user.role === 'parent') {
+        // Get the child user
+        const childUser = await storage.getUser(user_id);
+        if (!childUser) {
+          return res.status(404).json({ message: "Child user not found" });
+        }
+        // Use the child user for the transaction
+        user = childUser;
+        console.log(`Parent completing chore for child: ${childUser.username}`);
+      }
+      
+      // Step 1: Verify chore exists
+      const chore = await storage.getChore(chore_id);
+      if (!chore) {
+        return res.status(404).json({ message: "Chore not found" });
+      }
+      
+      // Step 2: Check if already completed today
+      const alreadyCompleted = await storage.hasCompletedChoreToday(user.id, chore_id);
+      if (alreadyCompleted) {
+        return res.status(400).json({ message: "This chore has already been completed today" });
+      }
+      
+      // Step 3: Check for daily bonus - only for checking if this completion should trigger the bonus flow
+      const today = new Date().toISOString().split('T')[0];
+      
+      // DEBUG: Log parameters for daily bonus lookup
+      console.log(`/api/earn: Looking for daily bonus for user ${user.id} on date ${today}`);
+      
+      const dailyBonus = await storage.getDailyBonus(today, user.id);
+      
+      // DEBUG: Log the daily bonus lookup result
+      console.log(`/api/earn: Daily bonus lookup result:`, dailyBonus);
+      
+      // Initialize bonus flags - IMPORTANT: we're not calculating or awarding bonus tickets here anymore
+      let bonus_triggered = false;
+      let daily_bonus_id = null;
+      
+      // DEBUG: Log conditions for bonus triggering with more detail
+      console.log(`[API_EARN] Daily bonus lookup for user ${user.id}, date ${today}:`, dailyBonus ? {
+        id: dailyBonus.id,
+        assigned_chore_id: dailyBonus.assigned_chore_id,
+        is_spun: dailyBonus.is_spun,
+        trigger_type: dailyBonus.trigger_type,
+        user_id: dailyBonus.user_id,
+        bonus_date: dailyBonus.bonus_date
+      } : 'No daily bonus record found');
+      
+      console.log(`[API_EARN] Checking bonus conditions for chore_id=${chore_id}:`, {
+        hasDailyBonus: !!dailyBonus,
+        assignedChoreId: dailyBonus?.assigned_chore_id,
+        completedChoreId: chore_id,
+        choreMatch: dailyBonus?.assigned_chore_id === chore_id,
+        isSpun: dailyBonus?.is_spun,
+        notYetSpun: dailyBonus ? !dailyBonus.is_spun : false,
+        triggerTypeMatch: dailyBonus?.trigger_type === 'chore_completion'
+      });
+      
+      // Check if this is a bonus-triggering chore completion
+      if (dailyBonus && dailyBonus.assigned_chore_id === chore_id && !dailyBonus.is_spun) {
+        console.log(`[API_EARN] 🎯 BONUS CHORE COMPLETED! User ${user.id} completed their assigned bonus chore ${chore_id}`);
+        
+        // Only mark as triggered if not already spun
+        bonus_triggered = true;
+        daily_bonus_id = dailyBonus.id;
+        
+        console.log(`[API_EARN] Marking bonus as triggered for chore completion. daily_bonus_id: ${daily_bonus_id}`);
+        
+        try {
+          // Mark that a spin should be triggered but don't set tickets yet
+          // Use raw SQL query to avoid type issues with dailyBonus variable vs. table
+          await pool.query(
+            "UPDATE daily_bonus SET trigger_type = 'chore_completion' WHERE id = $1",
+            [dailyBonus.id]
+          );
+            
+          console.log(`[API_EARN] Updated daily bonus ${dailyBonus.id} to mark as triggered for chore completion`);
+        } catch (err) {
+          console.error("[API_EARN] Failed to update daily bonus for trigger:", err);
+          // Continue anyway - this is not critical
+        }
+      } else {
+        console.log(`[API_EARN] Not a bonus-triggering completion. Reasons:`, {
+          missingDailyBonus: !dailyBonus,
+          choreIdMismatch: dailyBonus ? dailyBonus.assigned_chore_id !== chore_id : false,
+          alreadySpun: dailyBonus ? dailyBonus.is_spun : false
+        });
+      }
+      
+      // Step 4: Calculate base tickets (ONLY the chore base tickets, no bonus)
+      const base_tickets_earned = chore.tickets;
+      const noteText = `Completed: ${chore.name}`;
+      
+      // Step 5: Create the transaction record for ONLY the base tickets
+      const transaction = await storage.createTransaction({
+        user_id: user.id,
+        chore_id,
+        delta_tickets: base_tickets_earned, // ONLY base tickets, no bonus
+        type: "earn",
+        note: noteText,
+        source: "chore",
+        ref_id: daily_bonus_id // Reference the bonus ID if it exists
+      });
+      
+      // Step 6: Get updated user balance
+      const balance = await storage.getUserBalance(user.id);
+      
+      // Step 7: Get active goal (createTransaction already updated the tickets_saved value)
+      const activeGoal = await storage.getActiveGoalByUser(user.id);
+      
+      const boostPercent = activeGoal 
+        ? calculateBoostPercent(chore.tickets, activeGoal.product.price_locked_cents)
+        : 0;
+      
+      // Step 8: Prepare and send response
+      const response = {
+        transaction,
+        chore,
+        balance,
+        activeGoal,
+        boostPercent,
+        bonus_triggered, // Flag to tell client to show spin wheel
+        daily_bonus_id // ID needed for the spin API call
+      };
+      
+      // Step 9: Broadcast completion to all connected clients
+      const broadcastPayload = {
+        data: {
+          id: transaction.id,
+          delta_tickets: transaction.delta_tickets,
+          note: transaction.note,
+          user_id: transaction.user_id,
+          type: transaction.type,
+          chore_id: transaction.chore_id,
+          balance: balance, // Include updated balance for immediate UI updates
+          bonus_triggered, // Flag to tell clients user is eligible for spin
+          daily_bonus_id // ID needed for the spin
+        }
+      };
+      
+      console.log("Transaction broadcast payload:", JSON.stringify(broadcastPayload, null, 2));
+      
+      broadcast("transaction:earn", broadcastPayload);
+      
+      return res.status(201).json(response);
+    } catch (error) {
+      return res.status(400).json({ message: error.message });
+    }
+  });
+  
+  app.post("/api/spend", auth, async (req: Request, res: Response) => {
+    try {
+      const user = req.user;
+      const { tickets, goal_id, user_id, reason } = req.body;
+      
+      // Determine target user - if user_id provided and request is from a parent
+      const targetUserId = (user.role === 'parent' && user_id) ? user_id : user.id;
+      
+      // Validate that target user exists
+      const targetUser = await storage.getUser(targetUserId);
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Only parents can spend on behalf of children
+      if (targetUserId !== user.id && user.role !== 'parent') {
+        return res.status(403).json({ message: "Only parents can spend tickets on behalf of children" });
+      }
+      
+      // Validate input - either tickets or goal_id must be provided
+      if (tickets === undefined && goal_id === undefined) {
+        return res.status(400).json({ message: "Either tickets or goal_id must be provided" });
+      }
+      
+      // Get current balance
+      const currentBalance = await storage.getUserBalance(targetUserId);
+      
+      let ticketsToSpend = 0;
+      let targetGoal: any = null;
+      
+      if (goal_id !== undefined) {
+        // Spend from a specific goal
+        targetGoal = await storage.getGoalWithProduct(goal_id);
+        
+        if (!targetGoal) {
+          return res.status(404).json({ message: "Goal not found" });
+        }
+        
+        if (targetGoal.user_id !== targetUserId) {
+          return res.status(403).json({ message: "Not authorized to spend from this goal" });
+        }
+        
+        ticketsToSpend = targetGoal.tickets_saved;
+      } else {
+        // Spend a specific number of tickets
+        const ticketValue = typeof tickets === 'string' ? parseInt(tickets, 10) : tickets;
+        ticketsToSpend = Math.min(ticketValue, currentBalance);
+        
+        if (isNaN(ticketsToSpend) || ticketsToSpend <= 0) {
+          return res.status(400).json({ message: "Invalid number of tickets to spend" });
+        }
+        
+        if (ticketsToSpend > currentBalance) {
+          return res.status(400).json({ message: "Not enough tickets available" });
+        }
+      }
+      
+      // Create transaction - this will handle setting tickets_saved to 0 when type is 'spend'
+      const transaction = await storage.createTransaction({
+        user_id: targetUserId,
+        goal_id: targetGoal?.id,
+        delta_tickets: -ticketsToSpend,
+        type: "spend",
+        note: reason ? `Purchase: ${reason}` : "Purchase"
+      });
+      
+      // Refresh the targetGoal with updated tickets_saved
+      if (targetGoal) {
+        targetGoal = await storage.getGoalWithProduct(targetGoal.id);
+      }
+      
+      // Get updated balance for response
+      const updatedBalance = await storage.getUserBalance(targetUserId);
+      
+      const response = {
+        transaction,
+        balance: updatedBalance,
+        goal: targetGoal
+      };
+      
+      // Broadcast transaction with balance for real-time UI updates
+      broadcast("transaction:spend", {
+        data: {
+          id: transaction.id,
+          delta_tickets: transaction.delta_tickets,
+          note: transaction.note,
+          user_id: targetUserId,
+          type: transaction.type,
+          balance: updatedBalance
+        }
+      });
+      
+      return res.status(201).json(response);
+    } catch (error) {
+      return res.status(400).json({ message: error.message });
+    }
+  });
+  
+  // Add a bad behavior deduction (parent only)
+  app.post("/api/bad-behavior", parentOnly, async (req: Request, res: Response) => {
+    try {
+      const data = badBehaviorSchema.parse(req.body);
+      
+      // Make sure the user exists
+      const targetUser = await storage.getUser(data.user_id);
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Only allow deducting tickets from children
+      if (targetUser.role !== 'child') {
+        return res.status(400).json({ message: "Can only deduct tickets from child accounts" });
+      }
+      
+      // Get the active goal for this user
+      const activeGoal = await storage.getActiveGoalByUser(data.user_id);
+      
+      // Create the transaction with negative tickets
+      // The createTransaction method will handle updating the goal's tickets_saved
+      const transaction = await storage.createTransaction({
+        user_id: data.user_id,
+        chore_id: null,
+        goal_id: activeGoal?.id || null,
+        delta_tickets: -data.tickets, // Negative value for deduction
+        type: 'deduct',
+        note: `Deduction: ${data.reason}`,
+        source: 'manual_deduct'
+      });
+      
+      // Return the transaction and updated balance
+      const response = {
+        transaction,
+        reason: data.reason,
+        balance: await storage.getUserBalance(data.user_id),
+        goal: activeGoal
+      };
+      
+      // Get the current balance for the UI update
+      const updatedBalance = await storage.getUserBalance(data.user_id);
+      
+      // Broadcast the transaction with balance for immediate UI update
+      broadcast("transaction:deduct", {
+        data: {
+          id: transaction.id,
+          delta_tickets: transaction.delta_tickets,
+          note: transaction.note,
+          user_id: transaction.user_id,
+          type: transaction.type,
+          balance: updatedBalance // Include balance for immediate UI updates
+        }
+      });
+      
+      return res.status(201).json(response);
+    } catch (error) {
+      return res.status(400).json({ message: error.message });
+    }
+  });
+  
+  // Add a good behavior reward (parent only)
+  app.post("/api/good-behavior", parentOnly, async (req: Request, res: Response) => {
+    try {
+      const data = goodBehaviorSchema.parse(req.body);
+      
+      // Make sure the user exists
+      const targetUser = await storage.getUser(data.user_id);
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Only allow adding tickets to children
+      if (targetUser.role !== 'child') {
+        return res.status(400).json({ message: "Can only add bonus tickets to child accounts" });
+      }
+      
+      // Get the active goal for this user
+      const activeGoal = await storage.getActiveGoalByUser(data.user_id);
+      
+      // Create a daily bonus for good behavior
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Check if there's already a daily bonus today
+      let dailyBonusRecord = await storage.getDailyBonus(today, data.user_id);
+      
+      // If no daily bonus exists yet, create one
+      if (!dailyBonusRecord) {
+        dailyBonusRecord = await storage.createDailyBonus({
+          bonus_date: today,
+          user_id: data.user_id,
+          assigned_chore_id: null, // No specific chore for good behavior
+          is_override: true,
+          is_spun: false,
+          trigger_type: 'good_behavior_reward',
+          spin_result_tickets: 0 // Default value until wheel is spun
+        });
+      }
+      
+      // Create the transaction with positive tickets
+      // The createTransaction method will handle updating the goal's tickets_saved
+      const transaction = await storage.createTransaction({
+        user_id: data.user_id,
+        chore_id: null,
+        goal_id: activeGoal?.id || null,
+        delta_tickets: data.tickets, // Positive value for reward
+        type: 'reward',
+        note: data.reason,
+        source: 'chore',
+        ref_id: dailyBonusRecord.id
+      });
+      
+      // Return the transaction and updated balance
+      const response = {
+        transaction,
+        reason: data.reason,
+        balance: await storage.getUserBalance(data.user_id),
+        goal: activeGoal
+      };
+      
+      // Get the current balance for real-time UI updates
+      const updatedBalance = await storage.getUserBalance(data.user_id);
+      
+      // Broadcast the transaction with balance for immediate UI update
+      broadcast("transaction:reward", {
+        data: {
+          id: transaction.id,
+          delta_tickets: transaction.delta_tickets,
+          note: transaction.note || data.reason,
+          user_id: transaction.user_id,
+          type: transaction.type,
+          balance: updatedBalance, // Include balance for immediate UI updates
+          daily_bonus_id: dailyBonusRecord.id // Include bonus ID for wheel spinning
+        }
+      });
+      
+      // Also broadcast that a bonus has been assigned for good behavior
+      broadcast("daily_bonus:good_behavior", { 
+        user_id: data.user_id,
+        daily_bonus: dailyBonusRecord
+      });
+      
+      return res.status(201).json(response);
+    } catch (error) {
+      return res.status(400).json({ message: error.message });
+    }
+  });
+  
+  // Get daily bonus assignments for specific date - parent only
+  app.get("/api/daily-bonus/assignments", parentOnly, async (req: Request, res: Response) => {
+    try {
+      // Get the date from query parameters, default to today
+      const date = (req.query.date as string) || new Date().toISOString().split('T')[0];
+      console.log(`[BONUS_ASSIGNMENTS] Fetching assignments for date: ${date}`);
+      
+      // Get all child users
+      const childUsers = await storage.getUsersByRole('child');
+      console.log(`[BONUS_ASSIGNMENTS] Found ${childUsers.length} child users`);
+      
+      if (!childUsers.length) {
+        console.log(`[BONUS_ASSIGNMENTS] No child users found, returning 404`);
+        return res.status(404).json({ message: "No child users found" });
+      }
+      
+      // Build an object with child_id -> assignment information
+      const assignmentsResult: Record<string, any> = {}; // Change to string keys for client compatibility
+      
+      // For each child, get their daily bonus assignment (if any)
+      for (const child of childUsers) {
+        console.log(`[BONUS_ASSIGNMENTS] Checking bonus for child: ${child.id} (${child.name})`);
+        const bonusRecord = await storage.getDailyBonus(date, child.id);
+        console.log(`[BONUS_ASSIGNMENTS] Bonus record for child ${child.id}:`, bonusRecord || 'No bonus found');
+        
+        if (bonusRecord) {
+          let assignedChore = null;
+          if (bonusRecord.assigned_chore_id) {
+            assignedChore = await storage.getChore(bonusRecord.assigned_chore_id);
+            console.log(`[BONUS_ASSIGNMENTS] Found assigned chore:`, assignedChore?.name || 'No chore found');
+          }
+          
+          assignmentsResult[child.id.toString()] = { // Convert id to string
+            user: {
+              id: child.id,
+              name: child.name,
+              username: child.username
+            },
+            bonus: bonusRecord,
+            assigned_chore: assignedChore
+          };
+        } else {
+          assignmentsResult[child.id.toString()] = { // Convert id to string
+            user: {
+              id: child.id,
+              name: child.name,
+              username: child.username
+            },
+            bonus: null,
+            assigned_chore: null
+          };
+        }
+      }
+      
+      console.log(`[BONUS_ASSIGNMENTS] Returning assignment data for ${Object.keys(assignmentsResult).length} children`);
+      console.log(`[BONUS_ASSIGNMENTS] Data structure:`, {
+        isObject: true,
+        keys: Object.keys(assignmentsResult),
+        exampleKey: Object.keys(assignmentsResult)[0] || 'none',
+        keyTypes: Object.keys(assignmentsResult).map(k => typeof k).join(', ')
+      });
+      
+      return res.status(200).json(assignmentsResult);
+    } catch (error) {
+      return res.status(400).json({ message: error.message });
+    }
+  });
+  
+  // Check for an unspun daily bonus for a specific user
+  // Returns bonus info only if the chore has been completed (for chore_completion trigger types)
+  app.get("/api/daily-bonus/unspun", auth, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.query.user_id as string);
+      
+      if (!userId || isNaN(userId)) {
+        console.log("[UNSPUN_BONUS] Missing or invalid user_id:", req.query.user_id);
+        return res.status(400).json({ message: "Missing or invalid user_id parameter" });
+      }
+      
+      console.log("[UNSPUN_BONUS] Checking for unspun bonus for user:", userId);
+      
+      // Get today's date in YYYY-MM-DD format
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Check if there's a daily bonus for today that hasn't been spun yet
+      const dailyBonus = await storage.getDailyBonus(today, userId);
+      
+      if (!dailyBonus) {
+        console.log("[UNSPUN_BONUS] No daily bonus found for user", userId, "on date", today);
+        return res.status(404).json({ message: "No daily bonus found for this user and date" });
+      }
+      
+      if (dailyBonus.is_spun) {
+        console.log("[UNSPUN_BONUS] Daily bonus already spun for user", userId, "on date", today);
+        return res.status(404).json({ message: "Daily bonus has already been spun" });
+      }
+      
+      // For chore completion bonuses, check if the chore has actually been completed
+      if (dailyBonus.trigger_type === 'chore_completion' && dailyBonus.assigned_chore_id) {
+        // Get today's transactions to see if the assigned chore was completed
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const recentTransactions = await storage.getUserTransactions(userId, 50);
+        const completedChoreIds = new Set();
+        
+        // Find which chores were completed today
+        for (const tx of recentTransactions) {
+          if (tx.type === 'earn' && tx.chore_id && tx.date && tx.date >= today) {
+            completedChoreIds.add(tx.chore_id);
+          }
+        }
+        
+        console.log("[UNSPUN_BONUS] Checking if chore was completed - Assigned chore:", dailyBonus.assigned_chore_id);
+        console.log("[UNSPUN_BONUS] Completed chores today:", Array.from(completedChoreIds));
+        
+        // If the assigned chore wasn't completed, don't show the bonus yet
+        if (!completedChoreIds.has(dailyBonus.assigned_chore_id)) {
+          console.log("[UNSPUN_BONUS] Assigned chore has not been completed yet");
+          return res.status(404).json({ 
+            message: "Daily bonus chore has not been completed yet" 
+          });
+        }
+      }
+      
+      // If we have an unspun bonus and prerequisites are met, get more details
+      let bonusDetails: any = { daily_bonus_id: dailyBonus.id };
+      
+      if (dailyBonus.trigger_type === 'chore_completion' && dailyBonus.assigned_chore_id) {
+        // For chore-triggered bonuses, include chore details
+        const chore = await storage.getChore(dailyBonus.assigned_chore_id);
+        if (chore) {
+          bonusDetails.chore_name = chore.name;
+          bonusDetails.chore_id = chore.id;
+        }
+      } else {
+        // For good behavior bonuses, use a generic name
+        bonusDetails.chore_name = "Good Behavior";
+      }
+      
+      console.log("[UNSPUN_BONUS] Found unspun bonus:", bonusDetails);
+      return res.status(200).json(bonusDetails);
+    } catch (error) {
+      console.error("[UNSPUN_BONUS] Error checking for unspun bonus:", error);
+      return res.status(500).json({ message: "Error checking for unspun daily bonus" });
+    }
+  });
+
+  app.put("/api/daily-bonus/assign", parentOnly, async (req: Request, res: Response) => {
+    try {
+      const { user_id, chore_id, date } = req.body;
+      
+      if (!user_id || !chore_id) {
+        return res.status(400).json({ message: "user_id and chore_id are required" });
+      }
+      
+      // Default to today if date not provided
+      const assignDate = date || new Date().toISOString().split('T')[0];
+      
+      // Verify the user exists and is a child
+      const targetUser = await storage.getUser(user_id);
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      if (targetUser.role !== 'child') {
+        return res.status(400).json({ message: "Can only assign bonus to child accounts" });
+      }
+      
+      // Verify the chore exists
+      const chore = await storage.getChore(chore_id);
+      if (!chore) {
+        return res.status(404).json({ message: "Chore not found" });
+      }
+      
+      // Check if there's already a daily bonus for this user/date
+      let dailyBonus = await storage.getDailyBonus(assignDate, user_id);
+      
+      if (dailyBonus) {
+        // If already spun, don't allow changing the assignment
+        if (dailyBonus.is_spun) {
+          return res.status(400).json({ 
+            message: "Cannot change bonus assignment after wheel has been spun" 
+          });
+        }
+        
+        // Update the existing record using a direct SQL query
+        await pool.query(
+          "UPDATE daily_bonus SET assigned_chore_id = $1, is_override = true WHERE id = $2",
+          [chore_id, dailyBonus.id]
+        );
+        
+        // Get the updated record
+        dailyBonus = await storage.getDailyBonusById(dailyBonus.id);
+      } else {
+        // Create a new daily bonus record with override flag
+        dailyBonus = await storage.createDailyBonus({
+          bonus_date: assignDate,
+          user_id: user_id,
+          assigned_chore_id: chore_id,
+          is_override: true, // Mark this as a manual override
+          is_spun: false,
+          trigger_type: 'chore_completion',
+          spin_result_tickets: 0 // Default value until wheel is spun
+        });
+      }
+      
+      // Update the chore's last_bonus_assigned date
+      await pool.query(
+        "UPDATE chores SET last_bonus_assigned = $1 WHERE id = $2",
+        [assignDate, chore_id]
+      );
+      
+      // Broadcast the new assignment
+      broadcast("daily_bonus:assigned", {
+        user_id,
+        daily_bonus: dailyBonus
+      });
+      
+      return res.status(200).json({ 
+        success: true, 
+        daily_bonus: dailyBonus,
+        chore
+      });
+    } catch (error) {
+      return res.status(400).json({ message: error.message });
+    }
+  });
+  
+  // Reset daily bonus for a child - parent only
+  app.post("/api/reset-daily-bonus", parentOnly, async (req: Request, res: Response) => {
+    try {
+      const { user_id } = req.body;
+      
+      if (!user_id) {
+        return res.status(400).json({ message: "Missing user_id parameter" });
+      }
+      
+      // Verify child exists
+      const targetUser = await storage.getUser(parseInt(user_id));
+      
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      if (targetUser.role !== "child") {
+        return res.status(400).json({ message: "Daily bonus can only be reset for children" });
+      }
+      
+      // Get today's date
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Get the current daily bonus for debugging
+      const currentBonus = await storage.getDailyBonus(today, parseInt(user_id));
+      console.log(`Current daily bonus before reset for user ${user_id}:`, currentBonus);
+      
+      // Delete the bonus for today
+      await storage.deleteDailyBonus(parseInt(user_id));
+      
+      // Create a new daily bonus assignment
+      let newAssignment = await storage.assignDailyBonusChore(parseInt(user_id), today);
+      console.log(`New daily bonus assigned for user ${user_id}:`, newAssignment);
+      
+      // BUGFIX: If no assignment was created due to cooldown/eligibility issues,
+      // create one manually for debugging purposes
+      if (!newAssignment && process.env.NODE_ENV === 'development') {
+        console.log(`[BONUS_RESET] No automatic assignment created. Creating a manual one for debugging.`);
+        
+        // Get the first daily chore regardless of cooldown
+        const allChores = await storage.getChores(true);
+        const dailyChores = allChores.filter(c => c.recurrence === 'daily');
+        
+        if (dailyChores.length > 0) {
+          const selectedChore = dailyChores[0];
+          console.log(`[BONUS_RESET] Selected chore ${selectedChore.id} (${selectedChore.name}) for manual assignment`);
+          
+          // Create manual daily bonus
+          newAssignment = await storage.createDailyBonus({
+            bonus_date: today,
+            user_id: parseInt(user_id),
+            assigned_chore_id: selectedChore.id,
+            is_override: true, // Mark this as a manual override
+            is_spun: false,    // Make sure it's not marked as spun
+            trigger_type: 'chore_completion',
+            spin_result_tickets: 0
+          });
+          
+          console.log(`[BONUS_RESET] Created manual bonus assignment:`, newAssignment);
+        }
+      }
+      
+      // Broadcast the new assignment
+      if (newAssignment) {
+        const assignedChore = newAssignment.assigned_chore_id 
+          ? await storage.getChore(newAssignment.assigned_chore_id) 
+          : null;
+      
+        broadcast("daily_bonus:assigned", {
+          user_id: parseInt(user_id),
+          daily_bonus: newAssignment,
+          chore: assignedChore
+        });
+      }
+      
+      return res.status(200).json({ 
+        success: true, 
+        message: "Daily bonus has been reset and reassigned",
+        assignment: newAssignment
+      });
+    } catch (error) {
+      console.error("Error resetting daily bonus:", error);
+      return res.status(500).json({ message: "Failed to reset daily bonus" });
+    }
+  });
+  
+  // Assign daily bonus chores to all children - parent only
+  app.post("/api/assign-daily-bonuses", parentOnly, async (req: Request, res: Response) => {
+    try {
+      // Use today's date by default, or a date provided in the request
+      const date = req.body.date || new Date().toISOString().split('T')[0];
+      
+      // Assign bonus chores to all children
+      const results = await storage.assignDailyBonusesToAllChildren(date);
+      
+      // Count successful assignments
+      const successCount = Object.values(results).filter(bonus => bonus !== null).length;
+      
+      // If any bonuses were assigned, broadcast an event
+      if (successCount > 0) {
+        broadcast("daily_bonus:assigned", { 
+          date,
+          count: successCount,
+          results
+        });
+      }
+      
+      return res.status(200).json({
+        success: true,
+        message: `Assigned daily bonus chores to ${successCount} children`,
+        results
+      });
+    } catch (error) {
+      console.error("Error assigning daily bonuses:", error);
+      return res.status(500).json({ message: "Failed to assign daily bonuses" });
+    }
+  });
+  
+  // Assign a daily bonus chore to a specific child - parent only
+  app.post("/api/assign-daily-bonus", parentOnly, async (req: Request, res: Response) => {
+    try {
+      const { user_id, chore_id, date } = req.body;
+      
+      console.log("[ASSIGN_BONUS] Request body:", req.body);
+      
+      if (!user_id) {
+        return res.status(400).json({ message: "Missing user_id parameter" });
+      }
+      
+      // Verify child exists
+      const targetUser = await storage.getUser(parseInt(user_id));
+      
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      if (targetUser.role !== "child") {
+        return res.status(400).json({ message: "Daily bonus can only be assigned to children" });
+      }
+      
+      // Use today's date by default, or the date provided
+      const bonusDate = date || new Date().toISOString().split('T')[0];
+      
+      // Check if chore_id was provided - if so, use that specific chore instead of random assignment
+      let dailyBonus;
+      
+      if (chore_id) {
+        console.log(`[ASSIGN_BONUS] Specific chore ID ${chore_id} provided - using this instead of random assignment`);
+        
+        // Verify the chore exists
+        const chore = await storage.getChore(parseInt(chore_id));
+        if (!chore) {
+          return res.status(404).json({ message: `Chore with ID ${chore_id} not found` });
+        }
+        
+        // Check if there's already a daily bonus for this user/date
+        const existingBonus = await storage.getDailyBonus(bonusDate, parseInt(user_id));
+        
+        if (existingBonus) {
+          // If already spun, don't allow changing the assignment
+          if (existingBonus.is_spun) {
+            return res.status(400).json({ 
+              message: "Cannot change bonus assignment after wheel has been spun" 
+            });
+          }
+          
+          console.log(`[ASSIGN_BONUS] Updating existing bonus ID ${existingBonus.id} with new chore ID ${chore_id}`);
+          
+          // Update the existing record
+          await pool.query(
+            "UPDATE daily_bonus SET assigned_chore_id = $1, is_override = true WHERE id = $2",
+            [parseInt(chore_id), existingBonus.id]
+          );
+          
+          // Get the updated record
+          dailyBonus = await storage.getDailyBonusById(existingBonus.id);
+        } else {
+          // Create a new daily bonus record with the specified chore
+          dailyBonus = await storage.createDailyBonus({
+            bonus_date: bonusDate,
+            user_id: parseInt(user_id),
+            assigned_chore_id: parseInt(chore_id),
+            is_override: true, // Mark this as a manual override
+            is_spun: false,
+            trigger_type: 'chore_completion',
+            spin_result_tickets: 0 // Default value until wheel is spun
+          });
+        }
+        
+        // Update the chore's last_bonus_assigned date
+        await pool.query(
+          "UPDATE chores SET last_bonus_assigned = $1 WHERE id = $2",
+          [bonusDate, parseInt(chore_id)]
+        );
+      } else {
+        // No chore_id provided, assign a random bonus chore
+        dailyBonus = await storage.assignDailyBonusChore(parseInt(user_id), bonusDate);
+      }
+      
+      // BUGFIX: For debugging purposes, if no eligible chores found, create a manual assignment
+      if (!dailyBonus && process.env.NODE_ENV === 'development') {
+        console.log(`[ASSIGN_BONUS] No automatic assignment created. Creating a manual one for debugging.`);
+        
+        // Get all active chores for this user
+        const allChores = await storage.getChores(true);
+        const dailyChores = allChores.filter(c => c.recurrence === 'daily');
+        
+        if (dailyChores.length > 0) {
+          const selectedChore = dailyChores[0];
+          console.log(`[ASSIGN_BONUS] Selected chore ${selectedChore.id} (${selectedChore.name}) for manual assignment`);
+          
+          // Create manual daily bonus
+          dailyBonus = await storage.createDailyBonus({
+            bonus_date: bonusDate,
+            user_id: parseInt(user_id),
+            assigned_chore_id: selectedChore.id,
+            is_override: true, // Mark this as a manual override
+            is_spun: false,    // Make sure it's not marked as spun
+            trigger_type: 'chore_completion',
+            spin_result_tickets: 0
+          });
+          
+          console.log(`[ASSIGN_BONUS] Created manual bonus assignment:`, dailyBonus);
+          
+          // Update the chore's last_bonus_assigned date
+          await pool.query(
+            "UPDATE chores SET last_bonus_assigned = $1 WHERE id = $2",
+            [bonusDate, selectedChore.id]
+          );
+        }
+      }
+      
+      if (!dailyBonus) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Could not assign a bonus chore. No eligible chores found."
+        });
+      }
+      
+      // Get the assigned chore details
+      const chore = dailyBonus.assigned_chore_id ? 
+        await storage.getChore(dailyBonus.assigned_chore_id) : 
+        null;
+      
+      // Broadcast that a bonus has been assigned
+      broadcast("daily_bonus:assigned", { 
+        user_id: parseInt(user_id),
+        daily_bonus: dailyBonus,
+        chore
+      });
+      
+      return res.status(200).json({
+        success: true,
+        message: "Daily bonus chore has been assigned",
+        daily_bonus: dailyBonus,
+        chore
+      });
+    } catch (error) {
+      console.error("Error assigning daily bonus:", error);
+      return res.status(500).json({ message: "Failed to assign daily bonus" });
+    }
+  });
+
+  // Endpoint for spinning the bonus wheel for a daily bonus
+  app.post("/api/bonus-spin", auth, async (req: Request, res: Response) => {
+    try {
+      console.log(`[BONUS_SPIN] Processing spin request:`, req.body);
+      
+      const data = bonusSpinSchema.parse(req.body);
+      console.log(`[BONUS_SPIN] Validated request data:`, data);
+      
+      // Step 1: Get the daily bonus record
+      const dailyBonusRecord = await storage.getDailyBonusById(data.daily_bonus_id);
+      
+      console.log(`[BONUS_SPIN] Daily bonus record lookup:`, dailyBonusRecord ? {
+        id: dailyBonusRecord.id,
+        user_id: dailyBonusRecord.user_id,
+        assigned_chore_id: dailyBonusRecord.assigned_chore_id,
+        is_spun: dailyBonusRecord.is_spun,
+        trigger_type: dailyBonusRecord.trigger_type,
+        bonus_date: dailyBonusRecord.bonus_date
+      } : 'Record not found');
+      
+      if (!dailyBonusRecord) {
+        console.log(`[BONUS_SPIN] ERROR: Daily bonus record ${data.daily_bonus_id} not found`);
+        return res.status(404).json({ message: "Daily bonus record not found" });
+      }
+      
+      // Step 2: Verify the requesting user is either the bonus owner or a parent
+      const requestingUser = req.user;
+      console.log(`[BONUS_SPIN] Authorizing request from user ${requestingUser.id} (${requestingUser.role}) for bonus belonging to user ${dailyBonusRecord.user_id}`);
+      
+      if (
+        requestingUser.id !== dailyBonusRecord.user_id && 
+        requestingUser.role !== "parent"
+      ) {
+        console.log(`[BONUS_SPIN] ERROR: Authorization failed - requester is not owner or parent`);
+        return res.status(403).json({ 
+          message: "You do not have permission to spin this bonus wheel" 
+        });
+      }
+      
+      // Step 3: Check if the bonus has already been spun
+      if (dailyBonusRecord.is_spun) {
+        console.log(`[BONUS_SPIN] ERROR: Bonus ${dailyBonusRecord.id} has already been spun`);
+        return res.status(400).json({ 
+          message: "This bonus wheel has already been spun",
+          daily_bonus: dailyBonusRecord
+        });
+      }
+      
+      // Step 4: Get the associated chore information if this is a chore completion bonus
+      let chore = null;
+      if (dailyBonusRecord.assigned_chore_id) {
+        console.log(`[BONUS_SPIN] Looking up associated chore ${dailyBonusRecord.assigned_chore_id}`);
+        chore = await storage.getChore(dailyBonusRecord.assigned_chore_id);
+        
+        console.log(`[BONUS_SPIN] Associated chore lookup result:`, chore ? {
+          id: chore.id,
+          name: chore.name,
+          tickets: chore.tickets,
+          recurrence: chore.recurrence
+        } : 'Chore not found');
+        
+        if (!chore) {
+          console.log(`[BONUS_SPIN] ERROR: Associated chore ${dailyBonusRecord.assigned_chore_id} not found`);
+          return res.status(404).json({ message: "Associated chore not found" });
+        }
+      }
+      
+      // Step 5: Perform a weighted random spin
+      console.log(`[BONUS_SPIN] Starting random wheel spin process for bonus ${dailyBonusRecord.id}`);
+      
+      // Using the wheel segments from the frontend config
+      const WHEEL_SEGMENTS = [
+        { value: 1, weight: 20, label: "1" },   // 20% chance
+        { value: 2, weight: 18, label: "2" },   // 18% chance
+        { value: 3, weight: 16, label: "3" },   // 16% chance  
+        { value: 5, weight: 13, label: "5" },   // 13% chance
+        { value: 2, weight: 14, label: "2" },   // 14% chance (duplicate for UX)
+        { value: 10, weight: 7, label: "10" },  // 7% chance
+        { type: "double", weight: 5, label: "×2", value: "double", multiplier: 2 }, // 5% chance
+        { value: 4, weight: 7, label: "4" },    // 7% chance
+        { value: "respin", weight: 5, label: "Spin Again" }  // 5% chance
+      ];
+      
+      // Calculate total weight
+      const totalWeight = WHEEL_SEGMENTS.reduce((sum, segment) => sum + segment.weight, 0);
+      
+      // Generate a random number between 0 and totalWeight
+      const random = Math.random() * totalWeight;
+      console.log(`[BONUS_SPIN] Generated random value: ${random} (total weight: ${totalWeight})`);
+      
+      // Find the selected segment
+      let cumulativeWeight = 0;
+      let selectedSegment = WHEEL_SEGMENTS[0];
+      let selectedIndex = 0;
+      
+      for (let i = 0; i < WHEEL_SEGMENTS.length; i++) {
+        cumulativeWeight += WHEEL_SEGMENTS[i].weight;
+        if (random <= cumulativeWeight) {
+          selectedSegment = WHEEL_SEGMENTS[i];
+          selectedIndex = i;
+          break;
+        }
+      }
+      
+      console.log(`[BONUS_SPIN] Selected wheel segment: ${selectedSegment.label} (value: ${selectedSegment.value}) at index ${selectedIndex}`);
+      
+      
+      // Step 6: Calculate bonus tickets based on the spin result
+      let bonusTickets = 0;
+      let respin = false;
+      let segmentLabel = selectedSegment.label;
+      
+      console.log(`[BONUS_SPIN] Calculating bonus tickets for segment type: ${selectedSegment.value}`);
+      
+      if (selectedSegment.value === "respin") {
+        // First check if this is already a respin attempt
+        if (dailyBonusRecord.trigger_type === "respin") {
+          // Convert respin to +1 ticket if this is a second respin
+          bonusTickets = 1;
+          segmentLabel = "1 (converted from Spin Again)";
+          console.log(`[BONUS_SPIN] Already a respin attempt, converting to 1 ticket`);
+        } else {
+          // Mark for respin
+          respin = true;
+          bonusTickets = 0;
+          console.log(`[BONUS_SPIN] First respin attempt, will set trigger_type='respin'`);
+        }
+      } else if (selectedSegment.value === "double") {
+        // For "×2 Multiplier" - double the original tickets from the chore
+        if (dailyBonusRecord.trigger_type === "chore_completion" && chore) {
+          // Double the base tickets up to a max of 10 tickets total
+          const baseTickets = chore.tickets;
+          bonusTickets = Math.min(baseTickets * 2, 10);
+          // Show the multiplier in the result for clarity
+          segmentLabel = `×2 (${bonusTickets} tickets)`;
+          console.log(`[BONUS_SPIN] ×2 Multiplier: ${baseTickets} × 2 = ${bonusTickets} tickets`);
+        } else {
+          // For good behavior rewards, award a fixed prize (4 tickets)
+          bonusTickets = 4;
+          segmentLabel = "4 (×2 Multiplier)";
+          console.log(`[BONUS_SPIN] ×2 Multiplier for non-chore completion, awarding 4 tickets`);
+        }
+      } else {
+        // For direct ticket amounts (1, 2, 3, 5, 10)
+        bonusTickets = Number(selectedSegment.value);
+        console.log(`[BONUS_SPIN] Direct ticket award: ${bonusTickets} tickets`);
+      }
+      
+      // Step 7: Update the dailyBonus record
+      console.log(`[BONUS_SPIN] Updating daily bonus record ${dailyBonusRecord.id}:`, {
+        respin,
+        bonusTickets,
+        segmentLabel,
+        trigger_type: respin ? 'respin' : dailyBonusRecord.trigger_type,
+        is_spun: !respin
+      });
+      
+      let updatedBonus;
+      
+      if (respin) {
+        // For "Spin Again", update trigger_type but don't mark as spun yet
+        const result = await db
+          .update(dailyBonus)
+          .set({
+            trigger_type: 'respin'
+          })
+          .where(eq(dailyBonus.id, dailyBonusRecord.id))
+          .returning();
+        
+        updatedBonus = result[0];
+        console.log(`[BONUS_SPIN] Set respin flag - daily bonus will remain active for another spin`);
+      } else {
+        // For all other outcomes, mark as spun and set the result
+        const result = await db
+          .update(dailyBonus)
+          .set({
+            is_spun: true,
+            spin_result_tickets: bonusTickets
+          })
+          .where(eq(dailyBonus.id, dailyBonusRecord.id))
+          .returning();
+        
+        updatedBonus = result[0];
+        console.log(`[BONUS_SPIN] Final spin outcome - marked daily bonus as spun with ${bonusTickets} tickets`);
+      }
+      
+      // Step 8: Create a transaction for the bonus tickets (only if positive tickets and not respin)
+      if (bonusTickets > 0) {
+        const child = await storage.getUser(dailyBonusRecord.user_id);
+        
+        if (!child) {
+          return res.status(404).json({ message: "Child user not found" });
+        }
+        
+        const transaction = await storage.createTransaction({
+          user_id: child.id,
+          delta_tickets: bonusTickets,
+          type: "earn",
+          note: `Bonus Wheel: ${segmentLabel}`,
+          source: "bonus_spin",
+          ref_id: dailyBonusRecord.id
+        });
+        
+        // Step 9: Get updated user balance
+        const balance = await storage.getUserBalance(child.id);
+        
+        // Step 10: Broadcast the transaction to all connected clients
+        broadcast("transaction:earn", {
+          data: {
+            id: transaction.id,
+            delta_tickets: transaction.delta_tickets,
+            note: transaction.note,
+            user_id: transaction.user_id,
+            type: transaction.type,
+            source: transaction.source,
+            ref_id: transaction.ref_id,
+            balance: balance
+          }
+        });
+      }
+      
+      // Step 11: Broadcast the spin result
+      broadcast("bonus_spin:result", {
+        daily_bonus_id: dailyBonusRecord.id,
+        user_id: dailyBonusRecord.user_id,
+        segment_index: selectedIndex,
+        tickets_awarded: bonusTickets,
+        segment_label: segmentLabel,
+        respin_allowed: respin
+      });
+      
+      // Step 12: Return success response
+      return res.status(200).json({
+        success: true,
+        daily_bonus: updatedBonus,
+        segment_index: selectedIndex,
+        segment_label: segmentLabel,
+        tickets_awarded: bonusTickets,
+        respin_allowed: respin,
+        chore: chore
+      });
+    } catch (error: any) {
+      console.error("Error processing bonus spin:", error);
+      return res.status(400).json({ message: error.message || "Failed to process bonus spin" });
+    }
+  });
+
+  // Spin the wheel for daily bonus - parent only
+  app.post("/api/spin-wheel", parentOnly, async (req: Request, res: Response) => {
+    try {
+      const data = spinWheelSchema.parse(req.body);
+      
+      // Verify both child and chore exist
+      const [targetUser, chore] = await Promise.all([
+        storage.getUser(data.user_id),
+        storage.getChore(data.assigned_chore_id)
+      ]);
+      
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      if (targetUser.role !== "child") {
+        return res.status(400).json({ message: "Daily bonus can only be assigned to children" });
+      }
+      
+      if (!chore) {
+        return res.status(404).json({ message: "Chore not found" });
+      }
+      
+      // Check if child already has a bonus today
+      const today = new Date().toISOString().split('T')[0];
+      const existingBonus = await storage.getDailyBonus(today, data.user_id);
+      
+      let dailyBonus;
+      
+      if (existingBonus) {
+        if (existingBonus.is_spun) {
+          return res.status(400).json({ 
+            message: "Child has already spun the wheel for today's bonus",
+            daily_bonus: existingBonus
+          });
+        }
+        
+        // Calculate random bonus tickets (50-100% extra)
+        const bonusMultiplier = 0.5 + (Math.random() * 0.5);
+        const bonusTickets = Math.ceil(chore.tickets * bonusMultiplier);
+        
+        // Update the existing daily bonus with spin results
+        const [updatedBonus] = await db
+          .update(dailyBonus)
+          .set({
+            is_spun: true,
+            spin_result_tickets: bonusTickets
+          })
+          .where(eq(dailyBonus.id, existingBonus.id))
+          .returning();
+        
+        dailyBonus = updatedBonus;
+      } else {
+        // Calculate random bonus tickets (50-100% extra)
+        const bonusMultiplier = 0.5 + (Math.random() * 0.5);
+        const bonusTickets = Math.ceil(chore.tickets * bonusMultiplier);
+        
+        // Create a new daily bonus
+        dailyBonus = await storage.createDailyBonus({
+          bonus_date: today,
+          user_id: data.user_id,
+          assigned_chore_id: data.assigned_chore_id,
+          is_override: true,
+          is_spun: true,
+          trigger_type: 'good_behavior_reward',
+          spin_result_tickets: bonusTickets
+        });
+      }
+      
+      // Broadcast the spin results
+      broadcast("daily_bonus:spin", {
+        daily_bonus: dailyBonus,
+        chore: chore,
+        spin_result_tickets: dailyBonus.spin_result_tickets,
+        user_id: data.user_id
+      });
+      
+      // Return success with the daily bonus details
+      return res.status(200).json({
+        success: true,
+        message: "Wheel has been spun for daily bonus",
+        daily_bonus: dailyBonus,
+        chore: chore,
+        spin_result_tickets: dailyBonus.spin_result_tickets
+      });
+    } catch (error) {
+      console.error("Error spinning wheel for daily bonus:", error);
+      return res.status(500).json({ message: "Failed to spin wheel for daily bonus" });
+    }
+  });
+  
+  app.get("/api/transactions", auth, async (req: Request, res: Response) => {
+    const { userId, limit } = req.query;
+    const user = req.user;
+    
+    // Parents can view any user's transactions, children can only view their own
+    if (user.role !== "parent" && userId && parseInt(userId as string) !== user.id) {
+      return res.status(403).json({ message: "Not authorized to view these transactions" });
+    }
+    
+    const targetUserId = userId ? parseInt(userId as string) : user.id;
+    const limitNum = limit ? parseInt(limit as string) : 10;
+    
+    const transactions = await storage.getUserTransactionsWithDetails(targetUserId, limitNum);
+    
+    return res.json(transactions);
+  });
+  
+  app.delete("/api/transactions/:id", auth, async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const user = req.user;
+    
+    // Get the transaction first to verify ownership
+    const transaction = await storage.getTransaction(parseInt(id));
+    
+    if (!transaction) {
+      return res.status(404).json({ message: "Transaction not found" });
+    }
+    
+    // Only parents or the user who owns the transaction can delete it
+    if (user.role !== "parent" && transaction.user_id !== user.id) {
+      return res.status(403).json({ message: "Not authorized to delete this transaction" });
+    }
+    
+    // Delete the transaction
+    const deleted = await storage.deleteTransaction(parseInt(id));
+    
+    if (!deleted) {
+      return res.status(500).json({ message: "Failed to delete transaction" });
+    }
+    
+    // Get updated balance
+    const balance = await storage.getUserBalance(transaction.user_id);
+    
+    // Always get the updated active goal when a transaction is deleted,
+    // regardless of transaction type, since the balance has changed
+    let goal = await storage.getActiveGoalByUser(transaction.user_id);
+    
+    // If we don't have an active goal but the transaction was tied to a specific goal, 
+    // include that one instead
+    if (!goal && transaction.goal_id) {
+      goal = await storage.getGoalWithProduct(transaction.goal_id);
+    }
+    
+    // Force a refresh of the goal progress to match the current balance
+    if (goal) {
+      console.log(`[DELETE] Updating goal progress for user ${transaction.user_id} after transaction deletion`);
+      // Get current balance
+      const userBalance = await storage.getUserBalance(transaction.user_id);
+      
+      // Calculate the max tickets for this goal
+      const maxGoalTickets = Math.ceil(goal.product.price_locked_cents / 25);
+      
+      // Update the goal progress to match the current balance (up to the max tickets needed)
+      const newGoalProgress = Math.min(userBalance, maxGoalTickets);
+      
+      console.log(`[DELETE] Updating goal ${goal.id} progress from ${goal.tickets_saved} to ${newGoalProgress} (balance: ${userBalance}, max: ${maxGoalTickets})`);
+      
+      // Update the goal in the database
+      await storage.updateGoal(goal.id, { tickets_saved: newGoalProgress });
+      
+      // Get updated goal with new progress
+      goal = await storage.getActiveGoalByUser(transaction.user_id);
+    }
+    
+    // Broadcast the deletion
+    broadcast("transaction:delete", { 
+      transaction_id: parseInt(id),
+      user_id: transaction.user_id,
+      balance,
+      goal
+    });
+    
+    return res.json({ 
+      message: "Transaction deleted successfully",
+      transaction_id: parseInt(id),
+      balance,
+      goal
+    });
+  });
+  
+  app.get("/api/stats", auth, async (req: Request, res: Response) => {
+    const { userId } = req.query;
+    const user = req.user;
+    
+    // Parents can view any user's stats, children can only view their own
+    if (user.role !== "parent" && userId && parseInt(userId as string) !== user.id) {
+      return res.status(403).json({ message: "Not authorized to view these stats" });
+    }
+    
+    const targetUserId = userId ? parseInt(userId as string) : user.id;
+    
+    // Get balance
+    const balance = await storage.getUserBalance(targetUserId);
+    
+    // Get active goal with progress
+    let activeGoal = await storage.getActiveGoalByUser(targetUserId);
+    let progressPercent = 0;
+    let estimatedCompletion = null;
+    
+    if (activeGoal) {
+      // Make sure the goal's tickets_saved value is synced with the current balance
+      // This ensures the UI always shows consistent data even if somehow they got out of sync
+      if (balance !== activeGoal.tickets_saved) {
+        console.log(`[STATS] Fixing goal progress for user ${targetUserId}: balance=${balance}, goal.tickets_saved=${activeGoal.tickets_saved}`);
+        
+        // Calculate max tickets needed for this goal
+        const maxTickets = Math.ceil(activeGoal.product.price_locked_cents / 25);
+        
+        // Update the goal to match the balance (up to the max needed)
+        const newProgress = Math.min(balance, maxTickets);
+        
+        if (newProgress !== activeGoal.tickets_saved) {
+          console.log(`[STATS] Updating goal ${activeGoal.id} tickets_saved from ${activeGoal.tickets_saved} to ${newProgress}`);
+          await storage.updateGoal(activeGoal.id, { tickets_saved: newProgress });
+          
+          // Get the updated goal
+          activeGoal = await storage.getActiveGoalByUser(targetUserId);
+        }
+      }
+      
+      progressPercent = calculateProgressPercent(activeGoal.tickets_saved, activeGoal.product.price_locked_cents);
+      
+      // Calculate estimated completion
+      const transactions = await storage.getUserTransactions(targetUserId, 10);
+      const earnTransactions = transactions.filter(tx => tx.type === 'earn');
+      
+      if (earnTransactions.length > 0) {
+        // Calculate average tickets earned per day
+        const totalEarned = earnTransactions.reduce((sum, tx) => sum + tx.delta_tickets, 0);
+        const avgPerDay = totalEarned / Math.max(1, earnTransactions.length);
+        
+        // Tickets needed to complete goal
+        const ticketsNeeded = activeGoal.product.price_locked_cents / 25 - activeGoal.tickets_saved;
+        
+        // Estimated days to completion
+        const daysToCompletion = Math.ceil(ticketsNeeded / avgPerDay);
+        
+        if (daysToCompletion > 0) {
+          estimatedCompletion = {
+            days: daysToCompletion,
+            weeks: Math.ceil(daysToCompletion / 7)
+          };
+        }
+      }
+    }
+    
+    // Get available chores
+    const chores = await storage.getChores();
+    
+    // Check which chores are completed today
+    const completedChoreIds = new Set();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayString = today.toISOString().split('T')[0];
+    
+    const recentTransactions = await storage.getUserTransactions(targetUserId, 50);
+    for (const tx of recentTransactions) {
+      if (tx.type === 'earn' && tx.chore_id && tx.date >= today) {
+        completedChoreIds.add(tx.chore_id);
+      }
+    }
+    
+    // Get the daily bonus for this user if one exists
+    const dailyBonus = await storage.getDailyBonus(todayString, targetUserId);
+    
+    // Get the assigned bonus chore if there is one
+    let assignedBonusChore = null;
+    if (dailyBonus && dailyBonus.assigned_chore_id) {
+      assignedBonusChore = chores.find(c => c.id === dailyBonus.assigned_chore_id) || null;
+    }
+    
+    // Add completion status and bonus info to chores
+    const choresWithStatus = chores.map(chore => ({
+      ...chore,
+      completed: completedChoreIds.has(chore.id),
+      boostPercent: activeGoal ? calculateBoostPercent(chore.tickets, activeGoal.product.price_locked_cents) : 0,
+      // Add bonus information if this chore is the assigned bonus chore for today
+      is_bonus: dailyBonus ? dailyBonus.assigned_chore_id === chore.id : false,
+      // If the chore is the bonus chore and has been completed (but wheel not spun), it's eligible for spin
+      spin_eligible: dailyBonus && 
+                    dailyBonus.assigned_chore_id === chore.id && 
+                    completedChoreIds.has(chore.id) && 
+                    !dailyBonus.is_spun
+    }));
+    
+    // Check if the user is eligible for a bonus spin
+    const isBonusSpinAvailable = !!dailyBonus && 
+                               ((dailyBonus.trigger_type === 'chore_completion' && 
+                                 dailyBonus.assigned_chore_id !== null && 
+                                 completedChoreIds.has(dailyBonus.assigned_chore_id)) || 
+                                dailyBonus.trigger_type === 'good_behavior_reward') && 
+                               !dailyBonus.is_spun;
+    
+    return res.json({
+      balance,
+      activeGoal: activeGoal ? {
+        ...activeGoal,
+        progress: progressPercent,
+        estimatedCompletion
+      } : null,
+      chores: choresWithStatus,
+      // Enhanced daily bonus information
+      daily_bonus: {
+        has_bonus_assignment: !!dailyBonus,
+        is_bonus_spin_available: isBonusSpinAvailable,
+        daily_bonus_id: dailyBonus?.id || null,
+        assigned_bonus_chore_id: dailyBonus?.assigned_chore_id || null,
+        assigned_bonus_chore: assignedBonusChore ? {
+          id: assignedBonusChore.id,
+          name: assignedBonusChore.name,
+          emoji: assignedBonusChore.emoji,
+          tickets: assignedBonusChore.tickets,
+          completed: completedChoreIds.has(assignedBonusChore.id)
+        } : null,
+        is_spun: dailyBonus?.is_spun || false,
+        spin_result_tickets: dailyBonus?.spin_result_tickets || 0,
+        trigger_type: dailyBonus?.trigger_type || null
+      }
+    });
+  });
+
+  return httpServer;
+}

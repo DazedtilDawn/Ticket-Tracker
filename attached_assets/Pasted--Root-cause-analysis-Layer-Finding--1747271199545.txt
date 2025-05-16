@@ -1,0 +1,62 @@
+## 🕵️‍♂️ Root-cause analysis
+
+| Layer                         | Finding                                                                                                                                                                                           |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Frontend (`apiRequest`)       | The helper **already** awaits `fetch()` and returns the parsed JSON object. It **doesn’t** return a `Response`.                                                                                   |
+| Frontend (`AddProductDialog`) | `handleSave` (or similarly-named callback) does an extra `await res.json()` (or `response.json()`). When `res` is a plain object, `.json` is *undefined* → **“response.json is not a function”**. |
+| Backend                       | `/api/products` is fine – the request reaches the server (you saw it logged) and replies with JSON; the bug occurs before you inspect that reply.                                                 |
+
+So the client double-parses the response.
+
+---
+
+## 🔧 Fix (one-liner)
+
+In **`client/src/components/add-product-dialog.tsx`** (or wherever the product is POSTed):
+
+```diff
+- const resp = await apiRequest('/api/products', options);
+- const data = await resp.json();          // ❌ resp is already plain object
++ const data = await apiRequest('/api/products', options); // ✅ parsed JSON
+```
+
+If you also need HTTP metadata (status, headers) switch to raw `fetch` or change `apiRequest` to:
+
+```ts
+export async function apiRequest(url, opts) {
+  const r = await fetch(url, opts);
+  if (!r.ok) throw new Error(`${r.status}: ${await r.text()}`);
+  return r.json();               // <-- returns JSON only
+}
+```
+
+Then **never** call `.json()` on its return value.
+
+---
+
+## ✅ Verification checklist
+
+1. Open *Add Product* dialog, fill in the form, hit **Save**
+   → No console error.
+2. Network tab shows **POST /api/products** → 200.
+3. New product appears in wishlist grid (or refetch confirms).
+
+---
+
+### Extra polish & guardrails
+
+* **Type-safe helper**
+
+  ```ts
+  export async function apiRequest<T = any>(...) : Promise<T> { ... }
+  ```
+
+  Your IDE will flag accidental `.json()` calls.
+
+* **Consistent helpers**
+  Decide:
+  *Return JSON* (current helper) **or**
+  *Return raw `Response`* (then every caller must `await r.json()`).
+  Stick to one style.
+
+Happy fixing! 🛠️
