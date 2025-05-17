@@ -224,7 +224,10 @@ export default function Chores() {
   // Toggle chore active status
   const toggleActiveMutation = useMutation({
     mutationFn: async ({ id, is_active }: { id: number; is_active: boolean }) => {
-      return apiRequest("PUT", `/api/chores/${id}`, { is_active });
+      return apiRequest(`/api/chores/${id}`, {
+        method: "PUT",
+        body: { is_active }
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/chores"] });
