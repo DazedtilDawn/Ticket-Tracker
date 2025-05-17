@@ -982,7 +982,7 @@ export class DatabaseStorage implements IStorage {
         eq(transactions.user_id, userId),
         eq(transactions.chore_id, choreId),
         eq(transactions.type, 'earn'),
-        gte(transactions.date, today)
+        gte(transactions.created_at, today)
       ))
       .limit(1);
     
