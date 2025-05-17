@@ -19,35 +19,8 @@ services:
           name: ticket-db       # ← matches database name below
           property: connectionString
 
-      # S3-style variables from the blob-storage service →
-      - key: S3_ENDPOINT
-        fromService:
-          name: ticket-blob
-          type: storage
-          property: endpoint
-
-      - key: S3_ACCESS_KEY
-        fromService:
-          name: ticket-blob
-          type: storage
-          property: accessKey
-
-      - key: S3_SECRET_KEY
-        fromService:
-          name: ticket-blob
-          type: storage
-          property: secretKey
-
-      - key: S3_BUCKET
-        value: uploads          # default bucket name in your code
-
       - key: PORT
         value: 5000             # Express listens here (Render sets $PORT)
-
-  # --- S3-compatible Blob Storage -------------------------
-  - name: ticket-blob
-    type: storage
-    plan: starter               # ≈ $0 unless you store multiple GB
 
 # ── Postgres goes in its own top-level list ───────────────
 databases:
