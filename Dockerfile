@@ -41,6 +41,10 @@ RUN npm install dotenv
 ENV PLAYWRIGHT_BROWSERS_PATH=/home/nodejs/.cache/ms-playwright
 RUN npx playwright install chromium --with-deps
 
+# Create the nodejs user before switching to it
+RUN groupadd -g 1001 nodejs \
+    && useradd -u 1001 -g nodejs -m nodejs
+
 USER nodejs
 
 # Copy the rest of the application
