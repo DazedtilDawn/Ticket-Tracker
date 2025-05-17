@@ -1,22 +1,25 @@
+############################################################
+# Ticket-Tracker – Render Blueprint
+############################################################
+
+# ── list *all* services except Postgres here ──────────────
 services:
-  # --- Your Express + Vite app ---------------------------
+  # --- Express + Vite app ---------------------------------
   - name: ticket-tracker
     type: web
-    env: docker          # Render will build from Dockerfile
-    plan: free           # free web dyno
+    runtime: docker            # Render builds from Dockerfile
+    plan: free
     dockerfilePath: ./Dockerfile
-    buildCommand: ""     # Dockerfile already builds
     autoDeploy: true
 
     envVars:
-      # DATABASE_URL injected automatically from the Postgres service
+      # Postgres connection string →
       - key: DATABASE_URL
-        fromService:
-          name: ticket-db
-          type: postgres
+        fromDatabase:
+          name: ticket-db       # ← matches database name below
           property: connectionString
 
-      # S3-style variables injected from Blob Storage
+      # S3-style variables from the blob-storage service →
       - key: S3_ENDPOINT
         fromService:
           name: ticket-blob
@@ -36,19 +39,18 @@ services:
           property: secretKey
 
       - key: S3_BUCKET
-        value: uploads                       # your code can default to this
+        value: uploads          # default bucket name in your code
 
-      # Tell Express which port to listen on (Render sets PORT)
       - key: PORT
-        value: 5000
+        value: 5000             # Express listens here (Render sets $PORT)
 
-  # --- Postgres ------------------------------------------
-  - name: ticket-db
-    type: postgres
-    plan: free
-    version: 15
-
-  # --- S3-compatible Blob storage ------------------------
+  # --- S3-compatible Blob Storage -------------------------
   - name: ticket-blob
     type: s3
-    plan: starter         # tiny >$0.00/mo unless you store GBs of files
+    plan: starter               # ≈ $0 unless you store multiple GB
+
+# ── Postgres goes in its own top-level list ───────────────
+databases:
+  - name: ticket-db
+    plan: free
+    version: 15
