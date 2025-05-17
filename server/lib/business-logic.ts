@@ -1,4 +1,4 @@
-import { Chore } from "@shared/schema";
+import type { Chore } from "@shared/schema";
 
 /**
  * Calculate the tier of a chore based on tickets compared to other chores
