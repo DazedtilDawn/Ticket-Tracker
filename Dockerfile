@@ -53,5 +53,6 @@ COPY --from=builder /root/.cache/ms-playwright /home/nodejs/.cache/ms-playwright
 ENV PLAYWRIGHT_BROWSERS_PATH=/home/nodejs/.cache/ms-playwright
 
 USER nodejs
+ENV PORT 5000
 EXPOSE 5000
 CMD ["npm", "run", "start"]
