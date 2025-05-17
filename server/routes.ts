@@ -2158,7 +2158,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     const recentTransactions = await storage.getUserTransactions(targetUserId, 50);
     for (const tx of recentTransactions) {
-      if (tx.type === 'earn' && tx.chore_id && tx.date >= today) {
+      if (tx.type === 'earn' && tx.chore_id && tx.created_at && new Date(tx.created_at) >= today) {
         completedChoreIds.add(tx.chore_id);
       }
     }
