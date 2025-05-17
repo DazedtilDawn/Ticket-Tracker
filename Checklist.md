@@ -32,6 +32,9 @@
             - `PLAYWRIGHT_BROWSERS_PATH=/home/nodejs/.cache/ms-playwright`
             - `PORT=5000` (optional—keeps local & prod identical)
     - Verify: Environment variables are correctly set in Railway service settings.
+    - Note: If these S3 variables are missing, deployment logs will warn
+      "S3 configuration environment variables are missing" and uploads will
+      fall back to storing files in `public/uploads`.
 
 ## Phase 2: Application Configuration (AI-led, then Manual Redeploy)
 
