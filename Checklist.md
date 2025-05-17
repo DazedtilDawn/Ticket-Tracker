@@ -92,4 +92,23 @@
 - [ ] **(Optional) Configure Custom Domain / HTTPS**
     - (Files: Railway UI, DNS Provider UI, Goal: Make the application accessible via a custom domain with SSL)
     - Action: Follow Railway's guide for adding a custom domain.
-    - Verify: Application is accessible via `https://your.custom.domain`. 
+    - Verify: Application is accessible via `https://your.custom.domain`.
+
+# Render Blueprint Correction
+- [x] Edit `render.yaml` to change S3 type to `s3-storage`. (Files: render.yaml, Goal: Correct S3 service type for Render compatibility)
+- [x] Stage the updated `render.yaml`. (Files: render.yaml, Goal: Prepare file for commit)
+- [x] Commit the change with message "fix(render): use type s3-storage for blob service". (Files: render.yaml, Goal: Record the fix in version control)
+- [x] Push the commit to `origin main`. (Files: N/A, Goal: Update remote repository with the fix)
+
+# Render Blueprint Correction (Attempt 2)
+- [x] Edit `render.yaml` to change S3 service type to `storage` and update `envVars` references. (Files: render.yaml, Goal: Correct S3 service type and references for Render compatibility)
+- [x] Stage the updated `render.yaml`. (Files: render.yaml, Goal: Prepare file for commit)
+- [x] Commit the change with message "fix(render): use type storage for blob service". (Files: render.yaml, Goal: Record the fix in version control)
+- [x] Push the commit to `origin main`. (Files: N/A, Goal: Update remote repository with the fix)
+
+# Render Blueprint Correction (Attempt 3 - S3 Manual Setup)
+- [x] Edit `render.yaml` to remove S3 service (`ticket-blob`) and related S3 environment variables. (Files: render.yaml, Goal: Simplify blueprint for manual S3 setup via Render dashboard)
+- [x] Stage the updated `render.yaml`. (Files: render.yaml, Goal: Prepare file for commit)
+- [x] Commit the change with message "refactor(render): remove S3 from blueprint, will add manually". (Files: render.yaml, Goal: Record the change in version control)
+- [x] Push the commit to `origin main`. (Files: N/A, Goal: Update remote repository with the simplified blueprint)
+- [x] Inform User: Deploy updated Blueprint on Render and then manually create S3 bucket & configure env vars. (Files: N/A, Goal: Guide user on next manual steps) 
