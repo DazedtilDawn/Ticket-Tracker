@@ -1,0 +1,54 @@
+services:
+  # --- Your Express + Vite app ---------------------------
+  - name: ticket-tracker
+    type: web
+    env: docker          # Render will build from Dockerfile
+    plan: free           # free web dyno
+    dockerfilePath: ./Dockerfile
+    buildCommand: ""     # Dockerfile already builds
+    autoDeploy: true
+
+    envVars:
+      # DATABASE_URL injected automatically from the Postgres service
+      - key: DATABASE_URL
+        fromService:
+          name: ticket-db
+          type: postgres
+          property: connectionString
+
+      # S3-style variables injected from Blob Storage
+      - key: S3_ENDPOINT
+        fromService:
+          name: ticket-blob
+          type: s3
+          property: endpoint
+
+      - key: S3_ACCESS_KEY
+        fromService:
+          name: ticket-blob
+          type: s3
+          property: accessKey
+
+      - key: S3_SECRET_KEY
+        fromService:
+          name: ticket-blob
+          type: s3
+          property: secretKey
+
+      - key: S3_BUCKET
+        value: uploads                       # your code can default to this
+
+      # Tell Express which port to listen on (Render sets PORT)
+      - key: PORT
+        value: 5000
+
+  # --- Postgres ------------------------------------------
+  - name: ticket-db
+    type: postgres
+    plan: free
+    version: 15
+
+  # --- S3-compatible Blob storage ------------------------
+  - name: ticket-blob
+    type: s3
+    plan: starter         # tiny >$0.00/mo unless you store GBs of files
