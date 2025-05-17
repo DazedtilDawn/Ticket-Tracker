@@ -111,4 +111,10 @@
 - [x] Stage the updated `render.yaml`. (Files: render.yaml, Goal: Prepare file for commit)
 - [x] Commit the change with message "refactor(render): remove S3 from blueprint, will add manually". (Files: render.yaml, Goal: Record the change in version control)
 - [x] Push the commit to `origin main`. (Files: N/A, Goal: Update remote repository with the simplified blueprint)
-- [x] Inform User: Deploy updated Blueprint on Render and then manually create S3 bucket & configure env vars. (Files: N/A, Goal: Guide user on next manual steps) 
+- [x] Inform User: Deploy updated Blueprint on Render and then manually create S3 bucket & configure env vars. (Files: N/A, Goal: Guide user on next manual steps)
+
+# Dockerfile Enhancement: Explicit User Creation
+- [x] Edit `Dockerfile` to add explicit user and group creation for `nodejs`. (Files: Dockerfile, Goal: Improve Docker image permissions and security)
+- [x] Stage the updated `Dockerfile`. (Files: Dockerfile, Goal: Prepare file for commit)
+- [x] Commit the change with message "fix(docker): explicitly create nodejs user". (Files: Dockerfile, Goal: Record the enhancement in version control)
+- [x] Push the commit to `origin main`. (Files: N/A, Goal: Update remote repository with the Dockerfile fix) 
