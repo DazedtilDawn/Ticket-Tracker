@@ -1,5 +1,5 @@
 ###############   Stage 1 – Build   ###############
-FROM node:20-bookworm-slim
+FROM node:20-bookworm-slim AS builder
 
 # Set working directory
 WORKDIR /app
@@ -41,20 +41,24 @@ RUN npm install dotenv
 ENV PLAYWRIGHT_BROWSERS_PATH=/home/nodejs/.cache/ms-playwright
 RUN npx playwright install chromium --with-deps
 
-USER nodejs
-
-# Copy the rest of the application
 COPY . .
 
-# Build the application
 RUN npm run build
 
-# Set environment variables
-ENV NODE_ENV=production
-ENV PORT=5000
+###############   Stage 2 – Runtime   ###############
+FROM node:20-bookworm-slim
 
-# Expose port
+WORKDIR /app
+
+COPY --from=builder /app .
+
+RUN groupadd -g 1001 nodejs \
+    && useradd -u 1001 -g nodejs -m nodejs
+
+ENV NODE_ENV=production
+
 EXPOSE 5000
 
-# Start the application
-CMD ["npm", "start"]
+USER nodejs
+
+CMD ["node", "dist/index.js"]
