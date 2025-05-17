@@ -4,10 +4,11 @@ import { S3Client } from '@aws-sdk/client-s3';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
-// Validate required environment variables
+// Check for required environment variables
 if (!process.env.S3_ENDPOINT || !process.env.S3_ACCESS_KEY || !process.env.S3_SECRET_KEY) {
-  console.error('S3 configuration environment variables are missing');
-  console.error('Required: S3_ENDPOINT, S3_ACCESS_KEY, S3_SECRET_KEY');
+  console.warn(
+    'S3 configuration environment variables are missing; falling back to local storage'
+  );
   // Don't throw, gracefully degrade to local storage if missing
 }
 
