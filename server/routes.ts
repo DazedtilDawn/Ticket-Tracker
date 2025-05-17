@@ -856,14 +856,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Step 4: Calculate base tickets (ONLY the chore base tickets, no bonus)
-      const base_tickets_earned = chore.tickets;
+      const base_tickets_earned = chore.base_tickets;
       const noteText = `Completed: ${chore.name}`;
       
       // Step 5: Create the transaction record for ONLY the base tickets
       const transaction = await storage.createTransaction({
         user_id: user.id,
         chore_id,
-        delta_tickets: base_tickets_earned, // ONLY base tickets, no bonus
+        delta: base_tickets_earned, // ONLY base tickets, no bonus
         type: "earn",
         note: noteText,
         source: "chore",
@@ -895,7 +895,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const broadcastPayload = {
         data: {
           id: transaction.id,
-          delta_tickets: transaction.delta_tickets,
+          delta: transaction.delta,
           note: transaction.note,
           user_id: transaction.user_id,
           type: transaction.type,
