@@ -760,7 +760,7 @@ export class DatabaseStorage implements IStorage {
               );
             
             // Calculate total tickets earned
-            const totalEarned = earnTransactions.reduce((sum, tx) => sum + tx.delta_tickets, 0);
+            const totalEarned = earnTransactions.reduce((sum, tx) => sum + tx.delta, 0);
             
             // Calculate total spent on goals
             const spendTransactions = await db
@@ -773,7 +773,7 @@ export class DatabaseStorage implements IStorage {
                 )
               );
             
-            const totalSpent = spendTransactions.reduce((sum, tx) => sum + Math.abs(tx.delta_tickets), 0);
+            const totalSpent = spendTransactions.reduce((sum, tx) => sum + Math.abs(tx.delta), 0);
             
             // Calculate how many tickets should be in the goal (remaining balance)
             const balance = await this.getUserBalance(transaction.user_id);
@@ -789,11 +789,11 @@ export class DatabaseStorage implements IStorage {
       
       // If this transaction is for completing a chore, we need to check if it was a daily bonus chore
       // and reset the revealed flag in the dailyBonus table
-      if (transaction.chore_id && transaction.type === 'earn' && transaction.date) {
+      if (transaction.chore_id && transaction.type === 'earn' && transaction.created_at) {
         console.log(`Transaction ${transaction.id} is a chore completion transaction for chore ${transaction.chore_id}`);
         
         // Extract the date from the transaction date
-        const transactionDate = new Date(transaction.date);
+        const transactionDate = new Date(transaction.created_at);
         const transactionDateStr = transactionDate.toISOString().split('T')[0];
         console.log(`Transaction date: ${transactionDateStr}`);
         

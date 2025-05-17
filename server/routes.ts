@@ -2176,7 +2176,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const choresWithStatus = chores.map(chore => ({
       ...chore,
       completed: completedChoreIds.has(chore.id),
-      boostPercent: activeGoal ? calculateBoostPercent(chore.tickets, activeGoal.product.price_locked_cents) : 0,
+      boostPercent: activeGoal ? calculateBoostPercent(chore.base_tickets, activeGoal.product.price_locked_cents) : 0,
       // Add bonus information if this chore is the assigned bonus chore for today
       is_bonus: dailyBonus ? dailyBonus.assigned_chore_id === chore.id : false,
       // If the chore is the bonus chore and has been completed (but wheel not spun), it's eligible for spin
@@ -2212,7 +2212,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: assignedBonusChore.id,
           name: assignedBonusChore.name,
           emoji: assignedBonusChore.emoji,
-          tickets: assignedBonusChore.tickets,
+          tickets: assignedBonusChore.base_tickets,
           completed: completedChoreIds.has(assignedBonusChore.id)
         } : null,
         is_spun: dailyBonus?.is_spun || false,
