@@ -1,58 +1,60 @@
 ###############   Stage 1 – Build   ###############
-FROM node:20-bookworm-slim AS builder
+FROM node:20-bookworm-slim
 
-ENV PNPM_HOME="/pnpm" \
-    PATH="/pnpm:${PATH}"
-RUN corepack enable
-
+# Set working directory
 WORKDIR /app
 
-# OS deps for Playwright + curl
-RUN apt-get update && apt-get install -y \
-    curl jq \
-    libasound2 libatk1.0-0 libatk-bridge2.0-0 libcairo2 libcups2 libdbus-1-3 \
-    libexpat1 libfontconfig1 libgbm1 libgcc1 libglib2.0-0 libgtk-3-0 libnspr4 \
-    libnss3 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 \
-    libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 \
-    libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates fonts-liberation \
-    lsb-release xdg-utils wget --no-install-recommends && \
-    rm -rf /var/lib/apt/lists/*
-
-COPY package.json pnpm-lock.yaml* package-lock.json* ./
-RUN if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile --prod=false; \
-    else npm ci; fi
-
-# Install Playwright browsers
-RUN npx playwright install --with-deps chromium
-
-COPY . .
-RUN npm run build
-
-###############   Stage 2 – Runtime   ###############
-FROM node:20-bookworm-slim AS runner
-WORKDIR /app
-ENV NODE_ENV=production
-
-RUN groupadd -g 1001 nodejs && useradd -u 1001 -g nodejs -m nodejs
-
-# Runtime libs for Playwright
+# Install dependencies for Playwright and other utilities
 RUN apt-get update && apt-get install -y \
     curl \
-    libasound2 libatk1.0-0 libatk-bridge2.0-0 libcairo2 libcups2 libdbus-1-3 \
-    libexpat1 libfontconfig1 libgbm1 libgcc1 libglib2.0-0 libgtk-3-0 libnspr4 \
-    libnss3 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 \
-    libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 \
-    libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates fonts-liberation \
-    lsb-release xdg-utils wget --no-install-recommends && \
-    rm -rf /var/lib/apt/lists/*
+    gnupg \
+    libgconf-2-4 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxrandr2 \
+    libgbm1 \
+    libasound2 \
+    libpango-1.0-0 \
+    libcairo2 \
+    fonts-liberation \
+    libnspr4 \
+    libnss3 \
+    --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /app/dist          ./dist
-COPY --from=builder /app/node_modules  ./node_modules
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /root/.cache/ms-playwright /home/nodejs/.cache/ms-playwright
+# Copy package.json and package-lock.json
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Install dotenv so production build can load .env
+RUN npm install dotenv
+
+# Install Playwright browsers
 ENV PLAYWRIGHT_BROWSERS_PATH=/home/nodejs/.cache/ms-playwright
+RUN npx playwright install chromium --with-deps
 
 USER nodejs
-ENV PORT 5000
+
+# Copy the rest of the application
+COPY . .
+
+# Build the application
+RUN npm run build
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV PORT=5000
+
+# Expose port
 EXPOSE 5000
-CMD ["npm", "run", "start"]
+
+# Start the application
+CMD ["npm", "start"]
