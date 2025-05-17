@@ -237,7 +237,7 @@ export function sendMessage(event: string, data: any) {
     
     // Try to reconnect first
     const newWs = createWebSocketConnection();
-    
+
     // If we managed to create a new WebSocket instance, wait for it to connect
     if (newWs) {
       const sendAfterConnect = () => {
@@ -252,10 +252,10 @@ export function sendMessage(event: string, data: any) {
           const messageJson = JSON.stringify({ event, data });
           console.log(`Sending delayed WebSocket message: ${messageJson}`);
           ws.send(messageJson);
-          
+
           // Remove the event listener as we've now sent the message
-          if (ws) {
-            ws.removeEventListener('open', sendAfterConnect);
+          if (newWs) {
+            newWs.removeEventListener('open', sendAfterConnect);
           }
           return true;
         }
@@ -269,11 +269,11 @@ export function sendMessage(event: string, data: any) {
         console.log('Message sent immediately after reconnection');
         return true;
       }
-      
+
       // Otherwise wait for the connection to open
-      if (ws) {
+      if (newWs) {
         console.log('Adding event listener for open event to send message later');
-        ws.addEventListener('open', sendAfterConnect);
+        newWs.addEventListener('open', sendAfterConnect, { once: true });
         // Return false to indicate the message wasn't sent immediately
         return false;
       }
