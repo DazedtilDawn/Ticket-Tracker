@@ -1,12 +1,8 @@
 import multer from 'multer';
 import multerS3 from 'multer-s3';
 import { S3Client } from '@aws-sdk/client-s3';
-import { config as dotenv } from 'dotenv';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-
-// Load environment variables
-dotenv();
 
 // Validate required environment variables
 if (!process.env.S3_ENDPOINT || !process.env.S3_ACCESS_KEY || !process.env.S3_SECRET_KEY) {
