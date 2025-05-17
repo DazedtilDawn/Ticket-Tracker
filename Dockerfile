@@ -41,7 +41,9 @@ RUN npm install dotenv
 ENV PLAYWRIGHT_BROWSERS_PATH=/home/nodejs/.cache/ms-playwright
 RUN npx playwright install chromium --with-deps
 
-USER nodejs
+# Create the nodejs user so we can drop privileges later
+RUN groupadd -g 1001 nodejs \
+    && useradd -u 1001 -g nodejs -m nodejs
 
 # Copy the rest of the application
 COPY . .
@@ -55,6 +57,9 @@ ENV PORT=5000
 
 # Expose port
 EXPOSE 5000
+
+# Drop to the unprivileged user only for runtime
+USER nodejs
 
 # Start the application
 CMD ["npm", "start"]
