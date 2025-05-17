@@ -50,6 +50,9 @@ USER nodejs
 # Copy the rest of the application
 COPY . .
 
+# Ensure nodejs user owns the source files so build tools can write cache files
+RUN chown -R nodejs:nodejs /app
+
 # Build the application
 RUN npm run build
 
