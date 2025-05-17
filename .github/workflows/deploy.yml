@@ -1,0 +1,36 @@
+# .github/workflows/deploy.yml
+name: Build & Deploy to Render
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Check out repo"
+        uses: actions/checkout@v4
+
+      - name: "Set up Node (v20)"
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: "Install deps"
+        run: npm ci
+
+      - name: "Run tests"
+        run: npm test --if-present
+
+      - name: "Build Docker image"
+        run: |
+          docker build -t ticket-tracker .
+
+      - name: "Push image to Render"
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          curl -X POST "$RENDER_DEPLOY_HOOK"
