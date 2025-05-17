@@ -12,7 +12,7 @@ export function calculateTier(tickets: number, allChores: Chore[]): string {
   // Get ticket values from active chores
   const ticketValues = allChores
     .filter(chore => chore.is_active)
-    .map(chore => chore.tickets)
+    .map(chore => chore.base_tickets)
     .sort((a, b) => a - b);
   
   // Calculate median value
