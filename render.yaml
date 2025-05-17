@@ -1,16 +1,24 @@
+############################################################
+# Ticket-Tracker – Render Blueprint
+############################################################
+
 services:
+  # ── Express + Vite app (Docker) ─────────────────────────
   - name: ticket-tracker
     type: web
-    runtime: docker
+    env: docker                  # Render builds from Dockerfile
     plan: free
     dockerfilePath: ./Dockerfile
     autoDeploy: true
     envVars:
-      - key: DATABASE_URL
+      - key: DATABASE_URL        # ← injected from db below
         fromDatabase:
           name: ticket-db
           property: connectionString
       - key: PORT
         value: "5000"
 
-
+databases:
+  # ── Postgres ────────────────────────────────────────────
+  - name: ticket-db
+    plan: free
