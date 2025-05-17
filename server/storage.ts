@@ -836,7 +836,7 @@ export class DatabaseStorage implements IStorage {
         console.log(`Transaction ${transaction.id} is not a chore completion transaction or lacks required fields:`, {
           has_chore_id: !!transaction.chore_id,
           type: transaction.type,
-          has_date: !!transaction.date
+          has_date: !!transaction.created_at
         });
       }
       
@@ -854,11 +854,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createTransaction(insertTransaction: InsertTransaction): Promise<Transaction> {
-    console.log(`[TRANSACTION] Creating transaction for user ${insertTransaction.user_id}, delta: ${insertTransaction.delta_tickets}, type: ${insertTransaction.type}`);
+    console.log(`[TRANSACTION] Creating transaction for user ${insertTransaction.user_id}, delta: ${insertTransaction.delta}, type: ${insertTransaction.type}`);
     
     const transactionData = {
       ...insertTransaction,
-      date: new Date()
+      created_at: new Date()
     };
     
     // Calculate user's current balance for validation
@@ -867,7 +867,7 @@ export class DatabaseStorage implements IStorage {
     
     // Insert transaction
     const [transaction] = await db.insert(transactions).values(transactionData).returning();
-    console.log(`[TRANSACTION] Created transaction ${transaction.id} with delta ${transaction.delta_tickets}`);
+    console.log(`[TRANSACTION] Created transaction ${transaction.id} with delta ${transaction.delta}`);
     
     // Calculate new balance
     const newBalance = await this.getUserBalance(insertTransaction.user_id);
