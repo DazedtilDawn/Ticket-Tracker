@@ -730,15 +730,15 @@ export class DatabaseStorage implements IStorage {
         return false;
       }
       
-      // If the transaction is of type 'earn' and has positive delta_tickets, we need to update goals
-      if (transaction.type === 'earn' && transaction.delta_tickets > 0) {
+      // If the transaction is of type 'earn' and has positive delta, we need to update goals
+      if (transaction.type === 'earn' && transaction.delta > 0) {
         // If this transaction directly affected a goal, update that goal
         if (transaction.goal_id) {
           // Get the goal
           const goal = await this.getGoal(transaction.goal_id);
           if (goal) {
             // Subtract the tickets from the goal
-            const updatedTicketsSaved = Math.max(0, goal.tickets_saved - transaction.delta_tickets);
+            const updatedTicketsSaved = Math.max(0, goal.tickets_saved - transaction.delta);
             await this.updateGoal(goal.id, { tickets_saved: updatedTicketsSaved });
           }
         } 

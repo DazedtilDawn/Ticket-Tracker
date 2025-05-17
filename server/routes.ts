@@ -2129,7 +2129,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (earnTransactions.length > 0) {
         // Calculate average tickets earned per day
-        const totalEarned = earnTransactions.reduce((sum, tx) => sum + tx.delta_tickets, 0);
+        const totalEarned = earnTransactions.reduce((sum, tx) => sum + tx.delta, 0);
         const avgPerDay = totalEarned / Math.max(1, earnTransactions.length);
         
         // Tickets needed to complete goal
