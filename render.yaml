@@ -23,19 +23,19 @@ services:
       - key: S3_ENDPOINT
         fromService:
           name: ticket-blob
-          type: s3
+          type: storage
           property: endpoint
 
       - key: S3_ACCESS_KEY
         fromService:
           name: ticket-blob
-          type: s3
+          type: storage
           property: accessKey
 
       - key: S3_SECRET_KEY
         fromService:
           name: ticket-blob
-          type: s3
+          type: storage
           property: secretKey
 
       - key: S3_BUCKET
@@ -46,7 +46,7 @@ services:
 
   # --- S3-compatible Blob Storage -------------------------
   - name: ticket-blob
-    type: s3-storage
+    type: storage
     plan: starter               # ≈ $0 unless you store multiple GB
 
 # ── Postgres goes in its own top-level list ───────────────
