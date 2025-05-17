@@ -19,13 +19,15 @@ export const chores = pgTable("chores", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
-  tickets: integer("tickets").notNull(),
+  base_tickets: integer("base_tickets").notNull(),
   recurrence: text("recurrence").default("daily"), // "daily", "weekly", "monthly"
   tier: text("tier").default("common"), // "common", "rare", "epic"
   image_url: text("image_url"), // Field for storing chore image URL
   is_active: boolean("is_active").default(true),
   emoji: varchar("emoji", { length: 4 }), // For storing a single emoji character
   last_bonus_assigned: date("last_bonus_assigned"), // Tracks the last date this chore was assigned as a bonus
+  created_by_user_id: integer("created_by_user_id"),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
 export const products = pgTable("products", {
@@ -54,13 +56,15 @@ export const transactions = pgTable(
     user_id: integer("user_id").notNull().references(() => users.id),
     chore_id: integer("chore_id").references(() => chores.id),
     goal_id: integer("goal_id").references(() => goals.id),
-    delta_tickets: integer("delta_tickets").notNull(),
-    date: timestamp("date").defaultNow(), // This could be renamed to created_at in a future migration
+    delta: integer("delta").notNull(), // Changed from delta_tickets to delta
+    created_at: timestamp("created_at").defaultNow(), // Changed from date to created_at
     type: text("type").notNull().default("earn"), // "earn", "spend"
     note: text("note"), // Description of the transaction
     source: txnSourceEnum("source").notNull().default('chore'), // Where the transaction originated
     ref_id: integer("ref_id"), // For undo: original transactions.id; For bonus_spin: daily_bonus.id
     reason: text("reason"), // For manual adjustments, undo
+    metadata: text("metadata"), // JSON metadata
+    to_shared_goal_id: integer("to_shared_goal_id"), // For shared goal contributions
   },
   (table) => {
     return {

@@ -355,7 +355,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Calculate and update tier
       const chores = await storage.getChores();
-      const tier = calculateTier(newChore.tickets, chores);
+      const tier = calculateTier(newChore.base_tickets, chores);
       console.log("Calculated tier:", tier);
       const updatedChore = await storage.updateChore(newChore.id, { tier });
       console.log("Updated chore with tier:", updatedChore);

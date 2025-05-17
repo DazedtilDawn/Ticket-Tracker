@@ -964,7 +964,7 @@ export class DatabaseStorage implements IStorage {
         .where(eq(transactions.user_id, userId));
       
       // Calculate sum manually for better type safety
-      return txList.reduce((sum, tx) => sum + tx.delta_tickets, 0);
+      return txList.reduce((sum, tx) => sum + tx.delta, 0);
     } catch (error) {
       console.error("Error getting user balance:", error);
       return 0;
