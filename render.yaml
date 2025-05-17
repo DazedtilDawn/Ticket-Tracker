@@ -46,7 +46,7 @@ services:
 
   # --- S3-compatible Blob Storage -------------------------
   - name: ticket-blob
-    type: s3
+    type: s3-storage
     plan: starter               # ≈ $0 unless you store multiple GB
 
 # ── Postgres goes in its own top-level list ───────────────
