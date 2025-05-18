@@ -783,134 +783,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Chore not found" });
       }
       
-      // Step 2: Skip completion check for now to avoid SQL errors
-      // We'll make sure that parents can always complete a chore for children
-      console.log(`[API_EARN] Skipping completion check for chore ${chore_id} by user ${user.id} to bypass SQL errors`);
-      
-      // Step 3: Check for daily bonus - only for checking if this completion should trigger the bonus flow
-      const today = new Date().toISOString().split('T')[0];
-      
-      // DEBUG: Log parameters for daily bonus lookup
-      console.log(`/api/earn: Looking for daily bonus for user ${user.id} on date ${today}`);
-      
-      const dailyBonus = await storage.getDailyBonus(today, user.id);
-      
-      // DEBUG: Log the daily bonus lookup result
-      console.log(`/api/earn: Daily bonus lookup result:`, dailyBonus);
-      
-      // Initialize bonus flags - IMPORTANT: we're not calculating or awarding bonus tickets here anymore
-      let bonus_triggered = false;
-      let daily_bonus_id = null;
-      
-      // DEBUG: Log conditions for bonus triggering with more detail
-      console.log(`[API_EARN] Daily bonus lookup for user ${user.id}, date ${today}:`, dailyBonus ? {
-        id: dailyBonus.id,
-        assigned_chore_id: dailyBonus.assigned_chore_id,
-        is_spun: dailyBonus.is_spun,
-        trigger_type: dailyBonus.trigger_type,
-        user_id: dailyBonus.user_id,
-        bonus_date: dailyBonus.bonus_date
-      } : 'No daily bonus record found');
-      
-      console.log(`[API_EARN] Checking bonus conditions for chore_id=${chore_id}:`, {
-        hasDailyBonus: !!dailyBonus,
-        assignedChoreId: dailyBonus?.assigned_chore_id,
-        completedChoreId: chore_id,
-        choreMatch: dailyBonus?.assigned_chore_id === chore_id,
-        isSpun: dailyBonus?.is_spun,
-        notYetSpun: dailyBonus ? !dailyBonus.is_spun : false,
-        triggerTypeMatch: dailyBonus?.trigger_type === 'chore_completion'
-      });
-      
-      // Check if this is a bonus-triggering chore completion
-      if (dailyBonus && dailyBonus.assigned_chore_id === chore_id && !dailyBonus.is_spun) {
-        console.log(`[API_EARN] 🎯 BONUS CHORE COMPLETED! User ${user.id} completed their assigned bonus chore ${chore_id}`);
+      // EMERGENCY FIX: Direct SQL to bypass ORM issues
+      try {
+        const { pool } = require('./db');
+        const now = new Date().toISOString();
+        const noteText = `Completed: ${chore.name}`;
+        const base_tickets_earned = chore.base_tickets || 0;
         
-        // Only mark as triggered if not already spun
-        bonus_triggered = true;
-        daily_bonus_id = dailyBonus.id;
+        console.log(`[FIXED_API] Creating chore completion transaction: user=${user.id}, chore=${chore_id}, tickets=${base_tickets_earned}`);
         
-        console.log(`[API_EARN] Marking bonus as triggered for chore completion. daily_bonus_id: ${daily_bonus_id}`);
+        // Create transaction directly with raw SQL
+        const { rows } = await pool.query(
+          `INSERT INTO transactions 
+           (user_id, chore_id, delta, type, note, source, created_at) 
+           VALUES ($1, $2, $3, $4, $5, $6, $7)
+           RETURNING *`,
+          [user.id, chore_id, base_tickets_earned, 'earn', noteText, 'chore', now]
+        );
         
-        try {
-          // Mark that a spin should be triggered but don't set tickets yet
-          // Use raw SQL query to avoid type issues with dailyBonus variable vs. table
+        const transaction = rows[0];
+        console.log(`[FIXED_API] Created transaction ${transaction.id} with ${base_tickets_earned} tickets`);
+        
+        // Check for daily bonus eligibility
+        const today = new Date().toISOString().split('T')[0];
+        const dailyBonus = await storage.getDailyBonus(today, user.id);
+        
+        // Initialize bonus flags
+        let bonus_triggered = false;
+        let daily_bonus_id = null;
+        
+        // Check if this is a bonus-triggering completion
+        if (dailyBonus && dailyBonus.assigned_chore_id === chore_id && !dailyBonus.is_spun) {
+          console.log(`[FIXED_API] Bonus chore completed! User ${user.id} completed bonus chore ${chore_id}`);
+          bonus_triggered = true;
+          daily_bonus_id = dailyBonus.id;
+          
+          // Mark bonus as triggered for spin
           await pool.query(
             "UPDATE daily_bonus SET trigger_type = 'chore_completion' WHERE id = $1",
             [dailyBonus.id]
           );
-            
-          console.log(`[API_EARN] Updated daily bonus ${dailyBonus.id} to mark as triggered for chore completion`);
-        } catch (err) {
-          console.error("[API_EARN] Failed to update daily bonus for trigger:", err);
-          // Continue anyway - this is not critical
         }
-      } else {
-        console.log(`[API_EARN] Not a bonus-triggering completion. Reasons:`, {
-          missingDailyBonus: !dailyBonus,
-          choreIdMismatch: dailyBonus ? dailyBonus.assigned_chore_id !== chore_id : false,
-          alreadySpun: dailyBonus ? dailyBonus.is_spun : false
+        
+        // Get updated user data
+        const balance = await storage.getUserBalance(user.id);
+        const activeGoal = await storage.getActiveGoalByUser(user.id);
+        
+        // Prepare response
+        const response = {
+          transaction,
+          chore,
+          balance,
+          activeGoal,
+          bonus_triggered,
+          daily_bonus_id
+        };
+        
+        // Broadcast to WebSocket clients
+        broadcast("transaction:earn", {
+          data: {
+            id: transaction.id,
+            delta: transaction.delta,
+            note: transaction.note,
+            user_id: transaction.user_id,
+            type: transaction.type,
+            chore_id: transaction.chore_id,
+            balance,
+            bonus_triggered,
+            daily_bonus_id
+          }
+        });
+        
+        return res.status(201).json(response);
+      } catch (error) {
+        console.error("[FIXED_API] Error:", error);
+        return res.status(500).json({ 
+          message: "Failed to complete chore",
+          error: error.message 
         });
       }
-      
-      // Step 4: Calculate base tickets (ONLY the chore base tickets, no bonus)
-      const base_tickets_earned = chore.base_tickets;
-      const noteText = `Completed: ${chore.name}`;
-      
-      // Step 5: Create the transaction record for ONLY the base tickets
-      const transaction = await storage.createTransaction({
-        user_id: user.id,
-        chore_id,
-        delta: base_tickets_earned, // ONLY base tickets, no bonus
-        type: "earn",
-        note: noteText,
-        source: "chore",
-        ref_id: daily_bonus_id // Reference the bonus ID if it exists
-      });
-      
-      // Step 6: Get updated user balance
-      const balance = await storage.getUserBalance(user.id);
-      
-      // Step 7: Get active goal (createTransaction already updated the tickets_saved value)
-      const activeGoal = await storage.getActiveGoalByUser(user.id);
-      
-      const boostPercent = activeGoal && activeGoal.product && activeGoal.product.price_locked_cents
-        ? calculateBoostPercent(chore.base_tickets || 0, activeGoal.product.price_locked_cents)
-        : 0;
-      
-      // Step 8: Prepare and send response
-      const response = {
-        transaction,
-        chore,
-        balance,
-        activeGoal,
-        boostPercent,
-        bonus_triggered, // Flag to tell client to show spin wheel
-        daily_bonus_id // ID needed for the spin API call
-      };
-      
-      // Step 9: Broadcast completion to all connected clients
-      const broadcastPayload = {
-        data: {
-          id: transaction.id,
-          delta: transaction.delta,
-          note: transaction.note,
-          user_id: transaction.user_id,
-          type: transaction.type,
-          chore_id: transaction.chore_id,
-          balance: balance, // Include updated balance for immediate UI updates
-          bonus_triggered, // Flag to tell clients user is eligible for spin
-          daily_bonus_id // ID needed for the spin
-        }
-      };
-      
-      console.log("Transaction broadcast payload:", JSON.stringify(broadcastPayload, null, 2));
-      
-      broadcast("transaction:earn", broadcastPayload);
-      
-      return res.status(201).json(response);
     } catch (error) {
-      return res.status(400).json({ message: error.message });
+      console.error("[API Error]", error);
+      return res.status(400).json({ message: error.message || "Invalid request" });
     }
   });
   
