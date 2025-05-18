@@ -914,7 +914,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ticketsToSpend = targetGoal.tickets_saved;
       } else {
         // Spend a specific number of tickets
-        const ticketValue = typeof tickets === 'string' ? parseInt(tickets, 10) : tickets;
+        // Accept both 'tickets' and 'delta' fields for backward compatibility
+        const ticketInput = tickets !== undefined ? tickets : req.body.delta;
+        const ticketValue = typeof ticketInput === 'string' ? parseInt(ticketInput, 10) : ticketInput;
         ticketsToSpend = Math.min(ticketValue, currentBalance);
         
         if (isNaN(ticketsToSpend) || ticketsToSpend <= 0) {
