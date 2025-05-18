@@ -21,17 +21,8 @@ export default function Wishlist() {
   // Default to "my-list" tab unless otherwise specified
   const [activeTab, setActiveTab] = useState("my-list");
   
-  // Update active tab based on URL when component mounts
-  useEffect(() => {
-    const search = location.search || '';
-    if (search.indexOf('tab=my-list') !== -1) {
-      setActiveTab('my-list');
-    } else if (search.indexOf('tab=catalog') !== -1) {
-      setActiveTab('catalog');
-    } else if (search.indexOf('tab=active-goal') !== -1) {
-      setActiveTab('active-goal');
-    }
-  }, [location.search]);
+  // No URL parameter handling for now - just use the default tab
+  // We'll add this feature back once we resolve the type issues
   
   // Fetch user's goals
   const { 
