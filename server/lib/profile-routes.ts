@@ -9,56 +9,67 @@ import { eq } from "drizzle-orm";
 import { AuthMiddleware } from "./auth";
 
 // Configure storage for profile images
+// Use a simpler, more direct storage implementation
 const profileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // Make sure the path is correct and accessible
+    // Define the upload directory - keep it simple
     const uploadDir = path.join(process.cwd(), "public", "uploads", "profiles");
-    console.log('Destination directory for upload:', uploadDir);
+    console.log('[PROFILE UPLOAD] Destination directory:', uploadDir);
     
+    // Make sure the directory exists with proper permissions
     try {
-      // Ensure upload directory exists with proper permissions
       if (!fs.existsSync(uploadDir)) {
-        console.log('Creating directory:', uploadDir);
-        fs.mkdirSync(uploadDir, { recursive: true });
-        console.log('Directory created successfully');
-      } else {
-        console.log('Directory already exists');
+        console.log('[PROFILE UPLOAD] Creating directory');
+        fs.mkdirSync(uploadDir, { recursive: true, mode: 0o777 });
         
-        // Verify the directory permissions by writing a test file
-        try {
-          const testFile = path.join(uploadDir, '.test-write');
-          fs.writeFileSync(testFile, 'test');
-          fs.unlinkSync(testFile);
-          console.log('Directory is writable');
-        } catch (writeError) {
-          console.error('Directory is not writable:', writeError);
-          // Continue anyway, we'll handle the error downstream
+        // Verify directory was created
+        if (fs.existsSync(uploadDir)) {
+          console.log('[PROFILE UPLOAD] Directory created successfully');
+          
+          // Make absolutely sure the permissions are set
+          fs.chmodSync(uploadDir, 0o777);
+        } else {
+          console.error('[PROFILE UPLOAD] Failed to create directory');
         }
+      } else {
+        console.log('[PROFILE UPLOAD] Directory already exists');
+        
+        // Update permissions to ensure it's writable
+        fs.chmodSync(uploadDir, 0o777);
       }
       
+      // Try a test write to verify it's working
+      const testFilePath = path.join(uploadDir, '.test-upload');
+      fs.writeFileSync(testFilePath, 'test');
+      if (fs.existsSync(testFilePath)) {
+        console.log('[PROFILE UPLOAD] Test file created successfully');
+        fs.unlinkSync(testFilePath);
+        console.log('[PROFILE UPLOAD] Test file removed successfully');
+      }
+      
+      // Proceed with upload
       cb(null, uploadDir);
     } catch (error) {
-      console.error('Error setting up upload directory:', error);
-      cb(new Error(`Could not access upload directory: ${error.message}`), null);
+      console.error('[PROFILE UPLOAD] Error setting up upload directory:', error);
+      // Pass error to multer
+      cb(new Error(`Upload directory error: ${error instanceof Error ? error.message : String(error)}`), "");
     }
   },
   filename: (req, file, cb) => {
     try {
-      const originalName = file.originalname || 'untitled';
-      console.log('Original filename:', originalName);
+      // Log the incoming file
+      console.log('[PROFILE UPLOAD] Processing file:', file.originalname, 'type:', file.mimetype);
       
-      // Get file extension safely
-      const fileExt = path.extname(originalName).toLowerCase() || '.jpg';
-      console.log('File extension:', fileExt);
+      // Generate a simple unique filename with consistent extension handling
+      const ext = path.extname(file.originalname || 'image.jpg').toLowerCase() || '.jpg';
+      const uniqueId = uuidv4();
+      const newFilename = `${uniqueId}${ext}`;
       
-      // Generate a unique filename
-      const fileName = `${uuidv4()}${fileExt}`;
-      console.log('Generated filename:', fileName);
-      
-      cb(null, fileName);
+      console.log('[PROFILE UPLOAD] Generated filename:', newFilename);
+      cb(null, newFilename);
     } catch (error) {
-      console.error('Error generating filename:', error);
-      cb(new Error(`Failed to process filename: ${error.message}`), null);
+      console.error('[PROFILE UPLOAD] Error generating filename:', error);
+      cb(new Error(`Filename error: ${error instanceof Error ? error.message : String(error)}`), "");
     }
   }
 });
@@ -91,7 +102,23 @@ export function registerProfileImageRoutes(app: Express) {
     }
     
     const { userId } = req.params;
-    console.log('Starting profile image upload for user:', userId);
+    console.log('[PROFILE UPLOAD] Starting upload for user:', userId);
+    
+    // Create the upload directory first to ensure it exists
+    const uploadDir = path.join(process.cwd(), "public", "uploads", "profiles");
+    if (!fs.existsSync(uploadDir)) {
+      console.log('[PROFILE UPLOAD] Creating upload directory');
+      fs.mkdirSync(uploadDir, { recursive: true, mode: 0o777 });
+    }
+    
+    // Verify directory permissions
+    try {
+      fs.accessSync(uploadDir, fs.constants.W_OK);
+      console.log('[PROFILE UPLOAD] Directory is writable');
+    } catch (err) {
+      console.error('[PROFILE UPLOAD] Directory is not writable, changing permissions');
+      fs.chmodSync(uploadDir, 0o777);
+    }
     
     // Create a simple direct upload function
     const upload = profileUpload.single('profile_image');
@@ -99,7 +126,7 @@ export function registerProfileImageRoutes(app: Express) {
     // Use multer to handle the file upload
     upload(req, res, async (err) => {
       if (err) {
-        console.error('Multer error during upload:', err);
+        console.error('[PROFILE UPLOAD] Multer error:', err);
         return res.status(400).json({ 
           message: 'File upload error', 
           error: err.message
@@ -109,45 +136,55 @@ export function registerProfileImageRoutes(app: Express) {
       try {
         // Check if the file was uploaded successfully
         if (!req.file) {
-          console.error('No file was uploaded');
+          console.error('[PROFILE UPLOAD] No file received in request');
           return res.status(400).json({ message: 'No image file provided' });
         }
         
-        console.log('File uploaded successfully:', req.file);
+        console.log('[PROFILE UPLOAD] File received:', req.file);
         
-        // Use a simple direct path that we know works
+        // Get the path and verify the file exists
         const filename = req.file.filename;
+        const fullPath = path.join(uploadDir, filename);
         const imageUrl = `/uploads/profiles/${filename}`;
-        console.log('Image URL:', imageUrl);
         
-        // Make sure DB update works properly
+        console.log('[PROFILE UPLOAD] File saved at:', fullPath);
+        console.log('[PROFILE UPLOAD] Public URL will be:', imageUrl);
+        
+        // Verify the file was saved
+        if (!fs.existsSync(fullPath)) {
+          console.error('[PROFILE UPLOAD] File not saved to disk!');
+          return res.status(500).json({ message: 'File upload failed - not saved to disk' });
+        }
+        
         try {
           // Update user record in database
-          await db.update(users)
+          console.log('[PROFILE UPLOAD] Updating database for user:', userId);
+          const result = await db.update(users)
             .set({ profile_image_url: imageUrl })
             .where(eq(users.id, parseInt(userId)));
           
-          console.log('Database updated with new profile image');
+          console.log('[PROFILE UPLOAD] Database update result:', result);
           
-          // Respond with success
+          // Respond with success and the URL client should use
           return res.status(200).json({ 
             success: true, 
             profile_image_url: imageUrl,
             message: 'Profile image uploaded successfully',
-            filename: filename
+            filename: filename,
+            timestamp: new Date().getTime() // Add timestamp for cache busting
           });
         } catch (dbError) {
-          console.error('Database error:', dbError);
+          console.error('[PROFILE UPLOAD] Database error:', dbError);
           return res.status(500).json({ 
             message: 'Database error when updating profile image',
-            error: dbError instanceof Error ? dbError.message : 'Unknown error'
+            error: dbError instanceof Error ? dbError.message : String(dbError)
           });
         }
       } catch (error) {
-        console.error('Error in file processing:', error);
+        console.error('[PROFILE UPLOAD] Processing error:', error);
         return res.status(500).json({ 
           message: 'Failed to process uploaded file',
-          error: error instanceof Error ? error.message : 'Unknown error'
+          error: error instanceof Error ? error.message : String(error)
         });
       }
     });

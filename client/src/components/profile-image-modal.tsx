@@ -70,38 +70,65 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
     try {
       console.log('Preparing to upload profile image for user:', user.id);
       
-      // Create form data
+      // Create a new form data object
       const formData = new FormData();
+      
+      // Add the file with the exact name the server expects
       formData.append('profile_image', selectedFile);
       
-      // Add a timestamp to prevent caching
+      // Add a timestamp to prevent caching issues
       const timestamp = new Date().getTime();
       const uploadUrl = `/api/profile-image/${user.id}?_t=${timestamp}`;
       
       console.log('Sending profile image upload request to:', uploadUrl);
+      console.log('File being uploaded:', selectedFile.name, 'size:', selectedFile.size, 'type:', selectedFile.type);
       
-      // Use fetch directly for more control over the request
-      const response = await fetch(uploadUrl, {
-        method: 'POST',
-        body: formData,
-        // Don't set Content-Type header - browser will set it with boundary
-        headers: {
-          'Accept': 'application/json'
-        }
+      // Use XMLHttpRequest for better debugging
+      const xhr = new XMLHttpRequest();
+      
+      // Create a promise to handle the async XHR operation
+      const uploadPromise = new Promise((resolve, reject) => {
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4) {
+            console.log('Upload completed with status:', xhr.status);
+            
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const response = JSON.parse(xhr.responseText);
+                resolve(response);
+              } catch (parseError) {
+                console.error('Error parsing response:', parseError);
+                reject(new Error('Could not parse server response'));
+              }
+            } else {
+              console.error('Server returned error status:', xhr.status);
+              console.error('Response text:', xhr.responseText);
+              reject(new Error(`Upload failed with status: ${xhr.status}. ${xhr.responseText}`));
+            }
+          }
+        };
+        
+        // Track upload progress
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percentComplete = Math.round((event.loaded / event.total) * 100);
+            console.log(`Upload progress: ${percentComplete}%`);
+          }
+        };
+        
+        // Handle network errors
+        xhr.onerror = () => {
+          console.error('Network error during upload');
+          reject(new Error('Network error during upload'));
+        };
+        
+        // Open and send the request
+        xhr.open('POST', uploadUrl, true);
+        xhr.send(formData);
       });
       
-      // Log response status
-      console.log('Upload response status:', response.status);
-      
-      // Handle non-OK responses
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Upload error response:', errorText);
-        throw new Error(`Upload failed with status: ${response.status}. ${errorText}`);
-      }
-      
-      // Parse the JSON response
-      const data = await response.json();
+      // Wait for the upload to complete
+      const data = await uploadPromise;
       console.log('Upload success response:', data);
       
       if (data && data.profile_image_url) {
