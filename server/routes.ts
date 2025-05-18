@@ -1084,16 +1084,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
           
-          // Now we need to check if there's a chore completion bonus that conflicts
-          const existingChoreBonus = await storage.getDailyBonus(today, userId);
+          // Instead of checking for conflicts with chore completion bonuses,
+          // we now allow both types to coexist, since they serve different purposes
+          console.log(`[GOOD_BEHAVIOR] Keeping any existing chore completion bonus - both can coexist`);
           
-          if (existingChoreBonus && existingChoreBonus.trigger_type === 'chore_completion') {
-            console.log(`[GOOD_BEHAVIOR] User has a chore completion bonus for today`);
-            
-            // Good behavior takes priority - delete the chore bonus
-            await storage.deleteDailyBonusById(userId, existingChoreBonus.id);
-            console.log(`[GOOD_BEHAVIOR] Deleted existing chore completion bonus to make way for good behavior bonus`);
-          }
+          // We're no longer deleting chore completion bonuses when creating good behavior bonuses
           
           // Now create the good behavior bonus
           dailyBonusRecord = await storage.createDailyBonus({
