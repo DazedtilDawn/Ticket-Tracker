@@ -144,7 +144,7 @@ export const completeChoreSchema = z.object({
 // Bad behavior schema for deducting tickets
 export const badBehaviorSchema = z.object({
   user_id: z.number().int().positive(),
-  reason: z.string().min(1, "Reason is required"),
+  reason: z.string().optional(), // Make reason optional
   tickets: z.number().int().positive("Must deduct at least 1 ticket")
 });
 

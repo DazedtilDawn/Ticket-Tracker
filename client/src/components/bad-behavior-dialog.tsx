@@ -41,11 +41,11 @@ const formSchema = z.object({
   tickets: z.string().transform((val) => parseInt(val, 10)).refine((val) => val > 0, {
     message: "Must deduct at least 1 ticket",
   }),
-  reason: z.string().min(1, "Please provide a reason"),
+  reason: z.string().optional(), // Make reason optional
 });
 
 type FormValues = z.infer<typeof formSchema>;
-type FormDataType = { user_id: number; tickets: number; reason: string };
+type FormDataType = { user_id: number; tickets: number; reason?: string };
 
 interface BadBehaviorDialogProps {
   children: React.ReactNode;

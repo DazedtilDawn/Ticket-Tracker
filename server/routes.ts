@@ -995,9 +995,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user_id: data.user_id,
         chore_id: null,
         goal_id: activeGoal?.id || null,
-        delta_tickets: -data.tickets, // Negative value for deduction
+        delta: -data.tickets, // Negative value for deduction
         type: 'deduct',
-        note: `Deduction: ${data.reason}`,
+        note: data.reason ? `Deduction: ${data.reason}` : 'Ticket deduction for bad behavior',
         source: 'manual_deduct'
       });
       
@@ -1016,7 +1016,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       broadcast("transaction:deduct", {
         data: {
           id: transaction.id,
-          delta_tickets: transaction.delta_tickets,
+          delta_tickets: transaction.delta, // Changed to match property name in storage
           note: transaction.note,
           user_id: transaction.user_id,
           type: transaction.type,
