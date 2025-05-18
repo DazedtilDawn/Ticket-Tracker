@@ -2,176 +2,150 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
-import { Express, Request, Response, NextFunction } from 'express';
+import { Express, Request, Response } from 'express';
 import { db } from '../db';
 import { users } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { AuthMiddleware } from './auth';
 import cors from 'cors';
 
-// Set up profile image upload directory
-const profilesDir = path.join(process.cwd(), 'public', 'uploads', 'profiles');
-
-// Ensure directory exists
-if (!fs.existsSync(profilesDir)) {
-  console.log(`Creating profiles directory: ${profilesDir}`);
-  fs.mkdirSync(profilesDir, { recursive: true, mode: 0o777 });
-} else {
-  // Make sure permissions are set correctly
-  fs.chmodSync(profilesDir, 0o777);
-  console.log(`Using existing profiles directory with updated permissions: ${profilesDir}`);
-}
-
-// Configure memory storage for better reliability
-const memoryStorage = multer.memoryStorage();
-
-// Create the multer upload middleware with memory storage
-const upload = multer({
-  storage: memoryStorage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-  fileFilter: (req, file, cb) => {
-    // Accept only image files
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (allowedTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed (JPEG, PNG, GIF, WebP)'), false);
-    }
-  }
-});
-
-// Register profile image routes
+// Simple profile image handler - completely rewritten for reliability
 export function registerProfileImageRoutes(app: Express) {
-  // Enable CORS options for the profile image endpoints
+  // Configure upload directory
+  const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+  const profilesDir = path.join(uploadDir, 'profiles');
+  
+  // Ensure directories exist with proper permissions
+  [uploadDir, profilesDir].forEach(dir => {
+    if (!fs.existsSync(dir)) {
+      console.log(`Creating directory: ${dir}`);
+      fs.mkdirSync(dir, { recursive: true, mode: 0o777 });
+    } else {
+      console.log(`Using existing directory: ${dir}`);
+      fs.chmodSync(dir, 0o777);
+    }
+  });
+  
+  // Set up multer with memory storage for better reliability
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: (req, file, cb) => {
+      // Only accept images
+      if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only image files are allowed'), false);
+      }
+    }
+  });
+  
+  // Enable CORS for image endpoints
   app.use('/api/profile-image/:userId', cors());
   
-  // Profile image upload endpoint - parent only
+  // Profile image upload endpoint (parent only)
   app.post('/api/profile-image/:userId', AuthMiddleware, (req: Request, res: Response) => {
-    console.log('[PROFILE-UPLOAD] Request received');
-    console.log('[PROFILE-UPLOAD] Auth user:', req.user);
-    console.log('[PROFILE-UPLOAD] Headers:', req.headers);
-    console.log('[PROFILE-UPLOAD] Content-Type:', req.headers['content-type']);
-    console.log('[PROFILE-UPLOAD] Content-Length:', req.headers['content-length']);
+    console.log('[PROFILE] Upload request received');
     
     // Ensure user is a parent
     if (req.user?.role !== 'parent') {
-      console.log('[PROFILE-UPLOAD] Authorization failed - not a parent user');
-      return res.status(403).json({ message: 'Only parents can upload profile images' });
+      console.log('[PROFILE] Permission denied - user is not a parent');
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Only parents can upload profile images' 
+      });
     }
     
     const { userId } = req.params;
-    console.log(`[PROFILE-UPLOAD] Processing for user: ${userId}`);
-    
-    // Verify upload directories exist with proper permissions
-    if (!fs.existsSync(profilesDir)) {
-      console.log(`[PROFILE-UPLOAD] Creating missing directory: ${profilesDir}`);
-      fs.mkdirSync(profilesDir, { recursive: true, mode: 0o777 });
-    } else {
-      fs.chmodSync(profilesDir, 0o777);
-      console.log(`[PROFILE-UPLOAD] Updated permissions on directory: ${profilesDir}`);
+    if (!userId || isNaN(parseInt(userId))) {
+      console.log('[PROFILE] Invalid user ID:', userId);
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid user ID' 
+      });
     }
     
-    console.log('[PROFILE-UPLOAD] Directory exists:', fs.existsSync(profilesDir));
-    console.log('[PROFILE-UPLOAD] Directory is writable:', fs.accessSync(profilesDir, fs.constants.W_OK | fs.constants.R_OK, (err) => !err));
+    console.log(`[PROFILE] Processing upload for user ID: ${userId}`);
     
-    // Process image upload - non-blocking
-    const handleUpload = async () => {
-      try {
-        // Use multer middleware to handle the file upload with a fixed field name
-        // Important: The field name must match what's sent from the client (profile_image)
-        upload.single('profile_image')(req, res, async (err) => {
-          console.log('[PROFILE-UPLOAD] Inside multer middleware handler');
-          console.log('[PROFILE-UPLOAD] Got file?', !!req.file);
-          if (err) {
-            console.error('[PROFILE-UPLOAD] Middleware error:', err);
-            return res.status(400).json({
-              success: false,
-              message: err.message
-            });
-          }
-          
-          // Check if file was uploaded
-          if (!req.file) {
-            console.error('[PROFILE-UPLOAD] No file received in request');
-            return res.status(400).json({
-              success: false,
-              message: 'No file was uploaded'
-            });
-          }
-          
-          try {
-            console.log('[PROFILE-UPLOAD] File details:', {
-              fieldname: req.file.fieldname,
-              originalname: req.file.originalname,
-              mimetype: req.file.mimetype,
-              size: req.file.size,
-              filename: req.file.filename,
-              path: req.file.path
-            });
-            
-            // With memory storage, we don't need to verify the uploaded file exists
-            // as we're about to write it ourselves from the buffer
-            
-            // Generate a unique filename for the image
-            const ext = path.extname(req.file.originalname).toLowerCase() || '.jpg';
-            const filename = `${uuidv4()}${ext}`;
-            const filePath = path.join(profilesDir, filename);
-            
-            // Save the file from buffer to disk
-            fs.writeFileSync(filePath, req.file.buffer);
-            
-            // Get the public URL for the image
-            const publicUrl = `/uploads/profiles/${filename}`;
-            console.log('[PROFILE-UPLOAD] Public URL:', publicUrl);
-            
-            try {
-              // Update the user's profile image URL in the database
-              await db.update(users)
-                .set({ profile_image_url: publicUrl })
-                .where(eq(users.id, parseInt(userId)));
-              
-              // Add cache-busting timestamp
-              const timestamp = new Date().getTime();
-              const cacheBustUrl = `${publicUrl}?t=${timestamp}`;
-              
-              console.log('[PROFILE-UPLOAD] Updated database and returning success');
-              
-              // Return success response
-              return res.status(200).json({
-                success: true,
-                message: 'Profile image uploaded successfully',
-                profile_image_url: cacheBustUrl
-              });
-            } catch (dbError) {
-              console.error('[PROFILE-UPLOAD] Database error:', dbError);
-              return res.status(500).json({
-                success: false,
-                message: 'Database error updating profile image',
-                error: dbError instanceof Error ? dbError.message : 'Unknown error'
-              });
-            }
-          } catch (error) {
-            console.error('[PROFILE-UPLOAD] File processing error:', error);
-            return res.status(500).json({
-              success: false,
-              message: 'Server error processing profile image',
-              error: error instanceof Error ? error.message : 'Unknown error'
-            });
-          }
+    // Handle the file upload
+    upload.single('profile_image')(req, res, async (err) => {
+      if (err) {
+        console.error('[PROFILE] Upload error:', err);
+        return res.status(400).json({ 
+          success: false, 
+          message: `Upload error: ${err.message}` 
         });
+      }
+      
+      if (!req.file || !req.file.buffer) {
+        console.error('[PROFILE] No file received');
+        return res.status(400).json({ 
+          success: false, 
+          message: 'No file was uploaded' 
+        });
+      }
+      
+      try {
+        // Log file details
+        console.log('[PROFILE] Received file:', {
+          name: req.file.originalname,
+          type: req.file.mimetype,
+          size: req.file.size
+        });
+        
+        // Generate a unique filename
+        const ext = path.extname(req.file.originalname).toLowerCase() || '.jpg';
+        const filename = `${uuidv4()}${ext}`;
+        const filePath = path.join(profilesDir, filename);
+        
+        // Save the file from buffer to disk
+        fs.writeFileSync(filePath, req.file.buffer);
+        console.log(`[PROFILE] File saved to: ${filePath}`);
+        
+        // Verify the file was saved
+        if (!fs.existsSync(filePath)) {
+          throw new Error('File could not be saved to disk');
+        }
+        
+        // Set correct file permissions
+        fs.chmodSync(filePath, 0o666);
+        
+        // Generate the public URL for the image
+        const publicUrl = `/uploads/profiles/${filename}`;
+        
+        try {
+          // Update user profile in database
+          await db.update(users)
+            .set({ profile_image_url: publicUrl })
+            .where(eq(users.id, parseInt(userId)));
+          
+          console.log(`[PROFILE] Database updated for user: ${userId}`);
+          
+          // Add cache-busting timestamp
+          const timestamp = new Date().getTime();
+          const cacheBustUrl = `${publicUrl}?t=${timestamp}`;
+          
+          // Send success response
+          return res.status(200).json({
+            success: true,
+            message: 'Profile image uploaded successfully',
+            profile_image_url: cacheBustUrl
+          });
+        } catch (dbError) {
+          console.error('[PROFILE] Database error:', dbError);
+          return res.status(500).json({
+            success: false,
+            message: 'Database error updating profile'
+          });
+        }
       } catch (error) {
-        console.error('[PROFILE-UPLOAD] Outer error:', error);
-        res.status(500).json({
+        console.error('[PROFILE] Error processing file:', error);
+        return res.status(500).json({
           success: false,
-          message: 'Server error in upload handler',
+          message: 'Server error processing image',
           error: error instanceof Error ? error.message : 'Unknown error'
         });
       }
-    };
-    
-    // Execute the upload handling
-    handleUpload().catch(error => {
-      console.error('[PROFILE-UPLOAD] Unhandled promise rejection:', error);
     });
   });
   
@@ -186,24 +160,31 @@ export function registerProfileImageRoutes(app: Express) {
         .where(eq(users.id, parseInt(userId)));
       
       if (userResult.length === 0) {
-        return res.status(404).json({ message: 'User not found' });
+        return res.status(404).json({ 
+          success: false, 
+          message: 'User not found' 
+        });
       }
       
       const user = userResult[0];
       
       if (!user.profile_image_url) {
-        return res.status(404).json({ message: 'User has no profile image' });
+        return res.status(404).json({ 
+          success: false, 
+          message: 'User has no profile image' 
+        });
       }
       
       return res.json({ 
+        success: true,
         profile_image_url: user.profile_image_url,
         updated_at: new Date().toISOString()
       });
     } catch (error) {
-      console.error('Error retrieving profile image:', error);
+      console.error('[PROFILE] Error retrieving profile:', error);
       return res.status(500).json({ 
-        message: 'Failed to retrieve profile image',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        success: false,
+        message: 'Failed to retrieve profile image'
       });
     }
   });
