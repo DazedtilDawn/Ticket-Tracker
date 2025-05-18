@@ -1802,7 +1802,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const transaction = await storage.createTransaction({
           user_id: child.id,
-          delta_tickets: bonusTickets,
+          delta: bonusTickets, // Changed from delta_tickets to delta to match schema
           type: "earn",
           note: `Bonus Wheel: ${segmentLabel}`,
           source: "bonus_spin",
@@ -1816,7 +1816,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         broadcast("transaction:earn", {
           data: {
             id: transaction.id,
-            delta_tickets: transaction.delta_tickets,
+            delta: transaction.delta, // Changed from delta_tickets to delta to match schema
             note: transaction.note,
             user_id: transaction.user_id,
             type: transaction.type,
