@@ -150,10 +150,8 @@ export function GoodBehaviorDialog({ children, onCompleted }: GoodBehaviorDialog
     // Only include tickets if it's a direct ticket reward
     if (data.rewardType === "tickets" && data.tickets) {
       payload.tickets = data.tickets;
-    } else if (data.rewardType === "spin") {
-      // For bonus spin, we still need to send a default ticket value that won't be used
-      payload.tickets = 0;
     }
+    // For bonus spin, we don't send the tickets parameter at all
     
     goodBehaviorMutation.mutate(payload);
   };

@@ -151,8 +151,8 @@ export const badBehaviorSchema = z.object({
 // Good behavior schema for adding bonus tickets
 export const goodBehaviorSchema = z.object({
   user_id: z.number().int().positive(),
-  reason: z.string().min(1, "Reason is required"),
-  tickets: z.number().int().positive("Must add at least 1 ticket"),
+  reason: z.string().optional(),
+  tickets: z.number().int().positive("Must add at least 1 ticket").optional(),
   awardBonusSpin: z.boolean().default(false)
 });
 

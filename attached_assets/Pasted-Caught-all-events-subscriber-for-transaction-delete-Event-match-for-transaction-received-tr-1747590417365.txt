@@ -1,0 +1,209 @@
+Caught all-events subscriber for "transaction:delete"
+Event match for "transaction:" - received "transaction:delete"
+Received any transaction event - general handler: 
+Object {event: "transaction:delete", data: {…}}
+General transaction handler - Current user ID: 4, transaction for user ID: 4
+Transaction is for current user, showing toast and updating UI
+Updating balance directly in the cache: 2
+Invalidating and refreshing ALL transaction and stats queries
+Event match for "transaction:delete" - received "transaction:delete"
+Received transaction:delete event: 
+Object {event: "transaction:delete", data: {…}}
+Transaction delete - Current user ID: 4, affected user ID: 4
+Transaction delete is for current user, updating UI with new balance and goal data
+Updating goal data in stats cache: 
+Object {id: 6, user_id: 4, product_id: 11, tickets_saved: 2, is_active: true, …}
+Transaction:delete event - forcing complete data refresh cycle
+Event match for "transaction:delete" - received "transaction:delete"
+TransactionsTable received delete event: 
+Object {event: "transaction:delete", data: {…}}
+TransactionsTable: transaction:delete event - forcing complete refresh
+Caught all-events subscriber for "transaction:delete"
+[WHEEL_DEBUG] Received any WebSocket event: transaction:delete
+Loaded dashboard stats: 
+Object {balance: 2, activeGoal: {…}, chores: Array(3), daily_bonus: {…}}
+WebSocket message received: 
+Object {event: "transaction:delete", data: {…}}
+WebSocket message details - Event: transaction:delete 
+Object {timestamp: "2025-05-18T17:46:27.910Z", eventType: "transaction:delete", fullData: {…}, rawMessage: "{"event":"transaction:delete","data":{"transaction_id":189,"user_id":4,"balance":2,"go…"}
+Caught all-events subscriber for "transaction:delete"
+Event match for "transaction:" - received "transaction:delete"
+Received any transaction event - general handler: 
+Object {event: "transaction:delete", data: {…}}
+General transaction handler - Current user ID: 4, transaction for user ID: 4
+Transaction is for current user, showing toast and updating UI
+Updating balance directly in the cache: 2
+Invalidating and refreshing ALL transaction and stats queries
+Event match for "transaction:delete" - received "transaction:delete"
+Received transaction:delete event: 
+Object {event: "transaction:delete", data: {…}}
+Transaction delete - Current user ID: 4, affected user ID: 4
+Transaction delete is for current user, updating UI with new balance and goal data
+Updating goal data in stats cache: 
+Object {id: 6, user_id: 4, product_id: 11, tickets_saved: 2, is_active: true, …}
+Transaction:delete event - forcing complete data refresh cycle
+Event match for "transaction:delete" - received "transaction:delete"
+TransactionsTable received delete event: 
+Object {event: "transaction:delete", data: {…}}
+TransactionsTable: transaction:delete event - forcing complete refresh
+Caught all-events subscriber for "transaction:delete"
+[WHEEL_DEBUG] Received any WebSocket event: transaction:delete
+Executing delayed refetch for transaction:delete event
+Forcing immediate refetch after transaction deletion
+TransactionsTable: executing delayed refetch after transaction:delete
+Executing delayed refetch for transaction:delete event
+TransactionsTable: executing delayed refetch after transaction:delete
+TransactionsTable: executing final delayed refetch after transaction:delete
+Loaded dashboard stats: 
+Object {balance: 2, activeGoal: {…}, chores: Array(3), daily_bonus: {…}}
+WebSocket message received: 
+Object {event: "transaction:delete", data: {…}}
+WebSocket message details - Event: transaction:delete 
+Object {timestamp: "2025-05-18T17:46:31.312Z", eventType: "transaction:delete", fullData: {…}, rawMessage: "{"event":"transaction:delete","data":{"transaction_id":188,"user_id":4,"balance":0,"go…"}
+Caught all-events subscriber for "transaction:delete"
+Event match for "transaction:" - received "transaction:delete"
+Received any transaction event - general handler: 
+Object {event: "transaction:delete", data: {…}}
+General transaction handler - Current user ID: 4, transaction for user ID: 4
+Transaction is for current user, showing toast and updating UI
+Updating balance directly in the cache: 0
+Invalidating and refreshing ALL transaction and stats queries
+Event match for "transaction:delete" - received "transaction:delete"
+Received transaction:delete event: 
+Object {event: "transaction:delete", data: {…}}
+Transaction delete - Current user ID: 4, affected user ID: 4
+Transaction delete is for current user, updating UI with new balance and goal data
+Updating goal data in stats cache: 
+Object {id: 6, user_id: 4, product_id: 11, tickets_saved: 0, is_active: true, …}
+Transaction:delete event - forcing complete data refresh cycle
+Event match for "transaction:delete" - received "transaction:delete"
+TransactionsTable received delete event: 
+Object {event: "transaction:delete", data: {…}}
+TransactionsTable: transaction:delete event - forcing complete refresh
+Caught all-events subscriber for "transaction:delete"
+[WHEEL_DEBUG] Received any WebSocket event: transaction:delete
+WebSocket message received: 
+Object {event: "transaction:delete", data: {…}}
+WebSocket message details - Event: transaction:delete 
+Object {timestamp: "2025-05-18T17:46:31.325Z", eventType: "transaction:delete", fullData: {…}, rawMessage: "{"event":"transaction:delete","data":{"transaction_id":188,"user_id":4,"balance":0,"go…"}
+Caught all-events subscriber for "transaction:delete"
+Event match for "transaction:" - received "transaction:delete"
+Received any transaction event - general handler: 
+Object {event: "transaction:delete", data: {…}}
+General transaction handler - Current user ID: 4, transaction for user ID: 4
+Transaction is for current user, showing toast and updating UI
+Updating balance directly in the cache: 0
+Invalidating and refreshing ALL transaction and stats queries
+Event match for "transaction:delete" - received "transaction:delete"
+Received transaction:delete event: 
+Object {event: "transaction:delete", data: {…}}
+Transaction delete - Current user ID: 4, affected user ID: 4
+Transaction delete is for current user, updating UI with new balance and goal data
+Updating goal data in stats cache: 
+Object {id: 6, user_id: 4, product_id: 11, tickets_saved: 0, is_active: true, …}
+Transaction:delete event - forcing complete data refresh cycle
+Event match for "transaction:delete" - received "transaction:delete"
+TransactionsTable received delete event: 
+Object {event: "transaction:delete", data: {…}}
+TransactionsTable: transaction:delete event - forcing complete refresh
+Caught all-events subscriber for "transaction:delete"
+[WHEEL_DEBUG] Received any WebSocket event: transaction:delete
+Loaded dashboard stats: 
+Object {balance: undefined, activeGoal: {…}, chores: Array(3), daily_bonus: {…}}
+Forcing immediate refetch after transaction deletion
+Executing delayed refetch for transaction:delete event
+TransactionsTable: executing delayed refetch after transaction:delete
+Executing delayed refetch for transaction:delete event
+TicketTracker
+Quick Access: Child Accounts
+
+BR
+Bryce
+
+KI
+Kiki
+Dashboard
+Chores
+Wishlist
+Transactions
+Parent Controls
+Bonus Management
+Debug Tools
+
+PU
+Parent User
+parent
+
+Dashboard
+Sunday, May 18, 2025
+
+New Chore
+Savings Progress
+Current Balance: 0 tickets
+Star Wars Millennium Falcon
+Star Wars Millennium Falcon
+Price: $68.00
+
+272 tickets needed
+Progress: 0 of 272 tickets saved
+0%
+Est. completion: Not enough data to estimate
+Switch Goal
+View on Amazon
+Today's Chores
+Bad Behavior
+Good Behavior
+Purchase
+Filter by:
+
+All
+Clean Bedroom
+Clean Bedroom
+Make bed, all toys off of floor, vacuum or sweep
+
+rare
+tickets
+
++1.8% to goal
+
+Complete
+Clean Basement
+Clean Basement
+All toys need to be off the floor and put back where they belong
+
+rare
+tickets
+
++2.6% to goal
+
+Complete
+Feed Dogs
+Feed Dogs
+Feed Chachi and Choco
+
+common
+tickets
+
++0.7% to goal
+
+Complete
+Daily Fun-Wheel Bonus
+Spin for hidden tickets!
+
+Select child
+
+Select chore
+SPIN THE WHEEL!
+Recent Transactions
+View All
+Date	Description	Tickets	Status	
+No transactions found
+WebSocket Debug Monitor
+Test Connection
+Last 5 events received:
+
+1:46:31 PM - 💰 delete ? tickets
+1:46:31 PM - transaction:delete
+1:46:31 PM - 💰 delete ? tickets
+1:46:31 PM - transaction:delete
+1:46:27 PM - 💰 delete ? tickets
