@@ -45,7 +45,7 @@ export const profileUpload = multer({
 
 export function registerProfileImageRoutes(app: Express) {
   // Profile image upload endpoint - parent only
-  app.post("/api/profile-image/:userId", AuthMiddleware, profileUpload.single('profile_image'), async (req: Request, res: Response) => {
+  app.post("/api/profile-image/:userId", AuthMiddleware, async (req: Request, res: Response) => {
     try {
       // Ensure user is a parent
       if (req.user?.role !== 'parent') {
@@ -53,18 +53,42 @@ export function registerProfileImageRoutes(app: Express) {
       }
       
       const { userId } = req.params;
-      console.log('Uploading profile image for user:', userId);
+      console.log('Starting profile image upload for user:', userId);
       
-      // Verify file was uploaded
-      if (!req.file) {
-        console.log('No file was uploaded');
+      // Use a separate try/catch for the multer middleware to catch file upload errors
+      let uploadedFile;
+      try {
+        // Wrap multer in a promise to handle errors properly
+        await new Promise<void>((resolve, reject) => {
+          profileUpload.single('profile_image')(req, res, (err) => {
+            if (err) {
+              console.error('Multer upload error:', err);
+              reject(err);
+            } else {
+              resolve();
+            }
+          });
+        });
+        
+        uploadedFile = req.file;
+      } catch (uploadError) {
+        console.error('File upload error:', uploadError);
+        return res.status(400).json({ 
+          message: 'File upload error', 
+          error: uploadError instanceof Error ? uploadError.message : 'Unknown error' 
+        });
+      }
+      
+      // After handling upload errors, verify file was uploaded
+      if (!uploadedFile) {
+        console.log('No file was uploaded or file was undefined');
         return res.status(400).json({ message: 'No image file provided' });
       }
       
-      console.log('File uploaded:', req.file);
+      console.log('File uploaded successfully:', uploadedFile);
       
       // Build the URL path to the uploaded file
-      const imageUrl = `/uploads/profiles/${req.file.filename}`;
+      const imageUrl = `/uploads/profiles/${uploadedFile.filename}`;
       console.log('Image URL:', imageUrl);
       
       // Update user record in database
@@ -81,7 +105,10 @@ export function registerProfileImageRoutes(app: Express) {
       });
     } catch (error) {
       console.error('Error uploading profile image:', error);
-      return res.status(500).json({ message: 'Failed to upload profile image' });
+      return res.status(500).json({ 
+        message: 'Failed to upload profile image',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
   

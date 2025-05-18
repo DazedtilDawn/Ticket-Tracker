@@ -68,26 +68,41 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
     setIsUploading(true);
     
     try {
+      console.log('Preparing to upload profile image for user:', user.id);
+      
+      // Create form data
       const formData = new FormData();
       formData.append('profile_image', selectedFile);
       
       // Add a timestamp to prevent caching
       const timestamp = new Date().getTime();
+      const uploadUrl = `/api/profile-image/${user.id}?_t=${timestamp}`;
+      
+      console.log('Sending profile image upload request to:', uploadUrl);
       
       // Use fetch directly for more control over the request
-      const response = await fetch(`/api/profile-image/${user.id}?_t=${timestamp}`, {
+      const response = await fetch(uploadUrl, {
         method: 'POST',
         body: formData,
+        // Don't set Content-Type header - browser will set it with boundary
         headers: {
           'Accept': 'application/json'
         }
       });
       
+      // Log response status
+      console.log('Upload response status:', response.status);
+      
+      // Handle non-OK responses
       if (!response.ok) {
-        throw new Error(`Upload failed with status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Upload error response:', errorText);
+        throw new Error(`Upload failed with status: ${response.status}. ${errorText}`);
       }
       
+      // Parse the JSON response
       const data = await response.json();
+      console.log('Upload success response:', data);
       
       if (data && data.profile_image_url) {
         // Add a timestamp to prevent browser caching of the image
@@ -115,14 +130,22 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
       }
     } catch (error) {
       console.error("Error uploading profile image:", error);
+      
+      // Reset the loading state
+      setIsUploading(false);
+      
+      // Show error toast
       toast({
         title: "Upload failed",
-        description: "Failed to upload the profile image. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to upload the profile image. Please try again.",
         variant: "destructive"
       });
-    } finally {
-      setIsUploading(false);
+      
+      return; // Exit early to prevent further processing
     }
+    
+    // Only reach here on success
+    setIsUploading(false);
   };
 
   // Generate initials for avatar fallback
