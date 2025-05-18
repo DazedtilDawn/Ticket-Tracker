@@ -105,12 +105,12 @@ export default function Dashboard() {
         const errorMessage = error?.message || "Unknown error";
         const errorStatus = error?.status || 500;
         
-        // If it's a 404, that means there's no unspun bonus - expected case (don't need to log these)
+        // Don't log expected 404 responses - these happen when:
+        // 1. There's no bonus assigned for today
+        // 2. The bonus has already been spun
+        // 3. The assigned bonus chore hasn't been completed yet
         if (errorStatus !== 404) {
-          console.error("Error checking for unspun bonus:", {
-            status: errorStatus,
-            message: errorMessage
-          });
+          // Only log truly unexpected errors (server errors, etc.)
           console.error("Unexpected error checking for unspun bonus:", {
             status: errorStatus,
             message: errorMessage

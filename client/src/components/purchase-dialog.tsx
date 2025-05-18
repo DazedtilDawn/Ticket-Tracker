@@ -6,7 +6,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth-store";
 import { toast } from "@/hooks/use-toast";
 
-export function PurchaseDialog({ children }: { children: React.ReactNode }) {
+export function PurchaseDialog({ children, onCompleted }: { children: React.ReactNode, onCompleted?: () => void }) {
   const [open, setOpen] = useState(false);
   const [tickets, setTickets] = useState<number>(0);
   const { getActiveChildId } = useAuthStore();
