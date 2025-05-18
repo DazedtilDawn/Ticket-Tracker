@@ -152,7 +152,8 @@ export const badBehaviorSchema = z.object({
 export const goodBehaviorSchema = z.object({
   user_id: z.number().int().positive(),
   reason: z.string().min(1, "Reason is required"),
-  tickets: z.number().int().positive("Must add at least 1 ticket")
+  tickets: z.number().int().positive("Must add at least 1 ticket"),
+  awardBonusSpin: z.boolean().default(false)
 });
 
 // Transaction deletion schema
