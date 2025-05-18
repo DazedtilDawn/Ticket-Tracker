@@ -53,19 +53,26 @@ export function registerProfileImageRoutes(app: Express) {
       }
       
       const { userId } = req.params;
+      console.log('Uploading profile image for user:', userId);
       
       // Verify file was uploaded
       if (!req.file) {
+        console.log('No file was uploaded');
         return res.status(400).json({ message: 'No image file provided' });
       }
       
+      console.log('File uploaded:', req.file);
+      
       // Build the URL path to the uploaded file
       const imageUrl = `/uploads/profiles/${req.file.filename}`;
+      console.log('Image URL:', imageUrl);
       
       // Update user record in database
       await db.update(users)
         .set({ profile_image_url: imageUrl })
         .where(eq(users.id, parseInt(userId)));
+      
+      console.log('Database updated with new profile image');
       
       return res.status(200).json({ 
         success: true, 
