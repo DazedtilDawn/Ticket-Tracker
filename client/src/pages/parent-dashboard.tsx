@@ -157,22 +157,17 @@ export default function ParentDashboard() {
                 <div className="p-6">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 md:mb-0">Parent Controls</h3>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-3">
                       <BadBehaviorDialog>
-                        <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:border-red-900 dark:hover:bg-red-950 dark:hover:text-red-300">
-                          <MinusCircleIcon className="w-4 h-4 mr-1" /> Bad Behavior
+                        <Button size="lg" className="text-white bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 shadow-md">
+                          <MinusCircleIcon className="w-5 h-5 mr-2" /> Bad Behavior
                         </Button>
                       </BadBehaviorDialog>
                       <GoodBehaviorDialog>
-                        <Button variant="outline" className="text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:border-green-900 dark:hover:bg-green-950 dark:hover:text-green-300">
-                          <PlusCircleIcon className="w-4 h-4 mr-1" /> Good Behavior
+                        <Button size="lg" className="text-white bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 shadow-md">
+                          <PlusCircleIcon className="w-5 h-5 mr-2" /> Good Behavior
                         </Button>
                       </GoodBehaviorDialog>
-                      <PurchaseDialog>
-                        <Button variant="outline" className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 dark:text-indigo-400 dark:border-indigo-900 dark:hover:bg-indigo-950">
-                          <ShoppingCartIcon className="w-4 h-4 mr-1" /> Purchase
-                        </Button>
-                      </PurchaseDialog>
                     </div>
                   </div>
                   
