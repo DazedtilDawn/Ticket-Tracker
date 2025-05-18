@@ -140,8 +140,9 @@ const DEFAULT_AVATAR_DATA: AvatarData = {
 
 export function AvatarCreator() {
   const queryClient = useQueryClient();
-  const { getActiveChildId, isParent } = useAuthStore();
+  const { getActiveChildId, user } = useAuthStore();
   const userId = getActiveChildId();
+  const isParent = user?.role === 'parent';
   
   const [avatarData, setAvatarData] = useState<AvatarData>(DEFAULT_AVATAR_DATA);
   const [activeTab, setActiveTab] = useState('face');

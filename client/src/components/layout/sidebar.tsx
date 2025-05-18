@@ -22,6 +22,7 @@ const navItems = [
   { path: "/chores", label: "Chores", icon: "ri-list-check-2" },
   { path: "/wishlist", label: "Wishlist", icon: "ri-gift-line" },
   { path: "/transactions", label: "Transactions", icon: "ri-exchange-funds-line" },
+  { path: "/profile", label: "Profile", icon: "ri-user-line" },
 ];
 
 // Parent-only navigation items
