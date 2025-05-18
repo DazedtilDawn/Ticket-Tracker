@@ -1055,8 +1055,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if there's already a daily bonus today
       let dailyBonusRecord = await storage.getDailyBonus(today, data.user_id);
       
-      // If no daily bonus exists yet, create one
-      if (!dailyBonusRecord) {
+      // If no daily bonus exists yet or if we're awarding a bonus spin, create a new one
+      if (!dailyBonusRecord || data.awardBonusSpin) {
         dailyBonusRecord = await storage.createDailyBonus({
           bonus_date: today,
           user_id: data.user_id,
@@ -1066,6 +1066,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           trigger_type: 'good_behavior_reward',
           spin_result_tickets: 0 // Default value until wheel is spun
         });
+        
+        console.log(`[GOOD_BEHAVIOR] Created daily bonus for user ${data.user_id}, awardBonusSpin=${data.awardBonusSpin}`);
+      } else if (!data.awardBonusSpin && dailyBonusRecord) {
+        console.log(`[GOOD_BEHAVIOR] Using existing daily bonus for user ${data.user_id}, no bonus spin requested`);
       }
       
       // Create the transaction with positive tickets
