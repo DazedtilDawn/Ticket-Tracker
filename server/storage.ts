@@ -972,21 +972,20 @@ export class DatabaseStorage implements IStorage {
   }
   
   async hasCompletedChoreToday(userId: number, choreId: number): Promise<boolean> {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Format today as YYYY-MM-DD for string comparison
+    const todayStr = new Date().toISOString().split('T')[0];
     
-    const results = await db
-      .select()
-      .from(transactions)
-      .where(and(
-        eq(transactions.user_id, userId),
-        eq(transactions.chore_id, choreId),
-        eq(transactions.type, 'earn'),
-        gte(transactions.created_at, today)
-      ))
-      .limit(1);
+    // Use raw SQL query for better control of date comparison
+    const { rows } = await pool.query(
+      `SELECT COUNT(*) FROM transactions 
+       WHERE user_id = $1 
+       AND chore_id = $2 
+       AND type = 'earn' 
+       AND DATE(created_at) = $3`,
+      [userId, choreId, todayStr]
+    );
     
-    return results.length > 0;
+    return parseInt(rows[0].count) > 0;
   }
 }
 
