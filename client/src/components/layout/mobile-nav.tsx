@@ -23,7 +23,6 @@ const navItems = [
   { path: "/chores", label: "Chores", icon: "ri-list-check-2" },
   { path: "/wishlist", label: "Wishes", icon: "ri-gift-line" },
   { path: "/transactions", label: "Tickets", icon: "ri-exchange-funds-line" },
-  { path: "/profile", label: "Profile", icon: "ri-user-line" },
 ];
 
 // Parent-only navigation items
@@ -214,7 +213,7 @@ export function MobileNav() {
       
       {/* Mobile bottom navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg z-10">
-        <div className={`grid ${user?.role === 'parent' && !viewingAsChild ? 'grid-cols-6' : 'grid-cols-5'} h-16`}>
+        <div className={`grid ${user?.role === 'parent' && !viewingAsChild ? 'grid-cols-5' : 'grid-cols-4'} h-16`}>
           {/* Regular navigation items */}
           {navItems.map(item => (
             <a

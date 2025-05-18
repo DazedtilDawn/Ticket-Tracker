@@ -12,7 +12,6 @@ import Chores from "@/pages/chores";
 import Wishlist from "@/pages/wishlist";
 import Transactions from "@/pages/transactions";
 import BonusManagement from "@/pages/bonus-management";
-import Profile from "@/pages/profile";
 import DebugPage from "@/pages/debug";
 import { useAuthStore } from "./store/auth-store";
 import { Sidebar } from "./components/layout/sidebar";
@@ -61,9 +60,6 @@ function Router() {
       </Route>
       <Route path="/transactions">
         <ProtectedRoute component={Transactions} />
-      </Route>
-      <Route path="/profile">
-        <ProtectedRoute component={Profile} />
       </Route>
       <Route path="/bonus-management">
         <ProtectedRoute component={BonusManagement} />
