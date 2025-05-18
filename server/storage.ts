@@ -20,8 +20,6 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   getUsers(): Promise<User[]>;
   getUsersByRole(role: string): Promise<User[]>;
-  getUserById(id: number): Promise<User | null>;
-  updateUserProfileImage(userId: number, profileImageUrl: string): Promise<User | null>;
   
   // Chore operations
   getChore(id: number): Promise<Chore | undefined>;
@@ -1023,6 +1021,30 @@ export class DatabaseStorage implements IStorage {
     // Let's completely skip the check for now to allow completion
     console.log(`[CHORE_CHECK] Skipping completion check for user ${userId} and chore ${choreId} to avoid SQL errors`);
     return false;
+  }
+  
+  async getUserById(id: number): Promise<User | null> {
+    try {
+      const result = await db.select().from(users).where(eq(users.id, id));
+      return result.length ? result[0] : null;
+    } catch (error) {
+      console.error("Error getting user by ID:", error);
+      return null;
+    }
+  }
+  
+  async updateUserProfileImage(userId: number, profileImageUrl: string): Promise<User | null> {
+    try {
+      const result = await db.update(users)
+        .set({ profile_image_url: profileImageUrl })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      return result.length ? result[0] : null;
+    } catch (error) {
+      console.error("Error updating user profile image:", error);
+      return null;
+    }
   }
 }
 
