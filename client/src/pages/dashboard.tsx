@@ -21,11 +21,12 @@ import { PlusIcon, UserIcon, MinusCircleIcon, PlusCircleIcon, ShoppingCartIcon }
 import { format } from "date-fns";
 
 export default function Dashboard() {
-  const { user, isViewingAsChild, originalUser, setFamilyUsers } = useAuthStore();
+  const { user, isViewingAsChild, originalUser, setFamilyUsers, switchChildView, resetChildView, getChildUsers } = useAuthStore();
   const { balance, updateBalance } = useStatsStore();
   const { toast } = useToast();
   const viewingChild = isViewingAsChild();
   const queryClient = useQueryClient();
+  const childUsers = getChildUsers();
   
   // State for bonus spin prompt and wheel
   const [isSpinPromptOpen, setIsSpinPromptOpen] = useState(false);
@@ -33,7 +34,10 @@ export default function Dashboard() {
   const [dailyBonusId, setDailyBonusId] = useState<number | null>(null);
   const [completedChoreName, setCompletedChoreName] = useState("");
   
-  // Load family users for the behavior dialogs
+  // State for child summary data
+  const [childSummaries, setChildSummaries] = useState<{id: number, name: string, balance: number}[]>([]);
+  
+  // Load family users for the behavior dialogs and child summaries
   useEffect(() => {
     // Always fetch family users on dashboard load to ensure they're available for the behavior dialogs
     const loadFamilyUsers = async () => {
@@ -51,6 +55,31 @@ export default function Dashboard() {
         if (users && Array.isArray(users)) {
           setFamilyUsers(users);
           console.log("Successfully loaded family users:", users);
+          
+          // Load balance data for each child user
+          if (user?.role === 'parent') {
+            const children = users.filter(u => u.role === 'child');
+            const summaries = await Promise.all(
+              children.map(async (child) => {
+                try {
+                  const stats = await apiRequest(`/api/stats?user_id=${child.id}`, { method: 'GET' });
+                  return {
+                    id: child.id,
+                    name: child.name,
+                    balance: stats?.balance || 0
+                  };
+                } catch (err) {
+                  console.error(`Failed to load stats for child ${child.name}:`, err);
+                  return {
+                    id: child.id,
+                    name: child.name,
+                    balance: 0
+                  };
+                }
+              })
+            );
+            setChildSummaries(summaries);
+          }
         } else {
           console.error("Unexpected response format for family users:", users);
         }
@@ -66,10 +95,7 @@ export default function Dashboard() {
     
     // Load users immediately on component mount
     loadFamilyUsers();
-  }, [setFamilyUsers, toast]);
-  
-  // State to track last received WebSocket events for debugging
-  const [lastWsEvents, setLastWsEvents] = useState<string[]>([]);
+  }, [setFamilyUsers, toast, user?.role]);
 
   /** ----------------------------------------------------------------
    *  Check for an un-spun daily bonus whenever a child dashboard
