@@ -145,19 +145,39 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
       const data = await response.json();
       console.log('[UPLOAD] Server response:', data);
       
-      if (!data || !data.success) {
+      if (!data) {
+        throw new Error('Empty response from server');
+      }
+      
+      if (!data.success && !data.imageUrl) {
         throw new Error(data?.message || 'Server indicated failure');
       }
       
       // Step 9: Process success - CRITICAL PART FOR FIXING THE LOOP
-      // Make sure we have a profile image URL
-      if (!data.profile_image_url && !data.public_url) {
+      // Extract image URL from any of the possible response formats
+      let imageUrl = null;
+      
+      // Try all possible fields where the URL might be located
+      if (data.public_url) {
+        imageUrl = data.public_url;
+      } else if (data.profile_image_url) {
+        imageUrl = data.profile_image_url;
+      } else if (data.imageUrl) {
+        imageUrl = data.imageUrl;
+      }
+      
+      // Still no URL? Throw an error
+      if (!imageUrl) {
         throw new Error('No image URL in server response');
       }
       
-      // Update the UI with the new image (add timestamp for cache busting)
+      // Add timestamp for cache busting if not already present
       const currentTime = Date.now();
-      const imageUrl = data.public_url || `${data.profile_image_url}?t=${currentTime}`;
+      if (!imageUrl.includes('?t=')) {
+        imageUrl = `${imageUrl}?t=${currentTime}`;
+      }
+      
+      console.log('[UPLOAD] Final image URL with cache busting:', imageUrl);
       setPreviewUrl(imageUrl);
       
       // Mark the upload as successful
