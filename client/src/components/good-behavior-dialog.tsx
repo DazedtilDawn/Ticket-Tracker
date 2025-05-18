@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -35,19 +35,29 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
+import {
+  RadioGroup,
+  RadioGroupItem
+} from "@/components/ui/radio-group";
+import { Card, CardContent } from "@/components/ui/card";
 
 const formSchema = z.object({
   user_id: z.string().min(1, "Please select a child"),
-  tickets: z.string().transform((val) => parseInt(val, 10)).refine((val) => val > 0, {
-    message: "Must add at least 1 ticket",
-  }),
-  reason: z.string().min(1, "Please provide a reason"),
-  awardBonusSpin: z.boolean().default(false),
+  rewardType: z.enum(["tickets", "spin"]),
+  tickets: z.string().transform((val) => parseInt(val, 10)).refine(
+    (val) => val > 0, 
+    { message: "Must add at least 1 ticket" }
+  ).optional(),
+  reason: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
-type FormDataType = { user_id: number; tickets: number; reason: string; awardBonusSpin: boolean };
+type FormDataType = { 
+  user_id: number; 
+  tickets?: number; 
+  reason?: string; 
+  awardBonusSpin: boolean;
+};
 
 interface GoodBehaviorDialogProps {
   children: React.ReactNode;
@@ -65,11 +75,30 @@ export function GoodBehaviorDialog({ children, onCompleted }: GoodBehaviorDialog
     resolver: zodResolver(formSchema),
     defaultValues: {
       user_id: "",
+      rewardType: "tickets",
       tickets: "1",
       reason: "",
-      awardBonusSpin: false,
     },
   });
+
+  // Watch for reward type changes to conditionally show form fields
+  const rewardType = form.watch("rewardType");
+
+  // Update the title message based on the reward type
+  const [dialogTitle, setDialogTitle] = useState("Add Bonus Tickets");
+  const [dialogDescription, setDialogDescription] = useState(
+    "Reward good behavior with bonus tickets. This will update the child's balance."
+  );
+  
+  useEffect(() => {
+    if (rewardType === "tickets") {
+      setDialogTitle("Award Bonus Tickets");
+      setDialogDescription("Reward good behavior with bonus tickets. This will update the child's balance.");
+    } else {
+      setDialogTitle("Award Bonus Spin");
+      setDialogDescription("Reward good behavior with a bonus spin opportunity. The child will be able to spin the wheel on their next visit.");
+    }
+  }, [rewardType]);
 
   const goodBehaviorMutation = useMutation({
     mutationFn: async (data: FormDataType) => {
@@ -78,10 +107,16 @@ export function GoodBehaviorDialog({ children, onCompleted }: GoodBehaviorDialog
         body: JSON.stringify(data),
       });
     },
-    onSuccess: () => {
+    onSuccess: (response) => {
+      const rewardType = form.getValues("rewardType");
+      const actionText = rewardType === "tickets" ? "added" : "awarded";
+      const descriptionText = rewardType === "tickets" 
+        ? "Bonus tickets have been added for good behavior" 
+        : "A bonus wheel spin has been awarded for good behavior";
+      
       toast({
-        title: "Tickets added",
-        description: "Bonus tickets have been added for good behavior",
+        title: `Good behavior reward ${actionText}`,
+        description: descriptionText,
       });
       
       // Invalidate relevant queries
@@ -99,29 +134,38 @@ export function GoodBehaviorDialog({ children, onCompleted }: GoodBehaviorDialog
     onError: () => {
       toast({
         title: "Error",
-        description: "Failed to add tickets. Please try again.",
+        description: "Failed to process the good behavior reward. Please try again.",
         variant: "destructive",
       });
     },
   });
 
   const onSubmit = (data: FormValues) => {
-    goodBehaviorMutation.mutate({
+    const payload: FormDataType = {
       user_id: parseInt(data.user_id),
-      tickets: parseInt(data.tickets),
-      reason: data.reason,
-      awardBonusSpin: data.awardBonusSpin,
-    });
+      reason: data.reason || "",
+      awardBonusSpin: data.rewardType === "spin"
+    };
+    
+    // Only include tickets if it's a direct ticket reward
+    if (data.rewardType === "tickets" && data.tickets) {
+      payload.tickets = data.tickets;
+    } else if (data.rewardType === "spin") {
+      // For bonus spin, we still need to send a default ticket value that won't be used
+      payload.tickets = 0;
+    }
+    
+    goodBehaviorMutation.mutate(payload);
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add Bonus Tickets</DialogTitle>
+          <DialogTitle>{dialogTitle}</DialogTitle>
           <DialogDescription>
-            Reward good behavior with bonus tickets. This will update the child's balance.
+            {dialogDescription}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -150,68 +194,91 @@ export function GoodBehaviorDialog({ children, onCompleted }: GoodBehaviorDialog
                     </SelectContent>
                   </Select>
                   <FormDescription>
-                    Select the child to reward with tickets
+                    Select the child to reward
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            
             <FormField
               control={form.control}
-              name="tickets"
+              name="rewardType"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tickets to Add</FormLabel>
+                <FormItem className="space-y-3">
+                  <FormLabel>Reward Type</FormLabel>
                   <FormControl>
-                    <Input type="number" min="1" {...field} />
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex flex-col space-y-1"
+                    >
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="tickets" />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          Award Tickets Directly
+                        </FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="spin" />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          Award Bonus Wheel Spin
+                        </FormLabel>
+                      </FormItem>
+                    </RadioGroup>
                   </FormControl>
                   <FormDescription>
-                    How many bonus tickets to add to balance
+                    Choose how to reward the child
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            
+            {rewardType === "tickets" && (
+              <FormField
+                control={form.control}
+                name="tickets"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tickets to Add</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="1" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      How many bonus tickets to add to balance
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+            
             <FormField
               control={form.control}
               name="reason"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Reason</FormLabel>
+                  <FormLabel>Reason (Optional)</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Explain why tickets are being added"
+                      placeholder="Explain why this reward is being given"
                       className="resize-none"
                       {...field}
                     />
                   </FormControl>
                   <FormDescription>
-                    Provide a reason for the bonus tickets
+                    Provide a reason for the good behavior reward
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="awardBonusSpin"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Award Bonus Spin</FormLabel>
-                    <FormDescription>
-                      Child will get a spin on the bonus wheel when they visit their dashboard
-                    </FormDescription>
-                  </div>
-                </FormItem>
-              )}
-            />
+            
             <DialogFooter>
               <Button
                 type="submit"
@@ -219,7 +286,9 @@ export function GoodBehaviorDialog({ children, onCompleted }: GoodBehaviorDialog
                 className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
                 disabled={goodBehaviorMutation.isPending}
               >
-                {goodBehaviorMutation.isPending ? "Adding..." : "Add Bonus Tickets"}
+                {goodBehaviorMutation.isPending ? "Processing..." : 
+                  rewardType === "tickets" ? "Award Tickets" : "Award Bonus Spin"
+                }
               </Button>
             </DialogFooter>
           </form>

@@ -1052,11 +1052,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create a daily bonus for good behavior
       const today = new Date().toISOString().split('T')[0];
       
-      // Check if there's already a daily bonus today
-      let dailyBonusRecord = await storage.getDailyBonus(today, data.user_id);
+      let dailyBonusRecord;
+      let transaction;
+      let updatedBalance;
       
-      // If no daily bonus exists yet or if we're awarding a bonus spin, create a new one
-      if (!dailyBonusRecord || data.awardBonusSpin) {
+      // Handle based on reward type
+      if (data.awardBonusSpin) {
+        // For bonus spin, create a new daily bonus record without adding tickets yet
+        console.log(`[GOOD_BEHAVIOR] Creating bonus spin for user ${data.user_id}`);
+        
         dailyBonusRecord = await storage.createDailyBonus({
           bonus_date: today,
           user_id: data.user_id,
@@ -1067,56 +1071,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
           spin_result_tickets: 0 // Default value until wheel is spun
         });
         
-        console.log(`[GOOD_BEHAVIOR] Created daily bonus for user ${data.user_id}, awardBonusSpin=${data.awardBonusSpin}`);
-      } else if (!data.awardBonusSpin && dailyBonusRecord) {
-        console.log(`[GOOD_BEHAVIOR] Using existing daily bonus for user ${data.user_id}, no bonus spin requested`);
+        // Tickets will be added when the wheel is spun
+        updatedBalance = await storage.getUserBalance(data.user_id);
+        
+      } else {
+        // For direct ticket rewards, add the tickets immediately
+        console.log(`[GOOD_BEHAVIOR] Adding ${data.tickets} tickets for user ${data.user_id}`);
+        
+        // Create transaction for the direct ticket reward
+        transaction = await storage.createTransaction({
+          user_id: data.user_id,
+          chore_id: null,
+          goal_id: activeGoal?.id || null,
+          delta: data.tickets, // Positive value for reward
+          type: 'reward',
+          note: data.reason || "Good Behavior Reward",
+          source: 'manual_add',
+          ref_id: null // No daily bonus reference for direct rewards
+        });
+        
+        // Get updated balance after adding tickets
+        updatedBalance = await storage.getUserBalance(data.user_id);
+        
+        // Broadcast the transaction with balance for immediate UI update
+        broadcast("transaction:reward", {
+          data: {
+            id: transaction?.id,
+            delta: transaction?.delta,
+            note: transaction?.note || data.reason || "Good Behavior Reward",
+            user_id: data.user_id,
+            type: "reward",
+            balance: updatedBalance
+          }
+        });
       }
       
-      // Create the transaction with positive tickets
-      // The createTransaction method will handle updating the goal's tickets_saved
-      const transaction = await storage.createTransaction({
-        user_id: data.user_id,
-        chore_id: null,
-        goal_id: activeGoal?.id || null,
-        delta: data.tickets, // Positive value for reward
-        type: 'reward',
-        note: data.reason,
-        source: 'manual_add',
-        ref_id: dailyBonusRecord.id
-      });
-      
-      // Get the current balance for real-time UI updates
-      const updatedBalance = await storage.getUserBalance(data.user_id);
-      
-      // Build response with bonus spin info
+      // Build response
       const response = {
         transaction,
         reason: data.reason,
         balance: updatedBalance,
         goal: activeGoal,
         awardedBonusSpin: data.awardBonusSpin || false,
-        daily_bonus_id: dailyBonusRecord.id
+        daily_bonus_id: dailyBonusRecord?.id
       };
       
-      // Broadcast the transaction with balance for immediate UI update
-      broadcast("transaction:reward", {
-        data: {
-          id: transaction.id,
-          delta: transaction.delta,
-          note: transaction.note || data.reason,
-          user_id: transaction.user_id,
-          type: transaction.type,
-          balance: updatedBalance, // Include balance for immediate UI updates
-          daily_bonus_id: dailyBonusRecord.id // Include bonus ID for wheel spinning
-        }
-      });
-      
-      // Also broadcast that a bonus has been assigned for good behavior
-      broadcast("daily_bonus:good_behavior", { 
-        user_id: data.user_id,
-        daily_bonus: dailyBonusRecord,
-        awardedBonusSpin: data.awardBonusSpin || false
-      });
+      // Broadcast if bonus spin was awarded
+      if (data.awardBonusSpin && dailyBonusRecord) {
+        broadcast("daily_bonus:good_behavior", { 
+          user_id: data.user_id,
+          daily_bonus: dailyBonusRecord,
+          awardedBonusSpin: true
+        });
+      }
       
       return res.status(201).json(response);
     } catch (error) {
