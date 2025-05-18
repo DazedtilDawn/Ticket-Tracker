@@ -83,11 +83,12 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
       console.log('Sending profile image upload request to:', uploadUrl);
       console.log('File being uploaded:', selectedFile.name, 'size:', selectedFile.size, 'type:', selectedFile.type);
       
-      // Use fetch API for more reliable uploads
-      console.log('Using fetch API for upload');
+      // Use fetch API for more reliable uploads with credentials
+      console.log('Using fetch API for upload with credentials');
       const response = await fetch(uploadUrl, {
         method: 'POST',
         body: formData,
+        credentials: 'include', // Include cookies for authentication
         // Don't set Content-Type header, browser will set it correctly with boundary for multipart/form-data
       });
       
