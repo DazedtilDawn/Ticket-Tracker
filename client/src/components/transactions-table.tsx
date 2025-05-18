@@ -253,17 +253,17 @@ export default function TransactionsTable({ userId, limit = 10 }: TransactionsTa
                 transactions.map((transaction) => (
                   <TableRow key={transaction.id}>
                     <TableCell className="text-sm text-gray-500 dark:text-gray-400">
-                      {formatDate(transaction.date)}
+                      {formatDate(transaction.created_at)}
                     </TableCell>
                     <TableCell className="text-sm font-medium text-gray-900 dark:text-white">
                       {getTransactionDescription(transaction)}
                     </TableCell>
                     <TableCell className={`text-sm ${
-                      transaction.delta_tickets > 0 
+                      transaction.delta > 0 
                         ? 'text-gray-900 dark:text-white' 
                         : 'text-red-600 dark:text-red-400'
                     }`}>
-                      {transaction.delta_tickets > 0 ? `+${transaction.delta_tickets}` : transaction.delta_tickets}
+                      {transaction.delta > 0 ? `+${transaction.delta}` : transaction.delta}
                     </TableCell>
                     <TableCell>
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -290,10 +290,10 @@ export default function TransactionsTable({ userId, limit = 10 }: TransactionsTa
                         title={isViewingAsChild() ? "Undo this transaction" : "Delete this transaction"}
                         // For child users: Allow all transactions to be undone for now
                         disabled={isViewingAsChild() && (
-                          !transaction.date
+                          !transaction.created_at
                         )}
                         style={isViewingAsChild() && (
-                          !transaction.date
+                          !transaction.created_at
                         ) ? { display: 'none' } : {}}
                       >
                         <Trash2 className="h-4 w-4" />
