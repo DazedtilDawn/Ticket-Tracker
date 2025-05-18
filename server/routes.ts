@@ -317,6 +317,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.json(sanitizedUsers);
   });
   
+  // Get a specific user by ID
+  app.get("/api/users/:id", auth, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const user = req.user;
+      
+      // Users can only access their own data unless they're a parent
+      if (user.role !== 'parent' && user.id !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      
+      const userData = await storage.getUser(userId);
+      if (!userData) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      return res.json(userData);
+    } catch (error) {
+      return res.status(500).json({ message: "Failed to get user" });
+    }
+  });
+  
+  // Update user avatar
+  app.put("/api/users/:id/avatar", auth, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { avatar_data } = req.body;
+      const user = req.user;
+      
+      // Users can only update their own avatar unless they're a parent
+      if (user.role !== 'parent' && user.id !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      
+      const userData = await storage.getUser(userId);
+      if (!userData) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Update the avatar data
+      await storage.updateUser(userId, { avatar_data });
+      
+      return res.json({ message: "Avatar updated successfully" });
+    } catch (error) {
+      return res.status(500).json({ message: "Failed to update avatar" });
+    }
+  });
+  
   // Chore routes
   app.get("/api/chores", auth, async (req: Request, res: Response) => {
     const activeOnly = req.query.activeOnly !== "false";
