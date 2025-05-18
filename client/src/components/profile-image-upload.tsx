@@ -123,31 +123,37 @@ export default function ProfileImageUpload({
   };
   
   return (
-    <div className="relative inline-block group">
-      <Avatar className={`${avatarSizeClass} border-2 border-gray-200 dark:border-gray-700`}>
-        <AvatarImage 
-          src={previewUrl || currentImageUrl || undefined} 
-          alt={`${name}'s profile`} 
-        />
-        <AvatarFallback className="bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200">
-          {getInitials(name)}
-        </AvatarFallback>
-      </Avatar>
+    <div className="flex flex-col items-center gap-2">
+      <div className="relative inline-block group">
+        <Avatar className={`${avatarSizeClass} border-2 border-gray-200 dark:border-gray-700 cursor-pointer`} onClick={handleUploadClick}>
+          <AvatarImage 
+            src={previewUrl || currentImageUrl || undefined} 
+            alt={`${name}'s profile`} 
+          />
+          <AvatarFallback className="bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200">
+            {getInitials(name)}
+          </AvatarFallback>
+        </Avatar>
+        
+        <Button
+          type="button"
+          size="icon"
+          variant="secondary"
+          className={`absolute -bottom-1 -right-1 rounded-full shadow-md opacity-100 animate-pulse ${buttonSizeClass} bg-primary-500 hover:bg-primary-600 text-white`}
+          onClick={handleUploadClick}
+          disabled={isUploading}
+        >
+          {isUploading ? (
+            <Loader2 className={`${iconSizeClass} animate-spin`} />
+          ) : (
+            <CameraIcon className={iconSizeClass} />
+          )}
+        </Button>
+      </div>
       
-      <Button
-        type="button"
-        size="icon"
-        variant="secondary"
-        className={`absolute -bottom-1 -right-1 rounded-full shadow-md opacity-90 group-hover:opacity-100 ${buttonSizeClass} bg-primary-500 hover:bg-primary-600 text-white`}
-        onClick={handleUploadClick}
-        disabled={isUploading}
-      >
-        {isUploading ? (
-          <Loader2 className={`${iconSizeClass} animate-spin`} />
-        ) : (
-          <CameraIcon className={iconSizeClass} />
-        )}
-      </Button>
+      <div className="text-center text-xs text-muted-foreground">
+        {size === "lg" && "Click to upload photo"}
+      </div>
       
       <Input
         ref={fileInputRef}

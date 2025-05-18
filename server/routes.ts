@@ -41,6 +41,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.send('ok');
   });
   
+  // Create directories for uploads if they don't exist
+  const uploadsDir = path.join(process.cwd(), 'public/uploads');
+  const profilesDir = path.join(uploadsDir, 'profiles');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+  if (!fs.existsSync(profilesDir)) {
+    fs.mkdirSync(profilesDir, { recursive: true });
+  }
+  
   // Serve static files from public folder
   app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
   
