@@ -93,8 +93,11 @@ export function registerProfileImageRoutes(app: Express) {
     // Process image upload - non-blocking
     const handleUpload = async () => {
       try {
-        // Use multer middleware to handle the file upload
+        // Use multer middleware to handle the file upload with a fixed field name
+        // Important: The field name must match what's sent from the client (profile_image)
         upload.single('profile_image')(req, res, async (err) => {
+          console.log('[PROFILE-UPLOAD] Inside multer middleware handler');
+          console.log('[PROFILE-UPLOAD] Got file?', !!req.file);
           if (err) {
             console.error('[PROFILE-UPLOAD] Middleware error:', err);
             return res.status(400).json({

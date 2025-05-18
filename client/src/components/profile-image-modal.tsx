@@ -73,7 +73,8 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
       // Create a new form data object
       const formData = new FormData();
       
-      // Add the file with the exact name the server expects
+      // Add the file with the exact name the server expects - this needs to match the server side
+      // The field name must match the one expected in the server-side upload.single('profile_image') call
       formData.append('profile_image', selectedFile);
       
       // Add a timestamp to prevent caching issues
@@ -102,9 +103,16 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
         throw new Error(`Upload failed with status: ${response.status}. ${errorText}`);
       }
       
-      // Parse the successful response
-      const data = await response.json();
-      console.log('Upload success response:', data);
+      try {
+        // Parse the successful response
+        const data = await response.json();
+        console.log('Upload success response:', data);
+      } catch (parseError) {
+        console.error('Error parsing response JSON:', parseError);
+        const responseText = await response.text();
+        console.log('Raw response text:', responseText);
+        throw new Error('Failed to parse server response');
+      }
       
       if (data && data.profile_image_url) {
         // Add a timestamp to prevent browser caching of the image
