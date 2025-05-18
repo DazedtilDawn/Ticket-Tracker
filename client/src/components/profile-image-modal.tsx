@@ -68,119 +68,107 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
     
     // Prevent double submissions
     if (isUploading) {
-      console.log('Upload already in progress, preventing duplicate request');
+      console.log('Upload already in progress');
       return;
     }
     
     setIsUploading(true);
+    let uploadCompleted = false;
     
     try {
-      console.log('Preparing to upload profile image for user:', user.id);
+      console.log('Preparing upload for user:', user.id);
       
-      // Create form data and append the file
+      // Create form data
       const formData = new FormData();
       formData.append('profile_image', selectedFile);
       
-      // Create upload URL with cache-busting
+      // Add cache-busting timestamp
       const timestamp = new Date().getTime();
       const uploadUrl = `/api/profile-image/${user.id}?_t=${timestamp}`;
       
-      console.log('Sending profile image upload request to:', uploadUrl);
-      console.log('File being uploaded:', selectedFile.name, 'size:', selectedFile.size, 'type:', selectedFile.type);
+      console.log('Uploading file:', selectedFile.name);
       
-      // Set timeout to prevent hanging requests
+      // Create abort controller for timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
       
-      try {
-        // Make the upload request
-        const response = await fetch(uploadUrl, {
-          method: 'POST',
-          body: formData,
-          credentials: 'include',
-          signal: controller.signal
+      // Make the request
+      const response = await fetch(uploadUrl, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+        signal: controller.signal
+      });
+      
+      // Clear timeout
+      clearTimeout(timeoutId);
+      
+      console.log('Upload status:', response.status);
+      
+      // Handle error responses
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error(`Upload failed: ${response.status}`);
+      }
+      
+      // Parse the response
+      const data = await response.json();
+      console.log('Success response:', data);
+      
+      // Validation
+      if (!data || !data.success) {
+        throw new Error(data?.message || 'Upload failed');
+      }
+      
+      // Process successful upload
+      if (data.profile_image_url) {
+        // Set success flag
+        uploadCompleted = true;
+        
+        // Update UI with new image
+        const imageUrl = `${data.profile_image_url}?t=${timestamp}`;
+        setPreviewUrl(imageUrl);
+        setUploadSuccess(true);
+        
+        // Notify user
+        toast({
+          title: "Success",
+          description: "Profile image updated"
         });
         
-        // Clear the timeout since request completed
-        clearTimeout(timeoutId);
+        // Refresh data
+        queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/verify"] });
         
-        console.log('Upload completed with status:', response.status);
-        
-        // Handle non-successful responses
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Server returned error status:', response.status);
-          console.error('Response text:', errorText);
-          throw new Error(`Upload failed with status: ${response.status}. ${errorText}`);
+        if (user.id !== 1) {
+          queryClient.invalidateQueries({ queryKey: [`/api/users/${user.id}`] });
+          queryClient.invalidateQueries({ queryKey: [`/api/stats`] });
         }
         
-        // Try to parse response data
-        let data;
-        try {
-          data = await response.json();
-          console.log('Upload success response:', data);
-        } catch (parseError) {
-          console.error('Error parsing response JSON:', parseError);
-          throw new Error('Failed to parse server response');
-        }
-        
-        // Validate response data
-        if (!data || !data.success) {
-          throw new Error(data?.message || 'Server returned unsuccessful response');
-        }
-        
-        // Handle successful upload
-        if (data && data.profile_image_url) {
-          // Add a cache-busting timestamp
-          const imageUrlWithTimestamp = `${data.profile_image_url}?t=${timestamp}`;
-          setPreviewUrl(imageUrlWithTimestamp);
-          
-          // Show success message
-          toast({
-            title: "Profile image updated",
-            description: "The profile image was updated successfully."
-          });
-          
-          // Update success state
-          setUploadSuccess(true);
-          
-          // Close the modal after a short delay
-          setTimeout(() => {
-            onClose();
-          }, 1500);
-          
-          // Invalidate relevant queries to refresh data
-          queryClient.invalidateQueries({ queryKey: ["/api/users"] });
-          queryClient.invalidateQueries({ queryKey: ["/api/auth/verify"] });
-          
-          if (user.id !== 1) {
-            queryClient.invalidateQueries({ queryKey: [`/api/users/${user.id}`] });
-            queryClient.invalidateQueries({ queryKey: [`/api/stats`] });
-          }
-        } else {
-          throw new Error('No profile image URL returned from server');
-        }
-      } catch (fetchError) {
-        // Handle fetch-specific errors
-        if (fetchError.name === 'AbortError') {
-          throw new Error('Upload request timed out. Please try again.');
-        }
-        throw fetchError;
+        // Auto-close after success
+        setTimeout(() => onClose(), 1500);
+      } else {
+        throw new Error('No image URL in response');
       }
-    } catch (error) {
-      console.error("Error uploading profile image:", error);
+    } catch (error: any) {
+      // Error handling
+      console.error("Upload error:", error);
       
-      // Show error toast with appropriate message
       toast({
         title: "Upload failed",
-        description: error instanceof Error 
-          ? error.message 
-          : "Failed to upload the profile image. Please try again.",
+        description: error?.message || "Could not upload image",
         variant: "destructive"
       });
     } finally {
-      // Always reset loading state
+      // Always reset state
       setIsUploading(false);
+      
+      // If upload completed successfully, we can leave success state
+      // Otherwise reset it to allow retrying
+      if (!uploadCompleted) {
+        setUploadSuccess(false);
+      }
     }
   };
 
