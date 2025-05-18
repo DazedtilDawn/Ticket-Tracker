@@ -104,21 +104,23 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
       const formData = new FormData();
       formData.append('profile_image', selectedFile);
       
-      // Add cache-busting to prevent stale responses
-      const timestamp = Date.now();
-      const uploadUrl = `/api/profile-image/${user.id}?t=${timestamp}`;
+      // Use the generic upload endpoint used for chore images instead
+      const uploadUrl = `/api/upload/image`;
       
       // Log details for debugging
       console.log(`[UPLOAD] File: ${selectedFile.name}, Size: ${selectedFile.size} bytes`);
       
-      // Step 5: Setup automatic timeout (prevents hanging)
+      // Add the user_id to the form data to identify which user this image is for
+      formData.append('user_id', user.id.toString());
+      
+      // Setup automatic timeout (prevents hanging)
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
         console.log('[UPLOAD] Request timeout, aborting');
         controller.abort();
-      }, 12000); // 12-second timeout
+      }, 15000); // 15-second timeout (slightly longer)
       
-      // Step 6: Execute the actual upload
+      // Execute the actual upload using the same endpoint as chore images
       console.log(`[UPLOAD] POST request to ${uploadUrl}`);
       const response = await fetch(uploadUrl, {
         method: 'POST',
@@ -153,8 +155,9 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
         throw new Error('No image URL in server response');
       }
       
-      // Update the UI with the new image
-      const imageUrl = data.public_url || `${data.profile_image_url}?t=${timestamp}`;
+      // Update the UI with the new image (add timestamp for cache busting)
+      const currentTime = Date.now();
+      const imageUrl = data.public_url || `${data.profile_image_url}?t=${currentTime}`;
       setPreviewUrl(imageUrl);
       
       // Mark the upload as successful

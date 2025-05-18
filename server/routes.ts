@@ -365,24 +365,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.json(chores);
   });
   
-  // Image upload endpoint for chores
+  // Enhanced image upload endpoint for both chores and profile images
   app.post("/api/upload/image", auth, upload.single('image'), async (req: Request, res: Response) => {
     try {
+      console.log("[UPLOAD] Processing upload request:", { 
+        field: req.file?.fieldname,
+        size: req.file?.size,
+        mimetype: req.file?.mimetype,
+        userId: req.body?.user_id
+      });
+      
       if (!req.file) {
-        return res.status(400).json({ message: "No file uploaded" });
+        return res.status(400).json({ success: false, message: "No file uploaded" });
       }
       
-      // Return the URL to the uploaded file using our helper function
+      // For profile images, rename the field to help getFileUrl identify it correctly
+      if (req.body.user_id && req.file) {
+        console.log(`[UPLOAD] Handling as profile image for user ${req.body.user_id}`);
+        
+        // Set the fieldname to profile_image to ensure proper path handling
+        req.file.fieldname = 'profile_image';
+        
+        // If this is a profile image, we need to update the user record after upload
+        const userId = parseInt(req.body.user_id);
+        if (!isNaN(userId)) {
+          try {
+            // Get image URL via helper
+            const imageUrl = getFileUrl(req);
+            console.log(`[UPLOAD] Generated profile image URL: ${imageUrl}`);
+            
+            // Update the user record with the new profile image URL
+            await db.update(users)
+              .set({ profile_image_url: imageUrl })
+              .where(eq(users.id, userId));
+              
+            console.log(`[UPLOAD] Updated profile image for user ${userId}`);
+            
+            // Return success with cache busting parameter
+            return res.status(200).json({
+              success: true,
+              message: 'Profile image uploaded successfully',
+              imageUrl,
+              public_url: `${imageUrl}?t=${Date.now()}`,
+              profile_image_url: imageUrl,
+              timestamp: Date.now()
+            });
+          } catch (dbError) {
+            console.error("[UPLOAD] Database error updating user:", dbError);
+            return res.status(500).json({ 
+              success: false, 
+              message: "Failed to update user profile image in database" 
+            });
+          }
+        }
+      }
+      
+      // Standard path for chore images or other image types
       try {
         const imageUrl = getFileUrl(req);
-        return res.json({ imageUrl });
+        console.log(`[UPLOAD] Generated image URL: ${imageUrl}`);
+        return res.json({ 
+          success: true, 
+          imageUrl,
+          timestamp: Date.now() 
+        });
       } catch (urlError) {
-        console.error("Error getting file URL:", urlError);
-        return res.status(500).json({ message: "Failed to process uploaded file" });
+        console.error("[UPLOAD] Error getting file URL:", urlError);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Failed to process uploaded file" 
+        });
       }
     } catch (error) {
-      console.error("Error uploading image:", error);
-      return res.status(500).json({ message: "Failed to upload image" });
+      console.error("[UPLOAD] Error uploading image:", error);
+      return res.status(500).json({ 
+        success: false, 
+        message: "Failed to upload image" 
+      });
     }
   });
   
