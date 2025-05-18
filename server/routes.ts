@@ -1080,7 +1080,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             } else {
               // If it has been spun, delete it so we can create a new one
               console.log(`[GOOD_BEHAVIOR] Deleting previously spun good behavior bonus`);
-              await storage.deleteDailyBonus(userId, existingGoodBehaviorBonus.id);
+              await storage.deleteDailyBonusById(userId, existingGoodBehaviorBonus.id);
             }
           }
           
@@ -1091,7 +1091,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log(`[GOOD_BEHAVIOR] User has a chore completion bonus for today`);
             
             // Good behavior takes priority - delete the chore bonus
-            await storage.deleteDailyBonus(userId, existingChoreBonus.id);
+            await storage.deleteDailyBonusById(userId, existingChoreBonus.id);
             console.log(`[GOOD_BEHAVIOR] Deleted existing chore completion bonus to make way for good behavior bonus`);
           }
           

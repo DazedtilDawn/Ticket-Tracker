@@ -215,6 +215,24 @@ export class DatabaseStorage implements IStorage {
     
     return true; // Operation completed successfully
   }
+
+  async deleteDailyBonusById(userId: number, bonusId: number): Promise<boolean> {
+    console.log(`[DELETE_BONUS] Deleting daily bonus with ID ${bonusId} for user ${userId}`);
+    
+    // Delete the existing record by ID
+    const result = await db
+      .delete(dailyBonus)
+      .where(
+        and(
+          eq(dailyBonus.user_id, userId),
+          eq(dailyBonus.id, bonusId)
+        )
+      );
+    
+    console.log(`[DELETE_BONUS] Daily bonus deletion complete for ID ${bonusId}`);
+    
+    return true; // Operation completed successfully
+  }
   
   async assignDailyBonusChore(childId: number, date: string): Promise<DailyBonus | null> {
     console.log(`[BONUS_ASSIGN] Starting bonus assignment for child ${childId} on date ${date}`);
