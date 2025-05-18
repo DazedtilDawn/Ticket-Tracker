@@ -64,19 +64,41 @@ export function saveUploadedFile(file: Express.Multer.File): string {
   const filename = `${uuidv4()}${ext}`;
   const fullPath = path.join(targetDir, filename);
   
-  // Save the file
+  console.log(`[UPLOAD] Attempting to save file to: ${fullPath}`);
+  console.log(`[UPLOAD] Directory exists: ${fs.existsSync(targetDir)}`);
+  
+  // Extra check - ensure directory exists
+  if (!fs.existsSync(targetDir)) {
+    console.log(`[UPLOAD] Creating directory: ${targetDir}`);
+    fs.mkdirSync(targetDir, { recursive: true, mode: 0o777 });
+  }
+  
+  // Save the file with additional error checking
   try {
-    fs.writeFileSync(fullPath, file.buffer);
-    console.log(`File saved successfully: ${fullPath}`);
+    // First test if directory is writable
+    const testFile = path.join(targetDir, '.test');
+    fs.writeFileSync(testFile, 'test');
+    fs.unlinkSync(testFile);
+    console.log(`[UPLOAD] Directory is writable`);
     
-    // Return public URL path
-    if (file.fieldname === 'profile_image') {
-      return `/uploads/profiles/${filename}`;
+    // Write the actual file
+    fs.writeFileSync(fullPath, file.buffer);
+    
+    // Verify file was saved successfully
+    if (fs.existsSync(fullPath)) {
+      console.log(`[UPLOAD] File verified at: ${fullPath}`);
+      
+      // Return public URL path
+      if (file.fieldname === 'profile_image') {
+        return `/uploads/profiles/${filename}`;
+      }
+      return `/uploads/${filename}`;
+    } else {
+      throw new Error('File was written but could not be verified');
     }
-    return `/uploads/${filename}`;
   } catch (error) {
-    console.error('Error saving file:', error);
-    throw new Error(`Failed to save file: ${error.message}`);
+    console.error('[UPLOAD] Error saving file:', error);
+    throw new Error(`Failed to save file: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
