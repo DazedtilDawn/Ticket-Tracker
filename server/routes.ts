@@ -1737,7 +1737,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // For "×2 Multiplier" - double the original tickets from the chore
         if (dailyBonusRecord.trigger_type === "chore_completion" && chore) {
           // Double the base tickets up to a max of 10 tickets total
-          const baseTickets = chore.tickets;
+          const baseTickets = chore.base_tickets;
           bonusTickets = Math.min(baseTickets * 2, 10);
           // Show the multiplier in the result for clarity
           segmentLabel = `×2 (${bonusTickets} tickets)`;
@@ -1892,7 +1892,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Calculate random bonus tickets (50-100% extra)
         const bonusMultiplier = 0.5 + (Math.random() * 0.5);
-        const bonusTickets = Math.ceil(chore.tickets * bonusMultiplier);
+        const bonusTickets = Math.ceil(chore.base_tickets * bonusMultiplier);
         
         // Update the existing daily bonus with spin results
         const [updatedBonus] = await db
@@ -1908,7 +1908,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         // Calculate random bonus tickets (50-100% extra)
         const bonusMultiplier = 0.5 + (Math.random() * 0.5);
-        const bonusTickets = Math.ceil(chore.tickets * bonusMultiplier);
+        const bonusTickets = Math.ceil(chore.base_tickets * bonusMultiplier);
         
         // Create a new daily bonus
         dailyBonus = await storage.createDailyBonus({
