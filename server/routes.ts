@@ -36,6 +36,34 @@ import { registerProfileImageRoutes } from "./lib/profile-routes";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
+  
+  // Register profile image routes
+  registerProfileImageRoutes(app);
+  
+  // Create an endpoint to refresh the balances of all users
+  app.post("/api/transactions/refresh-balances", async (req: Request, res: Response) => {
+    try {
+      // Get all users
+      const allUsers = await storage.getUsers();
+      
+      // Update balances for each user
+      const results = await Promise.all(
+        allUsers.map(async (user) => {
+          // Recalculate balance from transactions
+          const transactions = await storage.getUserTransactions(user.id);
+          const balance = transactions.reduce((sum, t) => sum + t.delta, 0);
+          
+          return { userId: user.id, balance };
+        })
+      );
+      
+      console.log('Balances refreshed:', results);
+      res.status(200).json(results);
+    } catch (error) {
+      console.error('Error refreshing balances:', error);
+      res.status(500).json({ message: 'Failed to refresh balances' });
+    }
+  });
 
   app.get('/health', (_req: Request, res: Response) => {
     res.send('ok');

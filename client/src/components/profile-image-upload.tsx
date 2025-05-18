@@ -52,19 +52,38 @@ export default function ProfileImageUpload({
     const file = e.target.files?.[0];
     if (!file) return;
     
-    // Preview the selected image
+    // Set uploading state to true immediately for visual feedback
+    setIsUploading(true);
+    
+    // Preview the selected image immediately for instant feedback
     const reader = new FileReader();
     reader.onload = (e) => {
-      setPreviewUrl(e.target?.result as string);
+      if (e.target?.result) {
+        const previewData = e.target.result as string;
+        setPreviewUrl(previewData);
+        console.log('Local preview image set');
+      }
     };
     reader.readAsDataURL(file);
     
-    // Upload the image
-    await uploadImage(file);
+    try {
+      // Upload the image after local preview is set
+      console.log('Uploading file:', file.name);
+      await uploadImage(file);
+    } catch (error) {
+      console.error('Error during image upload:', error);
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload the profile image. Please try again.",
+        variant: "destructive"
+      });
+      setIsUploading(false);
+    }
   };
   
   // Function to upload the image
   const uploadImage = async (file: File) => {
+    // We're already setting isUploading in handleFileChange, but set it again just to be safe
     setIsUploading(true);
     
     try {
@@ -73,7 +92,9 @@ export default function ProfileImageUpload({
       
       console.log('Uploading image for user:', userId);
       
-      const response = await apiRequest(`/api/profile-image/${userId}`, {
+      // Add a timestamp to prevent caching
+      const timestamp = new Date().getTime();
+      const response = await apiRequest(`/api/profile-image/${userId}?_t=${timestamp}`, {
         method: 'POST',
         body: formData,
         // Don't set Content-Type, let the browser set it with the boundary
@@ -83,8 +104,10 @@ export default function ProfileImageUpload({
       console.log('Upload response:', response);
       
       if (response && response.profile_image_url) {
-        // Set the preview URL from the server response
-        setPreviewUrl(response.profile_image_url);
+        // Update the preview URL with the actual server URL (includes the full path)
+        // Add a timestamp to prevent browser caching of the image
+        const imageUrlWithTimestamp = `${response.profile_image_url}?t=${timestamp}`;
+        setPreviewUrl(imageUrlWithTimestamp);
         
         toast({
           title: "Profile image updated",
@@ -96,12 +119,14 @@ export default function ProfileImageUpload({
           onImageUpdated(response.profile_image_url);
         }
         
-        // Invalidate relevant queries to refresh data across the app
+        // Invalidate ALL relevant queries to refresh data across the app
         queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/verify"] });
         
         // Force a reload of child-specific data if this is a child profile
         if (userId !== 1) { // Assuming parent always has ID 1
           queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}`] });
+          queryClient.invalidateQueries({ queryKey: [`/api/stats`] });
         }
       } else {
         throw new Error('No profile image URL returned from server');
@@ -114,8 +139,8 @@ export default function ProfileImageUpload({
         variant: "destructive"
       });
       
-      // Reset preview on error
-      setPreviewUrl(null);
+      // Don't reset preview on error - let them see what they tried to upload
+      // This way they can see if it was the right image they selected
     } finally {
       setIsUploading(false);
     }
