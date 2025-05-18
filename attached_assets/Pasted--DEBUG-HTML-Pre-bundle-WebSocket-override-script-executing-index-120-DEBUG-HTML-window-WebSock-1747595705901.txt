@@ -1,0 +1,1080 @@
+[DEBUG_HTML] Pre-bundle WebSocket override script executing.
+(index):120 [DEBUG_HTML] window.WebSocket has been overridden from HTML.
+(index):64  [DEBUG_HTML] BLOCKING WebSocket attempt (HTML override): wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev:/?token=kpJkBcHmxEp9
+value @ (index):64
+setupWebSocket @ client:536
+(anonymous) @ client:531
+(index):67  [DEBUG_HTML] WebSocket blocked - Call stack: Error
+    at new value (https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/:67:76)
+    at setupWebSocket (https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/@vite/client:536:19)
+    at https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/@vite/client:531:12
+value @ (index):67
+setupWebSocket @ client:536
+(anonymous) @ client:531
+(index):76  [DEBUG_HTML] Found WebSocket with token parameter
+value @ (index):76
+setupWebSocket @ client:536
+(anonymous) @ client:531
+[NEW] Explain Console errors by using Copilot in Edge: click
+         
+         to explain an error. 
+        Learn more
+        Don't show again
+react-dom.development.js:29895 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+main.tsx:3 [DEBUG] Main.tsx: Relying on the HTML WebSocket override.
+supabase.ts:40 Connecting to WebSocket at: wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/ws
+supabase.ts:54 Using global WebSocket constructor (with HTML overrides)
+App.tsx:83 Checking authentication status, auto-login: true
+supabase.ts:57 WebSocket connection established
+child-bonus-wheel.tsx:168 [WHEEL_DEBUG] Setting up WebSocket listeners for bonus spin events
+supabase.ts:40 Connecting to WebSocket at: wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/ws
+supabase.ts:54 Using global WebSocket constructor (with HTML overrides)
+supabase.ts:180 Subscribing to WebSocket channel: bonus_spin:result
+supabase.ts:180 Subscribing to WebSocket channel: transaction:earn
+supabase.ts:180 Subscribing to WebSocket channel: 
+dashboard.tsx:41 Attempting to load family users...
+dashboard.tsx:171 Setting up WebSocket listeners for transaction events
+supabase.ts:28  WebSocket connection to 'wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/ws' failed: WebSocket is closed before the connection is established.
+createWebSocketConnection @ supabase.ts:28
+(anonymous) @ dashboard.tsx:174
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+performSyncWorkOnRoot @ react-dom.development.js:26115
+flushSyncCallbacks @ react-dom.development.js:12042
+commitRootImpl @ react-dom.development.js:26998
+commitRoot @ react-dom.development.js:26721
+finishConcurrentRender @ react-dom.development.js:26020
+performConcurrentWorkOnRoot @ react-dom.development.js:25848
+workLoop @ scheduler.development.js:266
+flushWork @ scheduler.development.js:239
+performWorkUntilDeadline @ scheduler.development.js:533
+supabase.ts:40 Connecting to WebSocket at: wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/ws
+supabase.ts:54 Using global WebSocket constructor (with HTML overrides)
+supabase.ts:180 Subscribing to WebSocket channel: 
+supabase.ts:180 Subscribing to WebSocket channel: transaction:
+supabase.ts:180 Subscribing to WebSocket channel: transaction:earn
+supabase.ts:180 Subscribing to WebSocket channel: transaction:spend
+supabase.ts:180 Subscribing to WebSocket channel: transaction:deduct
+supabase.ts:180 Subscribing to WebSocket channel: transaction:reward
+supabase.ts:180 Subscribing to WebSocket channel: transaction:delete
+content.js:260 Prompt Manager content script loaded
+supabase.ts:91 WebSocket message received: {event: 'server:welcome', data: {…}}
+supabase.ts:94 WebSocket message details - Event: server:welcome {timestamp: '2025-05-18T18:55:39.496Z', eventType: 'server:welcome', fullData: {…}, rawMessage: '{"event":"server:welcome","data":{"message":"Welco…service","timestamp":"2025-05-18T18:55:39.200Z"}}'}
+supabase.ts:199 Caught all-events subscriber for "server:welcome"
+child-bonus-wheel.tsx:193 [WHEEL_DEBUG] Received any WebSocket event: server:welcome
+supabase.ts:199 Caught all-events subscriber for "server:welcome"
+supabase.ts:137  WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.onerror @ supabase.ts:137
+supabase.ts:110 WebSocket connection closed
+supabase.ts:57 WebSocket connection established
+dashboard.tsx:53 Successfully loaded family users: (5) [{…}, {…}, {…}, {…}, {…}]
+transactions-table.tsx:60 Setting up WebSocket listeners in TransactionsTable component
+supabase.ts:180 Subscribing to WebSocket channel: transaction:earn
+supabase.ts:180 Subscribing to WebSocket channel: transaction:spend
+supabase.ts:180 Subscribing to WebSocket channel: transaction:delete
+dashboard.tsx:148 Loaded dashboard stats: {balance: 0, activeGoal: {…}, chores: Array(3), daily_bonus: {…}}
+supabase.ts:91 WebSocket message received: {event: 'server:welcome', data: {…}}
+supabase.ts:94 WebSocket message details - Event: server:welcome {timestamp: '2025-05-18T18:55:39.937Z', eventType: 'server:welcome', fullData: {…}, rawMessage: '{"event":"server:welcome","data":{"message":"Welco…service","timestamp":"2025-05-18T18:55:39.905Z"}}'}
+supabase.ts:199 Caught all-events subscriber for "server:welcome"
+child-bonus-wheel.tsx:193 [WHEEL_DEBUG] Received any WebSocket event: server:welcome
+supabase.ts:199 Caught all-events subscriber for "server:welcome"
+queryClient.ts:44 
+            
+            
+            POST https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/good-behavior 400 (Bad Request)
+apiRequest @ queryClient.ts:44
+mutationFn @ good-behavior-dialog.tsx:105
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+onSubmit @ good-behavior-dialog.tsx:156
+(anonymous) @ createFormControl.ts:1247
+await in (anonymous)
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+supabase.ts:91 WebSocket message received: {event: 'transaction:reward', data: {…}}
+supabase.ts:94 WebSocket message details - Event: transaction:reward {timestamp: '2025-05-18T18:55:58.845Z', eventType: 'transaction:reward', fullData: {…}, rawMessage: '{"event":"transaction:reward","data":{"data":{"id"…eward","user_id":4,"type":"reward","balance":1}}}'}
+supabase.ts:199 Caught all-events subscriber for "transaction:reward"
+child-bonus-wheel.tsx:193 [WHEEL_DEBUG] Received any WebSocket event: transaction:reward
+supabase.ts:199 Caught all-events subscriber for "transaction:reward"
+supabase.ts:201 Event match for "transaction:" - received "transaction:reward"
+dashboard.tsx:185 Received any transaction event - general handler: {event: 'transaction:reward', data: {…}}
+dashboard.tsx:200 General transaction handler - Current user ID: 1, transaction for user ID: undefined
+dashboard.tsx:239 Transaction is for a different user, not updating current user's UI
+supabase.ts:201 Event match for "transaction:reward" - received "transaction:reward"
+dashboard.tsx:381 Received transaction:reward event: {event: 'transaction:reward', data: {…}}
+dashboard.tsx:386 Current user ID: 1, transaction for user ID: undefined
+dashboard.tsx:402 Transaction is for a different user, not updating current user's balance
+supabase.ts:91 WebSocket message received: {event: 'transaction:reward', data: {…}}
+supabase.ts:94 WebSocket message details - Event: transaction:reward {timestamp: '2025-05-18T18:55:58.865Z', eventType: 'transaction:reward', fullData: {…}, rawMessage: '{"event":"transaction:reward","data":{"data":{"id"…eward","user_id":4,"type":"reward","balance":1}}}'}
+supabase.ts:199 Caught all-events subscriber for "transaction:reward"
+child-bonus-wheel.tsx:193 [WHEEL_DEBUG] Received any WebSocket event: transaction:reward
+supabase.ts:199 Caught all-events subscriber for "transaction:reward"
+supabase.ts:201 Event match for "transaction:" - received "transaction:reward"
+dashboard.tsx:185 Received any transaction event - general handler: {event: 'transaction:reward', data: {…}}
+dashboard.tsx:200 General transaction handler - Current user ID: 1, transaction for user ID: undefined
+dashboard.tsx:239 Transaction is for a different user, not updating current user's UI
+supabase.ts:201 Event match for "transaction:reward" - received "transaction:reward"
+dashboard.tsx:381 Received transaction:reward event: {event: 'transaction:reward', data: {…}}
+dashboard.tsx:386 Current user ID: 1, transaction for user ID: undefined
+dashboard.tsx:402 Transaction is for a different user, not updating current user's balance
+transactions-table.tsx:60 Setting up WebSocket listeners in TransactionsTable component
+supabase.ts:180 Subscribing to WebSocket channel: transaction:earn
+supabase.ts:180 Subscribing to WebSocket channel: transaction:spend
+supabase.ts:180 Subscribing to WebSocket channel: transaction:delete
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+(anonymous) @ dashboard.tsx:123
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:114  Unexpected error checking for unspun bonus: {status: 500, message: '404: {"message":"Daily bonus chore has not been completed yet"}'}
+checkForUnspunBonus @ dashboard.tsx:114
+await in checkForUnspunBonus
+(anonymous) @ dashboard.tsx:123
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:148 Loaded dashboard stats: {balance: 1, activeGoal: {…}, chores: Array(3), daily_bonus: {…}}
+32734c3e-d439-4087-a…riker.replit.dev/:1  Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/:1  Unchecked runtime.lastError: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+632734c3e-d439-4087-a…riker.replit.dev/:1  Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:114  Unexpected error checking for unspun bonus: {status: 500, message: '404: {"message":"Daily bonus chore has not been completed yet"}'}
+checkForUnspunBonus @ dashboard.tsx:114
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:114  Unexpected error checking for unspun bonus: {status: 500, message: '404: {"message":"Daily bonus chore has not been completed yet"}'}
+checkForUnspunBonus @ dashboard.tsx:114
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+supabase.ts:110 WebSocket connection closed
+supabase.ts:110 WebSocket connection closed
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 502 (Bad Gateway)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:114  Unexpected error checking for unspun bonus: {status: 500, message: '502: <!DOCTYPE html>\n<html lang="en">\n\n<head>\n  <t…     </div>\n    </div>\n  </div>\n</body>\n\n</html>\n'}
+checkForUnspunBonus @ dashboard.tsx:114
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+supabase.ts:40 Connecting to WebSocket at: wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/ws
+supabase.ts:54 Using global WebSocket constructor (with HTML overrides)
+supabase.ts:40 Connecting to WebSocket at: wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/ws
+supabase.ts:54 Using global WebSocket constructor (with HTML overrides)
+supabase.ts:57 WebSocket connection established
+supabase.ts:91 WebSocket message received: {event: 'server:welcome', data: {…}}
+supabase.ts:94 WebSocket message details - Event: server:welcome {timestamp: '2025-05-18T18:57:35.867Z', eventType: 'server:welcome', fullData: {…}, rawMessage: '{"event":"server:welcome","data":{"message":"Welco…service","timestamp":"2025-05-18T18:57:35.951Z"}}'}
+supabase.ts:199 Caught all-events subscriber for "server:welcome"
+child-bonus-wheel.tsx:193 [WHEEL_DEBUG] Received any WebSocket event: server:welcome
+supabase.ts:199 Caught all-events subscriber for "server:welcome"
+supabase.ts:57 WebSocket connection established
+supabase.ts:91 WebSocket message received: {event: 'server:welcome', data: {…}}
+supabase.ts:94 WebSocket message details - Event: server:welcome {timestamp: '2025-05-18T18:57:36.091Z', eventType: 'server:welcome', fullData: {…}, rawMessage: '{"event":"server:welcome","data":{"message":"Welco…service","timestamp":"2025-05-18T18:57:36.175Z"}}'}
+supabase.ts:199 Caught all-events subscriber for "server:welcome"
+child-bonus-wheel.tsx:193 [WHEEL_DEBUG] Received any WebSocket event: server:welcome
+supabase.ts:199 Caught all-events subscriber for "server:welcome"
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:114  Unexpected error checking for unspun bonus: {status: 500, message: '404: {"message":"Daily bonus chore has not been completed yet"}'}
+checkForUnspunBonus @ dashboard.tsx:114
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:114  Unexpected error checking for unspun bonus: {status: 500, message: '404: {"message":"Daily bonus chore has not been completed yet"}'}
+checkForUnspunBonus @ dashboard.tsx:114
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:114  Unexpected error checking for unspun bonus: {status: 500, message: '404: {"message":"Daily bonus chore has not been completed yet"}'}
+checkForUnspunBonus @ dashboard.tsx:114
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:114  Unexpected error checking for unspun bonus: {status: 500, message: '404: {"message":"Daily bonus chore has not been completed yet"}'}
+checkForUnspunBonus @ dashboard.tsx:114
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:114  Unexpected error checking for unspun bonus: {status: 500, message: '404: {"message":"Daily bonus chore has not been completed yet"}'}
+checkForUnspunBonus @ dashboard.tsx:114
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:114  Unexpected error checking for unspun bonus: {status: 500, message: '404: {"message":"Daily bonus chore has not been completed yet"}'}
+checkForUnspunBonus @ dashboard.tsx:114
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:114  Unexpected error checking for unspun bonus: {status: 500, message: '404: {"message":"Daily bonus chore has not been completed yet"}'}
+checkForUnspunBonus @ dashboard.tsx:114
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+1232734c3e-d439-4087-a…riker.replit.dev/:1  Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/:1  Error handling response: TypeError: Cannot read properties of undefined (reading 'success')
+    at chrome-extension://cgdjpilhipecahhcilnafpblkieebhea/s2k-listener.js:13833:30
+32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/:1  Unchecked runtime.lastError: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:114  Unexpected error checking for unspun bonus: {status: 500, message: '404: {"message":"Daily bonus chore has not been completed yet"}'}
+checkForUnspunBonus @ dashboard.tsx:114
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:114  Unexpected error checking for unspun bonus: {status: 500, message: '404: {"message":"Daily bonus chore has not been completed yet"}'}
+checkForUnspunBonus @ dashboard.tsx:114
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:114  Unexpected error checking for unspun bonus: {status: 500, message: '404: {"message":"Daily bonus chore has not been completed yet"}'}
+checkForUnspunBonus @ dashboard.tsx:114
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:114  Unexpected error checking for unspun bonus: {status: 500, message: '404: {"message":"Daily bonus chore has not been completed yet"}'}
+checkForUnspunBonus @ dashboard.tsx:114
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:114  Unexpected error checking for unspun bonus: {status: 500, message: '404: {"message":"Daily bonus chore has not been completed yet"}'}
+checkForUnspunBonus @ dashboard.tsx:114
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+32734c3e-d439-4087-a…riker.replit.dev/:1  Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:114  Unexpected error checking for unspun bonus: {status: 500, message: '404: {"message":"Daily bonus chore has not been completed yet"}'}
+checkForUnspunBonus @ dashboard.tsx:114
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:114  Unexpected error checking for unspun bonus: {status: 500, message: '404: {"message":"Daily bonus chore has not been completed yet"}'}
+checkForUnspunBonus @ dashboard.tsx:114
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:114  Unexpected error checking for unspun bonus: {status: 500, message: '404: {"message":"Daily bonus chore has not been completed yet"}'}
+checkForUnspunBonus @ dashboard.tsx:114
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:114  Unexpected error checking for unspun bonus: {status: 500, message: '404: {"message":"Daily bonus chore has not been completed yet"}'}
+checkForUnspunBonus @ dashboard.tsx:114
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:114  Unexpected error checking for unspun bonus: {status: 500, message: '404: {"message":"Daily bonus chore has not been completed yet"}'}
+checkForUnspunBonus @ dashboard.tsx:114
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:114  Unexpected error checking for unspun bonus: {status: 500, message: '404: {"message":"Daily bonus chore has not been completed yet"}'}
+checkForUnspunBonus @ dashboard.tsx:114
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:86 [Bonus] polling /unspun for id: 4
+queryClient.ts:44 
+            
+            
+            GET https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/daily-bonus/unspun?user_id=4 404 (Not Found)
+apiRequest @ queryClient.ts:44
+checkForUnspunBonus @ dashboard.tsx:88
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+dashboard.tsx:114  Unexpected error checking for unspun bonus: {status: 500, message: '404: {"message":"Daily bonus chore has not been completed yet"}'}
+checkForUnspunBonus @ dashboard.tsx:114
+setInterval
+(anonymous) @ dashboard.tsx:124
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+commitRootImpl @ react-dom.development.js:26974
+commitRoot @ react-dom.development.js:26721
+performSyncWorkOnRoot @ react-dom.development.js:26156
+flushSyncCallbacks @ react-dom.development.js:12042
+(anonymous) @ react-dom.development.js:25690
+transactions-table.tsx:60 Setting up WebSocket listeners in TransactionsTable component
+supabase.ts:180 Subscribing to WebSocket channel: transaction:earn
+supabase.ts:180 Subscribing to WebSocket channel: transaction:spend
+supabase.ts:180 Subscribing to WebSocket channel: transaction:delete
+dashboard.tsx:148 Loaded dashboard stats: {balance: 0, activeGoal: {…}, chores: Array(3), daily_bonus: {…}}
+dashboard.tsx:486 Dashboard WebSocket subscriptions cleaned up
+child-bonus-wheel.tsx:168 [WHEEL_DEBUG] Setting up WebSocket listeners for bonus spin events
+supabase.ts:180 Subscribing to WebSocket channel: bonus_spin:result
+supabase.ts:180 Subscribing to WebSocket channel: transaction:earn
+supabase.ts:180 Subscribing to WebSocket channel: 
+transactions-table.tsx:60 Setting up WebSocket listeners in TransactionsTable component
+supabase.ts:180 Subscribing to WebSocket channel: transaction:earn
+supabase.ts:180 Subscribing to WebSocket channel: transaction:spend
+supabase.ts:180 Subscribing to WebSocket channel: transaction:delete
+dashboard.tsx:41 Attempting to load family users...
+dashboard.tsx:148 Loaded dashboard stats: {balance: 0, activeGoal: {…}, chores: Array(3), daily_bonus: {…}}
+dashboard.tsx:171 Setting up WebSocket listeners for transaction events
+supabase.ts:180 Subscribing to WebSocket channel: 
+supabase.ts:180 Subscribing to WebSocket channel: transaction:
+supabase.ts:180 Subscribing to WebSocket channel: transaction:earn
+supabase.ts:180 Subscribing to WebSocket channel: transaction:spend
+supabase.ts:180 Subscribing to WebSocket channel: transaction:deduct
+supabase.ts:180 Subscribing to WebSocket channel: transaction:reward
+supabase.ts:180 Subscribing to WebSocket channel: transaction:delete
+dashboard.tsx:53 Successfully loaded family users: (5) [{…}, {…}, {…}, {…}, {…}]
+queryClient.ts:44 
+            
+            
+            POST https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/api/good-behavior 400 (Bad Request)
+apiRequest @ queryClient.ts:44
+mutationFn @ good-behavior-dialog.tsx:105
+fn @ mutation.ts:170
+run @ retryer.ts:153
+start @ retryer.ts:218
+execute @ mutation.ts:208
+await in execute
+mutate @ mutationObserver.ts:125
+(anonymous) @ useMutation.ts:52
+onSubmit @ good-behavior-dialog.tsx:156
+(anonymous) @ createFormControl.ts:1247
+await in (anonymous)
+callCallback2 @ react-dom.development.js:4164
+invokeGuardedCallbackDev @ react-dom.development.js:4213
+invokeGuardedCallback @ react-dom.development.js:4277
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:4291
+executeDispatch @ react-dom.development.js:9041
+processDispatchQueueItemsInOrder @ react-dom.development.js:9073
+processDispatchQueue @ react-dom.development.js:9086
+dispatchEventsForPlugins @ react-dom.development.js:9097
+(anonymous) @ react-dom.development.js:9288
+batchedUpdates$1 @ react-dom.development.js:26179
+batchedUpdates @ react-dom.development.js:3991
+dispatchEventForPluginEventSystem @ react-dom.development.js:9287
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ react-dom.development.js:6465
+dispatchEvent @ react-dom.development.js:6457
+dispatchDiscreteEvent @ react-dom.development.js:6430
+732734c3e-d439-4087-a…riker.replit.dev/:1  Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received

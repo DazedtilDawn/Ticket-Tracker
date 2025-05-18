@@ -148,12 +148,21 @@ export const badBehaviorSchema = z.object({
   tickets: z.number().int().positive("Must deduct at least 1 ticket")
 });
 
-// Good behavior schema for adding bonus tickets
+// Good behavior schema for adding bonus tickets or spin
 export const goodBehaviorSchema = z.object({
   user_id: z.number().int().positive(),
   reason: z.string().optional(),
-  tickets: z.number().int().positive("Must add at least 1 ticket").optional(),
-  awardBonusSpin: z.boolean().default(false)
+  rewardType: z.enum(['tickets', 'spin']),
+  tickets: z.number().int().positive("Must add at least 1 ticket").optional()
+}).refine(data => {
+  // If rewardType is 'tickets', tickets must be present
+  if (data.rewardType === 'tickets') {
+    return !!data.tickets;
+  }
+  return true;
+}, {
+  message: "Tickets amount is required when rewardType is 'tickets'",
+  path: ["tickets"]
 });
 
 // Transaction deletion schema

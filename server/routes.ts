@@ -1034,9 +1034,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/good-behavior", parentOnly, async (req: Request, res: Response) => {
     try {
       const data = goodBehaviorSchema.parse(req.body);
+      const userId = parseInt(data.user_id);
       
       // Make sure the user exists
-      const targetUser = await storage.getUser(data.user_id);
+      const targetUser = await storage.getUser(userId);
       if (!targetUser) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -1047,7 +1048,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Get the active goal for this user
-      const activeGoal = await storage.getActiveGoalByUser(data.user_id);
+      const activeGoal = await storage.getActiveGoalByUser(userId);
       
       // Create a daily bonus for good behavior
       const today = new Date().toISOString().split('T')[0];
@@ -1057,84 +1058,139 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let updatedBalance;
       
       // Handle based on reward type
-      if (data.awardBonusSpin) {
+      if (data.rewardType === 'spin') {
         // For bonus spin, create a new daily bonus record without adding tickets yet
-        console.log(`[GOOD_BEHAVIOR] Creating bonus spin for user ${data.user_id}`);
+        console.log(`[GOOD_BEHAVIOR] Creating bonus spin for user ${userId}`);
         
-        // Check if the user already has a good behavior bonus for today
-        const existingBonus = await storage.getDailyBonusByTriggerType(data.user_id, today, 'good_behavior_reward');
-        
-        if (existingBonus && !existingBonus.is_spun) {
-          console.log(`[GOOD_BEHAVIOR] User already has an unspun good behavior bonus for today`);
-          return res.status(400).json({ message: "This child already has a pending bonus spin from today" });
+        try {
+          // Always check first if they already have a good behavior reward today
+          const existingGoodBehaviorBonus = await storage.getDailyBonusByTriggerType(
+            userId, today, 'good_behavior_reward');
+          
+          if (existingGoodBehaviorBonus) {
+            console.log(`[GOOD_BEHAVIOR] User already has a good behavior bonus for today`);
+            
+            if (!existingGoodBehaviorBonus.is_spun) {
+              // If it exists but hasn't been spun, just return it
+              console.log(`[GOOD_BEHAVIOR] Existing bonus hasn't been spun yet, returning it`);
+              return res.status(200).json({ 
+                message: "This child already has a pending good behavior bonus spin",
+                daily_bonus: existingGoodBehaviorBonus
+              });
+            } else {
+              // If it has been spun, delete it so we can create a new one
+              console.log(`[GOOD_BEHAVIOR] Deleting previously spun good behavior bonus`);
+              await storage.deleteDailyBonus(userId, existingGoodBehaviorBonus.id);
+            }
+          }
+          
+          // Now we need to check if there's a chore completion bonus that conflicts
+          const existingChoreBonus = await storage.getDailyBonus(today, userId);
+          
+          if (existingChoreBonus && existingChoreBonus.trigger_type === 'chore_completion') {
+            console.log(`[GOOD_BEHAVIOR] User has a chore completion bonus for today`);
+            
+            // Good behavior takes priority - delete the chore bonus
+            await storage.deleteDailyBonus(userId, existingChoreBonus.id);
+            console.log(`[GOOD_BEHAVIOR] Deleted existing chore completion bonus to make way for good behavior bonus`);
+          }
+          
+          // Now create the good behavior bonus
+          dailyBonusRecord = await storage.createDailyBonus({
+            bonus_date: today,
+            user_id: userId,
+            assigned_chore_id: null, // No specific chore for good behavior
+            is_override: true,
+            is_spun: false,
+            trigger_type: 'good_behavior_reward',
+            spin_result_tickets: null // Will be set when spun
+          });
+          
+          console.log(`[GOOD_BEHAVIOR] Successfully created good behavior bonus:`, {
+            id: dailyBonusRecord.id,
+            user_id: dailyBonusRecord.user_id,
+            trigger_type: dailyBonusRecord.trigger_type
+          });
+          
+          // Create a placeholder transaction to acknowledge the spin opportunity
+          transaction = await storage.createTransaction({
+            user_id: userId,
+            chore_id: null,
+            goal_id: activeGoal?.id || null,
+            delta: 0, // No tickets yet, will be updated after spin
+            type: 'reward',
+            note: `Good Behavior: ${data.reason || 'No reason provided'}`,
+            source: 'bonus_spin',
+            ref_id: dailyBonusRecord.id, // Reference the bonus record
+            reason: data.reason || 'Good behavior'
+          });
+          
+          console.log(`[GOOD_BEHAVIOR] Created placeholder transaction:`, {
+            id: transaction.id,
+            user_id: transaction.user_id,
+            delta: transaction.delta
+          });
+          
+          // Broadcast notification about the good behavior bonus
+          broadcast("daily_bonus:good_behavior", { 
+            user_id: userId,
+            daily_bonus: dailyBonusRecord
+          });
+        } catch (error) {
+          console.error(`[GOOD_BEHAVIOR] Error creating bonus spin:`, error);
+          return res.status(400).json({ 
+            message: error instanceof Error ? error.message : 'Failed to create bonus spin'
+          });
         }
         
-        dailyBonusRecord = await storage.createDailyBonus({
-          bonus_date: today,
-          user_id: data.user_id,
-          assigned_chore_id: null, // No specific chore for good behavior
-          is_override: true,
-          is_spun: false,
-          trigger_type: 'good_behavior_reward',
-          spin_result_tickets: null // Will be set when spun
-        });
+        // Get the updated balance
+        updatedBalance = await storage.getUserBalance(userId);
         
-        // Tickets will be added when the wheel is spun
-        updatedBalance = await storage.getUserBalance(data.user_id);
-        
-      } else if (data.tickets) {
+      } else if (data.rewardType === 'tickets' && data.tickets) {
         // For direct ticket rewards, add the tickets immediately
-        console.log(`[GOOD_BEHAVIOR] Adding ${data.tickets} tickets for user ${data.user_id}`);
+        console.log(`[GOOD_BEHAVIOR] Adding ${data.tickets} tickets for user ${userId}`);
         
         // Create transaction for the direct ticket reward
         transaction = await storage.createTransaction({
-          user_id: data.user_id,
+          user_id: userId,
           chore_id: null,
           goal_id: activeGoal?.id || null,
-          delta: data.tickets, // Positive value for reward
+          delta: parseInt(data.tickets.toString()),
           type: 'reward',
-          note: data.reason || "Good Behavior Reward",
+          note: `Good Behavior: ${data.reason || 'No reason provided'}`,
           source: 'manual_add',
           ref_id: null // No daily bonus reference for direct rewards
         });
         
         // Get updated balance after adding tickets
-        updatedBalance = await storage.getUserBalance(data.user_id);
+        updatedBalance = await storage.getUserBalance(userId);
         
         // Broadcast the transaction with balance for immediate UI update
         broadcast("transaction:reward", {
           data: {
-            id: transaction?.id,
-            delta: transaction?.delta,
-            note: transaction?.note || data.reason || "Good Behavior Reward",
-            user_id: data.user_id,
+            id: transaction.id,
+            delta: transaction.delta,
+            note: transaction.note,
+            user_id: userId,
             type: "reward",
             balance: updatedBalance
           }
         });
       } else {
-        // Neither tickets nor awardBonusSpin was provided
-        return res.status(400).json({ message: "Must provide either tickets or awardBonusSpin=true" });
+        // Invalid or missing reward type
+        return res.status(400).json({ 
+          message: "Must provide valid rewardType ('tickets' or 'spin') and appropriate parameters" 
+        });
       }
       
       // Build response
       const response = {
         transaction,
+        daily_bonus: dailyBonusRecord,
         reason: data.reason,
         balance: updatedBalance,
-        goal: activeGoal,
-        awardedBonusSpin: data.awardBonusSpin || false,
-        daily_bonus_id: dailyBonusRecord?.id
+        goal: activeGoal
       };
-      
-      // Broadcast if bonus spin was awarded
-      if (data.awardBonusSpin && dailyBonusRecord) {
-        broadcast("daily_bonus:good_behavior", { 
-          user_id: data.user_id,
-          daily_bonus: dailyBonusRecord,
-          awardedBonusSpin: true
-        });
-      }
       
       return res.status(201).json(response);
     } catch (error) {
