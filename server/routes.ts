@@ -1078,29 +1078,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user_id: data.user_id,
         chore_id: null,
         goal_id: activeGoal?.id || null,
-        delta_tickets: data.tickets, // Positive value for reward
+        delta: data.tickets, // Positive value for reward
         type: 'reward',
         note: data.reason,
-        source: 'chore',
+        source: 'manual_add',
         ref_id: dailyBonusRecord.id
       });
       
-      // Return the transaction and updated balance
+      // Get the current balance for real-time UI updates
+      const updatedBalance = await storage.getUserBalance(data.user_id);
+      
+      // Build response with bonus spin info
       const response = {
         transaction,
         reason: data.reason,
-        balance: await storage.getUserBalance(data.user_id),
-        goal: activeGoal
+        balance: updatedBalance,
+        goal: activeGoal,
+        awardedBonusSpin: data.awardBonusSpin || false,
+        daily_bonus_id: dailyBonusRecord.id
       };
-      
-      // Get the current balance for real-time UI updates
-      const updatedBalance = await storage.getUserBalance(data.user_id);
       
       // Broadcast the transaction with balance for immediate UI update
       broadcast("transaction:reward", {
         data: {
           id: transaction.id,
-          delta_tickets: transaction.delta_tickets,
+          delta: transaction.delta,
           note: transaction.note || data.reason,
           user_id: transaction.user_id,
           type: transaction.type,
@@ -1112,7 +1114,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Also broadcast that a bonus has been assigned for good behavior
       broadcast("daily_bonus:good_behavior", { 
         user_id: data.user_id,
-        daily_bonus: dailyBonusRecord
+        daily_bonus: dailyBonusRecord,
+        awardedBonusSpin: data.awardBonusSpin || false
       });
       
       return res.status(201).json(response);
