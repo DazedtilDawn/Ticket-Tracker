@@ -64,9 +64,14 @@ export function registerProfileImageRoutes(app: Express) {
   // Profile image upload endpoint - parent only
   app.post('/api/profile-image/:userId', AuthMiddleware, (req: Request, res: Response) => {
     console.log('[PROFILE-UPLOAD] Request received');
+    console.log('[PROFILE-UPLOAD] Auth user:', req.user);
+    console.log('[PROFILE-UPLOAD] Headers:', req.headers);
+    console.log('[PROFILE-UPLOAD] Content-Type:', req.headers['content-type']);
+    console.log('[PROFILE-UPLOAD] Content-Length:', req.headers['content-length']);
     
     // Ensure user is a parent
     if (req.user?.role !== 'parent') {
+      console.log('[PROFILE-UPLOAD] Authorization failed - not a parent user');
       return res.status(403).json({ message: 'Only parents can upload profile images' });
     }
     
@@ -79,7 +84,11 @@ export function registerProfileImageRoutes(app: Express) {
       fs.mkdirSync(profilesDir, { recursive: true, mode: 0o777 });
     } else {
       fs.chmodSync(profilesDir, 0o777);
+      console.log(`[PROFILE-UPLOAD] Updated permissions on directory: ${profilesDir}`);
     }
+    
+    console.log('[PROFILE-UPLOAD] Directory exists:', fs.existsSync(profilesDir));
+    console.log('[PROFILE-UPLOAD] Directory is writable:', fs.accessSync(profilesDir, fs.constants.W_OK | fs.constants.R_OK, (err) => !err));
     
     // Process image upload - non-blocking
     const handleUpload = async () => {
