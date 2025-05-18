@@ -1211,7 +1211,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Check for an unspun daily bonus for a specific user
-  // Returns bonus info only if the chore has been completed (for chore_completion trigger types)
+  // Returns bonus info only if prerequisites are met based on trigger type
   app.get("/api/daily-bonus/unspun", auth, async (req: Request, res: Response) => {
     try {
       const userId = parseInt(req.query.user_id as string);
@@ -1226,14 +1226,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get today's date in YYYY-MM-DD format
       const today = new Date().toISOString().split('T')[0];
       
-      // Check if there's a daily bonus for today that hasn't been spun yet
+      // First check for good_behavior_reward bonuses as they have priority
+      const goodBehaviorBonus = await storage.getDailyBonusByTriggerType(userId, today, 'good_behavior_reward');
+      
+      // If there's an unspun good behavior bonus, return it immediately
+      if (goodBehaviorBonus && !goodBehaviorBonus.is_spun) {
+        console.log("[UNSPUN_BONUS] Found unspun good behavior bonus:", goodBehaviorBonus.id);
+        
+        // For good behavior bonuses, return immediately - no prerequisites
+        return res.status(200).json({
+          daily_bonus_id: goodBehaviorBonus.id,
+          chore_name: "Good Behavior",
+          trigger_type: 'good_behavior_reward'
+        });
+      }
+      
+      // If no good behavior bonus, check for chore completion bonus
       const dailyBonus = await storage.getDailyBonus(today, userId);
       
+      // No bonus found at all
       if (!dailyBonus) {
         console.log("[UNSPUN_BONUS] No daily bonus found for user", userId, "on date", today);
         return res.status(404).json({ message: "No daily bonus found for this user and date" });
       }
       
+      // Bonus exists but already spun
       if (dailyBonus.is_spun) {
         console.log("[UNSPUN_BONUS] Daily bonus already spun for user", userId, "on date", today);
         return res.status(404).json({ message: "Daily bonus has already been spun" });
@@ -1242,16 +1259,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // For chore completion bonuses, check if the chore has actually been completed
       if (dailyBonus.trigger_type === 'chore_completion' && dailyBonus.assigned_chore_id) {
         // Get today's transactions to see if the assigned chore was completed
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const todayDate = new Date();
+        todayDate.setHours(0, 0, 0, 0);
         
         const recentTransactions = await storage.getUserTransactions(userId, 50);
         const completedChoreIds = new Set();
         
         // Find which chores were completed today
         for (const tx of recentTransactions) {
-          if (tx.type === 'earn' && tx.chore_id && tx.date && tx.date >= today) {
-            completedChoreIds.add(tx.chore_id);
+          if (tx.type === 'earn' && tx.chore_id && tx.created_at) {
+            const txDate = new Date(tx.created_at);
+            if (txDate >= todayDate) {
+              completedChoreIds.add(tx.chore_id);
+            }
           }
         }
         
@@ -1268,7 +1288,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // If we have an unspun bonus and prerequisites are met, get more details
-      let bonusDetails: any = { daily_bonus_id: dailyBonus.id };
+      let bonusDetails: any = { 
+        daily_bonus_id: dailyBonus.id,
+        trigger_type: dailyBonus.trigger_type 
+      };
       
       if (dailyBonus.trigger_type === 'chore_completion' && dailyBonus.assigned_chore_id) {
         // For chore-triggered bonuses, include chore details
@@ -1278,8 +1301,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           bonusDetails.chore_id = chore.id;
         }
       } else {
-        // For good behavior bonuses, use a generic name
-        bonusDetails.chore_name = "Good Behavior";
+        // For other bonus types, use a generic name
+        bonusDetails.chore_name = "Bonus Spin";
       }
       
       console.log("[UNSPUN_BONUS] Found unspun bonus:", bonusDetails);

@@ -136,7 +136,7 @@ export class DatabaseStorage implements IStorage {
     return bonus;
   }
   
-  async getDailyBonusByTriggerType(userId: number, date: string, triggerType: string): Promise<DailyBonus | undefined> {
+  async getDailyBonusByTriggerType(userId: number, date: string, triggerType: 'chore_completion' | 'good_behavior_reward' | 'respin'): Promise<DailyBonus | undefined> {
     console.log(`[GET_BONUS] Looking for daily bonus with date=${date}, userId=${userId}, and triggerType=${triggerType}`);
     
     const results = await db
@@ -145,7 +145,7 @@ export class DatabaseStorage implements IStorage {
       .where(and(
         eq(dailyBonus.bonus_date, date),
         eq(dailyBonus.user_id, userId),
-        eq(dailyBonus.trigger_type, triggerType)
+        eq(dailyBonus.trigger_type, triggerType as any) // Type cast to fix compatibility issue
       ));
     
     if (results.length > 0) {
