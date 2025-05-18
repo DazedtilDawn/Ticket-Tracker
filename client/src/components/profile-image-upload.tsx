@@ -94,19 +94,28 @@ export default function ProfileImageUpload({
       
       // Add a timestamp to prevent caching
       const timestamp = new Date().getTime();
-      const response = await apiRequest(`/api/profile-image/${userId}?_t=${timestamp}`, {
+      
+      // Use fetch directly for more control over the request
+      const response = await fetch(`/api/profile-image/${userId}?_t=${timestamp}`, {
         method: 'POST',
         body: formData,
         // Don't set Content-Type, let the browser set it with the boundary
-        headers: {}
+        headers: {
+          'Accept': 'application/json'
+        }
       });
       
-      console.log('Upload response:', response);
+      if (!response.ok) {
+        throw new Error(`Upload failed with status: ${response.status}`);
+      }
       
-      if (response && response.profile_image_url) {
+      const data = await response.json();
+      console.log('Upload response:', data);
+      
+      if (data && data.profile_image_url) {
         // Update the preview URL with the actual server URL (includes the full path)
         // Add a timestamp to prevent browser caching of the image
-        const imageUrlWithTimestamp = `${response.profile_image_url}?t=${timestamp}`;
+        const imageUrlWithTimestamp = `${data.profile_image_url}?t=${timestamp}`;
         setPreviewUrl(imageUrlWithTimestamp);
         
         toast({
@@ -116,7 +125,7 @@ export default function ProfileImageUpload({
         
         // Call the callback if provided
         if (onImageUpdated) {
-          onImageUpdated(response.profile_image_url);
+          onImageUpdated(data.profile_image_url);
         }
         
         // Invalidate ALL relevant queries to refresh data across the app
