@@ -44,6 +44,12 @@ export default function ParentDashboard() {
           setFamilyUsers(users);
           console.log("Successfully loaded family users:", users);
           
+          // Get all transactions in one call first to ensure latest data
+          await apiRequest('/api/transactions/refresh-balances', { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          
           // Load balance data for each child user
           const children = users.filter(u => u.role === 'child');
           const summaries = await Promise.all(
@@ -58,9 +64,9 @@ export default function ParentDashboard() {
                   }
                 };
                 
-                // Force a fresh query each time
+                // Force a direct database query for each user's balance
                 const timestamp = new Date().getTime();
-                const stats = await apiRequest(`/api/stats?user_id=${child.id}&_t=${timestamp}`, requestOptions);
+                const stats = await apiRequest(`/api/stats/direct?user_id=${child.id}&_t=${timestamp}`, requestOptions);
                 
                 console.log(`Loaded balance for ${child.name} (ID: ${child.id}): ${stats?.balance}`);
                 
