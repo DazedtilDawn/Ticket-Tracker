@@ -68,12 +68,16 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
     
     // Prevent double submissions
     if (isUploading) {
-      console.log('Upload already in progress');
+      console.log('Upload already in progress, preventing duplicate request');
       return;
     }
     
+    // Set uploading state immediately to prevent multiple attempts
     setIsUploading(true);
+    
+    // Track upload completion status
     let uploadCompleted = false;
+    let autoCloseTimeout: NodeJS.Timeout | null = null;
     
     try {
       console.log('Preparing upload for user:', user.id);
@@ -86,13 +90,16 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
       const timestamp = new Date().getTime();
       const uploadUrl = `/api/profile-image/${user.id}?_t=${timestamp}`;
       
-      console.log('Uploading file:', selectedFile.name);
+      console.log('Uploading file:', selectedFile.name, 'size:', selectedFile.size);
       
-      // Create abort controller for timeout
+      // Create abort controller with timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      const timeoutId = setTimeout(() => {
+        console.log('Upload timeout triggered, aborting request');
+        controller.abort();
+      }, 15000); // 15 second timeout
       
-      // Make the request
+      // Execute the upload
       const response = await fetch(uploadUrl, {
         method: 'POST',
         body: formData,
@@ -100,30 +107,30 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
         signal: controller.signal
       });
       
-      // Clear timeout
+      // Clear abort timeout
       clearTimeout(timeoutId);
       
-      console.log('Upload status:', response.status);
+      console.log('Upload response status:', response.status);
       
       // Handle error responses
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Error response:', errorText);
-        throw new Error(`Upload failed: ${response.status}`);
+        console.error('Server error response:', errorText);
+        throw new Error(`Upload failed: ${response.status} - ${errorText.substring(0, 100)}`);
       }
       
       // Parse the response
       const data = await response.json();
-      console.log('Success response:', data);
+      console.log('Server success response:', data);
       
-      // Validation
+      // Validate response structure
       if (!data || !data.success) {
-        throw new Error(data?.message || 'Upload failed');
+        throw new Error(data?.message || 'Upload failed - server indicated failure');
       }
       
       // Process successful upload
       if (data.profile_image_url || data.public_url) {
-        // Set success flag
+        // Set success flag to prevent state reset in finally block
         uploadCompleted = true;
         
         // Update UI with new image (prefer public_url if available)
@@ -132,7 +139,7 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
         setUploadSuccess(true);
         
         // Log success details
-        console.log('Image upload succeeded with:', imageUrl);
+        console.log('Image upload succeeded with URL:', imageUrl);
         
         // Notify user
         toast({
@@ -140,7 +147,7 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
           description: "Profile image updated successfully"
         });
         
-        // Refresh data across the application
+        // Refresh all relevant data across the application
         queryClient.invalidateQueries({ queryKey: ["/api/users"] });
         queryClient.invalidateQueries({ queryKey: ["/api/auth/verify"] });
         
@@ -149,30 +156,40 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
           queryClient.invalidateQueries({ queryKey: [`/api/stats`] });
         }
         
-        // Auto-close after success with a short delay
-        setTimeout(() => {
+        // Auto-close after success with a delay - store the timeout ID
+        console.log('Scheduling auto-close of modal in 800ms');
+        autoCloseTimeout = setTimeout(() => {
           console.log('Auto-closing profile image modal after successful upload');
+          // Force modal closure
           onClose();
-        }, 1000);
+        }, 800);
       } else {
-        console.error('Response missing image URL:', data);
+        console.error('Response missing image URL in data:', data);
         throw new Error('No image URL in server response');
       }
     } catch (error: any) {
       // Error handling
-      console.error("Upload error:", error);
+      console.error("Upload error details:", error);
       
+      // Clear any existing timeout to prevent auto-close after error
+      if (autoCloseTimeout) {
+        clearTimeout(autoCloseTimeout);
+      }
+      
+      // Show user-friendly error message
       toast({
         title: "Upload failed",
         description: error?.message || "Could not upload image",
         variant: "destructive"
       });
+      
+      // Always set uploadCompleted to false on error
+      uploadCompleted = false;
     } finally {
-      // Always reset state
+      // Always reset loading state
       setIsUploading(false);
       
-      // If upload completed successfully, we can leave success state
-      // Otherwise reset it to allow retrying
+      // Only reset success state if upload didn't complete
       if (!uploadCompleted) {
         setUploadSuccess(false);
       }

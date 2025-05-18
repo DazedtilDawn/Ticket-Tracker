@@ -37,7 +37,8 @@ import { registerProfileImageRoutes } from "./lib/simple-profile-upload";
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   
-  console.log("[SETUP] Registering profile image routes...");
+  // Register only one profile image handler - this is the definitive implementation
+  console.log("[SETUP] Registering profile image routes (v2)...");
   registerProfileImageRoutes(app);
   console.log("[SETUP] Profile image routes registered successfully");
   
