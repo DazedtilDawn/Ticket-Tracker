@@ -136,6 +136,31 @@ export class DatabaseStorage implements IStorage {
     return bonus;
   }
   
+  async getDailyBonusByTriggerType(userId: number, date: string, triggerType: string): Promise<DailyBonus | undefined> {
+    console.log(`[GET_BONUS] Looking for daily bonus with date=${date}, userId=${userId}, and triggerType=${triggerType}`);
+    
+    const results = await db
+      .select()
+      .from(dailyBonus)
+      .where(and(
+        eq(dailyBonus.bonus_date, date),
+        eq(dailyBonus.user_id, userId),
+        eq(dailyBonus.trigger_type, triggerType)
+      ));
+    
+    if (results.length > 0) {
+      console.log(`[GET_BONUS] Found ${triggerType} bonus for user ${userId} on ${date}:`, {
+        id: results[0].id,
+        is_spun: results[0].is_spun,
+        trigger_type: results[0].trigger_type
+      });
+      return results[0];
+    } else {
+      console.log(`[GET_BONUS] No ${triggerType} bonus found for user ${userId} on date ${date}`);
+      return undefined;
+    }
+  }
+  
   async createDailyBonus(bonus: InsertDailyBonus): Promise<DailyBonus> {
     console.log(`[CREATE_BONUS] Creating new daily bonus with params:`, {
       bonus_date: bonus.bonus_date,

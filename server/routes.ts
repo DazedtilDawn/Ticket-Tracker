@@ -1061,6 +1061,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // For bonus spin, create a new daily bonus record without adding tickets yet
         console.log(`[GOOD_BEHAVIOR] Creating bonus spin for user ${data.user_id}`);
         
+        // Check if the user already has a good behavior bonus for today
+        const existingBonus = await storage.getDailyBonusByTriggerType(data.user_id, today, 'good_behavior_reward');
+        
+        if (existingBonus && !existingBonus.is_spun) {
+          console.log(`[GOOD_BEHAVIOR] User already has an unspun good behavior bonus for today`);
+          return res.status(400).json({ message: "This child already has a pending bonus spin from today" });
+        }
+        
         dailyBonusRecord = await storage.createDailyBonus({
           bonus_date: today,
           user_id: data.user_id,
@@ -1068,13 +1076,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           is_override: true,
           is_spun: false,
           trigger_type: 'good_behavior_reward',
-          spin_result_tickets: 0 // Default value until wheel is spun
+          spin_result_tickets: null // Will be set when spun
         });
         
         // Tickets will be added when the wheel is spun
         updatedBalance = await storage.getUserBalance(data.user_id);
         
-      } else {
+      } else if (data.tickets) {
         // For direct ticket rewards, add the tickets immediately
         console.log(`[GOOD_BEHAVIOR] Adding ${data.tickets} tickets for user ${data.user_id}`);
         
@@ -1104,6 +1112,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             balance: updatedBalance
           }
         });
+      } else {
+        // Neither tickets nor awardBonusSpin was provided
+        return res.status(400).json({ message: "Must provide either tickets or awardBonusSpin=true" });
       }
       
       // Build response
