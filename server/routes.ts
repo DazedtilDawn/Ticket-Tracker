@@ -32,7 +32,7 @@ import { calculateTier, calculateProgressPercent, calculateBoostPercent } from "
 import { WebSocketServer, WebSocket } from "ws";
 import { cleanupOrphanedProducts } from "./cleanup";
 import { upload, getFileUrl } from "./lib/upload";
-import { registerProfileImageRoutes } from "./lib/profile-routes";
+import { registerProfileImageRoutes } from "./lib/simple-profile-upload";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
