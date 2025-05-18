@@ -785,7 +785,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // EMERGENCY FIX: Direct SQL to bypass ORM issues
       try {
-        const { pool } = require('./db');
+        // Import pool from db.ts
+        const { pool } = await import('./db');
         const now = new Date().toISOString();
         const noteText = `Completed: ${chore.name}`;
         const base_tickets_earned = chore.base_tickets || 0;
