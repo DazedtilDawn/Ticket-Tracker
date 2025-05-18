@@ -37,8 +37,9 @@ import { registerProfileImageRoutes } from "./lib/simple-profile-upload";
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   
-  // Register profile image routes
+  console.log("[SETUP] Registering profile image routes...");
   registerProfileImageRoutes(app);
+  console.log("[SETUP] Profile image routes registered successfully");
   
   // Create an endpoint to refresh the balances of all users
   app.post("/api/transactions/refresh-balances", async (req: Request, res: Response) => {

@@ -122,22 +122,25 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
       }
       
       // Process successful upload
-      if (data.profile_image_url) {
+      if (data.profile_image_url || data.public_url) {
         // Set success flag
         uploadCompleted = true;
         
-        // Update UI with new image
-        const imageUrl = `${data.profile_image_url}?t=${timestamp}`;
+        // Update UI with new image (prefer public_url if available)
+        const imageUrl = data.public_url || `${data.profile_image_url}?t=${timestamp}`;
         setPreviewUrl(imageUrl);
         setUploadSuccess(true);
+        
+        // Log success details
+        console.log('Image upload succeeded with:', imageUrl);
         
         // Notify user
         toast({
           title: "Success",
-          description: "Profile image updated"
+          description: "Profile image updated successfully"
         });
         
-        // Refresh data
+        // Refresh data across the application
         queryClient.invalidateQueries({ queryKey: ["/api/users"] });
         queryClient.invalidateQueries({ queryKey: ["/api/auth/verify"] });
         
@@ -146,10 +149,14 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
           queryClient.invalidateQueries({ queryKey: [`/api/stats`] });
         }
         
-        // Auto-close after success
-        setTimeout(() => onClose(), 1500);
+        // Auto-close after success with a short delay
+        setTimeout(() => {
+          console.log('Auto-closing profile image modal after successful upload');
+          onClose();
+        }, 1000);
       } else {
-        throw new Error('No image URL in response');
+        console.error('Response missing image URL:', data);
+        throw new Error('No image URL in server response');
       }
     } catch (error: any) {
       // Error handling
