@@ -71,6 +71,8 @@ export default function ProfileImageUpload({
       const formData = new FormData();
       formData.append('profile_image', file);
       
+      console.log('Uploading image for user:', userId);
+      
       const response = await apiRequest(`/api/profile-image/${userId}`, {
         method: 'POST',
         body: formData,
@@ -78,7 +80,12 @@ export default function ProfileImageUpload({
         headers: {}
       });
       
+      console.log('Upload response:', response);
+      
       if (response && response.profile_image_url) {
+        // Set the preview URL from the server response
+        setPreviewUrl(response.profile_image_url);
+        
         toast({
           title: "Profile image updated",
           description: "The profile image was updated successfully."
@@ -89,8 +96,15 @@ export default function ProfileImageUpload({
           onImageUpdated(response.profile_image_url);
         }
         
-        // Invalidate relevant queries
+        // Invalidate relevant queries to refresh data across the app
         queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+        
+        // Force a reload of child-specific data if this is a child profile
+        if (userId !== 1) { // Assuming parent always has ID 1
+          queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}`] });
+        }
+      } else {
+        throw new Error('No profile image URL returned from server');
       }
     } catch (error) {
       console.error("Error uploading profile image:", error);

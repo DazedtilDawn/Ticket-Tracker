@@ -49,7 +49,21 @@ export default function ParentDashboard() {
           const summaries = await Promise.all(
             children.map(async (child) => {
               try {
-                const stats = await apiRequest(`/api/stats?user_id=${child.id}`, { method: 'GET' });
+                // Explicitly bypass cache to get fresh data
+                const requestOptions = {
+                  method: 'GET',
+                  headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                  }
+                };
+                
+                // Force a fresh query each time
+                const timestamp = new Date().getTime();
+                const stats = await apiRequest(`/api/stats?user_id=${child.id}&_t=${timestamp}`, requestOptions);
+                
+                console.log(`Loaded balance for ${child.name} (ID: ${child.id}): ${stats?.balance}`);
+                
                 return {
                   id: child.id,
                   name: child.name,

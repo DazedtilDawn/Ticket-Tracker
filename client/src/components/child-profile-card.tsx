@@ -28,9 +28,20 @@ export default function ChildProfileCard({
   
   // Handle profile image update
   const handleProfileImageUpdated = (imageUrl: string) => {
+    console.log('Profile image updated in child card:', imageUrl);
+    
+    // Trigger a UI update with the new image URL
+    const updatedChild = {
+      ...child,
+      profile_image_url: imageUrl
+    };
+    
     // Invalidate queries that might use the profile image
     queryClient.invalidateQueries({ queryKey: ["/api/auth/verify"] });
     queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+    
+    // Force refresh parent dashboard to show updated image
+    queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
   };
   
   // Generate initials for avatar fallback
