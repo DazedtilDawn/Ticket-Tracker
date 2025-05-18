@@ -12,3 +12,21 @@ export function ticketsToUSD(tickets: number): string {
   const dollars = (tickets * 0.25).toFixed(2);
   return `$${dollars}`;
 }
+
+/**
+ * Get the appropriate TailwindCSS class for a chore tier
+ */
+export function formatTierStyleClass(tier: string): string {
+  switch (tier?.toLowerCase()) {
+    case 'easy':
+      return 'bg-green-500';
+    case 'medium':
+      return 'bg-orange-500';
+    case 'hard':
+      return 'bg-red-500';
+    case 'special':
+      return 'bg-purple-500';
+    default:
+      return 'bg-gray-500';
+  }
+}
