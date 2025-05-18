@@ -131,47 +131,54 @@ export default function WishlistCard({ goal, onSetAsGoal, onDelete, refreshList 
           <Progress value={goal.progress} className="h-2" />
         </div>
         
-        <div className="mt-4 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <Button variant="link" size="sm" className="text-gray-500 dark:text-gray-400 p-0" asChild>
-              <a href={amazonUrl} target="_blank" rel="noopener noreferrer">
-                View on Amazon
-              </a>
-            </Button>
+        <div className="mt-4 flex flex-col space-y-3">
+          {/* Goal Controls */}
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-2">
+              <Button variant="link" size="sm" className="text-gray-500 dark:text-gray-400 p-0" asChild>
+                <a href={amazonUrl} target="_blank" rel="noopener noreferrer">
+                  View on Amazon
+                </a>
+              </Button>
+              
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete from wishlist?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to remove this item from your wishlist?
+                      This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+                      {isDeleting ? "Deleting..." : "Delete"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
             
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete from wishlist?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to remove this item from your wishlist?
-                    This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
-                    {isDeleting ? "Deleting..." : "Delete"}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            {/* Status indicator */}
+            {goal.is_active && (
+              <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 rounded-md">
+                Active Goal
+              </span>
+            )}
           </div>
           
-          {goal.is_active ? (
-            <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 rounded-md">
-              Active Goal
-            </span>
-          ) : (
+          {/* Set as goal button - only shown if not active */}
+          {!goal.is_active && (
             <Button 
               onClick={() => onSetAsGoal(goal.id)}
               size="sm"
-              className="bg-primary-600 hover:bg-primary-700 text-white dark:bg-primary-700 dark:hover:bg-primary-800"
+              className="w-full bg-primary-600 hover:bg-primary-700 text-white dark:bg-primary-700 dark:hover:bg-primary-800"
             >
               Set as Active Goal
             </Button>

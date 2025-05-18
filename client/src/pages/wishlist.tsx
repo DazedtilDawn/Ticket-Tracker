@@ -19,9 +19,16 @@ export default function Wishlist() {
   const [location] = useLocation();
   
   // Parse the URL for tab selection
-  const urlParams = new URLSearchParams(location.search);
-  const tabParam = urlParams.get('tab');
-  const [activeTab, setActiveTab] = useState(tabParam || "my-list");
+  const getTabFromUrl = () => {
+    // Simple manual parsing of URL search parameters
+    if (location.search && location.search.includes('tab=')) {
+      const tabValue = location.search.split('tab=')[1].split('&')[0];
+      return tabValue || "my-list";
+    }
+    return "my-list";
+  };
+  
+  const [activeTab, setActiveTab] = useState(getTabFromUrl());
   
   // Fetch user's goals
   const { 
