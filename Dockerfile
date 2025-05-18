@@ -46,6 +46,7 @@ WORKDIR /app
 COPY --from=builder /app .
 
 ENV NODE_ENV=production
+ENV PORT=5000
 EXPOSE 5000
 
 # drop privileges for runtime
