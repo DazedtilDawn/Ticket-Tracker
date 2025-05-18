@@ -1277,7 +1277,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get today's date in YYYY-MM-DD format
       const today = new Date().toISOString().split('T')[0];
       
-      // First check for good_behavior_reward bonuses as they have priority
+      // First check for good_behavior_reward bonuses
       const goodBehaviorBonus = await storage.getDailyBonusByTriggerType(userId, today, 'good_behavior_reward');
       
       // If there's an unspun good behavior bonus, return it immediately
@@ -1292,23 +1292,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // If no good behavior bonus, check for chore completion bonus
-      const dailyBonus = await storage.getDailyBonus(today, userId);
+      // Now check for a chore completion bonus specifically
+      const choreBonus = await storage.getDailyBonusByTriggerType(userId, today, 'chore_completion');
       
-      // No bonus found at all
-      if (!dailyBonus) {
-        console.log("[UNSPUN_BONUS] No daily bonus found for user", userId, "on date", today);
+      // No chore bonus found
+      if (!choreBonus) {
+        console.log("[UNSPUN_BONUS] No chore completion bonus found for user", userId, "on date", today);
         return res.status(404).json({ message: "No daily bonus found for this user and date" });
       }
       
-      // Bonus exists but already spun
-      if (dailyBonus.is_spun) {
-        console.log("[UNSPUN_BONUS] Daily bonus already spun for user", userId, "on date", today);
+      // Chore bonus exists but already spun
+      if (choreBonus.is_spun) {
+        console.log("[UNSPUN_BONUS] Chore completion bonus already spun for user", userId, "on date", today);
         return res.status(404).json({ message: "Daily bonus has already been spun" });
       }
       
       // For chore completion bonuses, check if the chore has actually been completed
-      if (dailyBonus.trigger_type === 'chore_completion' && dailyBonus.assigned_chore_id) {
+      if (choreBonus.trigger_type === 'chore_completion' && choreBonus.assigned_chore_id) {
         // Get today's transactions to see if the assigned chore was completed
         const todayDate = new Date();
         todayDate.setHours(0, 0, 0, 0);
