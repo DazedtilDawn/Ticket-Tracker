@@ -5,6 +5,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth-store";
 import { createWebSocketConnection, subscribeToChannel } from "@/lib/supabase";
+import { useLocation } from "wouter";
 import WishlistCard from "@/components/wishlist-card";
 import { SharedCatalog } from "@/components/shared-catalog";
 import { AddProductDialog } from "@/components/add-product-dialog";
@@ -15,7 +16,12 @@ import { PlusIcon, ShoppingBag } from "lucide-react";
 export default function Wishlist() {
   const { user } = useAuthStore();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("my-list");
+  const [location] = useLocation();
+  
+  // Parse the URL for tab selection
+  const urlParams = new URLSearchParams(location.search);
+  const tabParam = urlParams.get('tab');
+  const [activeTab, setActiveTab] = useState(tabParam || "my-list");
   
   // Fetch user's goals
   const { 

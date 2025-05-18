@@ -171,8 +171,9 @@ export default function WishlistCard({ goal, onSetAsGoal, onDelete, refreshList 
             <Button 
               onClick={() => onSetAsGoal(goal.id)}
               size="sm"
+              className="bg-primary-600 hover:bg-primary-700 text-white dark:bg-primary-700 dark:hover:bg-primary-800"
             >
-              Set as Goal
+              Set as Active Goal
             </Button>
           )}
         </div>
