@@ -35,6 +35,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const formSchema = z.object({
   user_id: z.string().min(1, "Please select a child"),
@@ -42,10 +43,11 @@ const formSchema = z.object({
     message: "Must add at least 1 ticket",
   }),
   reason: z.string().min(1, "Please provide a reason"),
+  awardBonusSpin: z.boolean().default(false),
 });
 
 type FormValues = z.infer<typeof formSchema>;
-type FormDataType = { user_id: number; tickets: number; reason: string };
+type FormDataType = { user_id: number; tickets: number; reason: string; awardBonusSpin: boolean };
 
 interface GoodBehaviorDialogProps {
   children: React.ReactNode;
@@ -65,6 +67,7 @@ export function GoodBehaviorDialog({ children, onCompleted }: GoodBehaviorDialog
       user_id: "",
       tickets: "1",
       reason: "",
+      awardBonusSpin: false,
     },
   });
 
@@ -107,6 +110,7 @@ export function GoodBehaviorDialog({ children, onCompleted }: GoodBehaviorDialog
       user_id: parseInt(data.user_id),
       tickets: parseInt(data.tickets),
       reason: data.reason,
+      awardBonusSpin: data.awardBonusSpin,
     });
   };
 
@@ -185,6 +189,26 @@ export function GoodBehaviorDialog({ children, onCompleted }: GoodBehaviorDialog
                     Provide a reason for the bonus tickets
                   </FormDescription>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="awardBonusSpin"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Award Bonus Spin</FormLabel>
+                    <FormDescription>
+                      Child will get a spin on the bonus wheel when they visit their dashboard
+                    </FormDescription>
+                  </div>
                 </FormItem>
               )}
             />
