@@ -56,6 +56,7 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
 
   // Function to upload the image
   const handleSaveImage = async () => {
+    // Safety checks
     if (!selectedFile) {
       toast({
         title: "No image selected",
@@ -65,98 +66,115 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
       return;
     }
     
+    // Prevent double submissions
+    if (isUploading) {
+      console.log('Upload already in progress, preventing duplicate request');
+      return;
+    }
+    
     setIsUploading(true);
     
     try {
       console.log('Preparing to upload profile image for user:', user.id);
       
-      // Create a new form data object
+      // Create form data and append the file
       const formData = new FormData();
-      
-      // Add the file with the exact name the server expects - this needs to match the server side
-      // The field name must match the one expected in the server-side upload.single('profile_image') call
       formData.append('profile_image', selectedFile);
       
-      // Add a timestamp to prevent caching issues
+      // Create upload URL with cache-busting
       const timestamp = new Date().getTime();
       const uploadUrl = `/api/profile-image/${user.id}?_t=${timestamp}`;
       
       console.log('Sending profile image upload request to:', uploadUrl);
       console.log('File being uploaded:', selectedFile.name, 'size:', selectedFile.size, 'type:', selectedFile.type);
       
-      // Use fetch API for more reliable uploads with credentials
-      console.log('Using fetch API for upload with credentials');
-      const response = await fetch(uploadUrl, {
-        method: 'POST',
-        body: formData,
-        credentials: 'include', // Include cookies for authentication
-        // Don't set Content-Type header, browser will set it correctly with boundary for multipart/form-data
-      });
+      // Set timeout to prevent hanging requests
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
       
-      console.log('Upload completed with status:', response.status);
-      
-      // Check if the upload was successful
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Server returned error status:', response.status);
-        console.error('Response text:', errorText);
-        throw new Error(`Upload failed with status: ${response.status}. ${errorText}`);
-      }
-      
-      let data;
       try {
-        // Parse the successful response
-        data = await response.json();
-        console.log('Upload success response:', data);
-      } catch (parseError) {
-        console.error('Error parsing response JSON:', parseError);
-        const responseText = await response.text();
-        console.log('Raw response text:', responseText);
-        throw new Error('Failed to parse server response');
-      }
-      
-      if (data && data.profile_image_url) {
-        // Add a timestamp to prevent browser caching of the image
-        const imageUrlWithTimestamp = `${data.profile_image_url}?t=${timestamp}`;
-        setPreviewUrl(imageUrlWithTimestamp);
-        
-        toast({
-          title: "Profile image updated",
-          description: "The profile image was updated successfully."
+        // Make the upload request
+        const response = await fetch(uploadUrl, {
+          method: 'POST',
+          body: formData,
+          credentials: 'include',
+          signal: controller.signal
         });
         
-        setUploadSuccess(true);
+        // Clear the timeout since request completed
+        clearTimeout(timeoutId);
         
-        // Invalidate ALL relevant queries to refresh data across the app
-        queryClient.invalidateQueries({ queryKey: ["/api/users"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/auth/verify"] });
+        console.log('Upload completed with status:', response.status);
         
-        // Force a reload of child-specific data if this is a child profile
-        if (user.id !== 1) { // Assuming parent always has ID 1
-          queryClient.invalidateQueries({ queryKey: [`/api/users/${user.id}`] });
-          queryClient.invalidateQueries({ queryKey: [`/api/stats`] });
+        // Handle non-successful responses
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Server returned error status:', response.status);
+          console.error('Response text:', errorText);
+          throw new Error(`Upload failed with status: ${response.status}. ${errorText}`);
         }
-      } else {
-        throw new Error('No profile image URL returned from server');
+        
+        // Parse response data
+        const data = await response.json();
+        console.log('Upload success response:', data);
+        
+        if (!data || !data.success) {
+          throw new Error(data?.message || 'Server returned unsuccessful response');
+        }
+        
+        // Handle successful upload
+        if (data && data.profile_image_url) {
+          // Add a cache-busting timestamp
+          const imageUrlWithTimestamp = `${data.profile_image_url}?t=${timestamp}`;
+          setPreviewUrl(imageUrlWithTimestamp);
+          
+          // Show success message
+          toast({
+            title: "Profile image updated",
+            description: "The profile image was updated successfully."
+          });
+          
+          // Update success state
+          setUploadSuccess(true);
+          
+          // Close the modal after a short delay
+          setTimeout(() => {
+            onClose();
+          }, 1500);
+          
+          // Invalidate relevant queries to refresh data
+          queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/auth/verify"] });
+          
+          if (user.id !== 1) {
+            queryClient.invalidateQueries({ queryKey: [`/api/users/${user.id}`] });
+            queryClient.invalidateQueries({ queryKey: [`/api/stats`] });
+          }
+        } else {
+          throw new Error('No profile image URL returned from server');
+        }
+      } catch (fetchError) {
+        // Handle fetch-specific errors
+        if (fetchError.name === 'AbortError') {
+          throw new Error('Upload request timed out. Please try again.');
+        }
+        throw fetchError;
       }
     } catch (error) {
       console.error("Error uploading profile image:", error);
       
-      // Reset the loading state
-      setIsUploading(false);
-      
-      // Show error toast
+      // Show error toast with appropriate message
       toast({
         title: "Upload failed",
-        description: error instanceof Error ? error.message : "Failed to upload the profile image. Please try again.",
+        description: error instanceof Error 
+          ? error.message 
+          : "Failed to upload the profile image. Please try again.",
         variant: "destructive"
       });
-      
-      return; // Exit early to prevent further processing
+    } finally {
+      // Always reset loading state
+      setIsUploading(false);
     }
-    
-    // Only reach here on success
-    setIsUploading(false);
   };
 
   // Generate initials for avatar fallback
