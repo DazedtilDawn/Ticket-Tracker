@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
+import ParentDashboard from "@/pages/parent-dashboard";
 import Login from "@/pages/login";
 import Chores from "@/pages/chores";
 import Wishlist from "@/pages/wishlist";
@@ -19,9 +20,16 @@ import { MobileNav } from "./components/layout/mobile-nav";
 
 function ProtectedRoute({ component: Component, ...rest }) {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const user = useAuthStore(state => state.user);
+  const isViewingAsChild = useAuthStore(state => state.isViewingAsChild);
   
   if (!isAuthenticated) {
     return <Route path="*" component={Login} />;
+  }
+  
+  // Special case for the Dashboard to show parent-specific dashboard
+  if (Component === Dashboard && user?.role === 'parent' && !isViewingAsChild()) {
+    return <ParentDashboard {...rest} />;
   }
   
   return <Component {...rest} />;
