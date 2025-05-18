@@ -15,7 +15,8 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("child"), // "parent" or "child"
   balance_cache: integer("balance_cache"),
   created_at: timestamp("created_at", { withTimezone: true }),
-  family_id: integer("family_id")
+  family_id: integer("family_id"),
+  avatar_data: text("avatar_data"), // Stores JSON data for the avatar
 });
 
 export const chores = pgTable("chores", {
