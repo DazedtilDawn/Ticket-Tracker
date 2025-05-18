@@ -17,7 +17,7 @@ export function PurchaseDialog({ children, onCompleted }: { children: React.Reac
         method: "POST",
         body: JSON.stringify({
           user_id: getActiveChildId(),
-          tickets,                         // positive integer
+          delta: tickets,                  // renamed from tickets to delta to match server expectations
           reason: "Purchase: General purchase"
         })
       });
