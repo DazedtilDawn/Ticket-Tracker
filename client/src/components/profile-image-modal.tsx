@@ -83,52 +83,26 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
       console.log('Sending profile image upload request to:', uploadUrl);
       console.log('File being uploaded:', selectedFile.name, 'size:', selectedFile.size, 'type:', selectedFile.type);
       
-      // Use XMLHttpRequest for better debugging
-      const xhr = new XMLHttpRequest();
-      
-      // Create a promise to handle the async XHR operation
-      const uploadPromise = new Promise((resolve, reject) => {
-        xhr.onreadystatechange = function() {
-          if (xhr.readyState === 4) {
-            console.log('Upload completed with status:', xhr.status);
-            
-            if (xhr.status >= 200 && xhr.status < 300) {
-              try {
-                const response = JSON.parse(xhr.responseText);
-                resolve(response);
-              } catch (parseError) {
-                console.error('Error parsing response:', parseError);
-                reject(new Error('Could not parse server response'));
-              }
-            } else {
-              console.error('Server returned error status:', xhr.status);
-              console.error('Response text:', xhr.responseText);
-              reject(new Error(`Upload failed with status: ${xhr.status}. ${xhr.responseText}`));
-            }
-          }
-        };
-        
-        // Track upload progress
-        xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable) {
-            const percentComplete = Math.round((event.loaded / event.total) * 100);
-            console.log(`Upload progress: ${percentComplete}%`);
-          }
-        };
-        
-        // Handle network errors
-        xhr.onerror = () => {
-          console.error('Network error during upload');
-          reject(new Error('Network error during upload'));
-        };
-        
-        // Open and send the request
-        xhr.open('POST', uploadUrl, true);
-        xhr.send(formData);
+      // Use fetch API for more reliable uploads
+      console.log('Using fetch API for upload');
+      const response = await fetch(uploadUrl, {
+        method: 'POST',
+        body: formData,
+        // Don't set Content-Type header, browser will set it correctly with boundary for multipart/form-data
       });
       
-      // Wait for the upload to complete
-      const data = await uploadPromise;
+      console.log('Upload completed with status:', response.status);
+      
+      // Check if the upload was successful
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server returned error status:', response.status);
+        console.error('Response text:', errorText);
+        throw new Error(`Upload failed with status: ${response.status}. ${errorText}`);
+      }
+      
+      // Parse the successful response
+      const data = await response.json();
       console.log('Upload success response:', data);
       
       if (data && data.profile_image_url) {
