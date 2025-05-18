@@ -1308,7 +1308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // For chore completion bonuses, check if the chore has actually been completed
-      if (choreBonus.trigger_type === 'chore_completion' && choreBonus.assigned_chore_id) {
+      if (choreBonus.trigger_type === 'chore_completion' && choreBonus.assigned_chore_id !== null) {
         // Get today's transactions to see if the assigned chore was completed
         const todayDate = new Date();
         todayDate.setHours(0, 0, 0, 0);
@@ -1326,11 +1326,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
         
-        console.log("[UNSPUN_BONUS] Checking if chore was completed - Assigned chore:", dailyBonus.assigned_chore_id);
+        console.log("[UNSPUN_BONUS] Checking if chore was completed - Assigned chore:", choreBonus.assigned_chore_id);
         console.log("[UNSPUN_BONUS] Completed chores today:", Array.from(completedChoreIds));
         
         // If the assigned chore wasn't completed, don't show the bonus yet
-        if (!completedChoreIds.has(dailyBonus.assigned_chore_id)) {
+        if (!completedChoreIds.has(choreBonus.assigned_chore_id)) {
           console.log("[UNSPUN_BONUS] Assigned chore has not been completed yet");
           return res.status(404).json({ 
             message: "Daily bonus chore has not been completed yet" 
@@ -1340,13 +1340,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If we have an unspun bonus and prerequisites are met, get more details
       let bonusDetails: any = { 
-        daily_bonus_id: dailyBonus.id,
-        trigger_type: dailyBonus.trigger_type 
+        daily_bonus_id: choreBonus.id,
+        trigger_type: choreBonus.trigger_type 
       };
       
-      if (dailyBonus.trigger_type === 'chore_completion' && dailyBonus.assigned_chore_id) {
+      if (choreBonus.trigger_type === 'chore_completion' && choreBonus.assigned_chore_id) {
         // For chore-triggered bonuses, include chore details
-        const chore = await storage.getChore(dailyBonus.assigned_chore_id);
+        const chore = await storage.getChore(choreBonus.assigned_chore_id);
         if (chore) {
           bonusDetails.chore_name = chore.name;
           bonusDetails.chore_id = chore.id;
