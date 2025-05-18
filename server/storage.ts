@@ -20,6 +20,8 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   getUsers(): Promise<User[]>;
   getUsersByRole(role: string): Promise<User[]>;
+  getUserById(id: number): Promise<User | null>;
+  updateUserProfileImage(userId: number, profileImageUrl: string): Promise<User | null>;
   
   // Chore operations
   getChore(id: number): Promise<Chore | undefined>;
