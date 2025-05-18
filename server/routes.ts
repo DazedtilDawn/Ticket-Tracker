@@ -872,7 +872,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/spend", auth, async (req: Request, res: Response) => {
     try {
       const user = req.user;
-      const { tickets, goal_id, user_id, reason } = req.body;
+      // Extract both tickets and delta for backward compatibility
+      const { tickets, delta, goal_id, user_id, reason } = req.body;
       
       // Determine target user - if user_id provided and request is from a parent
       const targetUserId = (user.role === 'parent' && user_id) ? user_id : user.id;
@@ -888,8 +889,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Only parents can spend tickets on behalf of children" });
       }
       
-      // Validate input - either tickets or goal_id must be provided
-      if (tickets === undefined && goal_id === undefined) {
+      // Validate input - either tickets/delta or goal_id must be provided
+      if (tickets === undefined && delta === undefined && goal_id === undefined) {
         return res.status(400).json({ message: "Either tickets or goal_id must be provided" });
       }
       
@@ -932,7 +933,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const transaction = await storage.createTransaction({
         user_id: targetUserId,
         goal_id: targetGoal?.id,
-        delta_tickets: -ticketsToSpend,
+        delta: -ticketsToSpend,
         type: "spend",
         note: reason ? `Purchase: ${reason}` : "Purchase"
       });
@@ -955,7 +956,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       broadcast("transaction:spend", {
         data: {
           id: transaction.id,
-          delta_tickets: transaction.delta_tickets,
+          delta: transaction.delta,
           note: transaction.note,
           user_id: targetUserId,
           type: transaction.type,
