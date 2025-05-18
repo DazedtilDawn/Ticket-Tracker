@@ -17,6 +17,7 @@ import { ChildBonusWheel } from "@/components/child-bonus-wheel";
 import { PurchaseDialog } from "@/components/purchase-dialog";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { PlusIcon, UserIcon, MinusCircleIcon, PlusCircleIcon, ShoppingCartIcon, BarChart3Icon } from "lucide-react";
 import { format } from "date-fns";
 
@@ -654,11 +655,27 @@ export default function Dashboard() {
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="px-4 py-5 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Dashboard</h2>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              {format(new Date(), "EEEE, MMMM d, yyyy")}
-            </p>
+          <div className="flex items-center space-x-4">
+            {/* Show profile avatar for child view */}
+            {viewingChild && (
+              <div className="hidden sm:block">
+                <Avatar className="h-16 w-16 border-2 border-gray-200 dark:border-gray-700">
+                  <AvatarImage 
+                    src={user?.profile_image_url || undefined} 
+                    alt={`${user?.name}'s profile`} 
+                  />
+                  <AvatarFallback className="bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200">
+                    {user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+            )}
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Dashboard</h2>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                {format(new Date(), "EEEE, MMMM d, yyyy")}
+              </p>
+            </div>
           </div>
           
           <div className="mt-4 sm:mt-0 flex items-center space-x-3">
