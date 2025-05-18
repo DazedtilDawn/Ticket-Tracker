@@ -17,7 +17,7 @@ import { ChildBonusWheel } from "@/components/child-bonus-wheel";
 import { PurchaseDialog } from "@/components/purchase-dialog";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { PlusIcon, UserIcon, MinusCircleIcon, PlusCircleIcon, ShoppingCartIcon } from "lucide-react";
+import { PlusIcon, UserIcon, MinusCircleIcon, PlusCircleIcon, ShoppingCartIcon, BarChart3Icon } from "lucide-react";
 import { format } from "date-fns";
 
 export default function Dashboard() {
@@ -36,6 +36,9 @@ export default function Dashboard() {
   
   // State for child summary data
   const [childSummaries, setChildSummaries] = useState<{id: number, name: string, balance: number}[]>([]);
+  
+  // State to track last received WebSocket events for debugging
+  const [lastWsEvents, setLastWsEvents] = useState<string[]>([]);
   
   // Load family users for the behavior dialogs and child summaries
   useEffect(() => {
