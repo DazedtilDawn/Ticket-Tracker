@@ -87,8 +87,8 @@ export default function WishlistCard({ goal, onSetAsGoal, onDelete, refreshList 
     }
   };
   
-  // Calculate tickets needed
-  const ticketsNeeded = Math.ceil(product.price_locked_cents / 25);
+  // Calculate tickets needed - standardized to 10 cents per ticket
+  const ticketsNeeded = Math.ceil(product.price_locked_cents / 10);
   
   // Format price in dollars
   const formatPrice = (cents: number) => {
@@ -132,7 +132,7 @@ export default function WishlistCard({ goal, onSetAsGoal, onDelete, refreshList 
         </div>
         
         <div className="mt-4 flex flex-col space-y-3">
-          {/* Goal Controls */}
+          {/* Controls row */}
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-2">
               <Button variant="link" size="sm" className="text-gray-500 dark:text-gray-400 p-0" asChild>
@@ -173,16 +173,15 @@ export default function WishlistCard({ goal, onSetAsGoal, onDelete, refreshList 
             )}
           </div>
           
-          {/* Set as goal button - only shown if not active */}
-          {!goal.is_active && (
-            <Button 
-              onClick={() => onSetAsGoal(goal.id)}
-              size="sm"
-              className="w-full bg-primary-600 hover:bg-primary-700 text-white dark:bg-primary-700 dark:hover:bg-primary-800"
-            >
-              Set as Active Goal
-            </Button>
-          )}
+          {/* Set as goal button - always displayed for debugging purposes */}
+          <Button 
+            onClick={() => onSetAsGoal(goal.id)}
+            size="default"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 mt-2"
+            disabled={goal.is_active}
+          >
+            {goal.is_active ? "Current Active Goal" : "Set as Active Goal"}
+          </Button>
         </div>
       </CardContent>
     </Card>
