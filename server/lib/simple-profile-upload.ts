@@ -22,28 +22,12 @@ if (!fs.existsSync(profilesDir)) {
   console.log(`Using existing profiles directory with updated permissions: ${profilesDir}`);
 }
 
-// Configure disk storage for simplicity and reliability
-const storage = multer.diskStorage({
-  destination: function(req, file, cb) {
-    console.log(`Saving profile image to: ${profilesDir}`);
-    // Verify directory exists before attempting to save
-    if (!fs.existsSync(profilesDir)) {
-      fs.mkdirSync(profilesDir, { recursive: true });
-    }
-    cb(null, profilesDir);
-  },
-  filename: function(req, file, cb) {
-    // Create a unique filename with the original extension
-    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
-    const uniqueFilename = `${uuidv4()}${ext}`;
-    console.log(`Generated filename: ${uniqueFilename}`);
-    cb(null, uniqueFilename);
-  }
-});
+// Configure memory storage for better reliability
+const memoryStorage = multer.memoryStorage();
 
-// Create the multer upload middleware
+// Create the multer upload middleware with memory storage
 const upload = multer({
-  storage: storage,
+  storage: memoryStorage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: (req, file, cb) => {
     // Accept only image files
@@ -125,19 +109,19 @@ export function registerProfileImageRoutes(app: Express) {
               path: req.file.path
             });
             
-            // Verify file exists after upload
-            const fileExists = fs.existsSync(req.file.path);
-            console.log(`[PROFILE-UPLOAD] File exists check: ${fileExists}`);
+            // With memory storage, we don't need to verify the uploaded file exists
+            // as we're about to write it ourselves from the buffer
             
-            if (!fileExists) {
-              throw new Error('File was not saved to disk properly');
-            }
+            // Generate a unique filename for the image
+            const ext = path.extname(req.file.originalname).toLowerCase() || '.jpg';
+            const filename = `${uuidv4()}${ext}`;
+            const filePath = path.join(profilesDir, filename);
             
-            // Apply correct permissions to ensure file is readable
-            fs.chmodSync(req.file.path, 0o666);
+            // Save the file from buffer to disk
+            fs.writeFileSync(filePath, req.file.buffer);
             
             // Get the public URL for the image
-            const publicUrl = `/uploads/profiles/${req.file.filename}`;
+            const publicUrl = `/uploads/profiles/${filename}`;
             console.log('[PROFILE-UPLOAD] Public URL:', publicUrl);
             
             try {

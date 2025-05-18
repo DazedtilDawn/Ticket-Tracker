@@ -103,9 +103,10 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
         throw new Error(`Upload failed with status: ${response.status}. ${errorText}`);
       }
       
+      let data;
       try {
         // Parse the successful response
-        const data = await response.json();
+        data = await response.json();
         console.log('Upload success response:', data);
       } catch (parseError) {
         console.error('Error parsing response JSON:', parseError);
