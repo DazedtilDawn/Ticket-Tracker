@@ -35,6 +35,10 @@ import { upload, getFileUrl } from "./lib/upload";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
+
+  app.get('/health', (_req: Request, res: Response) => {
+    res.send('ok');
+  });
   
   // Serve static files from public folder
   app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));

@@ -9,6 +9,7 @@ services:
     env: docker                  # Render builds from Dockerfile
     plan: free
     dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
     autoDeploy: true
     envVars:
       - key: DATABASE_URL        # ← injected from db below
