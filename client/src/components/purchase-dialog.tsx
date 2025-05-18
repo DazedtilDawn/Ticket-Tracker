@@ -24,6 +24,11 @@ export function PurchaseDialog({ children, onCompleted }: { children: React.Reac
       toast({ title: "Purchase complete", description: `-${tickets} tickets spent` });
       setOpen(false);
       setTickets(0);
+      
+      // Call the onCompleted callback if provided
+      if (onCompleted) {
+        onCompleted();
+      }
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
