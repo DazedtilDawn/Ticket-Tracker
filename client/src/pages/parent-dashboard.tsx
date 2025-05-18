@@ -64,16 +64,28 @@ export default function ParentDashboard() {
                   }
                 };
                 
-                // Force a direct database query for each user's balance
-                const timestamp = new Date().getTime();
-                const stats = await apiRequest(`/api/stats/direct?user_id=${child.id}&_t=${timestamp}`, requestOptions);
+                // Use the transaction data we already refreshed above
+                // Get the latest balance directly from the refresh response
+                const balanceResponse = await apiRequest('/api/transactions/refresh-balances', { 
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' }
+                });
                 
-                console.log(`Loaded balance for ${child.name} (ID: ${child.id}): ${stats?.balance}`);
+                // Find the balance for this specific child
+                let correctBalance = 0;
+                if (balanceResponse && Array.isArray(balanceResponse)) {
+                  const userBalance = balanceResponse.find(item => item.userId === child.id);
+                  if (userBalance && typeof userBalance.balance === 'number') {
+                    correctBalance = userBalance.balance;
+                  }
+                }
+                
+                console.log(`Loaded balance for ${child.name} (ID: ${child.id}): ${correctBalance}`);
                 
                 return {
                   id: child.id,
                   name: child.name,
-                  balance: stats?.balance || 0
+                  balance: correctBalance
                 };
               } catch (err) {
                 console.error(`Failed to load stats for child ${child.name}:`, err);
