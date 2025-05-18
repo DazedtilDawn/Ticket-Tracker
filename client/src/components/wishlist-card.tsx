@@ -87,8 +87,8 @@ export default function WishlistCard({ goal, onSetAsGoal, onDelete, refreshList 
     }
   };
   
-  // Calculate tickets needed - standardized to 10 cents per ticket
-  const ticketsNeeded = Math.ceil(product.price_locked_cents / 10);
+  // Calculate tickets needed - standardized to 25 cents per ticket
+  const ticketsNeeded = Math.ceil(product.price_locked_cents / 25);
   
   // Format price in dollars
   const formatPrice = (cents: number) => {

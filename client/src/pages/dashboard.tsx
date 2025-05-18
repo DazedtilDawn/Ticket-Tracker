@@ -102,10 +102,19 @@ export default function Dashboard() {
         }
       } catch (error: any) {
         // Only log the error, don't show toast to avoid spamming the user
-        console.error("Error checking for unspun bonus:", error);
-        // If it's a 404, that means there's no unspun bonus - expected case
-        if (error.status !== 404) {
-          console.error("Unexpected error checking for unspun bonus:", error);
+        const errorMessage = error?.message || "Unknown error";
+        const errorStatus = error?.status || 500;
+        
+        // If it's a 404, that means there's no unspun bonus - expected case (don't need to log these)
+        if (errorStatus !== 404) {
+          console.error("Error checking for unspun bonus:", {
+            status: errorStatus,
+            message: errorMessage
+          });
+          console.error("Unexpected error checking for unspun bonus:", {
+            status: errorStatus,
+            message: errorMessage
+          });
         }
       }
     };

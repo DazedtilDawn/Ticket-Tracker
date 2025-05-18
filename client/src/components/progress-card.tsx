@@ -40,8 +40,8 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
   // Generate Amazon product URL
   const amazonUrl = `https://www.amazon.com/dp/${goal.product.asin}`;
   
-  // Calculate tickets needed - using 10 cents per ticket conversion
-  const ticketsNeeded = Math.ceil(goal.product.price_locked_cents / 10);
+  // Calculate tickets needed - using 25 cents per ticket conversion
+  const ticketsNeeded = Math.ceil(goal.product.price_locked_cents / 25);
   
   // Handle switching goals - navigate directly to wishlist for the current child
   const handleSwitchGoal = () => {
