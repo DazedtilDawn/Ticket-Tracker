@@ -32,6 +32,7 @@ import { calculateTier, calculateProgressPercent, calculateBoostPercent } from "
 import { WebSocketServer, WebSocket } from "ws";
 import { cleanupOrphanedProducts } from "./cleanup";
 import { upload, getFileUrl } from "./lib/upload";
+import { registerProfileImageRoutes } from "./lib/profile-routes";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -42,6 +43,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Serve static files from public folder
   app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
+  
+  // Register profile image routes
+  registerProfileImageRoutes(app);
   
   // Setup WebSockets for realtime updates with specific path
   const wss = new WebSocketServer({ 
