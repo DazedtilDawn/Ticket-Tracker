@@ -1,10 +1,8 @@
-###############   Stage 1 – Build   ###############
-FROM node:20-bookworm-slim
-
-# Set working directory
+# ---------- build stage ----------
+FROM node:20-bookworm-slim AS builder
 WORKDIR /app
 
-# Install dependencies for Playwright and other utilities
+# Install system dependencies for Playwright
 RUN apt-get update && apt-get install -y \
     curl \
     gnupg \
@@ -25,44 +23,31 @@ RUN apt-get update && apt-get install -y \
     fonts-liberation \
     libnspr4 \
     libnss3 \
-    --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
+    --no-install-recommends && rm -rf /var/lib/apt/lists/*
 
-# Copy package.json and package-lock.json
+# install dependencies
 COPY package*.json ./
-
-# Install dependencies
 RUN npm ci
-
-# Install dotenv so production build can load .env
 RUN npm install dotenv
 
-# Install Playwright browsers
 ENV PLAYWRIGHT_BROWSERS_PATH=/home/nodejs/.cache/ms-playwright
 RUN npx playwright install chromium --with-deps
 
-# Create the nodejs user so we can drop privileges later
-RUN groupadd -g 1001 nodejs \
-    && useradd -u 1001 -g nodejs -m nodejs
-
-# Copy the rest of the application
+# copy source and build as root
 COPY . .
-
-# Ensure nodejs user owns the source files so build tools can write cache files
-RUN chown -R nodejs:nodejs /app
-
-# Build the application
 RUN npm run build
 
-# Set environment variables
-ENV NODE_ENV=production
-ENV PORT=5000
+# prepare unprivileged user
+RUN groupadd -g 1001 nodejs && useradd -u 1001 -g nodejs -m nodejs
 
-# Expose port
+# ---------- runtime stage ----------
+FROM node:20-bookworm-slim
+WORKDIR /app
+COPY --from=builder /app .
+
+ENV NODE_ENV=production
 EXPOSE 5000
 
-# Drop to the unprivileged user only for runtime
+# drop privileges for runtime
 USER nodejs
-
-# Start the application
-CMD ["npm", "start"]
+CMD ["node", "dist/index.js"]
