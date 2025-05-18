@@ -12,8 +12,9 @@ import { GoodBehaviorDialog } from "@/components/good-behavior-dialog";
 import { DailyBonusWheel } from "@/components/daily-bonus-wheel";
 import { PurchaseDialog } from "@/components/purchase-dialog";
 import ChildProfileCard from "@/components/child-profile-card";
+import ProfileImageModal from "@/components/profile-image-modal";
 import { Button } from "@/components/ui/button";
-import { PlusIcon, UserIcon, MinusCircleIcon, PlusCircleIcon, ShoppingCartIcon, BarChart3Icon } from "lucide-react";
+import { PlusIcon, UserIcon, MinusCircleIcon, PlusCircleIcon, ShoppingCartIcon, BarChart3Icon, ImageIcon } from "lucide-react";
 import { format } from "date-fns";
 
 export default function ParentDashboard() {
@@ -24,6 +25,10 @@ export default function ParentDashboard() {
   
   // State for child summary data
   const [childSummaries, setChildSummaries] = useState<{id: number, name: string, balance: number}[]>([]);
+  
+  // State for profile image modal
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [selectedChild, setSelectedChild] = useState<any>(null);
   
   // Load family users for the behavior dialogs and child summaries
   useEffect(() => {
@@ -215,15 +220,27 @@ export default function ParentDashboard() {
                           if (!childUser) return null;
                           
                           return (
-                            <ChildProfileCard
-                              key={child.id}
-                              child={childUser}
-                              balance={child.balance}
-                              onSelectChild={() => {
-                                switchChildView(childUser);
-                              }}
-                              isParentView={true}
-                            />
+                            <div key={child.id} className="relative">
+                              <ChildProfileCard
+                                child={childUser}
+                                balance={child.balance}
+                                onSelectChild={() => {
+                                  switchChildView(childUser);
+                                }}
+                                isParentView={false}
+                              />
+                              <button 
+                                className="absolute top-3 right-3 bg-white dark:bg-gray-700 rounded-full p-1 shadow-md hover:bg-gray-100 dark:hover:bg-gray-600"
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent triggering the card click
+                                  setSelectedChild(childUser);
+                                  setProfileModalOpen(true);
+                                }}
+                                aria-label={`Update ${childUser.name}'s profile picture`}
+                              >
+                                <ImageIcon className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                              </button>
+                            </div>
                           );
                         })
                       ) : (
@@ -236,6 +253,15 @@ export default function ParentDashboard() {
                 </div>
               </div>
             </section>
+
+            {/* Profile Image Modal */}
+            {selectedChild && (
+              <ProfileImageModal
+                isOpen={profileModalOpen}
+                onClose={() => setProfileModalOpen(false)}
+                user={selectedChild}
+              />
+            )}
             
             {/* Daily Bonus Wheel Management */}
             <section className="mb-8">
