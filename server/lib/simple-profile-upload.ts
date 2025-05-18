@@ -114,6 +114,20 @@ export function registerProfileImageRoutes(app: Express) {
         const publicUrl = `/uploads/profiles/${filename}`;
         
         try {
+          // Select the user to confirm it exists
+          const userExists = await db.select()
+            .from(users)
+            .where(eq(users.id, parseInt(userId)))
+            .limit(1);
+            
+          if (userExists.length === 0) {
+            console.error(`[PROFILE] User ${userId} not found in database`);
+            return res.status(404).json({
+              success: false,
+              message: 'User not found'
+            });
+          }
+            
           // Update user profile in database
           await db.update(users)
             .set({ profile_image_url: publicUrl })
@@ -121,15 +135,32 @@ export function registerProfileImageRoutes(app: Express) {
           
           console.log(`[PROFILE] Database updated for user: ${userId}`);
           
+          // Verify database was updated
+          const updatedUser = await db.select()
+            .from(users)
+            .where(eq(users.id, parseInt(userId)))
+            .limit(1);
+            
+          if (updatedUser[0].profile_image_url !== publicUrl) {
+            console.error(`[PROFILE] Database update verification failed for user ${userId}`);
+            return res.status(500).json({
+              success: false,
+              message: 'Database update could not be verified'
+            });
+          }
+          
           // Add cache-busting timestamp
           const timestamp = new Date().getTime();
           const cacheBustUrl = `${publicUrl}?t=${timestamp}`;
           
-          // Send success response
+          // Send success response with complete information
           return res.status(200).json({
             success: true,
             message: 'Profile image uploaded successfully',
-            profile_image_url: cacheBustUrl
+            profile_image_url: cacheBustUrl,
+            user_id: parseInt(userId),
+            file_size: req.file.size,
+            timestamp: timestamp
           });
         } catch (dbError) {
           console.error('[PROFILE] Database error:', dbError);
