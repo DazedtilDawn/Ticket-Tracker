@@ -11,6 +11,7 @@ import { BadBehaviorDialog } from "@/components/bad-behavior-dialog";
 import { GoodBehaviorDialog } from "@/components/good-behavior-dialog";
 import { DailyBonusWheel } from "@/components/daily-bonus-wheel";
 import { PurchaseDialog } from "@/components/purchase-dialog";
+import ChildProfileCard from "@/components/child-profile-card";
 import { Button } from "@/components/ui/button";
 import { PlusIcon, UserIcon, MinusCircleIcon, PlusCircleIcon, ShoppingCartIcon, BarChart3Icon } from "lucide-react";
 import { format } from "date-fns";
@@ -171,33 +172,28 @@ export default function ParentDashboard() {
                     </div>
                   </div>
                   
-                  {/* Child Summary Cards */}
+                  {/* Child Profile Cards */}
                   <div className="mb-2">
                     <h4 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">Child Profiles</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {childSummaries.length > 0 ? (
-                        childSummaries.map((child) => (
-                          <div 
-                            key={child.id}
-                            className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow cursor-pointer"
-                            onClick={() => {
-                              const childUser = childUsers.find(u => u.id === child.id);
-                              if (childUser) {
+                        childSummaries.map((child) => {
+                          // Find the full child user object to get additional data like username and profile image
+                          const childUser = childUsers.find(u => u.id === child.id);
+                          if (!childUser) return null;
+                          
+                          return (
+                            <ChildProfileCard
+                              key={child.id}
+                              child={childUser}
+                              balance={child.balance}
+                              onSelectChild={() => {
                                 switchChildView(childUser);
-                              }
-                            }}
-                          >
-                            <div className="flex items-center justify-between mb-2">
-                              <h5 className="font-semibold">{child.name}</h5>
-                              <span className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full text-xs font-medium">
-                                {child.balance} tickets
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              Click to view/manage {child.name}'s dashboard
-                            </p>
-                          </div>
-                        ))
+                              }}
+                              isParentView={true}
+                            />
+                          );
+                        })
                       ) : (
                         <div className="col-span-full p-4 text-center text-gray-500 dark:text-gray-400">
                           No child profiles found
