@@ -59,7 +59,7 @@ const upload = multer({
 export function registerProfileImageRoutes(app: Express) {
   // Profile image upload endpoint - parent only
   app.post('/api/profile-image/:userId', AuthMiddleware, (req: Request, res: Response) => {
-    console.log('Profile image upload request received');
+    console.log('[PROFILE-UPLOAD] Request received');
     
     // Ensure user is a parent
     if (req.user?.role !== 'parent') {
@@ -67,12 +67,18 @@ export function registerProfileImageRoutes(app: Express) {
     }
     
     const { userId } = req.params;
-    console.log(`Processing profile image upload for user: ${userId}`);
+    console.log(`[PROFILE-UPLOAD] Processing for user: ${userId}`);
+    
+    // Verify upload directories exist
+    if (!fs.existsSync(profilesDir)) {
+      console.log(`[PROFILE-UPLOAD] Creating missing directory: ${profilesDir}`);
+      fs.mkdirSync(profilesDir, { recursive: true, mode: 0o777 });
+    }
     
     // Use multer upload middleware
     upload.single('profile_image')(req, res, async (err) => {
       if (err) {
-        console.error('Upload middleware error:', err);
+        console.error('[PROFILE-UPLOAD] Middleware error:', err);
         return res.status(400).json({
           success: false,
           message: err.message
@@ -81,7 +87,7 @@ export function registerProfileImageRoutes(app: Express) {
       
       // Check if file was uploaded
       if (!req.file) {
-        console.error('No file received in upload request');
+        console.error('[PROFILE-UPLOAD] No file received in request');
         return res.status(400).json({
           success: false,
           message: 'No file was uploaded'
@@ -89,21 +95,61 @@ export function registerProfileImageRoutes(app: Express) {
       }
       
       try {
-        console.log('File saved to disk:', req.file.path);
+        console.log('[PROFILE-UPLOAD] File details:', {
+          fieldname: req.file.fieldname,
+          originalname: req.file.originalname,
+          encoding: req.file.encoding,
+          mimetype: req.file.mimetype,
+          size: req.file.size,
+          destination: req.file.destination,
+          filename: req.file.filename,
+          path: req.file.path
+        });
+        
+        // Verify file exists after upload
+        const fileExists = fs.existsSync(req.file.path);
+        console.log(`[PROFILE-UPLOAD] File exists check: ${fileExists}`);
+        
+        if (!fileExists) {
+          throw new Error('File was not saved to disk properly');
+        }
+        
+        // Apply correct permissions to ensure file is readable
+        fs.chmodSync(req.file.path, 0o666);
+        console.log('[PROFILE-UPLOAD] Applied permissions to file');
         
         // Get the public URL for the image
         const publicUrl = `/uploads/profiles/${req.file.filename}`;
-        console.log('Public URL:', publicUrl);
+        console.log('[PROFILE-UPLOAD] Public URL:', publicUrl);
+        
+        // Get user before update to verify changes
+        const beforeUser = await db.select()
+          .from(users)
+          .where(eq(users.id, parseInt(userId)))
+          .then(results => results[0]);
+          
+        console.log(`[PROFILE-UPLOAD] Before update - user profile image: ${beforeUser?.profile_image_url}`);
         
         // Update the user's profile image URL in the database
-        await db.update(users)
+        const updateResult = await db.update(users)
           .set({ profile_image_url: publicUrl })
           .where(eq(users.id, parseInt(userId)));
         
-        console.log('Database updated with new profile image URL');
+        console.log('[PROFILE-UPLOAD] Database update result:', updateResult);
         
-        // Add cache-busting
-        const cacheBustUrl = `${publicUrl}?t=${Date.now()}`;
+        // Verify the update in the database
+        const afterUser = await db.select()
+          .from(users)
+          .where(eq(users.id, parseInt(userId)))
+          .then(results => results[0]);
+          
+        console.log(`[PROFILE-UPLOAD] After update - user profile image: ${afterUser?.profile_image_url}`);
+        
+        // Add cache-busting timestamp
+        const timestamp = new Date().getTime();
+        const cacheBustUrl = `${publicUrl}?t=${timestamp}`;
+        
+        console.log('[PROFILE-UPLOAD] Returning success with URL:', cacheBustUrl);
         
         // Return success response
         return res.status(200).json({
@@ -112,7 +158,7 @@ export function registerProfileImageRoutes(app: Express) {
           profile_image_url: cacheBustUrl
         });
       } catch (error) {
-        console.error('Error saving profile image:', error);
+        console.error('[PROFILE-UPLOAD] Error:', error);
         return res.status(500).json({
           success: false,
           message: 'Server error while processing profile image',
