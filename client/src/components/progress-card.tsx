@@ -40,32 +40,24 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
   // Generate Amazon product URL
   const amazonUrl = `https://www.amazon.com/dp/${goal.product.asin}`;
   
-  // Calculate tickets needed
-  const ticketsNeeded = Math.ceil(goal.product.price_locked_cents / 25);
+  // Calculate tickets needed - using 10 cents per ticket conversion
+  const ticketsNeeded = Math.ceil(goal.product.price_locked_cents / 10);
   
-  // Handle switching goals - navigate to wishlist for the current child
-  const handleSwitchGoal = async () => {
+  // Handle switching goals - navigate directly to wishlist for the current child
+  const handleSwitchGoal = () => {
     try {
-      // Deactivate the current goal first 
-      await apiRequest(`/api/goals/${goal.id}/activate`, {
-        method: "PUT" 
-      } as RequestInit);
+      // Navigate directly to the wishlist page with my-list tab active
+      navigate("/wishlist?tab=my-list");
       
       toast({
-        title: "Goal deactivated",
-        description: "Navigating to wishlist to select a new goal.",
+        title: "Switch Goals",
+        description: "Select a different goal from your wishlist.",
       });
-      
-      // Refresh the current view data
-      onRefresh();
-      
-      // Navigate to the wishlist page
-      navigate("/wishlist");
       
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to switch goals",
+        description: error.message || "Failed to navigate to wishlist",
         variant: "destructive",
       });
     }

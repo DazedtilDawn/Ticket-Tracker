@@ -37,8 +37,8 @@ export function calculateTier(tickets: number, allChores: Chore[]): string {
 export function calculateProgressPercent(ticketsSaved: number, priceCents: number): number {
   if (!priceCents) return 0;
   
-  // Convert tickets to cents (25 cents per ticket)
-  const centsSaved = ticketsSaved * 25;
+  // Convert tickets to cents (10 cents per ticket)
+  const centsSaved = ticketsSaved * 10;
   
   // Calculate percentage
   const percent = (centsSaved / priceCents) * 100;
@@ -53,8 +53,8 @@ export function calculateProgressPercent(ticketsSaved: number, priceCents: numbe
 export function calculateBoostPercent(choreTickets: number, goalPriceCents: number): number {
   if (!goalPriceCents) return 0;
   
-  // Convert tickets to cents (25 cents per ticket)
-  const centsBoosted = choreTickets * 25;
+  // Convert tickets to cents (10 cents per ticket)
+  const centsBoosted = choreTickets * 10;
   
   // Calculate percentage
   const percent = (centsBoosted / goalPriceCents) * 100;
