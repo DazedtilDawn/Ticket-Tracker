@@ -120,10 +120,24 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
         controller.abort();
       }, 15000); // 15-second timeout (slightly longer)
       
+      // Get authentication token from local storage
+      const authStore = JSON.parse(localStorage.getItem('ticket-tracker-auth') || '{}');
+      const token = authStore?.state?.token;
+      
+      // Prepare headers with authentication
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+        console.log('[UPLOAD] Added authorization token to request');
+      } else {
+        console.warn('[UPLOAD] No authentication token found in storage');
+      }
+      
       // Execute the actual upload using the same endpoint as chore images
       console.log(`[UPLOAD] POST request to ${uploadUrl}`);
       const response = await fetch(uploadUrl, {
         method: 'POST',
+        headers,
         body: formData,
         credentials: 'include',
         signal: controller.signal
