@@ -56,7 +56,7 @@ type FormDataType = {
   user_id: number; 
   tickets?: number; 
   reason?: string; 
-  awardBonusSpin: boolean;
+  rewardType: "tickets" | "spin";
 };
 
 interface GoodBehaviorDialogProps {
@@ -144,7 +144,7 @@ export function GoodBehaviorDialog({ children, onCompleted }: GoodBehaviorDialog
     const payload: FormDataType = {
       user_id: parseInt(data.user_id),
       reason: data.reason || "",
-      awardBonusSpin: data.rewardType === "spin"
+      rewardType: data.rewardType
     };
     
     // Only include tickets if it's a direct ticket reward
