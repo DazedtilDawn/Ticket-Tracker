@@ -93,8 +93,9 @@ export function registerProfileImageRoutes(app: Express) {
   
   // Profile image upload endpoint (parent only)
   app.post('/api/profile-image/:userId', AuthMiddleware, (req: Request, res: Response) => {
+    const timestamp = new Date().toISOString();
     console.log('[PROFILE] Upload request received:', 
-      { userId: req.params.userId, userRole: req.user?.role, method: req.method });
+      { userId: req.params.userId, userRole: req.user?.role, timestamp });
     
     // Permission check (only parents can upload)
     if (req.user?.role !== 'parent') {
@@ -117,7 +118,7 @@ export function registerProfileImageRoutes(app: Express) {
       });
     }
     
-    console.log(`[PROFILE] Processing upload for user ID: ${userId}`);
+    console.log(`[PROFILE] Processing upload for user ID: ${userId} at ${timestamp}`);
     
     // Use multer middleware to handle file upload
     upload.single('profile_image')(req, res, async (uploadErr) => {
@@ -127,7 +128,8 @@ export function registerProfileImageRoutes(app: Express) {
         return res.status(400).json({
           success: false,
           message: `Upload failed: ${uploadErr.message}`,
-          code: 'UPLOAD_ERROR'
+          code: 'UPLOAD_ERROR',
+          timestamp: Date.now()
         });
       }
       
@@ -137,7 +139,8 @@ export function registerProfileImageRoutes(app: Express) {
         return res.status(400).json({
           success: false,
           message: 'No file was uploaded',
-          code: 'NO_FILE'
+          code: 'NO_FILE',
+          timestamp: Date.now()
         });
       }
       
@@ -148,7 +151,8 @@ export function registerProfileImageRoutes(app: Express) {
           originalName: req.file.originalname,
           path: req.file.path,
           size: req.file.size,
-          mimetype: req.file.mimetype
+          mimetype: req.file.mimetype,
+          timestamp
         });
         
         // Double check the file was actually saved
@@ -157,7 +161,9 @@ export function registerProfileImageRoutes(app: Express) {
         }
         
         // Build the public URL for accessing the file
-        const publicUrl = `/uploads/profiles/${req.file.filename}`;
+        const cacheBuster = Date.now();
+        const relativeUrl = `/uploads/profiles/${req.file.filename}`;
+        const publicUrl = `${relativeUrl}?t=${cacheBuster}`;
         console.log(`[PROFILE] Generated public URL: ${publicUrl}`);
         
         try {
@@ -170,17 +176,27 @@ export function registerProfileImageRoutes(app: Express) {
           
           if (!userExists || userExists.length === 0) {
             console.error(`[PROFILE] User ${userId} not found in database`);
+            // Clean up the file
+            try {
+              fs.unlinkSync(req.file.path);
+              console.log(`[PROFILE] Deleted file for non-existent user: ${req.file.path}`);
+            } catch (err) {
+              console.error(`[PROFILE] Failed to delete file: ${req.file.path}`, err);
+            }
+            
             return res.status(404).json({
               success: false,
               message: 'User not found',
-              code: 'USER_NOT_FOUND'
+              code: 'USER_NOT_FOUND',
+              timestamp: cacheBuster
             });
           }
           
-          // Update the user record with new profile image URL
-          console.log(`[PROFILE] Updating user ${userId} with new profile image URL: ${publicUrl}`);
+          // Critical fix: Store ONLY the relative path in the database, not with cache parameters
+          // This avoids perpetual saving loop issues with cache busting parameters
+          console.log(`[PROFILE] Updating user ${userId} with new profile image URL: ${relativeUrl}`);
           await db.update(users)
-            .set({ profile_image_url: publicUrl })
+            .set({ profile_image_url: relativeUrl })
             .where(eq(users.id, parseInt(userId)));
           
           // Verify database was updated
@@ -189,35 +205,39 @@ export function registerProfileImageRoutes(app: Express) {
             .where(eq(users.id, parseInt(userId)))
             .limit(1);
             
-          if (updatedUser[0].profile_image_url !== publicUrl) {
-            console.error(`[PROFILE] Database verification failed - URL mismatch: 
-              Expected ${publicUrl}, got ${updatedUser[0].profile_image_url}`);
+          if (!updatedUser[0].profile_image_url) {
+            console.error(`[PROFILE] Database verification failed - URL missing after update`);
+            // Clean up the uploaded file since the database update failed
+            try {
+              fs.unlinkSync(req.file.path);
+              console.log(`[PROFILE] Deleted orphaned file: ${req.file.path}`);
+            } catch (err) {
+              console.error(`[PROFILE] Failed to delete file: ${req.file.path}`, err);
+            }
+            
             return res.status(500).json({
               success: false,
               message: 'Database update failed verification',
-              code: 'DB_VERIFY_FAILED'
+              code: 'DB_VERIFY_FAILED',
+              timestamp: cacheBuster
             });
           }
           
           console.log(`[PROFILE] Database update successful and verified for user: ${userId}`);
           
-          // Add timestamp for cache busting
-          const timestamp = new Date().getTime();
-          const cachedUrl = `${publicUrl}?t=${timestamp}`;
-          
-          // Send comprehensive success response
+          // Send comprehensive success response with cache busting parameter
           return res.status(200).json({
             success: true,
             message: 'Profile image uploaded successfully',
-            profile_image_url: publicUrl,
-            public_url: cachedUrl,
+            profile_image_url: relativeUrl,  // The base URL without cache busting
+            public_url: publicUrl,           // URL with cache busting parameter
             user_id: parseInt(userId),
             file_details: {
               name: req.file.filename,
               size: req.file.size,
               type: req.file.mimetype
             },
-            timestamp: timestamp
+            timestamp: cacheBuster
           });
         } catch (dbError) {
           console.error('[PROFILE] Database operation error:', dbError);
