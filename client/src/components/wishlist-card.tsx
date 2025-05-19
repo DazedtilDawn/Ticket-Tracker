@@ -69,9 +69,9 @@ export default function WishlistCard({ goal, onSetAsGoal, onDelete, refreshList 
       if (refreshList) {
         refreshList();
       }
-    } catch (error) {
+    } catch (error: any) {
       // If we get a 404, it means the goal was already deleted - which is fine
-      if (error instanceof Error && error.message?.includes('404')) {
+      if (error?.status === 404) {
         toast({
           title: "Goal deleted",
           description: "The goal has been removed from your wishlist",

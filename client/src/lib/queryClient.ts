@@ -5,7 +5,9 @@ async function throwIfResNotOk(res: Response) {
     // Clone the response before reading the body
     const clonedRes = res.clone();
     const text = (await clonedRes.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    const err: any = new Error(`${res.status}: ${text}`);
+    err.status = res.status;
+    throw err;
   }
 }
 
