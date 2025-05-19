@@ -4,7 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/store/auth-store";
-import { createWebSocketConnection, subscribeToChannel } from "@/lib/supabase";
+import { createWebSocketConnection, subscribeToChannel } from "@/lib/websocketClient";
 
 // UI Components
 import { Button } from "@/components/ui/button";

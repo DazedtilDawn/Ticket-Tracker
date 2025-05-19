@@ -5,7 +5,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth-store";
 import { useStatsStore } from "@/store/stats-store";
-import { createWebSocketConnection, subscribeToChannel } from "@/lib/supabase";
+import { createWebSocketConnection, subscribeToChannel } from "@/lib/websocketClient";
 import ChoreCard from "@/components/chore-card";
 import { SpinPromptModal } from "@/components/spin-prompt-modal";
 import { ChildBonusWheel } from "@/components/child-bonus-wheel";

@@ -11,7 +11,7 @@ console.log('[DEBUG] Main.tsx: Relying on the HTML WebSocket override.');
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
-import { createWebSocketConnection } from "./lib/supabase"; // Your app's WebSocket
+import { createWebSocketConnection } from "./lib/websocketClient"; // Your app's WebSocket
 import { toast } from "@/hooks/use-toast";
 
 // Initialize your app's WebSocket connection

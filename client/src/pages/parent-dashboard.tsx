@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth-store";
 import { useStatsStore } from "@/store/stats-store";
-import { createWebSocketConnection, subscribeToChannel } from "@/lib/supabase";
+import { createWebSocketConnection, subscribeToChannel } from "@/lib/websocketClient";
 import TransactionsTable from "@/components/transactions-table";
 import { NewChoreDialog } from "@/components/new-chore-dialog";
 import { BadBehaviorDialog } from "@/components/bad-behavior-dialog";
