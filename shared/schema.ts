@@ -136,6 +136,12 @@ export const manualProductSchema = z.object({
   image_url: z.string().url("Please enter a valid image URL").optional(),
 });
 
+export const updateProductSchema = z.object({
+  title: z.string().min(1, "Title is required").optional(),
+  price_cents: z.number().int().min(1, "Price must be greater than 0").optional(),
+  image_url: z.string().url("Please enter a valid image URL").optional(),
+});
+
 // Chore completion schema
 export const completeChoreSchema = z.object({
   chore_id: z.number().int().positive(),
@@ -204,6 +210,7 @@ export type InsertDailyBonus = z.infer<typeof insertDailyBonusSchema>;
 export type Login = z.infer<typeof loginSchema>;
 export type AmazonSearch = z.infer<typeof amazonSearchSchema>;
 export type ManualProduct = z.infer<typeof manualProductSchema>;
+export type UpdateProduct = z.infer<typeof updateProductSchema>;
 export type CompleteChore = z.infer<typeof completeChoreSchema>;
 export type BadBehavior = z.infer<typeof badBehaviorSchema>;
 export type GoodBehavior = z.infer<typeof goodBehaviorSchema>;

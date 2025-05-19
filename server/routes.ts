@@ -18,6 +18,7 @@ import {
   completeChoreSchema,
   amazonSearchSchema,
   manualProductSchema,
+  updateProductSchema,
   badBehaviorSchema,
   goodBehaviorSchema,
   deleteTransactionSchema,
@@ -687,6 +688,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       return res.status(400).json({ message: errorMessage });
+    }
+  });
+
+  // Update product details
+  app.put("/api/products/:id", auth, async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid product ID" });
+    }
+
+    // Only parents can edit products
+    if (req.user.role !== "parent") {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    try {
+      const update = updateProductSchema.parse(req.body);
+      const updated = await storage.updateProduct(id, update);
+      if (!updated) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      // Broadcast update to clients (optional)
+      broadcast("product:update", updated);
+
+      return res.json(updated);
+    } catch (error: any) {
+      return res.status(400).json({ message: error.message });
     }
   });
   

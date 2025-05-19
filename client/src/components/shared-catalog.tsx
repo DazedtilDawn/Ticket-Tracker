@@ -19,7 +19,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { AddProductDialog } from './add-product-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Gift, ArrowRight } from 'lucide-react';
+import { Gift, ArrowRight, Pencil } from 'lucide-react';
+import { EditProductDialog } from './edit-product-dialog';
 
 export function SharedCatalog({ onProductSelected }: { onProductSelected: (productId: number) => void }) {
   const { toast } = useToast();
@@ -92,7 +93,12 @@ export function SharedCatalog({ onProductSelected }: { onProductSelected: (produ
                     </span>
                   </div>
                 </CardContent>
-                <CardFooter className="p-4 pt-0 flex justify-end">
+                <CardFooter className="p-4 pt-0 flex justify-end space-x-2">
+                  <EditProductDialog product={product} onProductUpdated={refreshCatalog}>
+                    <Button size="sm" variant="ghost">
+                      <Pencil className="mr-1 h-4 w-4" /> Edit
+                    </Button>
+                  </EditProductDialog>
                   <Button size="sm" variant="secondary" onClick={() => handleAddToWishlist(product.id)}>
                     Add to Wishlist
                     <ArrowRight className="ml-2 h-4 w-4" />

@@ -3,8 +3,8 @@ import { calculateTier } from "../lib/business-logic";
 
 test("fewer than 3 chores maps tickets to tiers", () => {
   const chores = [
-    { tickets: 2, is_active: true },
-    { tickets: 7, is_active: true }
+    { base_tickets: 2, is_active: true },
+    { base_tickets: 7, is_active: true }
   ] as any;
 
   expect(calculateTier(3, chores)).toBe("common");
@@ -14,11 +14,11 @@ test("fewer than 3 chores maps tickets to tiers", () => {
 
 test("larger set categorizes relative to median", () => {
   const chores = [
-    { tickets: 2, is_active: true },
-    { tickets: 4, is_active: true },
-    { tickets: 6, is_active: true },
-    { tickets: 8, is_active: true },
-    { tickets: 10, is_active: true },
+    { base_tickets: 2, is_active: true },
+    { base_tickets: 4, is_active: true },
+    { base_tickets: 6, is_active: true },
+    { base_tickets: 8, is_active: true },
+    { base_tickets: 10, is_active: true },
   ] as any;
 
   expect(calculateTier(2, chores)).toBe("common");
