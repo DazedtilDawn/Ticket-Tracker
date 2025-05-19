@@ -197,89 +197,16 @@ export default function Dashboard() {
   
   // Set up WebSocket connection for real-time updates
   useEffect(() => {
-    console.log("Setting up WebSocket listeners for transaction events");
-    
     // Ensure we have an active WebSocket connection
     createWebSocketConnection();
     
-    // Special catch-all handler for debug display
-    const debugSubscription = subscribeToChannel("", (data) => {
-      const timestamp = new Date().toLocaleTimeString();
-      const eventInfo = `${timestamp} - ${data.event}`;
-      setLastWsEvents(prev => [eventInfo, ...prev.slice(0, 4)]);
-    });
-    
-    // Global handler for ALL transaction events to ensure nothing is missed
-    const generalTransactionSubscription = subscribeToChannel("transaction:", (data) => {
-      console.log("Received any transaction event - general handler:", data);
-      
-      // Extract the user ID from the transaction data
-      const transactionUserId = data.data?.user_id;
-      
-      // Add the transaction event to our debug panel with more details
-      const timestamp = new Date().toLocaleTimeString();
-      const txType = data.event.split(':')[1] || 'unknown';
-      // Handle both old and new field names for compatibility
-      const txAmount = data.data?.delta_tickets !== undefined ? 
-                     data.data.delta_tickets : 
-                     (data.data?.amount !== undefined ? data.data.amount : '?');
-      const eventDetails = `${timestamp} - 💰 ${txType} ${txAmount} tickets`;
-      setLastWsEvents(prev => [eventDetails, ...prev.slice(0, 4)]);
-      
-      console.log(`General transaction handler - Current user ID: ${user?.id}, transaction for user ID: ${transactionUserId}`);
-      
-      // Only show toast and update UI if this transaction is for the current user
-      if (transactionUserId === user?.id) {
-        console.log("Transaction is for current user, showing toast and updating UI");
-        
-        // Show a toast notification for the transaction
-        toast({
-          title: `Transaction: ${txType}`,
-          description: `${txAmount} tickets - ${data.data?.note || data.data?.description || ''}`,
-          variant: txAmount > 0 ? "default" : "destructive"
-        });
-        
-        // Check if the server sent a new balance for immediate UI update
-        if (data.data?.balance !== undefined) {
-          console.log(`Updating balance directly in the cache: ${data.data.balance}`);
-          // Update the balance directly in the cache
-          queryClient.setQueryData(["/api/stats"], (oldData: any) => {
-            return {
-              ...oldData,
-              balance: data.data.balance
-            };
-          });
-        }
-        
-        // Immediately invalidate all relevant queries to ensure UI updates
-        console.log("Invalidating and refreshing ALL transaction and stats queries");
-        queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-        
-        // Force immediate refetches of ALL related queries with a small delay to ensure backend has processed changes
-        setTimeout(() => {
-          queryClient.refetchQueries({ queryKey: ["/api/stats"] });
-          queryClient.refetchQueries({ queryKey: ["/api/transactions"], exact: false });
-          
-          // Specifically refresh the dashboard stats
-          refetch();
-        }, 100);
-      } else {
-        console.log("Transaction is for a different user, not updating current user's UI");
-      }
-    });
-    
     // Specific handlers for different transaction types (for UI notifications)
     const earningSubscription = subscribeToChannel("transaction:earn", (data) => {
-      console.log("Received transaction:earn event:", data);
       // Handle both formats: data.transaction or data.data
       const tickets = data.data?.delta_tickets || data.transaction?.delta_tickets || 0;
       const userId = data.data?.user_id || data.transaction?.user_id;
       const balance = data.data?.balance;
       const note = data.data?.note || data.transaction?.note || "";
-      
-      console.log(`Current user ID: ${user?.id}, transaction for user ID: ${userId}`);
-      console.log(`Transaction data:`, { tickets, userId, balance, note });
       
       // Only update UI and show notifications if this transaction is for the current user
       if (userId === user?.id) {
@@ -505,14 +432,11 @@ export default function Dashboard() {
     
     // Cleanup function to unsubscribe when component unmounts
     return () => {
-      debugSubscription(); // Unsubscribe from the debug handler
-      generalTransactionSubscription(); // Unsubscribe from the general handler
       earningSubscription();
       spendingSubscription();
       deductionSubscription();
       rewardSubscription();
-      deleteSubscription(); // Unsubscribe from delete events
-      console.log("Dashboard WebSocket subscriptions cleaned up");
+      deleteSubscription();
     };
   }, [queryClient, toast]);
   
