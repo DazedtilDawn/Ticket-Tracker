@@ -57,10 +57,15 @@ export default function TransactionsTable({ userId, limit = 10 }: TransactionsTa
   
   // Set up WebSocket listeners for transaction events
   useEffect(() => {
+    console.log("Setting up WebSocket listeners in TransactionsTable component");
+    
     // Set up individual channel subscriptions for better targeting
     const earnSubscription = subscribeToChannel("transaction:earn", (data) => {
+      console.log("TransactionsTable received earn event:", data);
+      
       // Always refresh the transaction list when a transaction is earned, regardless of user
       // This helps ensure parent dashboard shows all child transactions
+      console.log("TransactionsTable: transaction:earn event - forcing complete refresh");
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       
       // First immediate refetch
@@ -71,11 +76,14 @@ export default function TransactionsTable({ userId, limit = 10 }: TransactionsTa
       
       // Also do a delayed refetch to ensure all backend processing is complete
       setTimeout(() => {
+        console.log("TransactionsTable: executing delayed refetch after transaction:earn");
         refetch();
       }, 300);
     });
     
     const spendSubscription = subscribeToChannel("transaction:spend", (data) => {
+      console.log("TransactionsTable received spend event:", data);
+      console.log("TransactionsTable: transaction:spend event - forcing complete refresh");
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       
       // First immediate refetch
@@ -86,12 +94,16 @@ export default function TransactionsTable({ userId, limit = 10 }: TransactionsTa
       
       // Also do a delayed refetch to ensure all backend processing is complete
       setTimeout(() => {
+        console.log("TransactionsTable: executing delayed refetch after transaction:spend");
         refetch();
       }, 300);
     });
     
     const deleteSubscription = subscribeToChannel("transaction:delete", (data) => {
+      console.log("TransactionsTable received delete event:", data);
+      
       // Always refresh transaction list when a transaction is deleted
+      console.log("TransactionsTable: transaction:delete event - forcing complete refresh");
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       
       // First immediate refetch
@@ -102,12 +114,14 @@ export default function TransactionsTable({ userId, limit = 10 }: TransactionsTa
       
       // Force delayed refetches to ensure all backend processing is complete
       setTimeout(() => {
+        console.log("TransactionsTable: executing delayed refetch after transaction:delete");
         queryClient.refetchQueries({ queryKey: [queryUrl], exact: false });
         refetch();
       }, 100);
       
       // One more refetch after a longer delay to catch any stragglers
       setTimeout(() => {
+        console.log("TransactionsTable: executing final delayed refetch after transaction:delete");
         refetch();
       }, 500);
     });
@@ -139,6 +153,7 @@ export default function TransactionsTable({ userId, limit = 10 }: TransactionsTa
       
       // Force a direct refetch of transactions with a small delay to allow the WebSocket event to process
       setTimeout(() => {
+        console.log("Forcing immediate refetch after transaction deletion");
         // Refetch all transaction queries
         queryClient.refetchQueries({ 
           queryKey: ["/api/transactions"],
@@ -157,6 +172,7 @@ export default function TransactionsTable({ userId, limit = 10 }: TransactionsTa
       setTransactionToDelete(null);
     },
     onError: (error) => {
+      console.error("Error deleting transaction:", error);
       toast({
         title: "Error",
         description: "Failed to delete transaction. Please try again.",

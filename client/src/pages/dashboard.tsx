@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth-store";
 import { useStatsStore } from "@/store/stats-store";
-import { createWebSocketConnection, subscribeToChannel } from "@/lib/supabase";
+import { createWebSocketConnection, subscribeToChannel, sendMessage } from "@/lib/supabase";
 import ProgressCard from "@/components/progress-card";
 import ChoreCard from "@/components/chore-card";
 import TransactionsTable from "@/components/transactions-table";
@@ -37,6 +37,9 @@ export default function Dashboard() {
   
   // State for child summary data
   const [childSummaries, setChildSummaries] = useState<{id: number, name: string, balance: number}[]>([]);
+  
+  // State to track last received WebSocket events for debugging
+  const [lastWsEvents, setLastWsEvents] = useState<string[]>([]);
   
   // Load family users for the behavior dialogs and child summaries
   useEffect(() => {
@@ -112,6 +115,8 @@ export default function Dashboard() {
 
     const checkForUnspunBonus = async () => {
       try {
+        console.log("[Bonus] polling /unspun for id:", activeChildId);
+
         const response = await apiRequest(
           `/api/daily-bonus/unspun?user_id=${activeChildId}`,
           { method: "GET" }
@@ -119,10 +124,13 @@ export default function Dashboard() {
         
         // If we found an unspun daily bonus, open the spin prompt
         if (response && response.daily_bonus_id) {
+          console.log("Found unspun bonus:", response);
           // Set up the data for the spin prompt modal
           setDailyBonusId(response.daily_bonus_id);
           setCompletedChoreName(response.chore_name || "Daily Bonus");
           setIsSpinPromptOpen(true);
+        } else {
+          console.log("No unspun bonus found for this user");
         }
       } catch (error: any) {
         // Only log the error, don't show toast to avoid spamming the user
@@ -133,13 +141,11 @@ export default function Dashboard() {
         // 1. There's no bonus assigned for today
         // 2. The bonus has already been spun
         // 3. The assigned bonus chore hasn't been completed yet
-        // We only care about unexpected errors (not 404s which are normal)
         if (errorStatus !== 404) {
-          // Use toast for truly unexpected errors (like server errors)
-          toast({
-            title: "Error checking bonus",
-            description: "An unexpected error occurred",
-            variant: "destructive"
+          // Only log truly unexpected errors (server errors, etc.)
+          console.error("Unexpected error checking for unspun bonus:", {
+            status: errorStatus,
+            message: errorMessage
           });
         }
       }
@@ -194,27 +200,105 @@ export default function Dashboard() {
   
   // Set up WebSocket connection for real-time updates
   useEffect(() => {
+    console.log("Setting up WebSocket listeners for transaction events");
+    
     // Ensure we have an active WebSocket connection
     createWebSocketConnection();
     
+    // Special catch-all handler for debug display
+    const debugSubscription = subscribeToChannel("", (data) => {
+      const timestamp = new Date().toLocaleTimeString();
+      const eventInfo = `${timestamp} - ${data.event}`;
+      setLastWsEvents(prev => [eventInfo, ...prev.slice(0, 4)]);
+    });
+    
+    // Global handler for ALL transaction events to ensure nothing is missed
+    const generalTransactionSubscription = subscribeToChannel("transaction:", (data) => {
+      console.log("Received any transaction event - general handler:", data);
+      
+      // Extract the user ID from the transaction data
+      const transactionUserId = data.data?.user_id;
+      
+      // Add the transaction event to our debug panel with more details
+      const timestamp = new Date().toLocaleTimeString();
+      const txType = data.event.split(':')[1] || 'unknown';
+      // Handle both old and new field names for compatibility
+      const txAmount = data.data?.delta_tickets !== undefined ? 
+                     data.data.delta_tickets : 
+                     (data.data?.amount !== undefined ? data.data.amount : '?');
+      const eventDetails = `${timestamp} - 💰 ${txType} ${txAmount} tickets`;
+      setLastWsEvents(prev => [eventDetails, ...prev.slice(0, 4)]);
+      
+      console.log(`General transaction handler - Current user ID: ${user?.id}, transaction for user ID: ${transactionUserId}`);
+      
+      // Only show toast and update UI if this transaction is for the current user
+      if (transactionUserId === user?.id) {
+        console.log("Transaction is for current user, showing toast and updating UI");
+        
+        // Show a toast notification for the transaction
+        toast({
+          title: `Transaction: ${txType}`,
+          description: `${txAmount} tickets - ${data.data?.note || data.data?.description || ''}`,
+          variant: txAmount > 0 ? "default" : "destructive"
+        });
+        
+        // Check if the server sent a new balance for immediate UI update
+        if (data.data?.balance !== undefined) {
+          console.log(`Updating balance directly in the cache: ${data.data.balance}`);
+          // Update the balance directly in the cache
+          queryClient.setQueryData(["/api/stats"], (oldData: any) => {
+            return {
+              ...oldData,
+              balance: data.data.balance
+            };
+          });
+        }
+        
+        // Immediately invalidate all relevant queries to ensure UI updates
+        console.log("Invalidating and refreshing ALL transaction and stats queries");
+        queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+        
+        // Force immediate refetches of ALL related queries with a small delay to ensure backend has processed changes
+        setTimeout(() => {
+          queryClient.refetchQueries({ queryKey: ["/api/stats"] });
+          queryClient.refetchQueries({ queryKey: ["/api/transactions"], exact: false });
+          
+          // Specifically refresh the dashboard stats
+          refetch();
+        }, 100);
+      } else {
+        console.log("Transaction is for a different user, not updating current user's UI");
+      }
+    });
+    
     // Specific handlers for different transaction types (for UI notifications)
     const earningSubscription = subscribeToChannel("transaction:earn", (data) => {
+      console.log("Received transaction:earn event:", data);
       // Handle both formats: data.transaction or data.data
       const tickets = data.data?.delta_tickets || data.transaction?.delta_tickets || 0;
       const userId = data.data?.user_id || data.transaction?.user_id;
       const balance = data.data?.balance;
       const note = data.data?.note || data.transaction?.note || "";
       
+      console.log(`Current user ID: ${user?.id}, transaction for user ID: ${userId}`);
+      console.log(`Transaction data:`, { tickets, userId, balance, note });
+      
       // Only update UI and show notifications if this transaction is for the current user
       if (userId === user?.id) {
+        console.log("Transaction is for current user, updating UI with new balance:", balance);
+        
         // If server sent the new balance, update it directly in the UI for immediate feedback
         if (balance !== undefined) {
+          console.log("Applying direct balance update to cache and stats store:", balance);
+          
           // Update the centralized stats store for immediate UI updates across all components
           updateBalance(balance);
           
           // Also update the query cache to keep everything in sync
           queryClient.setQueryData(["/api/stats"], (oldData: any) => {
             if (!oldData) return oldData;
+            console.log("Updating stats cache with new balance", { oldBalance: oldData.balance, newBalance: balance });
             return {
               ...oldData,
               balance: balance
@@ -228,7 +312,8 @@ export default function Dashboard() {
           description: `${tickets} tickets earned - ${note}`,
         });
         
-        // Force immediate query invalidation and refreshes
+        // Force immediate query invalidation and refreshes for this specific event
+        console.log("Transaction:earn event - forcing complete data refresh cycle");
         queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
         queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
         
@@ -238,18 +323,26 @@ export default function Dashboard() {
           queryClient.refetchQueries({ queryKey: ["/api/transactions"], exact: false });
           queryClient.refetchQueries({ queryKey: ["/api/stats"] });
         }, 100);
+      } else {
+        console.log("Transaction is for a different user, not updating current user's balance");
       }
     });
     
     const spendingSubscription = subscribeToChannel("transaction:spend", (data) => {
+      console.log("Received transaction:spend event:", data);
       // Handle both formats: data.transaction or data.data
       const tickets = data.data?.delta_tickets || data.transaction?.delta_tickets || 0;
       const userId = data.data?.user_id || data.transaction?.user_id;
       
+      console.log(`Current user ID: ${user?.id}, transaction for user ID: ${userId}`);
+      
       // Only update UI if this transaction is for the current user
       if (userId === user?.id) {
+        console.log("Transaction is for current user, updating UI with new balance");
+        
         // If server sent the new balance, update it directly in the UI
         if (data.data?.balance !== undefined) {
+          console.log("Updating stats cache with new balance:", data.data.balance);
           queryClient.setQueryData(["/api/stats"], (oldData: any) => {
             return {
               ...oldData,
@@ -269,24 +362,31 @@ export default function Dashboard() {
       
       // Whether it's for this user or not, we should refresh all transaction data
       // to ensure the transactions table is up-to-date for parents viewing child accounts
+      console.log("Transaction:spend event - forcing complete data refresh cycle");
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       
       // Add a small delay to ensure backend has processed all changes
       setTimeout(() => {
         // Force immediate refetch of all transaction-related queries
+        console.log("Executing delayed refetch for transaction:spend event");
         queryClient.refetchQueries({ queryKey: ["/api/transactions"], exact: false });
         queryClient.refetchQueries({ queryKey: ["/api/stats"] });
       }, 100);
     });
     
     const deductionSubscription = subscribeToChannel("transaction:deduct", (data) => {
+      console.log("Received transaction:deduct event:", data);
       // Handle both formats: data.transaction or data.data
       const tickets = data.data?.delta_tickets || data.transaction?.delta_tickets || 0;
       const userId = data.data?.user_id || data.transaction?.user_id;
       
+      console.log(`Current user ID: ${user?.id}, transaction for user ID: ${userId}`);
+      
       // Only update UI if this transaction is for the current user
       if (userId === user?.id) {
+        console.log("Transaction is for current user, updating UI with new balance");
+        
         // If server sent the new balance, update it directly in the UI
         if (data.data?.balance !== undefined) {
           queryClient.setQueryData(["/api/stats"], (oldData: any) => {
@@ -296,6 +396,8 @@ export default function Dashboard() {
             };
           });
         }
+      } else {
+        console.log("Transaction is for a different user, not updating current user's balance");
       }
       
       toast({
@@ -308,12 +410,17 @@ export default function Dashboard() {
     });
     
     const rewardSubscription = subscribeToChannel("transaction:reward", (data) => {
+      console.log("Received transaction:reward event:", data);
       // Handle both formats: data.data or data.transaction
       const tickets = data.data?.delta_tickets || data.transaction?.delta_tickets || 0;
       const userId = data.data?.user_id || data.transaction?.user_id;
       
+      console.log(`Current user ID: ${user?.id}, transaction for user ID: ${userId}`);
+      
       // Only update UI if this transaction is for the current user
       if (userId === user?.id) {
+        console.log("Transaction is for current user, updating UI with new balance");
+        
         // If server sent the new balance, update it directly in the UI
         if (data.data?.balance !== undefined) {
           queryClient.setQueryData(["/api/stats"], (oldData: any) => {
@@ -323,6 +430,8 @@ export default function Dashboard() {
             };
           });
         }
+      } else {
+        console.log("Transaction is for a different user, not updating current user's balance");
       }
       
       toast({
@@ -336,13 +445,19 @@ export default function Dashboard() {
     
     // Handler for transaction:delete events to update the goal progress meter
     const deleteSubscription = subscribeToChannel("transaction:delete", (data) => {
+      console.log("Received transaction:delete event:", data);
+      
       // Extract the user ID and updated balance - could be in data.data or directly in data
       const userId = data.data?.user_id || data.user_id;
       const balance = data.data?.balance || data.balance;
       const goal = data.data?.goal || data.goal;
       
+      console.log(`Transaction delete - Current user ID: ${user?.id}, affected user ID: ${userId}`);
+      
       // Only update UI if this transaction is for the current user or the child we're viewing
       if (userId === user?.id) {
+        console.log("Transaction delete is for current user, updating UI with new balance and goal data");
+        
         // Update balance in the stats store for immediate UI updates
         if (balance !== undefined) {
           updateBalance(balance);
@@ -361,6 +476,7 @@ export default function Dashboard() {
           // If we have updated goal data, update that too to refresh the progress meter
           if (goal) {
             newData.activeGoal = goal;
+            console.log("Updating goal data in stats cache:", goal);
           }
           
           return newData;
@@ -374,11 +490,13 @@ export default function Dashboard() {
       }
       
       // Force immediate query invalidation to ensure all UI components are updated
+      console.log("Transaction:delete event - forcing complete data refresh cycle");
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       
       // Add a small delay to ensure backend processing is complete
       setTimeout(() => {
+        console.log("Executing delayed refetch for transaction:delete event");
         // Force immediate refetch of ALL transaction-related queries with exact=false to catch any with parameters
         queryClient.refetchQueries({ queryKey: ["/api/transactions"], exact: false });
         queryClient.refetchQueries({ queryKey: ["/api/stats"] });
@@ -390,11 +508,14 @@ export default function Dashboard() {
     
     // Cleanup function to unsubscribe when component unmounts
     return () => {
+      debugSubscription(); // Unsubscribe from the debug handler
+      generalTransactionSubscription(); // Unsubscribe from the general handler
       earningSubscription();
       spendingSubscription();
       deductionSubscription();
       rewardSubscription();
-      deleteSubscription();
+      deleteSubscription(); // Unsubscribe from delete events
+      console.log("Dashboard WebSocket subscriptions cleaned up");
     };
   }, [queryClient, toast]);
   
@@ -407,21 +528,26 @@ export default function Dashboard() {
       // If a parent is viewing a child account, include the child's user ID
       if (viewingChild && user) {
         payload.user_id = user.id;
+        console.log("Adding user_id to chore completion payload:", user.id);
       }
       
       // Make the API request to complete the chore
+      console.log("Submitting chore completion with payload:", payload);
       const response = await apiRequest("/api/earn", {
         method: "POST",
         body: JSON.stringify(payload),
       });
+      console.log("Chore completion response:", response);
       
       // If the response includes the new balance, update our stats store immediately
       if (response && response.balance !== undefined) {
+        console.log("Updating balance from chore completion:", response.balance);
         updateBalance(response.balance);
       }
       
       // Check if this chore completion triggered a bonus
       if (response && response.bonus_triggered === true && response.daily_bonus_id) {
+        console.log("Bonus chore triggered! Opening spin modal with bonus ID:", response.daily_bonus_id);
         // Pass the chore info to the bonus handler to open the spin modal
         handleBonusChoreComplete(
           response.daily_bonus_id,
@@ -449,6 +575,7 @@ export default function Dashboard() {
   
   // Handle bonus chore completion - shows the spin wheel modal
   const handleBonusChoreComplete = (bonusId: number, choreName: string) => {
+    console.log(`Bonus chore completed: ${choreName} (ID: ${bonusId})`);
     setDailyBonusId(bonusId);
     setCompletedChoreName(choreName);
     setIsSpinPromptOpen(true);
@@ -456,6 +583,7 @@ export default function Dashboard() {
   
   // Handle user clicking "Spin Now!" in the prompt modal
   const handleUserInitiatesSpin = (bonusIdFromPrompt: number) => {
+    console.log(`User initiated spin for daily_bonus_id: ${bonusIdFromPrompt}`);
     // Close the prompt modal
     setIsSpinPromptOpen(false);
     // Open the main wheel modal
@@ -465,10 +593,13 @@ export default function Dashboard() {
   // Handle actual wheel spin action (called from the wheel component)
   const handleSpinWheel = async (bonusId: number) => {
     try {
+      console.log(`Spinning wheel for daily bonus ID: ${bonusId}`);
       const response = await apiRequest("/api/bonus-spin", {
         method: "POST",
         body: JSON.stringify({ daily_bonus_id: bonusId }),
       });
+      
+      console.log("Bonus spin response:", response);
       
       // The server will send a WebSocket event with the spin results
       // which will trigger a UI update automatically
@@ -717,6 +848,50 @@ export default function Dashboard() {
               <TransactionsTable limit={5} />
             </section>
             
+            {/* WebSocket Debug Panel - visible to all users for testing */}
+              <section className="mt-8 p-4 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <span className={`h-2 w-2 rounded-full ${lastWsEvents.length > 0 ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                    WebSocket Debug Monitor
+                  </h3>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      // Add timestamp to message to track round-trip time
+                      const timestamp = new Date().toISOString();
+                      const success = sendMessage('client:ping', { timestamp });
+                      
+                      // Record the test attempt in our event log
+                      const attemptMsg = `${new Date().toLocaleTimeString()} - Test ping sent (${success ? 'OK' : 'FAILED'})`;
+                      setLastWsEvents(prev => [attemptMsg, ...prev.slice(0, 4)]);
+                      
+                      toast({
+                        title: success ? "Ping sent" : "Ping failed",
+                        description: success 
+                          ? "Testing WebSocket connection... Check for response."
+                          : "Could not send ping. Connection may be closed.",
+                        variant: success ? "default" : "destructive"
+                      });
+                    }}
+                  >
+                    Test Connection
+                  </Button>
+                </div>
+                {lastWsEvents.length > 0 ? (
+                  <div className="text-sm font-mono">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Last 5 events received:</p>
+                    <ul className="space-y-1">
+                      {lastWsEvents.map((event, i) => (
+                        <li key={i} className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{event}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">No WebSocket events received yet. Try refreshing or performing an action.</p>
+                )}
+              </section>
             </>
           )}
       </div>
