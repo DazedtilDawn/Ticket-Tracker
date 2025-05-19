@@ -1,3 +1,6 @@
+Here’s the cleaned-up, conflict-free **SharedCatalog.tsx** with the taller scroll area and the extra **xl** grid column from the feature branch retained:
+
+```tsx
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
@@ -96,10 +99,13 @@ export function SharedCatalog({ onProductSelected }: { onProductSelected: (produ
           </AddProductDialog>
         </div>
       ) : (
-        <ScrollArea className="h-[400px] rounded-md border p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <ScrollArea className="h-[500px] rounded-md border p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {products.map((product: any) => (
-              <Card key={product.id} className="overflow-hidden">
+              <Card
+                key={product.id}
+                className="overflow-hidden transition-shadow hover:shadow-lg"
+              >
                 <div className="flex h-32 bg-slate-100 dark:bg-slate-800">
                   {product.image_url ? (
                     <img
@@ -164,3 +170,4 @@ export function SharedCatalog({ onProductSelected }: { onProductSelected: (produ
     </div>
   );
 }
+```

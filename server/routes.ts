@@ -705,7 +705,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const update = updateProductSchema.parse(req.body);
-      const updated = await storage.updateProduct(id, update);
+      // If price is being updated, lock the price for existing goals as well
+      const finalUpdate = {
+        ...update,
+        ...(update.price_cents !== undefined && {
+          price_locked_cents: update.price_cents,
+        }),
+      };
+      const updated = await storage.updateProduct(id, finalUpdate);
       if (!updated) {
         return res.status(404).json({ message: "Product not found" });
       }
