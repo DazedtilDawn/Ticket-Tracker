@@ -11,7 +11,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 
 const formSchema = z.object({
   title: z.string().min(1, { message: "Title is required" }),
-  price_cents: z.coerce.number().int().min(1, { message: "Price must be positive" }),
+  price_cents: z.coerce.number().min(1, { message: "Price must be positive" }),
   image_url: z.string().url().optional().or(z.literal(""))
 });
 

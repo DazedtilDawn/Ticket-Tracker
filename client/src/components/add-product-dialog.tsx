@@ -37,9 +37,7 @@ const searchSchema = z.object({
 
 const manualSchema = z.object({
   title: z.string().min(1, { message: "Product title is required" }),
-  price_cents: z.coerce.number()
-    .int({ message: "Price must be a whole number" })
-    .min(1, { message: "Price must be greater than 0" }),
+  price_cents: z.coerce.number().min(1, { message: "Price must be greater than 0" }),
   image_url: z.string().url({ message: "Image URL must be valid" }).optional().or(z.literal("")),
   amazonUrl: z.string().url({ message: "Amazon URL must be valid" }).optional().or(z.literal("")),
 });
@@ -123,11 +121,8 @@ export function AddProductDialog({ children, onProductAdded }: AddProductDialogP
     setIsManualCreating(true);
     
     try {
-      // Convert price from dollars to cents if needed
-      let priceCents = data.price_cents;
-      if (priceCents < 100 && priceCents > 0) {
-        priceCents = Math.round(priceCents * 100);
-      }
+      // Always convert price from dollars to cents
+      const priceCents = Math.round(data.price_cents * 100);
       
       // Prepare request data
       const requestData = {
