@@ -109,8 +109,11 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
       const authStore = JSON.parse(localStorage.getItem('ticket-tracker-auth') || '{}');
       const token = authStore?.state?.token;
       
+      // Determine current user ID for the profile image endpoint
+      const userId = authStore?.state?.user?.id ?? '';
+
       // Manual fetch with token for FormData upload
-      const response = await fetch('/api/upload/image', {
+      const response = await fetch(`/api/profile-image/${userId}`, {
         method: 'POST',
         body: formData,
         headers: {
@@ -124,8 +127,8 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
       }
       
       const data = await response.json();
-      
-      form.setValue('image_url', data.imageUrl);
+
+      form.setValue('image_url', data.profile_image_url || data.imageUrl);
       
       toast({
         title: "Image uploaded",
