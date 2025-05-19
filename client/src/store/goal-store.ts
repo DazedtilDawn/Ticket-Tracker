@@ -57,8 +57,8 @@ export const useGoalStore = create<GoalState>((set, get) => ({
       const response = await apiRequest('GET', '/api/goals/active');
       const data = await response.json();
       set({ activeGoal: data, isLoading: false });
-    } catch (error) {
-      if (error.message?.includes('404')) {
+    } catch (error: any) {
+      if (error?.status === 404) {
         // No active goal is not an error
         set({ activeGoal: null, isLoading: false });
       } else {
