@@ -102,7 +102,7 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
       console.log(`[UPLOAD] Starting upload for ${user.name} (ID: ${user.id})`);
       
       const formData = new FormData();
-      formData.append('profile_image', selectedFile);
+      formData.append('image', selectedFile); // Must use 'image' to match what the server expects
       
       // Use the generic upload endpoint used for chore images instead
       const uploadUrl = `/api/upload/image`;
