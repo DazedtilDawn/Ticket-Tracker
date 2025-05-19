@@ -4,6 +4,12 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { useAuthStore } from "@/store/auth-store";
+import { useState, useEffect, useRef } from "react";
+import { Ticket, Star, Trophy } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+// Import confetti for celebrations
+import confetti from "canvas-confetti";
 
 interface ProgressCardProps {
   goal: {
@@ -30,7 +36,33 @@ interface ProgressCardProps {
 export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
   const { toast } = useToast();
   const [, navigate] = useLocation();
-  const { user } = useAuthStore();
+  const { user, getChildUsers } = useAuthStore();
+  const [hasShownConfetti, setHasShownConfetti] = useState(false);
+  const progressContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Track when we've passed milestone percentages
+  const [passedMilestones, setPassedMilestones] = useState({
+    quarter: goal.progress >= 25,
+    half: goal.progress >= 50,
+    threeQuarters: goal.progress >= 75,
+    complete: goal.progress >= 100
+  });
+  
+  const childUsers = getChildUsers();
+  
+  // Find the current child's profile data (assuming user_id in goal matches a child's id)
+  const currentChild = childUsers.find(child => child.id === goal.user_id);
+  const childName = currentChild?.name || "";
+  const profileImageUrl = currentChild?.profile_image_url;
+  
+  // Get initials for avatar fallback
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase();
+  };
   
   // Format price in dollars
   const formatPrice = (cents: number) => {
@@ -42,6 +74,14 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
   
   // Calculate tickets needed - using 25 cents per ticket conversion
   const ticketsNeeded = Math.ceil(goal.product.price_locked_cents / 25);
+  
+  // Calculate tickets remaining
+  const ticketsRemaining = Math.max(0, ticketsNeeded - goal.tickets_saved);
+  
+  // Calculate money value of tickets
+  const ticketValueInCents = 25; // 25 cents per ticket
+  const ticketsMoneySaved = (goal.tickets_saved * ticketValueInCents / 100).toFixed(2);
+  const ticketsMoneyRemaining = (ticketsRemaining * ticketValueInCents / 100).toFixed(2);
   
   // Handle switching goals - navigate directly to wishlist for the current child
   const handleSwitchGoal = () => {
@@ -62,6 +102,64 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
       });
     }
   };
+
+  // Check for milestone achievements and show celebrations
+  useEffect(() => {
+    const checkMilestones = () => {
+      // Define previous and current milestones
+      const prevMilestones = { ...passedMilestones };
+      const newMilestones = {
+        quarter: goal.progress >= 25,
+        half: goal.progress >= 50,
+        threeQuarters: goal.progress >= 75,
+        complete: goal.progress >= 100
+      };
+      
+      // Check if we've just passed a milestone
+      if (!prevMilestones.quarter && newMilestones.quarter) {
+        toast({
+          title: "🌟 Milestone Reached!",
+          description: `${childName} is 25% of the way to their goal!`,
+        });
+      }
+      
+      if (!prevMilestones.half && newMilestones.half) {
+        toast({
+          title: "🏆 Halfway There!",
+          description: `${childName} has saved 50% of the tickets needed!`,
+        });
+      }
+      
+      if (!prevMilestones.threeQuarters && newMilestones.threeQuarters) {
+        toast({
+          title: "🚀 Almost There!",
+          description: `${childName} is 75% of the way to their goal!`,
+        });
+      }
+      
+      // Show confetti for 100% completion
+      if (!prevMilestones.complete && newMilestones.complete && !hasShownConfetti) {
+        toast({
+          title: "🎉 Goal Complete!",
+          description: `${childName} has all the tickets needed for their goal!`,
+          variant: "success"
+        });
+        
+        // Launch confetti
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+        
+        setHasShownConfetti(true);
+      }
+      
+      setPassedMilestones(newMilestones);
+    };
+    
+    checkMilestones();
+  }, [goal.progress, childName, passedMilestones, hasShownConfetti, toast]);
   
   return (
     <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -84,14 +182,29 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
               </p>
             </div>
             <div className="mt-2 sm:mt-0 flex items-center">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary-100 text-secondary-800 dark:bg-secondary-900 dark:text-secondary-300">
-                <i className="ri-ticket-2-line mr-1"></i>
-                {ticketsNeeded} tickets needed
-              </span>
+              <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-800/50">
+                <Ticket className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                <span className="text-xs font-medium text-amber-800 dark:text-amber-300">
+                  {ticketsNeeded} tickets needed
+                </span>
+              </div>
             </div>
           </div>
+
+          {/* Enhanced ticket value display */}
+          <div className="flex items-center mt-2 text-xs text-emerald-700 dark:text-emerald-400">
+            <span className="flex items-center">
+              <Ticket className="w-3 h-3 mr-1 inline" />
+              {goal.tickets_saved} tickets saved (${ticketsMoneySaved})
+            </span>
+            <span className="mx-2">•</span>
+            <span className="flex items-center">
+              <Ticket className="w-3 h-3 mr-1 inline" />
+              {ticketsRemaining} to go (${ticketsMoneyRemaining})
+            </span>
+          </div>
           
-          <div className="mt-3">
+          <div className="mt-3" ref={progressContainerRef}>
             <div className="flex items-center justify-between text-sm mb-1">
               <span className="text-gray-500 dark:text-gray-400">
                 Progress: {goal.tickets_saved} of {ticketsNeeded} tickets saved
@@ -100,7 +213,65 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
                 {Math.floor(goal.progress)}%
               </span>
             </div>
-            <Progress value={goal.progress} className="h-2.5 animate-progress" />
+
+            {/* Enhanced progress bar with milestones */}
+            <div className="relative">
+              {/* Gradient progress bar */}
+              <div className="relative h-5 w-full rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                <div 
+                  className="h-full rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-1000 ease-out"
+                  style={{ width: `${Math.min(100, goal.progress)}%` }}
+                />
+                
+                {/* Milestone markers */}
+                {[25, 50, 75].map(milestone => (
+                  <div 
+                    key={`milestone-${milestone}`}
+                    className={`absolute top-0 bottom-0 flex items-center justify-center ${goal.progress >= milestone ? 'text-white' : 'text-gray-400 dark:text-gray-500'}`}
+                    style={{ left: `${milestone}%`, transform: 'translateX(-50%)' }}
+                  >
+                    {milestone === 25 && (
+                      <div className={`w-4 h-4 rounded-full ${goal.progress >= milestone ? 'bg-blue-500 animate-pulse' : 'bg-gray-300 dark:bg-gray-600'} flex items-center justify-center`}>
+                        <Star className="w-2 h-2" />
+                      </div>
+                    )}
+                    {milestone === 50 && (
+                      <div className={`w-4 h-4 rounded-full ${goal.progress >= milestone ? 'bg-purple-500 animate-pulse' : 'bg-gray-300 dark:bg-gray-600'} flex items-center justify-center`}>
+                        <Star className="w-2 h-2" />
+                      </div>
+                    )}
+                    {milestone === 75 && (
+                      <div className={`w-4 h-4 rounded-full ${goal.progress >= milestone ? 'bg-pink-500 animate-pulse' : 'bg-gray-300 dark:bg-gray-600'} flex items-center justify-center`}>
+                        <Star className="w-2 h-2" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+                
+                {/* Avatar indicator moving along the progress bar */}
+                <div 
+                  className="absolute top-0 transform -translate-y-1/2"
+                  style={{ 
+                    left: `${Math.min(98, Math.max(2, goal.progress))}%`, 
+                    transform: 'translateX(-50%)' 
+                  }}
+                >
+                  <Avatar className="w-6 h-6 border-2 border-white dark:border-gray-900 shadow-md">
+                    <AvatarImage src={profileImageUrl || undefined} alt={childName} />
+                    <AvatarFallback className="text-[10px] bg-primary text-white">
+                      {getInitials(childName)}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+              </div>
+              
+              {/* 100% trophy marker */}
+              <div 
+                className={`absolute right-0 top-0 bottom-0 transform translate-x-1/2 flex items-center justify-center ${goal.progress >= 100 ? 'text-yellow-500 animate-bounce-slow' : 'text-gray-400'}`}
+              >
+                <Trophy className="w-6 h-6" />
+              </div>
+            </div>
           </div>
         </div>
       </div>

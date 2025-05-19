@@ -1,0 +1,78 @@
+The child dashboards render the goal progress via the ProgressCard component.
+In client/src/pages/dashboard.tsx, the card is displayed when there is an active goal:
+
+670  <div className="flex items-center justify-between mb-4">
+...
+694  {data?.activeGoal ? (
+695    <ProgressCard goal={data.activeGoal} onRefresh={refetch} />
+696  ) : (
+697    <div className="p-6 text-center">
+698      <p className="text-gray-500 dark:text-gray-400">
+699        No active goal set. Visit the wishlist page to add a goal.
+700      </p>
+701    </div>
+702  )}
+
+The ProgressCard itself (simplified excerpt) shows a small product image, progress bar and buttons:
+
+66  return (
+67    <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+68      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center">
+69        <img
+70          src={goal.product.image_url || "https://placehold.co/300x300/e5e7eb/a1a1aa?text=No+Image"}
+71          alt={goal.product.title}
+72          className="w-16 h-16 object-cover rounded-md"
+...
+95        <div className="flex items-center justify-between text-sm mb-1">
+96          <span className="text-gray-500 dark:text-gray-400">
+97            Progress: {goal.tickets_saved} of {ticketsNeeded} tickets saved
+98          </span>
+99          <span className="font-medium text-primary-600 dark:text-primary-400">
+100            {Math.floor(goal.progress)}%
+101          </span>
+102        </div>
+103        <Progress value={goal.progress} className="h-2.5 animate-progress" />
+...
+120        <Button variant="outline" size="sm" onClick={handleSwitchGoal}>
+121          Switch Goal
+122        </Button>
+123        <Button asChild variant="secondary" size="sm">
+124          <a href={amazonUrl} target="_blank" rel="noopener noreferrer">
+125            View on Amazon
+126          </a>
+127        </Button>
+
+Ideas to enhance the Goal display
+Animated milestone markers
+
+Add small star/trophy icons at 25%, 50%, and 75% progress points on the bar.
+
+Trigger a short bounce or glow animation when those thresholds are crossed.
+
+Confetti celebration on goal completion
+
+Reuse the existing canvas-confetti library (already used in child-bonus-wheel.tsx).
+
+Launch confetti when goal.progress reaches 100% and show a congratulatory message.
+
+Dynamic gradient progress bar
+
+Replace the single-colored bar with a gradient that transitions from one color to another as progress increases.
+
+Tailwind’s bg-gradient-to-r utilities or a custom style={{ width: ... }} could implement this quickly.
+
+Friendly avatar badges
+
+Overlay a small avatar (Bryce or Kiki) alongside the progress bar.
+
+As progress increases, animate the avatar moving along the bar to visually show how close they are to the reward.
+
+“Tickets to go” hint
+
+Below the progress bar, show a line like “Only X tickets left!” computed from ticketsNeeded - goal.tickets_saved.
+
+This adds a motivational countdown and is easy to calculate in the existing component.
+
+These additions would keep the existing layout intact but add playful visual feedback, making the child dashboards for Bryce and Kiki more engaging while still fitting within the program’s current code structure. An AI coding agent could implement these enhancements by extending ProgressCard with small animations and effects using the already-included Tailwind and confetti utilities.
+
+We also want to 2)   Improve Ticket display - image of a ticket and amount of tickets - show how much money it's equal to  -  make the ticket image fun and prominent
