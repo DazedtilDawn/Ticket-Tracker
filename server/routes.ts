@@ -32,6 +32,7 @@ import { calculateTier, calculateProgressPercent, calculateBoostPercent } from "
 import { WebSocketServer, WebSocket } from "ws";
 import { cleanupOrphanedProducts } from "./cleanup";
 import { success, failure } from "./lib/responses";
+import { TICKET_CENT_VALUE } from "../config/business";
 
 import { registerProfileImageRoutes } from "./lib/simple-profile-upload";
 
@@ -2210,7 +2211,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userBalance = await storage.getUserBalance(transaction.user_id);
 
       // Calculate the max tickets for this goal
-      const maxGoalTickets = Math.ceil(goal.product.price_locked_cents / 25);
+      const maxGoalTickets = Math.ceil(goal.product.price_locked_cents / TICKET_CENT_VALUE);
 
       // Update the goal progress to match the current balance (up to the max tickets needed)
       const newGoalProgress = Math.min(userBalance, maxGoalTickets);
@@ -2266,7 +2267,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`[STATS] Fixing goal progress for user ${targetUserId}: balance=${balance}, goal.tickets_saved=${activeGoal.tickets_saved}`);
 
         // Calculate max tickets needed for this goal
-        const maxTickets = Math.ceil(activeGoal.product.price_locked_cents / 25);
+        const maxTickets = Math.ceil(activeGoal.product.price_locked_cents / TICKET_CENT_VALUE);
 
         // Update the goal to match the balance (up to the max needed)
         const newProgress = Math.min(balance, maxTickets);
@@ -2292,7 +2293,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const avgPerDay = totalEarned / Math.max(1, earnTransactions.length);
 
         // Tickets needed to complete goal
-        const ticketsNeeded = activeGoal.product.price_locked_cents / 25 - activeGoal.tickets_saved;
+        const ticketsNeeded = activeGoal.product.price_locked_cents / TICKET_CENT_VALUE - activeGoal.tickets_saved;
 
         // Estimated days to completion
         const daysToCompletion = Math.ceil(ticketsNeeded / avgPerDay);

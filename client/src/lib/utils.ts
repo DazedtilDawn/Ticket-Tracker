@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { TICKET_DOLLAR_VALUE } from "../../../config/business"
  
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -9,7 +10,7 @@ export function cn(...inputs: ClassValue[]) {
  * Convert tickets to USD value (25 cents per ticket)
  */
 export function ticketsToUSD(tickets: number): string {
-  const dollars = (tickets * 0.25).toFixed(2);
+  const dollars = (tickets * TICKET_DOLLAR_VALUE).toFixed(2);
   return `$${dollars}`;
 }
 

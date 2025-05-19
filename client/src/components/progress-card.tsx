@@ -7,6 +7,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { useState, useEffect, useRef } from "react";
 import { Ticket, Star, Trophy } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { TICKET_CENT_VALUE } from "../../../config/business";
 
 // Import confetti for celebrations
 import confetti from "canvas-confetti";
@@ -73,13 +74,13 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
   const amazonUrl = `https://www.amazon.com/dp/${goal.product.asin}`;
   
   // Calculate tickets needed - using 25 cents per ticket conversion
-  const ticketsNeeded = Math.ceil(goal.product.price_locked_cents / 25);
+  const ticketsNeeded = Math.ceil(goal.product.price_locked_cents / TICKET_CENT_VALUE);
   
   // Calculate tickets remaining
   const ticketsRemaining = Math.max(0, ticketsNeeded - goal.tickets_saved);
   
   // Calculate money value of tickets
-  const ticketValueInCents = 25; // 25 cents per ticket
+  const ticketValueInCents = TICKET_CENT_VALUE; // cents per ticket
   const ticketsMoneySaved = (goal.tickets_saved * ticketValueInCents / 100).toFixed(2);
   const ticketsMoneyRemaining = (ticketsRemaining * ticketValueInCents / 100).toFixed(2);
   
