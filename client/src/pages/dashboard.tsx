@@ -718,20 +718,46 @@ export default function Dashboard() {
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Savings Progress</h3>
                     <div className="flex items-center gap-4">
-                      <span className="text-sm text-gray-500 dark:text-gray-400">
-                        Current Balance: <span className="font-semibold text-primary-600 dark:text-primary-400">
-                          {balance || data?.balance || 0} tickets
-                        </span>
-                      </span>
+                      {/* Enhanced ticket balance display with larger graphics */}
+                      <div className="flex items-center bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-800/20 px-4 py-3 rounded-lg border border-amber-200 dark:border-amber-800/50 shadow-sm">
+                        <div className="relative mr-3">
+                          <div className="relative">
+                            <Ticket className="h-12 w-12 text-amber-500 dark:text-amber-400" strokeWidth={1.5} />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <span className="text-xl font-bold text-amber-700 dark:text-amber-300">
+                                {balance || data?.balance || 0}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="absolute -right-1 -top-1">
+                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-gray-800">
+                              {user?.role === 'child' ? '🎯' : '👑'}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-col">
+                          <span className="text-xs uppercase tracking-wider text-amber-700/80 dark:text-amber-400/80 font-medium">
+                            Current Balance
+                          </span>
+                          <span className="text-lg font-bold text-amber-800 dark:text-amber-300">
+                            {balance || data?.balance || 0} Tickets
+                          </span>
+                          <span className="text-xs text-amber-600/80 dark:text-amber-500/80">
+                            Worth: ${((balance || data?.balance || 0) * 0.25).toFixed(2)} USD
+                          </span>
+                        </div>
+                      </div>
+                      
                       {/* Purchase Button - Only show for child or when viewing as child */}
                       {(viewingChild || user?.role === 'child') && (
                         <PurchaseDialog onCompleted={() => refetch()}>
                           <Button 
                             variant="outline" 
-                            size="sm"
-                            className="flex items-center text-primary-600 border-primary-200 hover:bg-primary-50 hover:text-primary-700 dark:text-primary-400 dark:border-primary-900 dark:hover:bg-primary-950 dark:hover:text-primary-300"
+                            size="default"
+                            className="flex items-center text-primary-600 border-primary-200 hover:bg-primary-50 hover:text-primary-700 dark:text-primary-400 dark:border-primary-900 dark:hover:bg-primary-950 dark:hover:text-primary-300 h-12"
                           >
-                            <ShoppingCartIcon className="mr-2 h-4 w-4" />
+                            <ShoppingCartIcon className="mr-2 h-5 w-5" />
                             Spend Tickets
                           </Button>
                         </PurchaseDialog>
