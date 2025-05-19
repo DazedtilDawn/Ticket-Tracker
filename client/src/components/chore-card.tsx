@@ -73,10 +73,11 @@ export default function ChoreCard({ chore, onComplete, onBonusComplete }: ChoreC
       {/* Chore image (if available) */}
       {chore.image_url && (
         <div className="w-full aspect-video overflow-hidden relative bg-gray-100 dark:bg-gray-800">
-          <img 
-            src={chore.image_url} 
+          <img
+            src={chore.image_url}
             alt={chore.name}
-            className="w-full h-full object-contain" 
+            className="w-full h-full object-contain"
+            loading="lazy"
             onError={(e) => {
               e.currentTarget.style.display = 'none';
             }}

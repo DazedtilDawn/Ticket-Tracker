@@ -177,10 +177,11 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
       <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex flex-col md:flex-row items-center">
         {/* Larger product image with shadow */}
         <div className="relative mb-4 md:mb-0">
-          <img 
-            src={goal.product.image_url || "https://placehold.co/300x300/e5e7eb/a1a1aa?text=No+Image"} 
-            alt={goal.product.title} 
+          <img
+            src={goal.product.image_url || "https://placehold.co/300x300/e5e7eb/a1a1aa?text=No+Image"}
+            alt={goal.product.title}
             className="w-32 h-32 md:w-40 md:h-40 object-contain rounded-md shadow-md border border-gray-200 dark:border-gray-700"
+            loading="lazy"
             onError={(e) => {
               e.currentTarget.src = "https://placehold.co/300x300/e5e7eb/a1a1aa?text=Image+Error";
             }}

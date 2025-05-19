@@ -364,10 +364,11 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
                       <div className="flex flex-col items-center justify-center py-4 text-center">
                         {field.value ? (
                           <div className="relative w-full max-w-xs mx-auto">
-                            <img 
-                              src={field.value} 
-                              alt="Chore preview" 
+                            <img
+                              src={field.value}
+                              alt="Chore preview"
                               className="mx-auto max-h-32 object-contain rounded-md"
+                              loading="lazy"
                               onError={() => {
                                 toast({
                                   title: "Image error",
