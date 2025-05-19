@@ -5,6 +5,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth-store";
 import { createWebSocketConnection, subscribeToChannel } from "@/lib/supabase";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLocation } from "wouter";
 import WishlistCard from "@/components/wishlist-card";
 import { SharedCatalog } from "@/components/shared-catalog";
@@ -43,19 +44,38 @@ export default function Wishlist() {
     // Subscribe to transaction events that might affect goals
     const spendingSubscription = subscribeToChannel("transaction:spend", (data) => {
       console.log("Received transaction:spend event in wishlist:", data);
-      // Invalidate queries to refresh the goals data
       queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
     });
-    
+
     const earningSubscription = subscribeToChannel("transaction:earn", (data) => {
       console.log("Received transaction:earn event in wishlist:", data);
       queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
+    });
+
+    // Listen for goal or product updates from other sessions
+    const goalUpdateSubscription = subscribeToChannel("goal:update", () => {
+      console.log("Received goal:update event in wishlist");
+      queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
+    });
+
+    const goalDeleteSubscription = subscribeToChannel("goal:deleted", () => {
+      console.log("Received goal:deleted event in wishlist");
+      queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
+    });
+
+    const productUpdateSubscription = subscribeToChannel("product:update", () => {
+      console.log("Received product:update event in wishlist");
+      queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
     });
     
     // Cleanup function to unsubscribe when component unmounts
     return () => {
       spendingSubscription();
       earningSubscription();
+      goalUpdateSubscription();
+      goalDeleteSubscription();
+      productUpdateSubscription();
     };
   }, [queryClient]);
   
@@ -221,12 +241,13 @@ export default function Wishlist() {
                 <div className="mb-2">
                   <h3 className="text-lg font-medium">Wishlist Items</h3>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <ScrollArea className="h-[400px]">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {wishlistGoals.length > 0 ? (
                     wishlistGoals.map(goal => (
-                      <WishlistCard 
-                        key={goal.id} 
-                        goal={goal} 
+                      <WishlistCard
+                        key={goal.id}
+                        goal={goal}
                         onSetAsGoal={handleSetAsGoal}
                         onDelete={handleGoalDeleted}
                         refreshList={refetch}
@@ -244,7 +265,8 @@ export default function Wishlist() {
                       </Button>
                     </div>
                   )}
-                </div>
+                  </div>
+                </ScrollArea>
               </>
             )}
           </TabsContent>
