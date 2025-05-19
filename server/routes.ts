@@ -348,12 +348,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/users", async (req: Request, res: Response) => {
     const users = await storage.getUsers();
     
-    // Remove passwords from response
+    // Remove passwords from response but include profile image URL
     const sanitizedUsers = users.map(user => ({
       id: user.id,
       name: user.name,
       username: user.username,
       role: user.role,
+      profile_image_url: user.profile_image_url,
     }));
     
     return res.json(sanitizedUsers);
