@@ -165,39 +165,26 @@ export function ChildBonusWheel({
   
   // Set up WebSocket listeners for bonus spin results
   useEffect(() => {
-    console.log('[WHEEL_DEBUG] Setting up WebSocket listeners for bonus spin events');
-    
     // Ensure we have an active WebSocket connection
     createWebSocketConnection();
     
     // Listen for bonus_spin:result events
     const bonusSpinListener = subscribeToChannel("bonus_spin:result", (eventData) => {
-      console.log('[WHEEL_DEBUG] Received bonus_spin:result WebSocket event:', eventData);
-      
       // Only process events for our bonus ID
       if (dailyBonusId && eventData.data?.daily_bonus_id === dailyBonusId) {
-        console.log('[WHEEL_DEBUG] Processing matching bonus_spin:result for our dailyBonusId:', dailyBonusId);
+        // Process the event
       }
     });
     
     // Listen for transaction:earn events that might be related to our bonus
     const transactionListener = subscribeToChannel("transaction:earn", (eventData) => {
-      if (dailyBonusId && eventData.data?.data?.source === "bonus_spin" && 
-          eventData.data?.data?.ref_id === dailyBonusId) {
-        console.log('[WHEEL_DEBUG] Received transaction from our bonus spin:', eventData);
-      }
-    });
-    
-    // Generic listener to catch all events (for debugging)
-    const allEventsListener = subscribeToChannel("", (eventData) => {
-      console.log('[WHEEL_DEBUG] Received any WebSocket event:', eventData.event);
+      // Process transaction events related to our bonus if needed
     });
     
     // Cleanup listeners on unmount
     return () => {
       bonusSpinListener();
       transactionListener();
-      allEventsListener();
     };
   }, [dailyBonusId, isOpen]);
 
@@ -208,11 +195,8 @@ export function ChildBonusWheel({
         body: JSON.stringify({ daily_bonus_id: bonusId })
       }),
     onSuccess: (data) => {
-      console.log('[WHEEL_DEBUG] Spin mutation success response:', data);
-      
       // Get the server-assigned segment index and adjust wheel position to match it
       const serverSegmentIndex = data.segment_index;
-      console.log('[WHEEL_DEBUG] Server assigned segment index:', serverSegmentIndex);
       
       // Calculate the final rotation to land on the winning segment
       const FULL_SPINS = 12;
@@ -221,14 +205,12 @@ export function ChildBonusWheel({
       const jitter = (Math.random() - 0.5) * 2 * JITTER_RANGE;
       // 0° (north) + 270° offset minus the slice-centre brings it under the pointer
       const finalRotation = FULL_SPINS * 360 + 270 - midPoint + jitter;
-      console.log('[WHEEL_DEBUG] Setting final rotation to:', finalRotation);
       
       // Apply the final rotation that will correctly land on the server-chosen segment
       setRotation(finalRotation);
       
       // Show the result after the wheel stops
       setTimeout(() => {
-        console.log('[WHEEL_DEBUG] Animation finished, setting result with tickets:', data.tickets_awarded);
         setSpinResult(data.tickets_awarded);
         
         // Get the segment that was landed on to determine if it was a multiplier
