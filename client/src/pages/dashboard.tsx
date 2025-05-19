@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth-store";
 import { useStatsStore } from "@/store/stats-store";
-import { createWebSocketConnection, subscribeToChannel, sendMessage } from "@/lib/supabase";
+import { createWebSocketConnection, subscribeToChannel } from "@/lib/supabase";
 import ProgressCard from "@/components/progress-card";
 import ChoreCard from "@/components/chore-card";
 import TransactionsTable from "@/components/transactions-table";
@@ -37,9 +37,6 @@ export default function Dashboard() {
   
   // State for child summary data
   const [childSummaries, setChildSummaries] = useState<{id: number, name: string, balance: number}[]>([]);
-  
-  // State to track last received WebSocket events for debugging
-  const [lastWsEvents, setLastWsEvents] = useState<string[]>([]);
   
   // Load family users for the behavior dialogs and child summaries
   useEffect(() => {
@@ -848,50 +845,6 @@ export default function Dashboard() {
               <TransactionsTable limit={5} />
             </section>
             
-            {/* WebSocket Debug Panel - visible to all users for testing */}
-              <section className="mt-8 p-4 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <span className={`h-2 w-2 rounded-full ${lastWsEvents.length > 0 ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                    WebSocket Debug Monitor
-                  </h3>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      // Add timestamp to message to track round-trip time
-                      const timestamp = new Date().toISOString();
-                      const success = sendMessage('client:ping', { timestamp });
-                      
-                      // Record the test attempt in our event log
-                      const attemptMsg = `${new Date().toLocaleTimeString()} - Test ping sent (${success ? 'OK' : 'FAILED'})`;
-                      setLastWsEvents(prev => [attemptMsg, ...prev.slice(0, 4)]);
-                      
-                      toast({
-                        title: success ? "Ping sent" : "Ping failed",
-                        description: success 
-                          ? "Testing WebSocket connection... Check for response."
-                          : "Could not send ping. Connection may be closed.",
-                        variant: success ? "default" : "destructive"
-                      });
-                    }}
-                  >
-                    Test Connection
-                  </Button>
-                </div>
-                {lastWsEvents.length > 0 ? (
-                  <div className="text-sm font-mono">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Last 5 events received:</p>
-                    <ul className="space-y-1">
-                      {lastWsEvents.map((event, i) => (
-                        <li key={i} className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{event}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">No WebSocket events received yet. Try refreshing or performing an action.</p>
-                )}
-              </section>
             </>
           )}
       </div>
