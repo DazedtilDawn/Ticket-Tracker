@@ -121,7 +121,9 @@ export function registerProfileImageRoutes(app: Express) {
     console.log(`[PROFILE] Processing upload for user ID: ${userId} at ${timestamp}`);
     
     // Use multer middleware to handle file upload
-    upload.single('profile_image')(req, res, async (uploadErr) => {
+    // Accept both 'image' (from the generic upload) and 'profile_image' (from dedicated endpoint)
+    const fileFieldHandler = upload.single('image');
+    fileFieldHandler(req, res, async (uploadErr) => {
       // Handle upload errors from multer
       if (uploadErr) {
         console.error('[PROFILE] Upload error from multer:', uploadErr);

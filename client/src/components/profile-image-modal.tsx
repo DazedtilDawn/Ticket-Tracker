@@ -204,12 +204,29 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
         description: "Profile image updated successfully"
       });
       
+      // DIAGNOSTIC LOGGING
+      console.log('[DEBUG] Original user object before update:', user);
+      console.log('[DEBUG] Image URL from server response:', imageUrl);
+      
       // Force refresh all user data to update the UI
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/verify"] });
       
       // Force immediate refetch of all user data
-      queryClient.refetchQueries({ queryKey: ["/api/users"] });
+      queryClient.refetchQueries({ queryKey: ["/api/users"] })
+        .then(results => {
+          console.log('[DEBUG] User data after refetch:', results);
+          
+          // Check if the users API response contains the updated profile image
+          fetch('/api/users')
+            .then(res => res.json())
+            .then(users => {
+              const updatedUser = users.find((u: any) => u.id === user.id);
+              console.log('[DEBUG] User from /api/users API after update:', updatedUser);
+              console.log('[DEBUG] Profile image URL in user record:', updatedUser?.profile_image_url);
+            })
+            .catch(err => console.error('[DEBUG] Error fetching users:', err));
+        });
       
       // For specific user
       if (user.id) {
@@ -223,7 +240,7 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
         // Force window reload to ensure all components pick up the new image
         // This is needed because some components may have cached the old image
         window.location.reload();
-      }, 1000);
+      }, 3000); // Extended timeout to see logs
       
       // Auto-close after success with a delay
       console.log('[UPLOAD] Scheduling auto-close');
