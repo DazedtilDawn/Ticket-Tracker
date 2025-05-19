@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth-store";
+import { TICKET_DOLLAR_VALUE } from "../../../config/business";
 import { useStatsStore } from "@/store/stats-store";
 import { createWebSocketConnection, subscribeToChannel, sendMessage } from "@/lib/websocketClient";
 import ProgressCard from "@/components/progress-card";
@@ -744,7 +745,7 @@ export default function Dashboard() {
                             {balance || data?.balance || 0} Tickets
                           </span>
                           <span className="text-xs text-amber-600/80 dark:text-amber-500/80">
-                            Worth: ${((balance || data?.balance || 0) * 0.25).toFixed(2)} USD
+                            Worth: ${((balance || data?.balance || 0) * TICKET_DOLLAR_VALUE).toFixed(2)} USD
                           </span>
                         </div>
                       </div>

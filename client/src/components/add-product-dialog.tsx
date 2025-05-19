@@ -3,6 +3,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
+import { TICKET_CENT_VALUE } from "../../../config/business";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth-store";
 import {
@@ -386,7 +387,7 @@ export function AddProductDialog({ children, onProductAdded }: AddProductDialogP
                         Price: {formatPrice(searchResult.price_cents)}
                       </p>
                       <p className="text-sm text-gray-500">
-                        Tickets required: {Math.ceil(searchResult.price_cents / 25)}
+                        Tickets required: {Math.ceil(searchResult.price_cents / TICKET_CENT_VALUE)}
                       </p>
                     </div>
                   </CardContent>

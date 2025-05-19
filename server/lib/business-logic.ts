@@ -1,4 +1,5 @@
 import type { Chore } from "@shared/schema";
+import { TICKET_CENT_VALUE } from "../../config/business";
 
 /**
  * Calculate the tier of a chore based on tickets compared to other chores
@@ -37,8 +38,8 @@ export function calculateTier(tickets: number, allChores: Chore[]): string {
 export function calculateProgressPercent(ticketsSaved: number, priceCents: number): number {
   if (!priceCents) return 0;
   
-  // Convert tickets to cents (25 cents per ticket)
-  const centsSaved = ticketsSaved * 25;
+  // Convert tickets to cents
+  const centsSaved = ticketsSaved * TICKET_CENT_VALUE;
   
   // Calculate percentage
   const percent = (centsSaved / priceCents) * 100;
@@ -53,8 +54,8 @@ export function calculateProgressPercent(ticketsSaved: number, priceCents: numbe
 export function calculateBoostPercent(choreTickets: number, goalPriceCents: number): number {
   if (!goalPriceCents) return 0;
   
-  // Convert tickets to cents (25 cents per ticket)
-  const centsBoosted = choreTickets * 25;
+  // Convert tickets to cents
+  const centsBoosted = choreTickets * TICKET_CENT_VALUE;
   
   // Calculate percentage
   const percent = (centsBoosted / goalPriceCents) * 100;

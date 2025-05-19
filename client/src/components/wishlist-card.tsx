@@ -16,6 +16,7 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2 } from "lucide-react";
+import { TICKET_CENT_VALUE } from "../../../config/business";
 
 interface WishlistCardProps {
   goal: {
@@ -88,7 +89,7 @@ export default function WishlistCard({ goal, onSetAsGoal, onDelete, refreshList 
   };
   
   // Calculate tickets needed - standardized to 25 cents per ticket
-  const ticketsNeeded = Math.ceil(product.price_locked_cents / 25);
+  const ticketsNeeded = Math.ceil(product.price_locked_cents / TICKET_CENT_VALUE);
   
   // Format price in dollars
   const formatPrice = (cents: number) => {

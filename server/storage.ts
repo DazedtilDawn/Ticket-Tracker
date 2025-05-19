@@ -67,10 +67,11 @@ export interface IStorage {
 }
 
 import { db } from "./db";
-import { 
+import {
   users, chores, products, goals, transactions, dailyBonus
 } from "@shared/schema";
 import { eq, and, desc, gte, sql, ilike, lt, ne } from "drizzle-orm";
+import { TICKET_CENT_VALUE } from "../config/business";
 
 export class DatabaseStorage implements IStorage {
   // Daily Bonus operations
@@ -916,8 +917,10 @@ export class DatabaseStorage implements IStorage {
           console.log(`[TRANSACTION] Recalculating goal progress for goal ${activeGoal.id}`);
           
           // Ensure goal progress never goes below 0 or exceeds current balance
-          const newTicketsSaved = Math.min(Math.max(0, newBalance), 
-            Math.ceil(activeGoal.product.price_locked_cents / 25));
+          const newTicketsSaved = Math.min(
+            Math.max(0, newBalance),
+            Math.ceil(activeGoal.product.price_locked_cents / TICKET_CENT_VALUE)
+          );
           
           console.log(`[TRANSACTION] Updating active goal ${activeGoal.id} tickets_saved from ${activeGoal.tickets_saved} to ${newTicketsSaved}`);
           

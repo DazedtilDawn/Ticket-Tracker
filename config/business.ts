@@ -1,0 +1,2 @@
+export const TICKET_CENT_VALUE = 25;
+export const TICKET_DOLLAR_VALUE = TICKET_CENT_VALUE / 100;
