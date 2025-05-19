@@ -18,7 +18,7 @@ import { PurchaseDialog } from "@/components/purchase-dialog";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { PlusIcon, UserIcon, MinusCircleIcon, PlusCircleIcon, ShoppingCartIcon, BarChart3Icon } from "lucide-react";
+import { PlusIcon, UserIcon, MinusCircleIcon, PlusCircleIcon, ShoppingCartIcon, BarChart3Icon, Ticket } from "lucide-react";
 import { format } from "date-fns";
 
 export default function Dashboard() {
