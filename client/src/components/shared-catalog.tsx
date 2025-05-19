@@ -79,6 +79,7 @@ export function SharedCatalog({ onProductSelected }: SharedCatalogProps) {
                       src={product.image_url}
                       alt={product.title}
                       className="h-full w-auto mx-auto object-contain"
+                      loading="lazy"
                     />
                   ) : (
                     <div className="flex items-center justify-center w-full">

@@ -297,10 +297,11 @@ export function AddProductDialog({ children, onProductAdded }: AddProductDialogP
               <>
                 <Card>
                   <CardContent className="p-4 flex items-center space-x-4">
-                    <img 
-                      src={searchResult.image_url || "https://placehold.co/100x100/e5e7eb/a1a1aa?text=No+Image"} 
-                      alt={searchResult.title} 
+                    <img
+                      src={searchResult.image_url || "https://placehold.co/100x100/e5e7eb/a1a1aa?text=No+Image"}
+                      alt={searchResult.title}
                       className="w-20 h-20 object-contain"
+                      loading="lazy"
                       onError={(e) => {
                         e.currentTarget.src = "https://placehold.co/100x100/e5e7eb/a1a1aa?text=Image+Error";
                       }}
