@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useState, useEffect } from "react";
 import { apiRequest } from "@/lib/queryClient";
-import { subscribeToChannel } from "@/lib/supabase";
+import { subscribeToChannel } from "@/lib/websocketClient";
 import { useLocation } from "wouter";
 
 interface TransactionsTableProps {

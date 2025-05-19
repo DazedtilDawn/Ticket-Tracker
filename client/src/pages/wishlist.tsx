@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth-store";
-import { createWebSocketConnection, subscribeToChannel } from "@/lib/supabase";
+import { createWebSocketConnection, subscribeToChannel } from "@/lib/websocketClient";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLocation } from "wouter";
 import WishlistCard from "@/components/wishlist-card";

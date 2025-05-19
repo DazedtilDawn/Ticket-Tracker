@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/store/auth-store";
 import { useStatsStore } from "@/store/stats-store";
-import { subscribeToChannel } from "@/lib/supabase";
+import { subscribeToChannel } from "@/lib/websocketClient";
 import TransactionsTable from "@/components/transactions-table";
 import { 
   Card, 

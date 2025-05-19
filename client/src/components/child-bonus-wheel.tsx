@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { subscribeToChannel, createWebSocketConnection } from "@/lib/supabase";
+import { subscribeToChannel, createWebSocketConnection } from "@/lib/websocketClient";
 import {
   Loader2,
   RefreshCw,

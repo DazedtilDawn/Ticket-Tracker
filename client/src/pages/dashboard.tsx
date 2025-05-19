@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth-store";
 import { useStatsStore } from "@/store/stats-store";
-import { createWebSocketConnection, subscribeToChannel, sendMessage } from "@/lib/supabase";
+import { createWebSocketConnection, subscribeToChannel, sendMessage } from "@/lib/websocketClient";
 import ProgressCard from "@/components/progress-card";
 import ChoreCard from "@/components/chore-card";
 import TransactionsTable from "@/components/transactions-table";
