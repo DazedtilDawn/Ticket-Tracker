@@ -31,6 +31,7 @@ import { scrapeAmazon, extractAsin } from "./lib/amazon-api";
 import { calculateTier, calculateProgressPercent, calculateBoostPercent } from "./lib/business-logic";
 import { WebSocketServer, WebSocket } from "ws";
 import { cleanupOrphanedProducts } from "./cleanup";
+import { success, failure } from "./lib/responses";
 
 import { registerProfileImageRoutes } from "./lib/simple-profile-upload";
 
@@ -272,19 +273,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      return res.json({
-        message: "Logged in successfully",
-        token,
-        user: {
-          id: user.id,
-          name: user.name,
-          username: user.username,
-          role: user.role,
-        },
-        daily_bonus_assignments: dailyBonusAssignments
-      });
+      return res.json(
+        success({
+          token,
+          user: {
+            id: user.id,
+            name: user.name,
+            username: user.username,
+            role: user.role,
+          },
+          daily_bonus_assignments: dailyBonusAssignments,
+        })
+      );
     } catch (error) {
-      return res.status(400).json({ message: error.message });
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(400).json(failure("BadRequest", message));
     }
   });
 
@@ -301,18 +304,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const newUser = await storage.createUser(userData);
       const token = createJwt(newUser);
 
-      return res.status(201).json({
-        message: "User created successfully",
-        token,
-        user: {
-          id: newUser.id,
-          name: newUser.name,
-          username: newUser.username,
-          role: newUser.role,
-        },
-      });
+      return res
+        .status(201)
+        .json(
+          success({
+            token,
+            user: {
+              id: newUser.id,
+              name: newUser.name,
+              username: newUser.username,
+              role: newUser.role,
+            },
+          })
+        );
     } catch (error) {
-      return res.status(400).json({ message: error.message });
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(400).json(failure("BadRequest", message));
     }
   });
 
@@ -446,10 +453,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Get all products in the system
       const productsList = await storage.getAllProducts(); // Renamed to avoid conflict with schema
-      return res.json(productsList);
+      return res.json(success(productsList));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      return res.status(500).json({ message: errorMessage });
+      return res.status(500).json(failure("ServerError", errorMessage));
     }
   });
 
@@ -482,7 +489,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
 
-        return res.json(product);
+        return res.json(success(product));
       } catch (scrapeError) {
         console.error("Product scraping error:", scrapeError);
 
@@ -496,7 +503,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let product = await storage.getProductByAsin(asin);
 
         if (product) {
-          return res.json(product);
+          return res.json(success(product));
         }
 
         // Create a demo product with the consistent ASIN if it doesn't exist
@@ -509,15 +516,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           camel_last_checked: new Date(),
         });
 
-        return res.json(product);
+        return res.json(success(product));
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      return res.status(400).json({
-        message: errorMessage,
-        error: "ScrapingFailed",
-        fallback: "Try adding the product manually instead."
-      });
+      return res
+        .status(400)
+        .json(
+          failure("ScrapingFailed", `${errorMessage}. Try adding the product manually instead.`)
+        );
     }
   });
 
@@ -547,11 +554,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             console.log("Updated existing product with new details:", updatedProduct);
 
-            return res.json({
-              ...updatedProduct,
-              alreadyExists: true,
-              wasUpdated: true
-            });
+            return res.json(
+              success({
+                ...updatedProduct,
+                alreadyExists: true,
+                wasUpdated: true,
+              })
+            );
           }
         } catch (e) {
           console.log("ASIN extraction failed:", e);
@@ -571,10 +580,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (exactTitleMatch) {
         // Return the exact match
         console.log("Found exact title match:", exactTitleMatch);
-        return res.json({
-          ...exactTitleMatch,
-          alreadyExists: true
-        });
+        return res.json(
+          success({
+            ...exactTitleMatch,
+            alreadyExists: true,
+          })
+        );
       }
 
       // Handle ASIN generation for products without Amazon URL
@@ -605,10 +616,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const product = await storage.createProduct(newProduct);
       console.log("Created product:", product);
 
-      return res.status(201).json(product);
+      return res.status(201).json(success(product));
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      return res.status(400).json({ message: errorMessage });
+      return res.status(400).json(failure("BadRequest", errorMessage));
     }
   });
 
@@ -616,12 +627,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/products/:id", auth, async (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
     if (isNaN(id)) {
-      return res.status(400).json({ message: "Invalid product ID" });
+      return res.status(400).json(failure("BadRequest", "Invalid product ID"));
     }
 
     // Only parents can edit products
     if (req.user.role !== "parent") {
-      return res.status(403).json({ message: "Not authorized" });
+      return res.status(403).json(failure("Forbidden", "Not authorized"));
     }
 
     try {
@@ -635,15 +646,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       const updated = await storage.updateProduct(id, finalUpdate);
       if (!updated) {
-        return res.status(404).json({ message: "Product not found" });
+        return res.status(404).json(failure("NotFound", "Product not found"));
       }
 
       // Broadcast update to clients (optional)
       broadcast("product:update", updated);
 
-      return res.json(updated);
+      return res.json(success(updated));
     } catch (error: any) {
-      return res.status(400).json({ message: error.message });
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(400).json(failure("BadRequest", message));
     }
   });
 
@@ -651,11 +663,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/products/:id", auth, async (req: Request, res: Response) => {
     const id = parseInt(req.params.id, 10); // Added radix 10
     if (isNaN(id)) {
-      return res.status(400).json({ message: "Invalid product ID" });
+      return res.status(400).json(failure("BadRequest", "Invalid product ID"));
     }
 
     if (req.user.role !== "parent") {
-      return res.status(403).json({ message: "Not authorized" });
+      return res.status(403).json(failure("Forbidden", "Not authorized"));
     }
 
     try {
@@ -664,18 +676,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (goalsUsingProduct.length > 0) {
         return res
           .status(400)
-          .json({ message: "Product is linked to existing goals" });
+          .json(failure("BadRequest", "Product is linked to existing goals"));
       }
 
       const deleted = await storage.deleteProduct(id);
       if (!deleted) {
-        return res.status(404).json({ message: "Product not found" });
+        return res.status(404).json(failure("NotFound", "Product not found"));
       }
 
       broadcast("product:deleted", { id });
-      return res.json({ success: true });
-    } catch (err: any) { // Changed error to err to match example
-      return res.status(500).json({ message: err.message });
+      return res.json(success(true));
+    } catch (err: any) {
+      const message = err instanceof Error ? err.message : String(err);
+      return res.status(500).json(failure("ServerError", message));
     }
   });
 

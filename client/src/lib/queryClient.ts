@@ -50,13 +50,19 @@ export async function apiRequest(
 
   await throwIfResNotOk(res);
   
-  // Try to parse JSON response, return text if not JSON
   try {
-    // Clone the response before reading
     const jsonRes = res.clone();
-    return await jsonRes.json();
+    const json = await jsonRes.json();
+    if (json && typeof json.success === "boolean") {
+      if (json.success) {
+        return json.data;
+      }
+      const err: any = new Error(json.error?.msg || "Request failed");
+      err.code = json.error?.code;
+      throw err;
+    }
+    return json;
   } catch (e) {
-    // If JSON parsing fails, return text
     return await res.text();
   }
 }
@@ -103,9 +109,17 @@ export const getQueryFn: <T>(options: {
     }
 
     await throwIfResNotOk(res);
-    // Clone the response before reading the body to avoid "body already read" errors
     const jsonRes = res.clone();
-    return await jsonRes.json();
+    const json = await jsonRes.json();
+    if (json && typeof json.success === "boolean") {
+      if (json.success) {
+        return json.data as T;
+      }
+      const err: any = new Error(json.error?.msg || "Request failed");
+      err.code = json.error?.code;
+      throw err;
+    }
+    return json as T;
   };
 
 export const queryClient = new QueryClient({
