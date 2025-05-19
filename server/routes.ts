@@ -14,7 +14,6 @@ import {
   insertProductSchema,
   insertGoalSchema,
   completeChoreSchema,
-  amazonSearchSchema,
   manualProductSchema,
   updateProductSchema,
   badBehaviorSchema,
@@ -27,7 +26,7 @@ import {
 } from "@shared/schema";
 import { createJwt, verifyJwt, AuthMiddleware } from "./lib/auth";
 import { DailyBonusAssignmentMiddleware } from "./lib/daily-bonus-middleware";
-import { scrapeAmazon, extractAsin } from "./lib/amazon-api";
+
 import { calculateTier, calculateProgressPercent, calculateBoostPercent } from "./lib/business-logic";
 import { WebSocketServer, WebSocket } from "ws";
 import { cleanupOrphanedProducts } from "./cleanup";
@@ -35,6 +34,15 @@ import { success, failure } from "./lib/responses";
 import { TICKET_CENT_VALUE } from "../config/business";
 
 import { registerProfileImageRoutes } from "./lib/simple-profile-upload";
+
+function extractAsin(url: string): string {
+  const asinPattern = /(?:\/dp\/|\/gp\/product\/|\/ASIN\/|%2Fdp%2F)([A-Z0-9]{10})/i;
+  const match = url.match(asinPattern);
+  if (match && match[1]) {
+    return match[1];
+  }
+  throw new Error("Could not extract ASIN from URL.");
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -461,73 +469,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/products/scrape", auth, async (req: Request, res: Response) => {
-    try {
-      const { amazonUrl } = amazonSearchSchema.parse(req.body);
 
-      try {
-        const productData = await scrapeAmazon(amazonUrl);
-
-        // Check if product already exists
-        let product = await storage.getProductByAsin(productData.asin);
-
-        if (product) {
-          // Update with latest price but don't change locked price
-          // Also update the camel_last_checked timestamp
-          product = await storage.updateProduct(product.id, {
-            title: productData.title,
-            image_url: productData.image_url,
-            price_cents: productData.price_cents,
-            camel_last_checked: new Date(),
-          });
-        } else {
-          // Create new product with current price as locked price
-          // And include the camel_last_checked timestamp
-          product = await storage.createProduct({
-            ...productData,
-            price_locked_cents: productData.price_cents,
-            camel_last_checked: new Date(),
-          });
-        }
-
-        return res.json(success(product));
-      } catch (scrapeError) {
-        console.error("Product scraping error:", scrapeError);
-
-        // For demonstration purposes only - using a consistent fallback product
-        // In a production environment, we would need a proper API or handle this differently
-
-        // Use a consistent ASIN for our demo product
-        const asin = "B0CGXZ4LBK"; // Known working ASIN for LEGO Star Wars X-Wing
-
-        // Check if we already have this demo product
-        let product = await storage.getProductByAsin(asin);
-
-        if (product) {
-          return res.json(success(product));
-        }
-
-        // Create a demo product with the consistent ASIN if it doesn't exist
-        product = await storage.createProduct({
-          title: "LEGO Star Wars 25th Anniversary X-Wing Starfighter",
-          asin,
-          image_url: "https://m.media-amazon.com/images/I/81ww66OBpQL._AC_SL1500_.jpg",
-          price_cents: 12999, // $129.99
-          price_locked_cents: 12999,
-          camel_last_checked: new Date(),
-        });
-
-        return res.json(success(product));
-      }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      return res
-        .status(400)
-        .json(
-          failure("ScrapingFailed", `${errorMessage}. Try adding the product manually instead.`)
-        );
-    }
-  });
 
   // Manual product creation endpoint
   app.post("/api/products/manual", auth, async (req: Request, res: Response) => {
