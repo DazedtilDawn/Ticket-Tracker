@@ -30,7 +30,6 @@ interface GoalState {
   fetchActiveGoal: () => Promise<void>;
   createGoal: (goal: { user_id: number; product_id: number }) => Promise<void>;
   activateGoal: (goalId: number) => Promise<void>;
-  searchProduct: (amazonUrl: string) => Promise<Product>;
 }
 
 export const useGoalStore = create<GoalState>((set, get) => ({
@@ -110,20 +109,6 @@ export const useGoalStore = create<GoalState>((set, get) => ({
       }));
     } catch (error) {
       set({ error: error.message, isLoading: false });
-    }
-  },
-  
-  searchProduct: async (amazonUrl) => {
-    set({ isLoading: true, error: null });
-    
-    try {
-      const response = await apiRequest('POST', '/api/products/scrape', { amazonUrl });
-      const product = await response.json();
-      set({ isLoading: false });
-      return product;
-    } catch (error) {
-      set({ error: error.message, isLoading: false });
-      throw error;
     }
   }
 }));

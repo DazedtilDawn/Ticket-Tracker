@@ -30,12 +30,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 
-const searchSchema = z.object({
-  amazonUrl: z.string().url({
-    message: "Please enter a valid Amazon product URL",
-  }),
-});
-
 const manualSchema = z.object({
   title: z.string().min(1, { message: "Product title is required" }),
   price_cents: z.coerce.number().min(1, { message: "Price must be greater than 0" }),
@@ -48,7 +42,6 @@ const goalSchema = z.object({
   product_id: z.number().int().positive(),
 });
 
-type SearchValues = z.infer<typeof searchSchema>;
 type ManualValues = z.infer<typeof manualSchema>;
 type GoalValues = z.infer<typeof goalSchema>;
 
@@ -61,18 +54,10 @@ export function AddProductDialog({ children, onProductAdded }: AddProductDialogP
   const { toast } = useToast();
   const { user } = useAuthStore();
   const [open, setOpen] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isManualCreating, setIsManualCreating] = useState(false);
   const [searchResult, setSearchResult] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState("amazon");
-  
-  const searchForm = useForm<SearchValues>({
-    resolver: zodResolver(searchSchema),
-    defaultValues: {
-      amazonUrl: "",
-    },
-  });
+  const [activeTab, setActiveTab] = useState("manual");
   
   const manualForm = useForm<ManualValues>({
     resolver: zodResolver(manualSchema),
@@ -92,31 +77,7 @@ export function AddProductDialog({ children, onProductAdded }: AddProductDialogP
     },
   });
   
-  const handleSearch = async (data: SearchValues) => {
-    setIsSearching(true);
-    setSearchResult(null);
-    
-    try {
-      const result = await apiRequest("/api/products/scrape", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
-      
-      setSearchResult(result);
-      
-      // Update goal form with product ID
-      goalForm.setValue("product_id", result.id);
-    } catch (error) {
-      toast({
-        title: "Search Error",
-        description: error.message || "Failed to find product details",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSearching(false);
-    }
-  };
+
   
   const handleManualCreate = async (data: ManualValues) => {
     setIsManualCreating(true);
@@ -200,7 +161,6 @@ export function AddProductDialog({ children, onProductAdded }: AddProductDialogP
       onProductAdded();
       setOpen(false);
       setSearchResult(null);
-      searchForm.reset();
       manualForm.reset();
     } catch (error) {
       toast({
@@ -227,51 +187,15 @@ export function AddProductDialog({ children, onProductAdded }: AddProductDialogP
         <DialogHeader>
           <DialogTitle>Add a Product</DialogTitle>
           <DialogDescription>
-            Add a product to your wishlist using Amazon or manual entry
+            Add a product to your wishlist manually
           </DialogDescription>
         </DialogHeader>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full pt-2">
           <TabsList className="w-full">
-            <TabsTrigger value="amazon" className="flex-1">Amazon Link</TabsTrigger>
             <TabsTrigger value="manual" className="flex-1">Manual Entry</TabsTrigger>
             {searchResult && <TabsTrigger value="preview" className="flex-1">Product</TabsTrigger>}
           </TabsList>
-          
-          <TabsContent value="amazon" className="mt-4">
-            <Form {...searchForm}>
-              <form onSubmit={searchForm.handleSubmit(handleSearch)} className="space-y-4">
-                <FormField
-                  control={searchForm.control}
-                  name="amazonUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Amazon Product URL</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="https://www.amazon.com/dp/B07..."
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Paste the full Amazon product URL
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <Button type="submit" disabled={isSearching} className="w-full">
-                  {isSearching ? (
-                    <span className="flex items-center justify-center">
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Searching...
-                    </span>
-                  ) : "Search Product"}
-                </Button>
-              </form>
-            </Form>
-          </TabsContent>
           
           <TabsContent value="manual" className="mt-4">
             <Form {...manualForm}>
