@@ -104,8 +104,8 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
       const formData = new FormData();
       formData.append('image', selectedFile); // Must use 'image' to match what the server expects
       
-      // Use the generic upload endpoint used for chore images instead
-      const uploadUrl = `/api/upload/image`;
+      // Use the profile image upload endpoint
+      const uploadUrl = `/api/profile-image/${user.id}`;
       
       // Log details for debugging
       console.log(`[UPLOAD] File: ${selectedFile.name}, Size: ${selectedFile.size} bytes`);

@@ -3,10 +3,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db, pool } from "./db";
-import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { v4 as uuidv4 } from "uuid";
 import { eq } from "drizzle-orm";
 import { users } from "../shared/schema";
 import {
@@ -33,7 +31,7 @@ import { scrapeAmazon, extractAsin } from "./lib/amazon-api";
 import { calculateTier, calculateProgressPercent, calculateBoostPercent } from "./lib/business-logic";
 import { WebSocketServer, WebSocket } from "ws";
 import { cleanupOrphanedProducts } from "./cleanup";
-import { upload, getFileUrl } from "./lib/upload";
+
 import { registerProfileImageRoutes } from "./lib/simple-profile-upload";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -370,85 +368,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.json(chores);
   });
 
-  // Enhanced image upload endpoint for both chores and profile images
-  app.post("/api/upload/image", auth, upload.single('image'), async (req: Request, res: Response) => {
-    try {
-      console.log("[UPLOAD] Processing upload request:", {
-        field: req.file?.fieldname,
-        size: req.file?.size,
-        mimetype: req.file?.mimetype,
-        userId: req.body?.user_id
-      });
-
-      if (!req.file) {
-        return res.status(400).json({ success: false, message: "No file uploaded" });
-      }
-
-      // For profile images, rename the field to help getFileUrl identify it correctly
-      if (req.body.user_id && req.file) {
-        console.log(`[UPLOAD] Handling as profile image for user ${req.body.user_id}`);
-
-        // Set the fieldname to profile_image to ensure proper path handling
-        req.file.fieldname = 'profile_image';
-
-        // If this is a profile image, we need to update the user record after upload
-        const userId = parseInt(req.body.user_id);
-        if (!isNaN(userId)) {
-          try {
-            // Get image URL via helper
-            const imageUrl = getFileUrl(req);
-            console.log(`[UPLOAD] Generated profile image URL: ${imageUrl}`);
-
-            // Update the user record with the new profile image URL
-            await db.update(users)
-              .set({ profile_image_url: imageUrl })
-              .where(eq(users.id, userId));
-
-            console.log(`[UPLOAD] Updated profile image for user ${userId}`);
-
-            // Return success with cache busting parameter
-            return res.status(200).json({
-              success: true,
-              message: 'Profile image uploaded successfully',
-              imageUrl,
-              public_url: `${imageUrl}?t=${Date.now()}`,
-              profile_image_url: imageUrl,
-              timestamp: Date.now()
-            });
-          } catch (dbError) {
-            console.error("[UPLOAD] Database error updating user:", dbError);
-            return res.status(500).json({
-              success: false,
-              message: "Failed to update user profile image in database"
-            });
-          }
-        }
-      }
-
-      // Standard path for chore images or other image types
-      try {
-        const imageUrl = getFileUrl(req);
-        console.log(`[UPLOAD] Generated image URL: ${imageUrl}`);
-        return res.json({
-          success: true,
-          imageUrl,
-          timestamp: Date.now()
-        });
-      } catch (urlError) {
-        console.error("[UPLOAD] Error getting file URL:", urlError);
-        return res.status(500).json({
-          success: false,
-          message: "Failed to process uploaded file"
-        });
-      }
-    } catch (error) {
-      console.error("[UPLOAD] Error uploading image:", error);
-      return res.status(500).json({
-        success: false,
-        message: "Failed to upload image"
-      });
-    }
-  });
 
   app.post("/api/chores", parentOnly, async (req: Request, res: Response) => {
     try {
