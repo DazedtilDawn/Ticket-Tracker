@@ -163,45 +163,91 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
   
   return (
     <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center">
-        <img 
-          src={goal.product.image_url || "https://placehold.co/300x300/e5e7eb/a1a1aa?text=No+Image"} 
-          alt={goal.product.title} 
-          className="w-16 h-16 object-cover rounded-md"
-          onError={(e) => {
-            e.currentTarget.src = "https://placehold.co/300x300/e5e7eb/a1a1aa?text=Image+Error";
-          }}
-        />
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex flex-col md:flex-row items-center">
+        {/* Larger product image with shadow */}
+        <div className="relative mb-4 md:mb-0">
+          <img 
+            src={goal.product.image_url || "https://placehold.co/300x300/e5e7eb/a1a1aa?text=No+Image"} 
+            alt={goal.product.title} 
+            className="w-32 h-32 md:w-40 md:h-40 object-contain rounded-md shadow-md border border-gray-200 dark:border-gray-700"
+            onError={(e) => {
+              e.currentTarget.src = "https://placehold.co/300x300/e5e7eb/a1a1aa?text=Image+Error";
+            }}
+          />
+          <div className="absolute bottom-2 right-2 bg-white dark:bg-gray-800 px-2 py-1 rounded shadow-sm border border-gray-200 dark:border-gray-700 text-xs font-semibold">
+            {formatPrice(goal.product.price_locked_cents)}
+          </div>
+        </div>
         
-        <div className="ml-4 flex-1">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div className="md:ml-6 flex-1 w-full">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white">{goal.product.title}</h4>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Price: {formatPrice(goal.product.price_locked_cents)}
+              <h4 className="font-medium text-gray-900 dark:text-white text-lg">{goal.product.title}</h4>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Goal Price: {formatPrice(goal.product.price_locked_cents)}
               </p>
             </div>
-            <div className="mt-2 sm:mt-0 flex items-center">
-              <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-800/50">
-                <Ticket className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                <span className="text-xs font-medium text-amber-800 dark:text-amber-300">
-                  {ticketsNeeded} tickets needed
-                </span>
+            
+            {/* Redesigned ticket display */}
+            <div className="mt-3 sm:mt-0">
+              <div className="flex flex-col items-end">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-100 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-800/50 mb-2">
+                  <div className="relative">
+                    <Ticket className="w-8 h-8 text-amber-600 dark:text-amber-400" strokeWidth={1.5} />
+                    <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-amber-800 dark:text-amber-300">
+                      {ticketsNeeded}
+                    </span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                      {ticketsNeeded} tickets needed
+                    </span>
+                    <span className="text-xs text-amber-700 dark:text-amber-400">
+                      Value: ${(ticketsNeeded * ticketValueInCents / 100).toFixed(2)} USD
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Enhanced ticket value display */}
-          <div className="flex items-center mt-2 text-xs text-emerald-700 dark:text-emerald-400">
-            <span className="flex items-center">
-              <Ticket className="w-3 h-3 mr-1 inline" />
-              {goal.tickets_saved} tickets saved (${ticketsMoneySaved})
-            </span>
-            <span className="mx-2">•</span>
-            <span className="flex items-center">
-              <Ticket className="w-3 h-3 mr-1 inline" />
-              {ticketsRemaining} to go (${ticketsMoneyRemaining})
-            </span>
+          {/* Enhanced ticket value display with more visual elements */}
+          <div className="flex items-center mt-2 mb-3 p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-md border border-emerald-100 dark:border-emerald-900/30">
+            <div className="flex items-center mr-4">
+              <div className="relative mr-2">
+                <Ticket className="w-6 h-6 text-emerald-600 dark:text-emerald-400" strokeWidth={1.5} />
+                <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                  ✓
+                </span>
+              </div>
+              <div>
+                <span className="text-sm font-medium text-emerald-800 dark:text-emerald-300">
+                  {goal.tickets_saved} tickets saved
+                </span>
+                <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                  ${ticketsMoneySaved} USD
+                </p>
+              </div>
+            </div>
+            
+            <div className="h-8 border-r border-emerald-200 dark:border-emerald-700 mx-2"></div>
+            
+            <div className="flex items-center">
+              <div className="relative mr-2">
+                <Ticket className="w-6 h-6 text-emerald-600/70 dark:text-emerald-400/70" strokeWidth={1.5} />
+                <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-emerald-800/70 dark:text-emerald-300/70">
+                  →
+                </span>
+              </div>
+              <div>
+                <span className="text-sm font-medium text-emerald-800/80 dark:text-emerald-300/80">
+                  {ticketsRemaining} tickets to go
+                </span>
+                <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70">
+                  ${ticketsMoneyRemaining} USD
+                </p>
+              </div>
+            </div>
           </div>
           
           <div className="mt-3" ref={progressContainerRef}>
