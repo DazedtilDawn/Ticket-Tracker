@@ -10,7 +10,7 @@ import { AuthMiddleware } from './auth';
 import cors from 'cors';
 
 /**
- * DEFINITIVE PROFILE IMAGE HANDLER v4
+ * DEFINITIVE PROFILE IMAGE HANDLER v5
  * This is a self-contained implementation of profile image upload
  * with zero dependencies on other implementations.
  */
@@ -278,75 +278,6 @@ export function registerProfileImageRoutes(app: Express) {
   app.get('/api/profile-image/:userId', async (req: Request, res: Response) => {
     try {
       const { userId } = req.params;
-      
-      if (!userId || isNaN(parseInt(userId))) {
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid user ID',
-          code: 'INVALID_USER_ID'
-        });
-      }
-      
-      const userResult = await db.select()
-        .from(users)
-        .where(eq(users.id, parseInt(userId)))
-        .limit(1);
-      
-      if (!userResult || userResult.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'User not found',
-          code: 'USER_NOT_FOUND'
-        });
-      }
-      
-      const user = userResult[0];
-      
-      if (!user.profile_image_url) {
-        // Return default profile image based on role
-        const defaultImage = user.role === 'parent' ? 
-          '/uploads/profiles/default-parent-avatar.png' : 
-          '/uploads/profiles/default-child-avatar.png';
-        
-        return res.status(200).json({
-          success: true,
-          message: 'Using default profile image',
-          profile_image_url: defaultImage,
-          is_default: true
-        });
-      }
-      
-      // Add cache busting for the current profile image
-      const cacheBuster = Date.now();
-      const publicUrl = `${user.profile_image_url}?t=${cacheBuster}`;
-      
-      return res.status(200).json({
-        success: true,
-        message: 'Profile image found',
-        profile_image_url: user.profile_image_url,
-        public_url: publicUrl,
-        user_id: user.id,
-        username: user.username,
-        updated_at: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('[PROFILE] Error retrieving profile image:', error);
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to retrieve profile image',
-        code: 'RETRIEVAL_ERROR'
-      });
-    }
-  });
-  
-  console.log('[PROFILE] Profile image routes registered and ready');
-}
-  });
-  
-  // Profile image retrieval endpoint
-  app.get('/api/profile-image/:userId', async (req: Request, res: Response) => {
-    try {
-      const { userId } = req.params;
       console.log(`[PROFILE] Getting profile image for user: ${userId}`);
       
       // Get user from database
@@ -365,21 +296,28 @@ export function registerProfileImageRoutes(app: Express) {
       const user = userResult[0];
       
       if (!user.profile_image_url) {
-        return res.status(404).json({
-          success: false,
-          message: 'User has no profile image',
-          code: 'NO_PROFILE_IMAGE'
+        // Return default profile image URL based on user role
+        const defaultImage = user.role === 'parent' ? 
+          '/assets/default-parent-avatar.png' : 
+          '/assets/default-child-avatar.png';
+        
+        return res.status(200).json({
+          success: true,
+          message: 'Default profile image returned',
+          profile_image_url: defaultImage,
+          is_default: true
         });
       }
       
-      // Add cache-busting timestamp
-      const timestamp = new Date().getTime();
-      const imageUrl = `${user.profile_image_url}?t=${timestamp}`;
+      // Add cache busting parameter to the URL
+      const cacheBuster = Date.now();
+      const publicUrl = `${user.profile_image_url}?t=${cacheBuster}`;
       
-      return res.json({
+      return res.status(200).json({
         success: true,
-        profile_image_url: imageUrl,
-        original_url: user.profile_image_url,
+        message: 'Profile image found',
+        profile_image_url: user.profile_image_url,
+        public_url: publicUrl,
         user_id: user.id,
         updated_at: new Date().toISOString()
       });
