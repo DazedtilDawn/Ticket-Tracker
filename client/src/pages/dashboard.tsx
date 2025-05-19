@@ -60,9 +60,11 @@ export default function Dashboard() {
           setFamilyUsers(users);
           console.log("Successfully loaded family users:", users);
           
-          // Load balance data for each child user
+          // Load balance data for each child user (only Kiki and Bryce)
           if (user?.role === 'parent') {
-            const children = users.filter(u => u.role === 'child');
+            const children = users.filter(u => 
+              u.role === 'child' && (u.name === 'Kiki' || u.name === 'Bryce')
+            );
             const summaries = await Promise.all(
               children.map(async (child) => {
                 try {
