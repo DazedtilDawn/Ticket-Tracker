@@ -101,10 +101,11 @@ export default function WishlistCard({ goal, onSetAsGoal, onDelete, refreshList 
   
   return (
     <Card className="overflow-hidden border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow duration-200">
-      <img 
-        src={product.image_url || "https://placehold.co/500x300/e5e7eb/a1a1aa?text=No+Image"} 
-        alt={product.title} 
-        className="w-full h-48 object-cover"
+      <img
+        src={product.image_url || "https://placehold.co/500x300/e5e7eb/a1a1aa?text=No+Image"}
+        alt={product.title}
+        className="w-full h-48 object-contain bg-slate-100"
+        loading="lazy"
         onError={(e) => {
           e.currentTarget.src = "https://placehold.co/500x300/e5e7eb/a1a1aa?text=Image+Error";
         }}
