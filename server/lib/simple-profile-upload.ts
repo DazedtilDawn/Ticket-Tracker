@@ -10,7 +10,7 @@ import { AuthMiddleware } from './auth';
 import cors from 'cors';
 
 /**
- * DEFINITIVE PROFILE IMAGE HANDLER v3
+ * DEFINITIVE PROFILE IMAGE HANDLER v4
  * This is a self-contained implementation of profile image upload
  * with zero dependencies on other implementations.
  */
@@ -119,23 +119,20 @@ export function registerProfileImageRoutes(app: Express) {
     }
     
     console.log(`[PROFILE] Processing upload for user ID: ${userId} at ${timestamp}`);
+    console.log('[PROFILE] Request content type:', req.get('content-type'));
     
-    // Use multer middleware to handle file upload
-    // Accept both 'image' (from the generic upload) and 'profile_image' (from dedicated endpoint)
-    const fileFieldHandler = upload.single('image');
-    fileFieldHandler(req, res, async (uploadErr) => {
-      // Handle upload errors from multer
-      if (uploadErr) {
-        console.error('[PROFILE] Upload error from multer:', uploadErr);
+    // Process the uploaded file
+    const processUploadedFile = async (err: any) => {
+      if (err) {
+        console.error('[PROFILE] Upload error:', err);
         return res.status(400).json({
           success: false,
-          message: `Upload failed: ${uploadErr.message}`,
+          message: `Upload failed: ${err.message}`,
           code: 'UPLOAD_ERROR',
           timestamp: Date.now()
         });
       }
       
-      // Check if we got a file
       if (!req.file) {
         console.error('[PROFILE] No file received in request');
         return res.status(400).json({
@@ -147,7 +144,13 @@ export function registerProfileImageRoutes(app: Express) {
       }
       
       try {
-        // Log file info
+        // Log file info and request details for debugging
+        console.log('[PROFILE-DEBUG] Form fields received:', {
+          fields: req.body,
+          file: req.file.originalname,
+          userId: userId
+        });
+        
         console.log('[PROFILE] Received file:', {
           filename: req.file.filename,
           originalName: req.file.originalname,
@@ -157,19 +160,19 @@ export function registerProfileImageRoutes(app: Express) {
           timestamp
         });
         
-        // Double check the file was actually saved
+        // Verify the file was saved correctly
         if (!fs.existsSync(req.file.path)) {
           throw new Error(`File not found at expected path: ${req.file.path}`);
         }
         
-        // Build the public URL for accessing the file
+        // Build the URL paths
         const cacheBuster = Date.now();
         const relativeUrl = `/uploads/profiles/${req.file.filename}`;
         const publicUrl = `${relativeUrl}?t=${cacheBuster}`;
         console.log(`[PROFILE] Generated public URL: ${publicUrl}`);
         
         try {
-          // First verify the user exists in database
+          // Verify user exists
           console.log(`[PROFILE] Verifying user ${userId} exists in database`);
           const userExists = await db.select()
             .from(users)
@@ -178,7 +181,6 @@ export function registerProfileImageRoutes(app: Express) {
           
           if (!userExists || userExists.length === 0) {
             console.error(`[PROFILE] User ${userId} not found in database`);
-            // Clean up the file
             try {
               fs.unlinkSync(req.file.path);
               console.log(`[PROFILE] Deleted file for non-existent user: ${req.file.path}`);
@@ -194,8 +196,7 @@ export function registerProfileImageRoutes(app: Express) {
             });
           }
           
-          // Critical fix: Store ONLY the relative path in the database, not with cache parameters
-          // This avoids perpetual saving loop issues with cache busting parameters
+          // Update user profile with new image URL
           console.log(`[PROFILE] Updating user ${userId} with new profile image URL: ${relativeUrl}`);
           await db.update(users)
             .set({ profile_image_url: relativeUrl })
@@ -209,7 +210,6 @@ export function registerProfileImageRoutes(app: Express) {
             
           if (!updatedUser[0].profile_image_url) {
             console.error(`[PROFILE] Database verification failed - URL missing after update`);
-            // Clean up the uploaded file since the database update failed
             try {
               fs.unlinkSync(req.file.path);
               console.log(`[PROFILE] Deleted orphaned file: ${req.file.path}`);
@@ -227,12 +227,12 @@ export function registerProfileImageRoutes(app: Express) {
           
           console.log(`[PROFILE] Database update successful and verified for user: ${userId}`);
           
-          // Send comprehensive success response with cache busting parameter
+          // Send success response
           return res.status(200).json({
             success: true,
             message: 'Profile image uploaded successfully',
-            profile_image_url: relativeUrl,  // The base URL without cache busting
-            public_url: publicUrl,           // URL with cache busting parameter
+            profile_image_url: relativeUrl,
+            public_url: publicUrl,
             user_id: parseInt(userId),
             file_details: {
               name: req.file.filename,
@@ -250,15 +250,97 @@ export function registerProfileImageRoutes(app: Express) {
           });
         }
       } catch (processingError) {
-        console.error('[PROFILE] Error processing uploaded file:', processingError);
+        console.error('[PROFILE] File processing error:', processingError);
         return res.status(500).json({
           success: false,
-          message: 'Server error processing image',
-          error: processingError instanceof Error ? processingError.message : 'Unknown error',
+          message: `Error processing file: ${processingError instanceof Error ? processingError.message : 'Unknown error'}`,
           code: 'PROCESSING_ERROR'
         });
       }
+    };
+    
+    // Try with 'image' field name first (frontend uses this)
+    upload.single('image')(req, res, (err) => {
+      if (err || !req.file) {
+        console.log('[PROFILE] No file with field name "image", trying "profile_image"');
+        // Reset req.file if it was partially processed
+        req.file = undefined;
+        // Try alternate field name as fallback
+        upload.single('profile_image')(req, res, processUploadedFile);
+      } else {
+        // Image field worked
+        processUploadedFile(null);
+      }
     });
+  });
+  
+  // Profile image retrieval endpoint
+  app.get('/api/profile-image/:userId', async (req: Request, res: Response) => {
+    try {
+      const { userId } = req.params;
+      
+      if (!userId || isNaN(parseInt(userId))) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid user ID',
+          code: 'INVALID_USER_ID'
+        });
+      }
+      
+      const userResult = await db.select()
+        .from(users)
+        .where(eq(users.id, parseInt(userId)))
+        .limit(1);
+      
+      if (!userResult || userResult.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'User not found',
+          code: 'USER_NOT_FOUND'
+        });
+      }
+      
+      const user = userResult[0];
+      
+      if (!user.profile_image_url) {
+        // Return default profile image based on role
+        const defaultImage = user.role === 'parent' ? 
+          '/uploads/profiles/default-parent-avatar.png' : 
+          '/uploads/profiles/default-child-avatar.png';
+        
+        return res.status(200).json({
+          success: true,
+          message: 'Using default profile image',
+          profile_image_url: defaultImage,
+          is_default: true
+        });
+      }
+      
+      // Add cache busting for the current profile image
+      const cacheBuster = Date.now();
+      const publicUrl = `${user.profile_image_url}?t=${cacheBuster}`;
+      
+      return res.status(200).json({
+        success: true,
+        message: 'Profile image found',
+        profile_image_url: user.profile_image_url,
+        public_url: publicUrl,
+        user_id: user.id,
+        username: user.username,
+        updated_at: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('[PROFILE] Error retrieving profile image:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to retrieve profile image',
+        code: 'RETRIEVAL_ERROR'
+      });
+    }
+  });
+  
+  console.log('[PROFILE] Profile image routes registered and ready');
+}
   });
   
   // Profile image retrieval endpoint
