@@ -683,7 +683,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const product = await storage.createProduct(newProduct);
       console.log("Created product:", product);
       
-      return res.status(201).json(product);
+    return res.status(201).json(product);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return res.status(400).json({ message: errorMessage });
+  }
+  });
+
+  app.put("/api/products/:id", parentOnly, async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid product ID" });
+    }
+
+    try {
+      const data = manualProductSchema.parse(req.body);
+      let asin: string | undefined = undefined;
+      if (data.amazonUrl) {
+        try {
+          asin = extractAsin(data.amazonUrl);
+        } catch (e) {
+          // ignore asin extraction errors
+        }
+      }
+
+      const update: any = {
+        title: data.title,
+        image_url: data.image_url,
+        price_cents: data.price_cents,
+        price_locked_cents: data.price_cents,
+      };
+      if (asin) update.asin = asin;
+
+      const updated = await storage.updateProduct(id, update);
+      if (!updated) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      return res.json(updated);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       return res.status(400).json({ message: errorMessage });
