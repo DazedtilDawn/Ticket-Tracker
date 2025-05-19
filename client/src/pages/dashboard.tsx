@@ -468,13 +468,10 @@ export default function Dashboard() {
   // Handle actual wheel spin action (called from the wheel component)
   const handleSpinWheel = async (bonusId: number) => {
     try {
-      console.log(`Spinning wheel for daily bonus ID: ${bonusId}`);
       const response = await apiRequest("/api/bonus-spin", {
         method: "POST",
         body: JSON.stringify({ daily_bonus_id: bonusId }),
       });
-      
-      console.log("Bonus spin response:", response);
       
       // The server will send a WebSocket event with the spin results
       // which will trigger a UI update automatically

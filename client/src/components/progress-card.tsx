@@ -105,61 +105,62 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
 
   // Check for milestone achievements and show celebrations
   useEffect(() => {
-    const checkMilestones = () => {
-      // Define previous and current milestones
-      const prevMilestones = { ...passedMilestones };
-      const newMilestones = {
-        quarter: goal.progress >= 25,
-        half: goal.progress >= 50,
-        threeQuarters: goal.progress >= 75,
-        complete: goal.progress >= 100
-      };
-      
-      // Check if we've just passed a milestone
-      if (!prevMilestones.quarter && newMilestones.quarter) {
-        toast({
-          title: "🌟 Milestone Reached!",
-          description: `${childName} is 25% of the way to their goal!`,
-        });
-      }
-      
-      if (!prevMilestones.half && newMilestones.half) {
-        toast({
-          title: "🏆 Halfway There!",
-          description: `${childName} has saved 50% of the tickets needed!`,
-        });
-      }
-      
-      if (!prevMilestones.threeQuarters && newMilestones.threeQuarters) {
-        toast({
-          title: "🚀 Almost There!",
-          description: `${childName} is 75% of the way to their goal!`,
-        });
-      }
-      
-      // Show confetti for 100% completion
-      if (!prevMilestones.complete && newMilestones.complete && !hasShownConfetti) {
-        toast({
-          title: "🎉 Goal Complete!",
-          description: `${childName} has all the tickets needed for their goal!`,
-          variant: "success"
-        });
-        
-        // Launch confetti
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 }
-        });
-        
-        setHasShownConfetti(true);
-      }
-      
-      setPassedMilestones(newMilestones);
+    // Define current milestones based on current progress
+    const newMilestones = {
+      quarter: goal.progress >= 25,
+      half: goal.progress >= 50,
+      threeQuarters: goal.progress >= 75,
+      complete: goal.progress >= 100
     };
     
-    checkMilestones();
-  }, [goal.progress, childName, passedMilestones, hasShownConfetti, toast]);
+    // Check if we've just passed a milestone
+    if (!passedMilestones.quarter && newMilestones.quarter) {
+      toast({
+        title: "🌟 Milestone Reached!",
+        description: `${childName} is 25% of the way to their goal!`,
+      });
+    }
+    
+    if (!passedMilestones.half && newMilestones.half) {
+      toast({
+        title: "🏆 Halfway There!",
+        description: `${childName} has saved 50% of the tickets needed!`,
+      });
+    }
+    
+    if (!passedMilestones.threeQuarters && newMilestones.threeQuarters) {
+      toast({
+        title: "🚀 Almost There!",
+        description: `${childName} is 75% of the way to their goal!`,
+      });
+    }
+    
+    // Show confetti for 100% completion
+    if (!passedMilestones.complete && newMilestones.complete && !hasShownConfetti) {
+      toast({
+        title: "🎉 Goal Complete!",
+        description: `${childName} has all the tickets needed for their goal!`,
+        variant: "default"
+      });
+      
+      // Launch confetti
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+      
+      setHasShownConfetti(true);
+    }
+    
+    // Only update state if milestones have changed
+    if (passedMilestones.quarter !== newMilestones.quarter ||
+        passedMilestones.half !== newMilestones.half ||
+        passedMilestones.threeQuarters !== newMilestones.threeQuarters ||
+        passedMilestones.complete !== newMilestones.complete) {
+      setPassedMilestones(newMilestones);
+    }
+  }, [goal.progress, childName, hasShownConfetti, toast, passedMilestones]);
   
   return (
     <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
