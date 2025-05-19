@@ -131,14 +131,14 @@ export const amazonSearchSchema = z.object({
 // Manual product creation schema
 export const manualProductSchema = z.object({
   title: z.string().min(1, "Title is required"),
-  price_cents: z.number().int().min(1, "Price must be greater than 0"),
+  price_cents: z.coerce.number().min(1, "Price must be greater than 0"),
   amazonUrl: z.string().url("Please enter a valid URL").optional(),
   image_url: z.string().url("Please enter a valid image URL").optional(),
 });
 
 export const updateProductSchema = z.object({
   title: z.string().min(1, "Title is required").optional(),
-  price_cents: z.number().int().min(1, "Price must be greater than 0").optional(),
+  price_cents: z.coerce.number().min(1, "Price must be greater than 0").optional(),
   image_url: z.string().url("Please enter a valid image URL").optional(),
 });
 
