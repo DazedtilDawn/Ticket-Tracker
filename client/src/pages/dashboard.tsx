@@ -210,19 +210,14 @@ export default function Dashboard() {
       
       // Only update UI and show notifications if this transaction is for the current user
       if (userId === user?.id) {
-        console.log("Transaction is for current user, updating UI with new balance:", balance);
-        
         // If server sent the new balance, update it directly in the UI for immediate feedback
         if (balance !== undefined) {
-          console.log("Applying direct balance update to cache and stats store:", balance);
-          
           // Update the centralized stats store for immediate UI updates across all components
           updateBalance(balance);
           
           // Also update the query cache to keep everything in sync
           queryClient.setQueryData(["/api/stats"], (oldData: any) => {
             if (!oldData) return oldData;
-            console.log("Updating stats cache with new balance", { oldBalance: oldData.balance, newBalance: balance });
             return {
               ...oldData,
               balance: balance
@@ -236,8 +231,7 @@ export default function Dashboard() {
           description: `${tickets} tickets earned - ${note}`,
         });
         
-        // Force immediate query invalidation and refreshes for this specific event
-        console.log("Transaction:earn event - forcing complete data refresh cycle");
+        // Force immediate query invalidation and refreshes
         queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
         queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
         
@@ -247,26 +241,18 @@ export default function Dashboard() {
           queryClient.refetchQueries({ queryKey: ["/api/transactions"], exact: false });
           queryClient.refetchQueries({ queryKey: ["/api/stats"] });
         }, 100);
-      } else {
-        console.log("Transaction is for a different user, not updating current user's balance");
       }
     });
     
     const spendingSubscription = subscribeToChannel("transaction:spend", (data) => {
-      console.log("Received transaction:spend event:", data);
       // Handle both formats: data.transaction or data.data
       const tickets = data.data?.delta_tickets || data.transaction?.delta_tickets || 0;
       const userId = data.data?.user_id || data.transaction?.user_id;
       
-      console.log(`Current user ID: ${user?.id}, transaction for user ID: ${userId}`);
-      
       // Only update UI if this transaction is for the current user
       if (userId === user?.id) {
-        console.log("Transaction is for current user, updating UI with new balance");
-        
         // If server sent the new balance, update it directly in the UI
         if (data.data?.balance !== undefined) {
-          console.log("Updating stats cache with new balance:", data.data.balance);
           queryClient.setQueryData(["/api/stats"], (oldData: any) => {
             return {
               ...oldData,
@@ -286,31 +272,24 @@ export default function Dashboard() {
       
       // Whether it's for this user or not, we should refresh all transaction data
       // to ensure the transactions table is up-to-date for parents viewing child accounts
-      console.log("Transaction:spend event - forcing complete data refresh cycle");
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       
       // Add a small delay to ensure backend has processed all changes
       setTimeout(() => {
         // Force immediate refetch of all transaction-related queries
-        console.log("Executing delayed refetch for transaction:spend event");
         queryClient.refetchQueries({ queryKey: ["/api/transactions"], exact: false });
         queryClient.refetchQueries({ queryKey: ["/api/stats"] });
       }, 100);
     });
     
     const deductionSubscription = subscribeToChannel("transaction:deduct", (data) => {
-      console.log("Received transaction:deduct event:", data);
       // Handle both formats: data.transaction or data.data
       const tickets = data.data?.delta_tickets || data.transaction?.delta_tickets || 0;
       const userId = data.data?.user_id || data.transaction?.user_id;
       
-      console.log(`Current user ID: ${user?.id}, transaction for user ID: ${userId}`);
-      
       // Only update UI if this transaction is for the current user
       if (userId === user?.id) {
-        console.log("Transaction is for current user, updating UI with new balance");
-        
         // If server sent the new balance, update it directly in the UI
         if (data.data?.balance !== undefined) {
           queryClient.setQueryData(["/api/stats"], (oldData: any) => {
@@ -320,8 +299,6 @@ export default function Dashboard() {
             };
           });
         }
-      } else {
-        console.log("Transaction is for a different user, not updating current user's balance");
       }
       
       toast({
@@ -334,17 +311,12 @@ export default function Dashboard() {
     });
     
     const rewardSubscription = subscribeToChannel("transaction:reward", (data) => {
-      console.log("Received transaction:reward event:", data);
       // Handle both formats: data.data or data.transaction
       const tickets = data.data?.delta_tickets || data.transaction?.delta_tickets || 0;
       const userId = data.data?.user_id || data.transaction?.user_id;
       
-      console.log(`Current user ID: ${user?.id}, transaction for user ID: ${userId}`);
-      
       // Only update UI if this transaction is for the current user
       if (userId === user?.id) {
-        console.log("Transaction is for current user, updating UI with new balance");
-        
         // If server sent the new balance, update it directly in the UI
         if (data.data?.balance !== undefined) {
           queryClient.setQueryData(["/api/stats"], (oldData: any) => {
@@ -354,8 +326,6 @@ export default function Dashboard() {
             };
           });
         }
-      } else {
-        console.log("Transaction is for a different user, not updating current user's balance");
       }
       
       toast({
@@ -369,19 +339,13 @@ export default function Dashboard() {
     
     // Handler for transaction:delete events to update the goal progress meter
     const deleteSubscription = subscribeToChannel("transaction:delete", (data) => {
-      console.log("Received transaction:delete event:", data);
-      
       // Extract the user ID and updated balance - could be in data.data or directly in data
       const userId = data.data?.user_id || data.user_id;
       const balance = data.data?.balance || data.balance;
       const goal = data.data?.goal || data.goal;
       
-      console.log(`Transaction delete - Current user ID: ${user?.id}, affected user ID: ${userId}`);
-      
       // Only update UI if this transaction is for the current user or the child we're viewing
       if (userId === user?.id) {
-        console.log("Transaction delete is for current user, updating UI with new balance and goal data");
-        
         // Update balance in the stats store for immediate UI updates
         if (balance !== undefined) {
           updateBalance(balance);
@@ -400,7 +364,6 @@ export default function Dashboard() {
           // If we have updated goal data, update that too to refresh the progress meter
           if (goal) {
             newData.activeGoal = goal;
-            console.log("Updating goal data in stats cache:", goal);
           }
           
           return newData;
@@ -414,13 +377,11 @@ export default function Dashboard() {
       }
       
       // Force immediate query invalidation to ensure all UI components are updated
-      console.log("Transaction:delete event - forcing complete data refresh cycle");
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       
       // Add a small delay to ensure backend processing is complete
       setTimeout(() => {
-        console.log("Executing delayed refetch for transaction:delete event");
         // Force immediate refetch of ALL transaction-related queries with exact=false to catch any with parameters
         queryClient.refetchQueries({ queryKey: ["/api/transactions"], exact: false });
         queryClient.refetchQueries({ queryKey: ["/api/stats"] });
@@ -449,16 +410,13 @@ export default function Dashboard() {
       // If a parent is viewing a child account, include the child's user ID
       if (viewingChild && user) {
         payload.user_id = user.id;
-        console.log("Adding user_id to chore completion payload:", user.id);
       }
       
       // Make the API request to complete the chore
-      console.log("Submitting chore completion with payload:", payload);
       const response = await apiRequest("/api/earn", {
         method: "POST",
         body: JSON.stringify(payload),
       });
-      console.log("Chore completion response:", response);
       
       // If the response includes the new balance, update our stats store immediately
       if (response && response.balance !== undefined) {
