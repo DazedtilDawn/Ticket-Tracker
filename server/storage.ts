@@ -558,10 +558,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateProduct(id: number, update: Partial<InsertProduct>): Promise<Product | undefined> {
+    const updateData = { ...update } as any;
+
+    // Keep locked price in sync when price changes unless explicitly provided
+    if (update.price_cents !== undefined && update.price_locked_cents === undefined) {
+      updateData.price_locked_cents = update.price_cents;
+    }
+
     const [updatedProduct] = await db
       .update(products)
       .set({
-        ...update,
+        ...updateData,
         last_checked: new Date()
       })
       .where(eq(products.id, id))
