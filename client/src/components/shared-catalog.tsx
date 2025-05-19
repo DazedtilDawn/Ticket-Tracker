@@ -1,7 +1,4 @@
-Here’s the cleaned-up, conflict-free **SharedCatalog.tsx** with the taller scroll area and the extra **xl** grid column from the feature branch retained:
-
-```tsx
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,13 +18,16 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { AddProductDialog } from './add-product-dialog';
-import { useToast } from '@/hooks/use-toast';
-import { Gift, ArrowRight, Pencil, Trash2 } from 'lucide-react';
-import { createWebSocketConnection, subscribeToChannel } from "@/lib/supabase";
 import { EditProductDialog } from './edit-product-dialog';
+import { DeleteProductDialog } from './delete-product-dialog';
+import { useToast } from '@/hooks/use-toast';
+import { useAuthStore } from '@/store/auth-store';
+import { Gift, ArrowRight, PencilIcon, Trash2 } from 'lucide-react';
 
 export function SharedCatalog({ onProductSelected }: { onProductSelected: (productId: number) => void }) {
   const { toast } = useToast();
+  const { user } = useAuthStore();
+  const isParent = user?.role === 'parent';
   
   // Get all available products
   const { data: products = [] } = useQuery({
@@ -41,47 +41,19 @@ export function SharedCatalog({ onProductSelected }: { onProductSelected: (produ
   const refreshCatalog = () => {
     queryClient.invalidateQueries({ queryKey: ["/api/products"] });
   };
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      return apiRequest(`/api/products/${id}`, { method: "DELETE" });
-    },
-    onSuccess: () => {
-      toast({ title: "Product deleted" });
-      refreshCatalog();
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete product",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleDeleteProduct = (id: number) => deleteMutation.mutate(id);
-
-  // Listen for product updates/deletes from other sessions
-  useEffect(() => {
-    createWebSocketConnection();
-    const subUpdate = subscribeToChannel("product:update", refreshCatalog);
-    const subDelete = subscribeToChannel("product:deleted", refreshCatalog);
-    return () => {
-      subUpdate();
-      subDelete();
-    };
-  }, []);
   
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold">Shared Product Catalog</h2>
-        <AddProductDialog onProductAdded={refreshCatalog}>
-          <Button size="sm">
-            <Gift className="mr-2 h-4 w-4" />
-            Add Product
-          </Button>
-        </AddProductDialog>
+        <h2 className="text-xl font-bold">Family Catalog</h2>
+        {isParent && (
+          <AddProductDialog onProductAdded={refreshCatalog}>
+            <Button size="sm">
+              <Gift className="mr-2 h-4 w-4" />
+              Add Product
+            </Button>
+          </AddProductDialog>
+        )}
       </div>
             
       {products.length === 0 ? (
@@ -91,12 +63,14 @@ export function SharedCatalog({ onProductSelected }: { onProductSelected: (produ
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
             Products added to the catalog will be available for everyone in the family.
           </p>
-          <AddProductDialog onProductAdded={refreshCatalog}>
-            <Button>
-              <Gift className="mr-2 h-4 w-4" />
-              Add Your First Product
-            </Button>
-          </AddProductDialog>
+          {isParent && (
+            <AddProductDialog onProductAdded={refreshCatalog}>
+              <Button>
+                <Gift className="mr-2 h-4 w-4" />
+                Add Your First Product
+              </Button>
+            </AddProductDialog>
+          )}
         </div>
       ) : (
         <ScrollArea className="h-[500px] rounded-md border p-4">
@@ -130,33 +104,31 @@ export function SharedCatalog({ onProductSelected }: { onProductSelected: (produ
                     </span>
                   </div>
                 </CardContent>
-                <CardFooter className="p-4 pt-0 flex justify-end space-x-2">
-                  <EditProductDialog product={product} onProductUpdated={refreshCatalog}>
-                    <Button size="sm" variant="ghost">
-                      <Pencil className="mr-1 h-4 w-4" /> Edit
-                    </Button>
-                  </EditProductDialog>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700">
-                        <Trash2 className="mr-1 h-4 w-4" /> Delete
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete product?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will remove the product from the family catalog.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDeleteProduct(product.id)}>
+                <CardFooter className="p-4 pt-0 flex justify-between">
+                  {isParent && (
+                    <div className="flex space-x-2">
+                      <EditProductDialog 
+                        product={product} 
+                        onProductUpdated={refreshCatalog}
+                      >
+                        <Button size="sm" variant="outline">
+                          <PencilIcon className="mr-1 h-3 w-3" />
+                          Edit
+                        </Button>
+                      </EditProductDialog>
+                      
+                      <DeleteProductDialog
+                        productId={product.id}
+                        productTitle={product.title}
+                        onProductDeleted={refreshCatalog}
+                      >
+                        <Button size="sm" variant="destructive">
+                          <Trash2 className="mr-1 h-3 w-3" />
                           Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                        </Button>
+                      </DeleteProductDialog>
+                    </div>
+                  )}
                   <Button size="sm" variant="secondary" onClick={() => handleAddToWishlist(product.id)}>
                     Add to Wishlist
                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -170,4 +142,3 @@ export function SharedCatalog({ onProductSelected }: { onProductSelected: (produ
     </div>
   );
 }
-```
