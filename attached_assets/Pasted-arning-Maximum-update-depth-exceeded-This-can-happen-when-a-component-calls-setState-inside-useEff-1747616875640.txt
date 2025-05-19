@@ -1,0 +1,37 @@
+arning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+    at ProgressCard (https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/src/components/progress-card.tsx:26:40)
+    at div
+    at div
+    at section
+    at div
+    at Dashboard (https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/src/pages/dashboard.tsx:42:116)
+    at ProtectedRoute (https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/src/App.tsx?v=5F-u2B1RwK5vXBO95lfjb:37:38)
+    at Route (https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cddbf515:323:16)
+    at Switch (https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cddbf515:379:17)
+    at Router
+    at main
+    at div
+    at AppLayout (https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/src/App.tsx?v=5F-u2B1RwK5vXBO95lfjb:66:22)
+    at Provider (https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=cddbf515:38:15)
+    at TooltipProvider (https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=cddbf515:64:5)
+    at ThemeProvider (https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/src/components/theme-provider.tsx:25:3)
+    at QueryClientProvider (https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=cddbf515:2805:3)
+    at App (https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/src/App.tsx?v=5F-u2B1RwK5vXBO95lfjb:173:43)
+printWarning @ react-dom.development.js:86
+error @ react-dom.development.js:60
+checkForNestedUpdates @ react-dom.development.js:27339
+scheduleUpdateOnFiber @ react-dom.development.js:25514
+dispatchSetState @ react-dom.development.js:16708
+checkMilestones @ progress-card.tsx:158
+(anonymous) @ progress-card.tsx:161
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+(anonymous) @ react-dom.development.js:26808
+workLoop @ scheduler.development.js:266
+flushWork @ scheduler.development.js:239
+performWorkUntilDeadline @ scheduler.development.js:533

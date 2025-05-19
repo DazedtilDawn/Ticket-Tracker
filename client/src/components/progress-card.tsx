@@ -115,6 +115,13 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
         complete: goal.progress >= 100
       };
       
+      // Only update state if milestones have actually changed
+      const hasChanged = 
+        prevMilestones.quarter !== newMilestones.quarter ||
+        prevMilestones.half !== newMilestones.half ||
+        prevMilestones.threeQuarters !== newMilestones.threeQuarters ||
+        prevMilestones.complete !== newMilestones.complete;
+        
       // Check if we've just passed a milestone
       if (!prevMilestones.quarter && newMilestones.quarter) {
         toast({
@@ -142,7 +149,7 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
         toast({
           title: "🎉 Goal Complete!",
           description: `${childName} has all the tickets needed for their goal!`,
-          variant: "success"
+          variant: "default"
         });
         
         // Launch confetti
@@ -155,11 +162,14 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
         setHasShownConfetti(true);
       }
       
-      setPassedMilestones(newMilestones);
+      // Only update state if something has changed to prevent infinite loop
+      if (hasChanged) {
+        setPassedMilestones(newMilestones);
+      }
     };
     
     checkMilestones();
-  }, [goal.progress, childName, passedMilestones, hasShownConfetti, toast]);
+  }, [goal.progress, childName, hasShownConfetti, toast]);
   
   return (
     <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
