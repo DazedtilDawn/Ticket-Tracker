@@ -420,13 +420,11 @@ export default function Dashboard() {
       
       // If the response includes the new balance, update our stats store immediately
       if (response && response.balance !== undefined) {
-        console.log("Updating balance from chore completion:", response.balance);
         updateBalance(response.balance);
       }
       
       // Check if this chore completion triggered a bonus
       if (response && response.bonus_triggered === true && response.daily_bonus_id) {
-        console.log("Bonus chore triggered! Opening spin modal with bonus ID:", response.daily_bonus_id);
         // Pass the chore info to the bonus handler to open the spin modal
         handleBonusChoreComplete(
           response.daily_bonus_id,
@@ -454,7 +452,6 @@ export default function Dashboard() {
   
   // Handle bonus chore completion - shows the spin wheel modal
   const handleBonusChoreComplete = (bonusId: number, choreName: string) => {
-    console.log(`Bonus chore completed: ${choreName} (ID: ${bonusId})`);
     setDailyBonusId(bonusId);
     setCompletedChoreName(choreName);
     setIsSpinPromptOpen(true);
@@ -462,7 +459,6 @@ export default function Dashboard() {
   
   // Handle user clicking "Spin Now!" in the prompt modal
   const handleUserInitiatesSpin = (bonusIdFromPrompt: number) => {
-    console.log(`User initiated spin for daily_bonus_id: ${bonusIdFromPrompt}`);
     // Close the prompt modal
     setIsSpinPromptOpen(false);
     // Open the main wheel modal
