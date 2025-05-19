@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,16 +19,51 @@ import {
 } from "@/components/ui/alert-dialog";
 import { AddProductDialog } from './add-product-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Gift, ArrowRight, Pencil } from 'lucide-react';
+import { Gift, ArrowRight, Pencil, Trash2 } from 'lucide-react';
 import { EditProductDialog } from './edit-product-dialog';
+import { createWebSocketConnection, subscribeToChannel } from "@/lib/supabase";
+import { useAuthStore } from "@/store/auth-store";
 
 export function SharedCatalog({ onProductSelected }: { onProductSelected: (productId: number) => void }) {
   const { toast } = useToast();
-  
+  const { user } = useAuthStore();
+  const isParent = user?.role === "parent";
+
   // Get all available products
   const { data: products = [] } = useQuery({
     queryKey: ["/api/products"],
   });
+
+  const deleteProductMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest(`/api/products/${id}`, { method: "DELETE" });
+    },
+    onSuccess: () => {
+      toast({ title: "Product deleted" });
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+    },
+    onError: (e: any) => {
+      toast({ title: "Error", description: e.message || "Failed to delete product", variant: "destructive" });
+    },
+  });
+
+  // Listen for real-time product events
+  useEffect(() => {
+    createWebSocketConnection();
+
+    const updateSub = subscribeToChannel("product:update", () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+    });
+
+    const deleteSub = subscribeToChannel("product:deleted", () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+    });
+
+    return () => {
+      updateSub();
+      deleteSub();
+    };
+  }, [queryClient]);
 
   const handleAddToWishlist = (productId: number) => {
     onProductSelected(productId);
@@ -94,11 +129,36 @@ export function SharedCatalog({ onProductSelected }: { onProductSelected: (produ
                   </div>
                 </CardContent>
                 <CardFooter className="p-4 pt-0 flex justify-end space-x-2">
-                  <EditProductDialog product={product} onProductUpdated={refreshCatalog}>
-                    <Button size="sm" variant="ghost">
-                      <Pencil className="mr-1 h-4 w-4" /> Edit
-                    </Button>
-                  </EditProductDialog>
+                  {isParent && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="ghost" className="text-red-600">
+                          <Trash2 className="mr-1 h-4 w-4" /> Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Remove product?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will delete the product from the family catalog.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => deleteProductMutation.mutate(product.id)} disabled={deleteProductMutation.isPending}>
+                            {deleteProductMutation.isPending ? "Deleting..." : "Delete"}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                  {isParent && (
+                    <EditProductDialog product={product} onProductUpdated={refreshCatalog}>
+                      <Button size="sm" variant="ghost">
+                        <Pencil className="mr-1 h-4 w-4" /> Edit
+                      </Button>
+                    </EditProductDialog>
+                  )}
                   <Button size="sm" variant="secondary" onClick={() => handleAddToWishlist(product.id)}>
                     Add to Wishlist
                     <ArrowRight className="ml-2 h-4 w-4" />
