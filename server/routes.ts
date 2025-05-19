@@ -725,6 +725,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ message: error.message });
     }
   });
+
+  // Delete product
+  app.delete("/api/products/:id", auth, async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid product ID" });
+    }
+
+    // Only parents can delete products
+    if (req.user.role !== "parent") {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    try {
+      // Prevent deletion if any goals still reference this product
+      const goalsUsingProduct = await storage.getGoalsByProductId(id);
+      if (goalsUsingProduct.length > 0) {
+        return res
+          .status(400)
+          .json({ message: "Product is linked to existing goals" });
+      }
+
+      const deleted = await storage.deleteProduct(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      broadcast("product:deleted", { id });
+      return res.json({ success: true });
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
   
   // Goal routes
   app.get("/api/goals", auth, async (req: Request, res: Response) => {
