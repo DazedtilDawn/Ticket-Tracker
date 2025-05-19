@@ -204,14 +204,26 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
         description: "Profile image updated successfully"
       });
       
-      // Refresh related data
+      // Force refresh all user data to update the UI
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/verify"] });
       
-      if (user.id !== 1) {
+      // Force immediate refetch of all user data
+      queryClient.refetchQueries({ queryKey: ["/api/users"] });
+      
+      // For specific user
+      if (user.id) {
         queryClient.invalidateQueries({ queryKey: [`/api/users/${user.id}`] });
+        queryClient.refetchQueries({ queryKey: [`/api/users/${user.id}`] });
         queryClient.invalidateQueries({ queryKey: [`/api/stats`] });
       }
+      
+      // Force reload the auth store to update profile image in the UI
+      setTimeout(() => {
+        // Force window reload to ensure all components pick up the new image
+        // This is needed because some components may have cached the old image
+        window.location.reload();
+      }, 1000);
       
       // Auto-close after success with a delay
       console.log('[UPLOAD] Scheduling auto-close');

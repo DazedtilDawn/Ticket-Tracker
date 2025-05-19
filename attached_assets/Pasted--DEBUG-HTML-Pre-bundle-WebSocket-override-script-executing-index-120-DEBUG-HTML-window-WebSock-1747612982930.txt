@@ -1,0 +1,52 @@
+[DEBUG_HTML] Pre-bundle WebSocket override script executing.
+(index):120 [DEBUG_HTML] window.WebSocket has been overridden from HTML.
+(index):64  [DEBUG_HTML] BLOCKING WebSocket attempt (HTML override): wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev:/?token=FzlH-pX0WLpK
+value @ (index):64
+(index):67  [DEBUG_HTML] WebSocket blocked - Call stack: Error
+    at new value (https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/:67:76)
+    at setupWebSocket (https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/@vite/client:536:19)
+    at https://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/@vite/client:531:12
+value @ (index):67
+(index):76  [DEBUG_HTML] Found WebSocket with token parameter
+value @ (index):76
+react-dom.development.js:29895 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+main.tsx:3 [DEBUG] Main.tsx: Relying on the HTML WebSocket override.
+supabase.ts:40 Connecting to WebSocket at: wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/ws
+supabase.ts:54 Using global WebSocket constructor (with HTML overrides)
+App.tsx:91 Checking authentication status, auto-login: true
+parent-dashboard.tsx:38 Attempting to load family users...
+parent-dashboard.tsx:125 Setting up WebSocket listeners for transaction events
+supabase.ts:40 Connecting to WebSocket at: wss://32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/ws
+supabase.ts:54 Using global WebSocket constructor (with HTML overrides)
+supabase.ts:180 Subscribing to WebSocket channel: transaction:
+content.js:260 Prompt Manager content script loaded
+supabase.ts:57 WebSocket connection established
+supabase.ts:57 WebSocket connection established
+supabase.ts:91 WebSocket message received: Object
+supabase.ts:94 WebSocket message details - Event: server:welcome Object
+parent-dashboard.tsx:50 Successfully loaded family users: Array(5)
+supabase.ts:91 WebSocket message received: Object
+supabase.ts:94 WebSocket message details - Event: server:welcome Object
+transactions-table.tsx:60 Setting up WebSocket listeners in TransactionsTable component
+supabase.ts:180 Subscribing to WebSocket channel: transaction:earn
+supabase.ts:180 Subscribing to WebSocket channel: transaction:spend
+supabase.ts:180 Subscribing to WebSocket channel: transaction:delete
+parent-dashboard.tsx:88 Loaded balance for Child User (ID: 7): 0
+parent-dashboard.tsx:88 Loaded balance for Kiki (ID: 5): 0
+parent-dashboard.tsx:88 Loaded balance for Bryce (ID: 4): 10
+32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev/:1  Unchecked runtime.lastError: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+profile-image-modal.tsx:102 [UPLOAD] Starting upload for Kiki (ID: 5)
+profile-image-modal.tsx:111 [UPLOAD] File: 493902548_10161494670302099_1823607205318560808_n.jpg, Size: 26922 bytes
+profile-image-modal.tsx:131 [UPLOAD] Added authorization token to request
+profile-image-modal.tsx:137 [UPLOAD] POST request to /api/upload/image
+profile-image-modal.tsx:150 [UPLOAD] Response status: 200
+profile-image-modal.tsx:160 [UPLOAD] Server response: Object
+profile-image-modal.tsx:194 [UPLOAD] Final image URL with cache busting: /uploads/profiles/9ae47f65-0446-4437-a7e7-cb1ec6afbf9c.jpg?t=1747612969556
+profile-image-modal.tsx:199 [UPLOAD] Success! Image URL: /uploads/profiles/9ae47f65-0446-4437-a7e7-cb1ec6afbf9c.jpg?t=1747612969556
+profile-image-modal.tsx:217 [UPLOAD] Scheduling auto-close
+profile-image-modal.tsx:223 [UPLOAD] Auto-closing modal after successful upload
+[NEW] Explain Console errors by using Copilot in Edge: click
+         
+         to explain an error. 
+        Learn more
+        Don't show again
