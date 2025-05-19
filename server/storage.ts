@@ -246,35 +246,7 @@ export class DatabaseStorage implements IStorage {
         is_spun: existingBonus.is_spun,
         trigger_type: existingBonus.trigger_type
       });
-      
-      // BUGFIX: If we found a bonus with is_spun incorrectly set to true, fix it here
-      if (existingBonus.is_spun) {
-        console.log(`[BONUS_ASSIGN] IMPORTANT: Existing bonus for user ${childId} is marked as already spun.`);
-        console.log(`[BONUS_ASSIGN] DEBUG FIX: Resetting is_spun to false to allow wheel to trigger.`);
-        
-        try {
-          // Fix the is_spun flag so the wheel can be triggered
-          await db
-            .update(dailyBonus)
-            .set({ is_spun: false })
-            .where(eq(dailyBonus.id, existingBonus.id));
-            
-          console.log(`[BONUS_ASSIGN] Successfully reset is_spun flag to false for bonus ${existingBonus.id}`);
-          
-          // Re-fetch the updated bonus
-          const updatedBonus = await this.getDailyBonusById(existingBonus.id);
-          if (updatedBonus) {
-            console.log(`[BONUS_ASSIGN] Updated bonus state:`, {
-              id: updatedBonus.id,
-              is_spun: updatedBonus.is_spun
-            });
-            return updatedBonus;
-          }
-        } catch (err) {
-          console.error(`[BONUS_ASSIGN] Error resetting is_spun flag:`, err);
-        }
-      }
-      
+
       return existingBonus;
     }
     
