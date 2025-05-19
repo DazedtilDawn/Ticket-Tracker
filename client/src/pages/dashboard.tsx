@@ -112,8 +112,6 @@ export default function Dashboard() {
 
     const checkForUnspunBonus = async () => {
       try {
-        console.log("[Bonus] polling /unspun for id:", activeChildId);
-
         const response = await apiRequest(
           `/api/daily-bonus/unspun?user_id=${activeChildId}`,
           { method: "GET" }
@@ -121,13 +119,10 @@ export default function Dashboard() {
         
         // If we found an unspun daily bonus, open the spin prompt
         if (response && response.daily_bonus_id) {
-          console.log("Found unspun bonus:", response);
           // Set up the data for the spin prompt modal
           setDailyBonusId(response.daily_bonus_id);
           setCompletedChoreName(response.chore_name || "Daily Bonus");
           setIsSpinPromptOpen(true);
-        } else {
-          console.log("No unspun bonus found for this user");
         }
       } catch (error: any) {
         // Only log the error, don't show toast to avoid spamming the user
@@ -138,11 +133,13 @@ export default function Dashboard() {
         // 1. There's no bonus assigned for today
         // 2. The bonus has already been spun
         // 3. The assigned bonus chore hasn't been completed yet
+        // We only care about unexpected errors (not 404s which are normal)
         if (errorStatus !== 404) {
-          // Only log truly unexpected errors (server errors, etc.)
-          console.error("Unexpected error checking for unspun bonus:", {
-            status: errorStatus,
-            message: errorMessage
+          // Use toast for truly unexpected errors (like server errors)
+          toast({
+            title: "Error checking bonus",
+            description: "An unexpected error occurred",
+            variant: "destructive"
           });
         }
       }

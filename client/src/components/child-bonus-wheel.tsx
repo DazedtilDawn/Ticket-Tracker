@@ -219,7 +219,6 @@ export function ChildBonusWheel({
         
         // Set a custom result label for multipliers
         if (isMultiplier) {
-          console.log('[WHEEL_DEBUG] Landed on multiplier segment');
           setResultLabel('×2');
         } else {
           setResultLabel(null);
@@ -227,41 +226,35 @@ export function ChildBonusWheel({
         
         // Highlight the winning slice
         const slices = wheelRef.current?.querySelectorAll<HTMLElement>("[data-slice]");
-        console.log('[WHEEL_DEBUG] Found wheel slices:', slices?.length || 0);
         
         if (slices) {
           slices.forEach((s, i) => {
             if (i === data.segment_index) {
-              console.log('[WHEEL_DEBUG] Highlighting winning slice at index', i);
               s.classList.add("ring-4", "ring-yellow-300", "animate-pulse");
             } else {
               s.classList.remove("ring-4", "ring-yellow-300", "animate-pulse");
             }
           });
-        } else {
-          console.error('[WHEEL_DEBUG] ERROR: Could not find wheel slices to highlight');
         }
         
         // Play celebration sound
         try {
           const celebrationAudio = new Audio('/sounds/celebration.mp3');
           celebrationAudio.volume = 0.4;
-          celebrationAudio.play().catch(err => {
-            console.log('[WHEEL_DEBUG] Could not play celebration sound:', err);
+          celebrationAudio.play().catch(() => {
+            // Silently fail if audio can't play
           });
         } catch (err) {
-          console.log('[WHEEL_DEBUG] Error setting up celebration sound:', err);
+          // Ignore audio errors - not critical to functionality
         }
         
         // Vibration feedback if available
         if (navigator.vibrate) {
-          console.log('[WHEEL_DEBUG] Triggering device vibration');
           navigator.vibrate([50, 60, 50]);
         }
         
         // Confetti for 10 tickets
         if (data.tickets_awarded >= 10) {
-          console.log('[WHEEL_DEBUG] Triggering confetti for high ticket win');
           confetti({ 
             particleCount: 120, 
             spread: 80, 
@@ -270,7 +263,6 @@ export function ChildBonusWheel({
         }
         
         // Show toast with the result
-        console.log('[WHEEL_DEBUG] Showing success toast with', data.tickets_awarded, 'tickets');
         toast({
           title: "🎊 Bonus Spin Complete!",
           description: `You won ${data.tickets_awarded} tickets!`,
@@ -278,13 +270,11 @@ export function ChildBonusWheel({
         });
         
         // Refresh data to update ticket balance
-        console.log('[WHEEL_DEBUG] Invalidating queries to refresh UI data');
         queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
         queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
         
         // Allow user to close the modal after seeing the result
         setIsSpinning(false);
-        console.log('[WHEEL_DEBUG] Spin animation and process complete');
       }, 8000);
     },
     onError: (err: any) => {
