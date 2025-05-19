@@ -278,7 +278,6 @@ export function ChildBonusWheel({
       }, 8000);
     },
     onError: (err: any) => {
-      console.error('[WHEEL_DEBUG] Spin mutation error:', err);
       clearInterval(tickTimer.current!);
       
       toast({
@@ -293,10 +292,7 @@ export function ChildBonusWheel({
 
   /* ----- spin handler -----------------------------------------*/
   const handleSpin = () => {
-    console.log('[WHEEL_DEBUG] Spin button clicked with dailyBonusId:', dailyBonusId);
-    
     if (!dailyBonusId) {
-      console.log('[WHEEL_DEBUG] Error: Missing dailyBonusId');
       toast({ 
         title: "Error", 
         description: "Missing bonus information", 
@@ -305,7 +301,6 @@ export function ChildBonusWheel({
       return;
     }
 
-    console.log('[WHEEL_DEBUG] Starting wheel spin animation for bonus ID:', dailyBonusId);
     setIsSpinning(true);
     
     // Use progressive tick interval that matches wheel physics
@@ -333,25 +328,20 @@ export function ChildBonusWheel({
     requestAnimationFrame(updateTickInterval);
 
     /* Wind-up */
-    console.log('[WHEEL_DEBUG] Applying wind-up animation');
     setRotation((r) => r - 35);
 
     /* Send API call first to get the real segment index */
     setTimeout(() => {
-      console.log('[WHEEL_DEBUG] Making API call to /api/bonus-spin with ID:', dailyBonusId);
-      
       // Send request to /api/bonus-spin to get the actual segment index
       spinMutation.mutate(dailyBonusId);
       
       // Start the wheel spin immediately with a temporary rotation
       // The final rotation will be set in the onSuccess handler based on server response
       const initialTarget = 360 * 5; // Start with 5 rotations
-      console.log('[WHEEL_DEBUG] Starting initial spin animation');
       setRotation(initialTarget);
       
       /* On settle, clear tick sound */
       setTimeout(() => {
-        console.log('[WHEEL_DEBUG] Wheel spin animation completing, clearing tick sound');
         clearInterval(tickTimer.current!);
         
         // Also stop any playing audio
