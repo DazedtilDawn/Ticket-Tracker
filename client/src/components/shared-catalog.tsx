@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -19,7 +19,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { AddProductDialog } from './add-product-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Gift, ArrowRight, Pencil } from 'lucide-react';
+import { Gift, ArrowRight, Pencil, Trash2 } from 'lucide-react';
+import { createWebSocketConnection, subscribeToChannel } from "@/lib/supabase";
 import { EditProductDialog } from './edit-product-dialog';
 
 export function SharedCatalog({ onProductSelected }: { onProductSelected: (productId: number) => void }) {
@@ -37,6 +38,36 @@ export function SharedCatalog({ onProductSelected }: { onProductSelected: (produ
   const refreshCatalog = () => {
     queryClient.invalidateQueries({ queryKey: ["/api/products"] });
   };
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest(`/api/products/${id}`, { method: "DELETE" });
+    },
+    onSuccess: () => {
+      toast({ title: "Product deleted" });
+      refreshCatalog();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete product",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteProduct = (id: number) => deleteMutation.mutate(id);
+
+  // Listen for product updates/deletes from other sessions
+  useEffect(() => {
+    createWebSocketConnection();
+    const subUpdate = subscribeToChannel("product:update", refreshCatalog);
+    const subDelete = subscribeToChannel("product:deleted", refreshCatalog);
+    return () => {
+      subUpdate();
+      subDelete();
+    };
+  }, []);
   
   return (
     <div className="space-y-4">
@@ -66,7 +97,7 @@ export function SharedCatalog({ onProductSelected }: { onProductSelected: (produ
         </div>
       ) : (
         <ScrollArea className="h-[400px] rounded-md border p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {products.map((product: any) => (
               <Card key={product.id} className="overflow-hidden">
                 <div className="flex h-32 bg-slate-100 dark:bg-slate-800">
@@ -99,6 +130,27 @@ export function SharedCatalog({ onProductSelected }: { onProductSelected: (produ
                       <Pencil className="mr-1 h-4 w-4" /> Edit
                     </Button>
                   </EditProductDialog>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700">
+                        <Trash2 className="mr-1 h-4 w-4" /> Delete
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete product?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will remove the product from the family catalog.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDeleteProduct(product.id)}>
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                   <Button size="sm" variant="secondary" onClick={() => handleAddToWishlist(product.id)}>
                     Add to Wishlist
                     <ArrowRight className="ml-2 h-4 w-4" />
