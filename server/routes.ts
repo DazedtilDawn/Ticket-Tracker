@@ -1370,11 +1370,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = parseInt(req.query.user_id as string);
       
       if (!userId || isNaN(userId)) {
-        console.log("[UNSPUN_BONUS] Missing or invalid user_id:", req.query.user_id);
         return res.status(400).json({ message: "Missing or invalid user_id parameter" });
       }
-      
-      console.log("[UNSPUN_BONUS] Checking for unspun bonus for user:", userId);
       
       // Get today's date in YYYY-MM-DD format
       const today = new Date().toISOString().split('T')[0];
@@ -1384,8 +1381,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If there's an unspun good behavior bonus, return it immediately
       if (goodBehaviorBonus && !goodBehaviorBonus.is_spun) {
-        console.log("[UNSPUN_BONUS] Found unspun good behavior bonus:", goodBehaviorBonus.id);
-        
         // For good behavior bonuses, return immediately - no prerequisites
         return res.status(200).json({
           daily_bonus_id: goodBehaviorBonus.id,
@@ -1399,13 +1394,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // No chore bonus found
       if (!choreBonus) {
-        console.log("[UNSPUN_BONUS] No chore completion bonus found for user", userId, "on date", today);
         return res.status(404).json({ message: "No daily bonus found for this user and date" });
       }
       
       // Chore bonus exists but already spun
       if (choreBonus.is_spun) {
-        console.log("[UNSPUN_BONUS] Chore completion bonus already spun for user", userId, "on date", today);
         return res.status(404).json({ message: "Daily bonus has already been spun" });
       }
       
@@ -1428,12 +1421,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
         
-        console.log("[UNSPUN_BONUS] Checking if chore was completed - Assigned chore:", choreBonus.assigned_chore_id);
-        console.log("[UNSPUN_BONUS] Completed chores today:", Array.from(completedChoreIds));
-        
         // If the assigned chore wasn't completed, don't show the bonus yet
         if (!completedChoreIds.has(choreBonus.assigned_chore_id)) {
-          console.log("[UNSPUN_BONUS] Assigned chore has not been completed yet");
           return res.status(404).json({ 
             message: "Daily bonus chore has not been completed yet" 
           });
