@@ -58,10 +58,10 @@ export function AssignToChildDialog({ productId, trigger, onAssigned, children }
           <DialogTitle>Add to Child's Wishlist</DialogTitle>
         </DialogHeader>
         <div className="space-y-2">
-          {children.length === 0 ? (
+          {childUsers.length === 0 ? (
             <p className="text-sm text-gray-500">No child accounts found.</p>
           ) : (
-            children.map((child) => (
+            childUsers.map((child) => (
               <label key={child.id} className="flex items-center space-x-2">
                 <Checkbox
                   checked={selectedIds.includes(child.id)}
