@@ -39,10 +39,8 @@ export function UserSwitcher() {
     enabled: currentUser.role === 'parent'
   });
   
-  // Filter to only show Bryce and Kiki, exclude "Child User"
-  const childUsers = users.filter(user => 
-    user.role === 'child' && (user.name === 'Bryce' || user.name === 'Kiki')
-  );
+  // Only child users
+  const childUsers = users.filter(user => user.role === 'child');
   
   useEffect(() => {
     // If coming back from children view, reset selection

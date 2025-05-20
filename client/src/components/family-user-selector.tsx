@@ -34,9 +34,7 @@ export function FamilyUserSelector() {
 
   // Filter parent and child users
   const parentUsers = users.filter((user: UserInfo) => user.role === 'parent');
-  const childUsers = users.filter((user: UserInfo) => 
-    user.role === 'child' && (user.name === 'Bryce' || user.name === 'Kiki')
-  );
+  const childUsers = users.filter((user: UserInfo) => user.role === 'child');
 
   // Handle user login
   const handleUserLogin = async (username: string) => {

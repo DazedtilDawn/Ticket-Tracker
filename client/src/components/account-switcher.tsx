@@ -154,10 +154,10 @@ export function AccountSwitcher() {
             <>
               <DropdownMenuLabel>Family accounts</DropdownMenuLabel>
               {users
-                .filter(user => user.role === 'child' && (user.name === 'Bryce' || user.name === 'Kiki'))
+                .filter(user => user.role === 'child')
                 .map(user => (
-                  <DropdownMenuItem 
-                    key={user.id} 
+                  <DropdownMenuItem
+                    key={user.id}
                     onClick={() => handleSwitchUser(user)}
                     disabled={isViewingAsChild() && user.id === currentUser.id}
                   >
@@ -175,13 +175,10 @@ export function AccountSwitcher() {
             <>
               <DropdownMenuLabel>Switch account</DropdownMenuLabel>
               {users
-                .filter(user => 
-                  user.id !== currentUser.id && 
-                  (user.name === 'Parent User' || user.name === 'Bryce' || user.name === 'Kiki')
-                )
+                .filter(user => user.id !== currentUser.id)
                 .map(user => (
-                  <DropdownMenuItem 
-                    key={user.id} 
+                  <DropdownMenuItem
+                    key={user.id}
                     onClick={() => handleSwitchUser(user)}
                   >
                     <Avatar className={`h-5 w-5 mr-2 ${getAvatarColor(user.name)}`}>
