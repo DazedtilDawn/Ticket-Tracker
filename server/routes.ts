@@ -143,9 +143,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 const testAmount = 5; // 5 tickets as a test reward
                 const transaction = await storage.createTransaction({
                   type: 'reward',
-                  delta_tickets: testAmount, // Must use delta_tickets, not amount
+                  delta: testAmount,
                   note: 'WebSocket test reward (connection test)',
-                  user_id: 1 // Parent user ID
+                  user_id: 1,
                 });
 
                 console.log("Created real test transaction:", transaction.id);
@@ -410,7 +410,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(201).json(updatedChore);
     } catch (error) {
       console.error("Error creating chore:", error);
-      return res.status(400).json({ message: error.message });
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(400).json({ message });
     }
   });
 
@@ -446,7 +447,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       broadcast("chore:update", updatedChore);
       return res.json(updatedChore);
     } catch (error) {
-      return res.status(400).json({ message: error.message });
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(400).json({ message });
     }
   });
 
@@ -664,7 +666,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return {
           ...goal,
           product,
-          progress: product ? calculateProgressPercent(goal.tickets_saved, product.price_locked_cents) : 0
+          progress: product ? calculateProgressPercent(goal.tickets_saved, product.price_locked_cents || 0) : 0
         };
       })
     );
@@ -688,7 +690,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).json({ message: "No active goal found" });
     }
 
-    const progressPercent = calculateProgressPercent(goal.tickets_saved, goal.product.price_locked_cents);
+    const progressPercent = calculateProgressPercent(goal.tickets_saved, goal.product.price_locked_cents || 0);
 
     return res.json({
       ...goal,
@@ -1111,7 +1113,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/good-behavior", parentOnly, async (req: Request, res: Response) => {
     try {
       const data = goodBehaviorSchema.parse(req.body);
-      const userId = parseInt(data.user_id);
+      const userId = data.user_id;
 
       // Make sure the user exists
       const targetUser = await storage.getUser(userId);
@@ -2192,7 +2194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userBalance = await storage.getUserBalance(transaction.user_id);
 
       // Calculate the max tickets for this goal
-      const maxGoalTickets = Math.ceil(goal.product.price_locked_cents / TICKET_CENT_VALUE);
+      const maxGoalTickets = Math.ceil((goal.product.price_locked_cents || 0) / TICKET_CENT_VALUE);
 
       // Update the goal progress to match the current balance (up to the max tickets needed)
       const newGoalProgress = Math.min(userBalance, maxGoalTickets);
@@ -2248,7 +2250,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`[STATS] Fixing goal progress for user ${targetUserId}: balance=${balance}, goal.tickets_saved=${activeGoal.tickets_saved}`);
 
         // Calculate max tickets needed for this goal
-        const maxTickets = Math.ceil(activeGoal.product.price_locked_cents / TICKET_CENT_VALUE);
+        const maxTickets = Math.ceil((activeGoal.product.price_locked_cents || 0) / TICKET_CENT_VALUE);
 
         // Update the goal to match the balance (up to the max needed)
         const newProgress = Math.min(balance, maxTickets);
@@ -2262,7 +2264,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      progressPercent = calculateProgressPercent(activeGoal.tickets_saved, activeGoal.product.price_locked_cents);
+      if (activeGoal) {
+        progressPercent = calculateProgressPercent(
+          activeGoal.tickets_saved,
+          activeGoal.product.price_locked_cents || 0
+        );
+      }
 
       // Calculate estimated completion
       const transactions = await storage.getUserTransactions(targetUserId, 10);
@@ -2274,7 +2281,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const avgPerDay = totalEarned / Math.max(1, earnTransactions.length);
 
         // Tickets needed to complete goal
-        const ticketsNeeded = activeGoal.product.price_locked_cents / TICKET_CENT_VALUE - activeGoal.tickets_saved;
+        const ticketsNeeded =
+          (activeGoal!.product.price_locked_cents || 0) / TICKET_CENT_VALUE -
+          activeGoal!.tickets_saved;
 
         // Estimated days to completion
         const daysToCompletion = Math.ceil(ticketsNeeded / avgPerDay);
@@ -2317,7 +2326,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const choresWithStatus = chores.map(chore => ({
       ...chore,
       completed: completedChoreIds.has(chore.id),
-      boostPercent: activeGoal ? calculateBoostPercent(chore.base_tickets, activeGoal.product.price_locked_cents) : 0,
+      boostPercent: activeGoal ? calculateBoostPercent(chore.base_tickets, activeGoal.product.price_locked_cents || 0) : 0,
       // Add bonus information if this chore is the assigned bonus chore for today
       is_bonus: dailyBonusRecord ? dailyBonusRecord.assigned_chore_id === chore.id : false,
       // If the chore is the bonus chore and has been completed (but wheel not spun), it's eligible for spin

@@ -370,7 +370,9 @@ export class DatabaseStorage implements IStorage {
         is_active: chores.is_active,
         emoji: chores.emoji,
         last_bonus_assigned: chores.last_bonus_assigned,
-        bonus_tickets: dailyBonus.spin_result_tickets
+        created_at: chores.created_at,
+        created_by_user_id: chores.created_by_user_id,
+        bonus_tickets: sql`coalesce(${dailyBonus.spin_result_tickets}, 0)`
       })
       .from(chores)
       .innerJoin(
@@ -397,7 +399,9 @@ export class DatabaseStorage implements IStorage {
           is_active: chores.is_active,
           emoji: chores.emoji,
           last_bonus_assigned: chores.last_bonus_assigned,
-          bonus_tickets: dailyBonus.spin_result_tickets
+          created_at: chores.created_at,
+          created_by_user_id: chores.created_by_user_id,
+          bonus_tickets: sql`coalesce(${dailyBonus.spin_result_tickets}, 0)`
         })
         .from(chores)
         .innerJoin(
@@ -877,24 +881,40 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createTransaction(insertTransaction: InsertTransaction): Promise<Transaction> {
-    console.log(`[TRANSACTION] Creating transaction for user ${insertTransaction.user_id}, delta: ${insertTransaction.delta}, type: ${insertTransaction.type}`);
-    
+    const { user_id, delta, type, chore_id, goal_id, note, source, ref_id, reason, metadata, to_shared_goal_id } = insertTransaction;
+    console.log(`[TRANSACTION] Creating transaction for user ${user_id}, delta: ${delta}, type: ${type}`);
+
     const transactionData = {
       ...insertTransaction,
+      user_id,
+      delta,
+      type: type || 'earn',
+      source: source || 'chore',
       created_at: new Date()
     };
-    
+
     // Calculate user's current balance for validation
-    const currentBalance = await this.getUserBalance(insertTransaction.user_id);
-    console.log(`[TRANSACTION] Current balance for user ${insertTransaction.user_id}: ${currentBalance}`);
-    
-    // Insert transaction
-    const [transaction] = await db.insert(transactions).values(transactionData).returning();
+    const currentBalance = await this.getUserBalance(user_id);
+    console.log(`[TRANSACTION] Current balance for user ${user_id}: ${currentBalance}`);
+
+    const [transaction] = await db.insert(transactions).values({
+      user_id: transactionData.user_id,
+      delta: transactionData.delta,
+      type: transactionData.type,
+      source: transactionData.source,
+      created_at: transactionData.created_at,
+      chore_id: transactionData.chore_id,
+      goal_id: transactionData.goal_id,
+      note: transactionData.note,
+      ref_id: transactionData.ref_id,
+      reason: transactionData.reason,
+      metadata: transactionData.metadata,
+      to_shared_goal_id: transactionData.to_shared_goal_id
+    }).returning();
     console.log(`[TRANSACTION] Created transaction ${transaction.id} with delta ${transaction.delta}`);
-    
-    // Calculate new balance
-    const newBalance = await this.getUserBalance(insertTransaction.user_id);
-    console.log(`[TRANSACTION] New balance for user ${insertTransaction.user_id}: ${newBalance}`);
+
+    const newBalance = await this.getUserBalance(user_id);
+    console.log(`[TRANSACTION] New balance for user ${user_id}: ${newBalance}`);
     
     // Always sync the active goal with the latest total
     try {
@@ -919,7 +939,7 @@ export class DatabaseStorage implements IStorage {
           // Ensure goal progress never goes below 0 or exceeds current balance
           const newTicketsSaved = Math.min(
             Math.max(0, newBalance),
-            Math.ceil(activeGoal.product.price_locked_cents / TICKET_CENT_VALUE)
+            Math.ceil((activeGoal.product.price_locked_cents || 0) / TICKET_CENT_VALUE)
           );
           
           console.log(`[TRANSACTION] Updating active goal ${activeGoal.id} tickets_saved from ${activeGoal.tickets_saved} to ${newTicketsSaved}`);
