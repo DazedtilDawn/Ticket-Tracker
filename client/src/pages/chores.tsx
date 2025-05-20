@@ -440,7 +440,7 @@ export default function Chores() {
                             <TableCell className="max-w-xs truncate">
                               {chore.description || "No description"}
                             </TableCell>
-                            <TableCell>{chore.tickets}</TableCell>
+                            <TableCell>{chore.base_tickets}</TableCell>
                             <TableCell>
                               <span className="text-xl">{chore.emoji || "—"}</span>
                             </TableCell>

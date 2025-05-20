@@ -366,7 +366,7 @@ export default function BonusManagement() {
                   <SelectContent>
                     {(chores || []).filter((c: Chore) => c.is_active).map((chore: Chore) => (
                       <SelectItem key={chore.id} value={chore.id.toString()}>
-                        {chore.name} ({chore.tickets} tickets)
+                        {chore.name} ({chore.base_tickets} tickets)
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -495,7 +495,7 @@ export default function BonusManagement() {
                                     </SelectItem>
                                     {(chores || []).filter((c: Chore) => c.is_active && c.id !== bonus.assigned_chore_id).map((chore: Chore) => (
                                       <SelectItem key={chore.id} value={chore.id.toString()}>
-                                        {chore.name} ({chore.tickets} tickets)
+                                        {chore.name} ({chore.base_tickets} tickets)
                                       </SelectItem>
                                     ))}
                                   </SelectContent>
