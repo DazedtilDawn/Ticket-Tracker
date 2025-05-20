@@ -731,7 +731,14 @@ export class DatabaseStorage implements IStorage {
         return false;
       }
 
-      console.log(`[STORAGE_DELETE_GOAL] Goal ID ${id} found. Attempting to delete.`);
+      console.log(`[STORAGE_DELETE_GOAL] Goal ID ${id} found. Disassociating transactions first.`);
+      // Set goal_id to NULL for all transactions referencing this goal
+      await db.update(transactions)
+        .set({ goal_id: null })
+        .where(eq(transactions.goal_id, id));
+      console.log(`[STORAGE_DELETE_GOAL] Transactions for goal ID ${id} disassociated.`);
+
+      console.log(`[STORAGE_DELETE_GOAL] Attempting to delete goal ID ${id}.`);
       const deleteResult = await db.delete(goals).where(eq(goals.id, id)).returning({ id: goals.id });
       console.log(`[STORAGE_DELETE_GOAL] Drizzle delete operation result for goal ID ${id}:`, deleteResult);
 
