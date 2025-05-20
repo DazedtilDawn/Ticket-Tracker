@@ -108,10 +108,21 @@ export const useAuthStore = create<AuthState>()(
             // Simple validation of token expiration
             const decoded: any = jwtDecode(token);
             const currentTime = Date.now() / 1000;
-            
+
             if (!decoded.exp || decoded.exp > currentTime) {
               // Token still valid
               set({ isAuthenticated: true });
+
+              // Load family users if we don't have them yet
+              if (familyUsers.length === 0) {
+                try {
+                  const users = await apiRequest('/api/users');
+                  set({ familyUsers: users });
+                } catch (err) {
+                  console.error('Failed to fetch family users:', err);
+                }
+              }
+
               return true;
             }
           } catch (error) {
@@ -119,12 +130,26 @@ export const useAuthStore = create<AuthState>()(
           }
         }
         
-        // If no valid token, but auto-login is enabled and we have users
-        if (autoLoginEnabled && familyUsers.length > 0) {
-          // Try to auto-login with parent (first user)
-          const parentUser = familyUsers.find(u => u.role === 'parent') || familyUsers[0];
-          if (parentUser) {
-            return await get().loginAsUser(parentUser.username);
+        // If no valid token, but auto-login is enabled
+        if (autoLoginEnabled) {
+          let users = familyUsers;
+
+          // Load users if not already available
+          if (users.length === 0) {
+            try {
+              users = await apiRequest('/api/users');
+              set({ familyUsers: users });
+            } catch (err) {
+              console.error('Failed to fetch family users for auto-login:', err);
+            }
+          }
+
+          if (users.length > 0) {
+            // Try to auto-login with parent (first user)
+            const parentUser = users.find(u => u.role === 'parent') || users[0];
+            if (parentUser) {
+              return await get().loginAsUser(parentUser.username);
+            }
           }
         }
         
