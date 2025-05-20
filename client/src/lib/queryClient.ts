@@ -51,22 +51,32 @@ export async function apiRequest(
   });
 
   await throwIfResNotOk(res);
-  
-  try {
-    const jsonRes = res.clone();
-    const json = await jsonRes.json();
-    if (json && typeof json.success === "boolean") {
-      if (json.success) {
-        return json.data;
-      }
-      const err: any = new Error(json.error?.msg || "Request failed");
-      err.code = json.error?.code;
-      throw err;
+
+  const contentType = res.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
+    const text = await res.text();
+    if (!text) {
+      return undefined;
     }
-    return json;
-  } catch (e) {
-    return await res.text();
+    try {
+      const json = JSON.parse(text);
+      if (json && typeof json.success === 'boolean') {
+        if (json.success) {
+          return json.data !== undefined ? json.data : json;
+        }
+        const err: any = new Error(json.error?.msg || json.message || "Request failed");
+        err.code = json.error?.code;
+        err.status = res.status;
+        throw err;
+      }
+      return json;
+    } catch (e) {
+      console.error("Failed to parse JSON response:", text, e);
+      throw new Error("Failed to parse JSON response from server.");
+    }
   }
+
+  return await res.text();
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";

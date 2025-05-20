@@ -190,13 +190,15 @@ export function ChildBonusWheel({
 
   const spinMutation = useMutation({
     mutationFn: (bonusId: number) =>
-      apiRequest("/api/bonus-spin", { 
-        method: "POST", 
+      apiRequest("/api/bonus-spin", {
+        method: "POST",
         body: JSON.stringify({ daily_bonus_id: bonusId })
       }),
     onSuccess: (data) => {
+      console.log('[WHEEL_DEBUG] spinMutation onSuccess data:', data);
       // Get the server-assigned segment index and adjust wheel position to match it
       const serverSegmentIndex = data.segment_index;
+      console.log('[WHEEL_DEBUG] serverSegmentIndex:', serverSegmentIndex);
       
       // Calculate the final rotation to land on the winning segment
       const FULL_SPINS = 12;
