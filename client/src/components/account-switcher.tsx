@@ -154,7 +154,9 @@ export function AccountSwitcher() {
             <>
               <DropdownMenuLabel>Family accounts</DropdownMenuLabel>
               {users
-                .filter(user => user.role === 'child')
+                .filter(user =>
+                  user.role === 'child' && (user.name === 'Bryce' || user.name === 'Kiki')
+                )
                 .map(user => (
                   <DropdownMenuItem
                     key={user.id}
@@ -175,7 +177,10 @@ export function AccountSwitcher() {
             <>
               <DropdownMenuLabel>Switch account</DropdownMenuLabel>
               {users
-                .filter(user => user.id !== currentUser.id)
+                .filter(user =>
+                  user.id !== currentUser.id &&
+                  (user.role === 'parent' || user.name === 'Bryce' || user.name === 'Kiki')
+                )
                 .map(user => (
                   <DropdownMenuItem
                     key={user.id}

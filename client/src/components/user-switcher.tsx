@@ -40,7 +40,9 @@ export function UserSwitcher() {
   });
   
   // Only child users
-  const childUsers = users.filter(user => user.role === 'child');
+  const childUsers = users.filter(
+    user => user.role === 'child' && (user.name === 'Bryce' || user.name === 'Kiki')
+  );
   
   useEffect(() => {
     // If coming back from children view, reset selection

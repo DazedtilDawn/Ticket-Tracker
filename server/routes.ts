@@ -909,6 +909,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
 
         // Broadcast to WebSocket clients
+        console.log('[BROADCAST DEBUG] Broadcasting transaction:earn with user_id:', transaction.user_id, 'Full transaction object:', transaction);
         broadcast("transaction:earn", {
           data: {
             id: transaction.id,

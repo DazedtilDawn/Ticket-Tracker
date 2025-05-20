@@ -23,6 +23,7 @@ function ProtectedRoute({ component: Component, ...rest }) {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const user = useAuthStore(state => state.user);
   const isViewingAsChild = useAuthStore(state => state.isViewingAsChild);
+  console.log('ProtectedRoute: user:', user, 'isAuthenticated:', isAuthenticated, 'isViewingAsChild:', isViewingAsChild());
   
   if (!isAuthenticated) {
     return <Route path="*" component={Login} />;
