@@ -490,9 +490,9 @@ export default function BonusManagement() {
                                     <SelectItem value={bonus.assigned_chore_id ? bonus.assigned_chore_id.toString() : "null"}>
                                       Current: {getAssignedChoreName(bonus.assigned_chore_id)}
                                     </SelectItem>
-                                    <SelectItem value="divider" disabled>
-                                      ───────────────
-                                    </SelectItem>
+                                  <SelectItem value="divider" disabled>
+                                    ───────────────
+                                  </SelectItem> {/* Divider */}
                                     {(chores || []).filter((c: Chore) => c.is_active && c.id !== bonus.assigned_chore_id).map((chore: Chore) => (
                                       <SelectItem key={chore.id} value={chore.id.toString()}>
                                         {chore.name} ({chore.base_tickets} tickets)

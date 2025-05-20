@@ -44,15 +44,16 @@ export const useAuthStore = create<AuthState>()(
       familyUsers: [],
       
       login: async (token: string, user: UserInfo) => {
-        set({ token, user, isAuthenticated: true });
+        set({ token, user, isAuthenticated: true, originalUser: null, viewingChildId: null });
         if (user.role === 'parent') {
           try {
             const users = await apiRequest('/api/users');
-            if (Array.isArray(users)) {
+            if (users && Array.isArray(users)) {
               set({ familyUsers: users });
+              console.log('AuthStore: Family users loaded on parent login.');
             }
-          } catch (error) {
-            console.error('Failed to load family users:', error);
+          } catch (e) {
+            console.error('AuthStore: Failed to fetch family users on login', e);
           }
         }
       },
@@ -89,53 +90,50 @@ export const useAuthStore = create<AuthState>()(
       },
       
       checkAuth: async () => {
-        const { token, autoLoginEnabled, familyUsers } = get();
+        const { token, autoLoginEnabled, familyUsers: currentFamilyUsers, user: currentUserInStore } = get();
         
         // If we have a token, validate it
         if (token) {
           try {
-            // Simple validation of token expiration
             const decoded: any = jwtDecode(token);
             const currentTime = Date.now() / 1000;
 
             if (!decoded.exp || decoded.exp > currentTime) {
-              // Token still valid
-              set({ isAuthenticated: true });
-
-              // Load family users if we don't have them yet
-              if (familyUsers.length === 0) {
-                try {
-                  const users = await apiRequest('/api/users');
-                  set({ familyUsers: users });
-                } catch (err) {
-                  console.error('Failed to fetch family users:', err);
+              if (currentUserInStore) {
+                set({ isAuthenticated: true });
+                if (currentUserInStore.role === 'parent' && currentFamilyUsers.length === 0) {
+                  try {
+                    const users = await apiRequest('/api/users');
+                    if (users && Array.isArray(users)) {
+                      set({ familyUsers: users });
+                      console.log('AuthStore: Family users loaded on auth check for parent.');
+                    }
+                  } catch (e) {
+                    console.error('AuthStore: Failed to fetch family users on auth check', e);
+                  }
                 }
+                return true;
               }
-
-              return true;
             }
           } catch (error) {
-            // Token invalid, continue to auto-login
+            console.warn('AuthStore: Token validation failed or expired.', error);
           }
         }
         
         // If no valid token, but auto-login is enabled
         if (autoLoginEnabled) {
-          let users = familyUsers;
-
-          // Load users if not already available
-          if (users.length === 0) {
+          let usersForAutoLogin = currentFamilyUsers;
+          if (usersForAutoLogin.length === 0) {
             try {
-              users = await apiRequest('/api/users');
-              set({ familyUsers: users });
-            } catch (err) {
-              console.error('Failed to fetch family users for auto-login:', err);
+              usersForAutoLogin = await apiRequest('/api/users') || [];
+              if (Array.isArray(usersForAutoLogin)) set({ familyUsers: usersForAutoLogin });
+            } catch (e) {
+              console.error('AuthStore: Failed to fetch users for auto-login', e);
+              usersForAutoLogin = [];
             }
           }
-
-          if (users.length > 0) {
-            // Try to auto-login with parent (first user)
-            const parentUser = users.find(u => u.role === 'parent') || users[0];
+          if (usersForAutoLogin.length > 0) {
+            const parentUser = usersForAutoLogin.find(u => u.role === 'parent') || usersForAutoLogin[0];
             if (parentUser) {
               return await get().loginAsUser(parentUser.username);
             }
@@ -143,13 +141,7 @@ export const useAuthStore = create<AuthState>()(
         }
         
         // No token and no auto-login
-        set({ 
-          token: null, 
-          user: null, 
-          originalUser: null,
-          viewingChildId: null,
-          isAuthenticated: false 
-        });
+        get().logout();
         return false;
       },
       
