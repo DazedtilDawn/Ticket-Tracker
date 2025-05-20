@@ -388,6 +388,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/chores", parentOnly, async (req: Request, res: Response) => {
     try {
       console.log("Creating new chore with data:", req.body);
+
+      // Map legacy 'tickets' field to 'base_tickets' for backward compatibility
+      if (req.body.tickets && !req.body.base_tickets) {
+        req.body.base_tickets = req.body.tickets;
+      }
+
       const choreData = insertChoreSchema.parse(req.body);
       console.log("Validated chore data:", choreData);
       const newChore = await storage.createChore(choreData);
@@ -415,19 +421,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      // Allow partial updates
+      // Allow partial updates and support legacy 'tickets' field
       const choreUpdate = req.body;
+      if (choreUpdate.tickets && !choreUpdate.base_tickets) {
+        choreUpdate.base_tickets = choreUpdate.tickets;
+      }
       const updatedChore = await storage.updateChore(id, choreUpdate);
 
       if (!updatedChore) {
         return res.status(404).json({ message: "Chore not found" });
       }
 
-      // Recalculate tier for all chores if tickets changed
-      if (choreUpdate.tickets) {
+      // Recalculate tier for all chores if base_tickets changed
+      if (choreUpdate.base_tickets) {
         const chores = await storage.getChores();
         for (const chore of chores) {
-          const tierRecalc = calculateTier(chore.tickets, chores); // Renamed tier to avoid conflict
+          const tierRecalc = calculateTier(chore.base_tickets, chores);
           if (tierRecalc !== chore.tier) {
             await storage.updateChore(chore.id, { tier: tierRecalc });
           }
