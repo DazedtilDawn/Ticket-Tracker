@@ -42,8 +42,7 @@ export const useGoalStore = create<GoalState>((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      const response = await apiRequest('GET', '/api/goals');
-      const data = await response.json();
+      const data = await apiRequest('/api/goals');
       set({ goals: data, isLoading: false });
     } catch (error) {
       set({ error: error.message, isLoading: false });
@@ -54,8 +53,7 @@ export const useGoalStore = create<GoalState>((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      const response = await apiRequest('GET', '/api/goals/active');
-      const data = await response.json();
+      const data = await apiRequest('/api/goals/active');
       set({ activeGoal: data, isLoading: false });
     } catch (error: any) {
       if (error?.status === 404) {
@@ -71,8 +69,10 @@ export const useGoalStore = create<GoalState>((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      const response = await apiRequest('POST', '/api/goals', goal);
-      const newGoal = await response.json();
+      const newGoal = await apiRequest('/api/goals', {
+        method: 'POST',
+        body: goal,
+      });
       
       set(state => ({ 
         goals: [...state.goals, newGoal],
@@ -92,8 +92,10 @@ export const useGoalStore = create<GoalState>((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      const response = await apiRequest('PUT', `/api/goals/${goalId}/activate`, {});
-      const updatedGoal = await response.json();
+      const updatedGoal = await apiRequest(`/api/goals/${goalId}/activate`, {
+        method: 'PUT',
+        body: {},
+      });
       
       set(state => ({ 
         goals: state.goals.map(goal => {
