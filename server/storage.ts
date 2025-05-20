@@ -725,20 +725,26 @@ export class DatabaseStorage implements IStorage {
   
   async deleteGoal(id: number): Promise<boolean> {
     try {
-      // First check if the goal exists
       const goalExists = await this.getGoal(id);
       if (!goalExists) {
+        console.log(`[STORAGE_DELETE_GOAL] Goal ID ${id} not found initially. Cannot delete.`);
         return false;
       }
-      
-      // Delete the goal
-      await db.delete(goals).where(eq(goals.id, id));
-      
-      // Verify deletion
+
+      console.log(`[STORAGE_DELETE_GOAL] Goal ID ${id} found. Attempting to delete.`);
+      const deleteResult = await db.delete(goals).where(eq(goals.id, id)).returning({ id: goals.id });
+      console.log(`[STORAGE_DELETE_GOAL] Drizzle delete operation result for goal ID ${id}:`, deleteResult);
+
       const stillExists = await this.getGoal(id);
-      return !stillExists;
+      if (stillExists) {
+        console.warn(`[STORAGE_DELETE_GOAL] VERIFICATION FAILED: Goal ID ${id} still exists after delete attempt.`);
+        return false;
+      }
+
+      console.log(`[STORAGE_DELETE_GOAL] VERIFICATION SUCCESS: Goal ID ${id} successfully deleted.`);
+      return true;
     } catch (error) {
-      console.error("Error deleting goal:", error);
+      console.error(`[STORAGE_DELETE_GOAL] Error deleting goal ID ${id}:`, error);
       return false;
     }
   }
