@@ -49,8 +49,11 @@ export const useAuthStore = create<AuthState>()(
           try {
             const users = await apiRequest('/api/users');
             if (users && Array.isArray(users)) {
+              console.log('AuthStore: Fetched family users on parent login:', users);
               set({ familyUsers: users });
               console.log('AuthStore: Family users loaded on parent login.');
+            } else {
+              console.error('AuthStore: Failed to fetch or parse family users on parent login. Received:', users);
             }
           } catch (e) {
             console.error('AuthStore: Failed to fetch family users on login', e);
@@ -105,8 +108,11 @@ export const useAuthStore = create<AuthState>()(
                   try {
                     const users = await apiRequest('/api/users');
                     if (users && Array.isArray(users)) {
+                      console.log('AuthStore: Fetched family users on auth check:', users);
                       set({ familyUsers: users });
                       console.log('AuthStore: Family users loaded on auth check for parent.');
+                    } else {
+                      console.error('AuthStore: Failed to fetch or parse family users on auth check. Received:', users);
                     }
                   } catch (e) {
                     console.error('AuthStore: Failed to fetch family users on auth check', e);
@@ -127,6 +133,7 @@ export const useAuthStore = create<AuthState>()(
             try {
               usersForAutoLogin = await apiRequest('/api/users') || [];
               if (Array.isArray(usersForAutoLogin)) set({ familyUsers: usersForAutoLogin });
+              console.log('AuthStore: Fetched family users for auto-login:', usersForAutoLogin);
             } catch (e) {
               console.error('AuthStore: Failed to fetch users for auto-login', e);
               usersForAutoLogin = [];
