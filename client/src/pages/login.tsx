@@ -60,7 +60,8 @@ export default function Login() {
     try {
       const result = await apiRequest("/api/auth/login", {
         method: "POST",
-        body: data,
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
       });
       
       toast({
@@ -70,7 +71,7 @@ export default function Login() {
       
       await login(result.token, result.user);
       setLocation("/");
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Login failed",
         description: error.message || "Please check your credentials and try again",
@@ -89,7 +90,8 @@ export default function Login() {
       
       const result = await apiRequest("/api/auth/register", {
         method: "POST",
-        body: registerData,
+        body: JSON.stringify(registerData),
+        headers: { "Content-Type": "application/json" },
       });
       
       toast({
@@ -99,7 +101,7 @@ export default function Login() {
       
       await login(result.token, result.user);
       setLocation("/");
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Registration failed",
         description: error.message || "Please try again with different credentials",

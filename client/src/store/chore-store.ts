@@ -32,7 +32,7 @@ export const useChoreStore = create<ChoreState>((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      const data = await apiRequest('/api/chores');
+      const data = await apiRequest('/api/chores', { method: 'GET' });
       set({ chores: data, isLoading: false });
     } catch (error) {
       set({ error: error.message, isLoading: false });
@@ -43,7 +43,11 @@ export const useChoreStore = create<ChoreState>((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      await apiRequest('/api/earn', { method: 'POST', body: { chore_id: choreId } });
+      await apiRequest('/api/earn', {
+        method: 'POST',
+        body: JSON.stringify({ chore_id: choreId }),
+        headers: { 'Content-Type': 'application/json' },
+      });
       
       // Mark chore as completed
       const chores = get().chores.map(chore => 
@@ -62,7 +66,8 @@ export const useChoreStore = create<ChoreState>((set, get) => ({
     try {
       const newChore = await apiRequest('/api/chores', {
         method: 'POST',
-        body: chore,
+        body: JSON.stringify(chore),
+        headers: { 'Content-Type': 'application/json' },
       });
       
       set(state => ({ 
@@ -80,7 +85,8 @@ export const useChoreStore = create<ChoreState>((set, get) => ({
     try {
       const updatedChore = await apiRequest(`/api/chores/${id}`, {
         method: 'PUT',
-        body: updates,
+        body: JSON.stringify(updates),
+        headers: { 'Content-Type': 'application/json' },
       });
       
       set(state => ({ 
