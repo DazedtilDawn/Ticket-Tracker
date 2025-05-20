@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { AddProductDialog } from './add-product-dialog';
 import { EditProductDialog } from './edit-product-dialog';
 import { DeleteProductDialog } from './delete-product-dialog';
+import { AssignToChildDialog } from './assign-to-child-dialog';
 
 import { useAuthStore } from '@/store/auth-store';
 import { Gift, ArrowRight, PencilIcon, Trash2 } from 'lucide-react';
@@ -111,16 +112,22 @@ export function SharedCatalog({ onProductSelected }: SharedCatalogProps) {
                         </Button>
                       </EditProductDialog>
                       
-                      <DeleteProductDialog
-                        productId={product.id}
-                        productTitle={product.title}
-                        onProductDeleted={refreshCatalog}
-                      >
-                        <Button size="sm" variant="destructive">
-                          <Trash2 className="mr-1 h-3 w-3" />
-                          Delete
+                    <DeleteProductDialog
+                      productId={product.id}
+                      productTitle={product.title}
+                      onProductDeleted={refreshCatalog}
+                    >
+                      <Button size="sm" variant="destructive">
+                        <Trash2 className="mr-1 h-3 w-3" />
+                        Delete
+                      </Button>
+                    </DeleteProductDialog>
+
+                      <AssignToChildDialog productId={product.id}>
+                        <Button size="sm" variant="secondary">
+                          Add to Child
                         </Button>
-                      </DeleteProductDialog>
+                      </AssignToChildDialog>
                     </div>
                   )}
                   {/* Children (or parent viewing as child) see "Add to My Wishlist" */}
