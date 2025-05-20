@@ -421,7 +421,7 @@ export function DailyBonusWheel() {
               <SelectContent>
                 {Array.isArray(chores) && chores.map((ch: any) => (
                   <SelectItem key={ch.id} value={ch.id.toString()}>
-                    {`${ch.name} (${ch.tickets})`}
+                    {`${ch.name} (${ch.base_tickets})`}
                   </SelectItem>
                 ))}
               </SelectContent>
