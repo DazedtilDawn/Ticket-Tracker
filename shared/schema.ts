@@ -114,7 +114,7 @@ export const insertGoalSchema = createInsertSchema(goals).omit({
 
 export const insertTransactionSchema = createInsertSchema(transactions).omit({
   id: true,
-  date: true,
+  created_at: true,
 });
 
 // Auth schema
