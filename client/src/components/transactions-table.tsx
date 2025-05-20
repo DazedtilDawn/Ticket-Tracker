@@ -187,17 +187,64 @@ export default function TransactionsTable({ userId, limit = 10 }: TransactionsTa
     return format(new Date(dateString), "MMM d, yyyy");
   };
   
-  // Get transaction description
+  // Get transaction description with more nuance for reward transactions
   const getTransactionDescription = (transaction: any) => {
-    if (transaction.type === 'earn' && transaction.chore) {
-      return transaction.chore.name;
-    } else if (transaction.type === 'spend' && transaction.goal?.product) {
-      return `${transaction.goal.product.title} Purchase`;
-    } else if (transaction.type === 'deduct') {
-      return 'Behavior Deduction';
-    } else {
-      return transaction.type === 'earn' ? 'Ticket Earned' : 'Ticket Spent';
+    if (transaction.note) return transaction.note;
+
+    switch (transaction.type) {
+      case 'earn':
+        if (transaction.source === 'chore' && transaction.chore)
+          return `Completed: ${transaction.chore.name}`;
+        if (transaction.source === 'bonus_spin') return 'Bonus Wheel Spin';
+        return 'Tickets Earned';
+      case 'spend':
+        if (transaction.goal?.product)
+          return `Purchase: ${transaction.goal.product.title}`;
+        return 'Tickets Spent';
+      case 'deduct':
+        return transaction.reason || 'Tickets Deducted';
+      case 'reward':
+        if (transaction.source === 'manual_add')
+          return transaction.reason || 'Bonus Tickets Awarded';
+        if (transaction.source === 'bonus_spin') return 'Bonus Spin Opportunity';
+        return 'Tickets Awarded';
+      default:
+        return 'Transaction';
     }
+  };
+
+  const getTransactionStatusInfo = (transaction: any) => {
+    if (transaction.delta > 0) {
+      if (
+        transaction.type === 'reward' ||
+        transaction.source === 'manual_add' ||
+        transaction.source === 'bonus_spin'
+      ) {
+        return {
+          text: 'Awarded',
+          style: 'bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-300'
+        };
+      }
+      return {
+        text: 'Earned',
+        style: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+      };
+    } else if (transaction.delta < 0) {
+      if (transaction.type === 'deduct' || transaction.source === 'manual_deduct') {
+        return {
+          text: 'Deducted',
+          style: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+        };
+      }
+      return {
+        text: 'Spent',
+        style: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+      };
+    }
+    return {
+      text: 'Neutral',
+      style: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+    };
   };
   
   return (
@@ -258,27 +305,24 @@ export default function TransactionsTable({ userId, limit = 10 }: TransactionsTa
                     <TableCell className="text-sm font-medium text-gray-900 dark:text-white">
                       {getTransactionDescription(transaction)}
                     </TableCell>
-                    <TableCell className={`text-sm ${
-                      transaction.delta > 0 
-                        ? 'text-gray-900 dark:text-white' 
-                        : 'text-red-600 dark:text-red-400'
+                    <TableCell className={`text-sm font-semibold ${
+                      transaction.delta > 0
+                        ? 'text-green-600 dark:text-green-400'
+                        : transaction.delta < 0
+                          ? 'text-red-600 dark:text-red-400'
+                          : 'text-gray-500 dark:text-gray-400'
                     }`}>
                       {transaction.delta > 0 ? `+${transaction.delta}` : transaction.delta}
                     </TableCell>
                     <TableCell>
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        transaction.type === 'earn'
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                          : transaction.type === 'deduct'
-                            ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-                            : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
-                      }`}>
-                        {transaction.type === 'earn' 
-                          ? 'Completed' 
-                          : transaction.type === 'deduct'
-                            ? 'Deducted'
-                            : 'Redeemed'}
-                      </span>
+                      {(() => {
+                        const status = getTransactionStatusInfo(transaction);
+                        return (
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${status.style}`}>
+                            {status.text}
+                          </span>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell>
                       {/* Parent can delete any transaction, children can only undo very recent transactions */}
