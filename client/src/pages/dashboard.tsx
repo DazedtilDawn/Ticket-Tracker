@@ -163,7 +163,20 @@ export default function Dashboard() {
     balance: number;
     activeGoal?: {
       id: number;
-      product: any;
+      user_id: number;
+      product_id: number;
+      tickets_saved: number;
+      is_active: boolean;
+      product: {
+        id: number;
+        title: string;
+        asin: string;
+        image_url: string;
+        price_cents: number;
+        price_locked_cents: number;
+      };
+      progress: number;
+      estimatedCompletion?: { days: number; weeks: number; };
     };
     chores?: any[];
   }

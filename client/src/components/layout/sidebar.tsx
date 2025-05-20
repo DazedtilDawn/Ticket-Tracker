@@ -67,6 +67,7 @@ export function Sidebar() {
   };
   
   const handleSwitchToChild = (childUser: UserInfo) => {
+    console.log('Sidebar: handleSwitchToChild called with:', childUser);
     // If already viewing as a child and trying to switch to another child,
     // we need to reset to parent view first, then switch to the new child
     if (viewingAsChild) {
@@ -82,8 +83,9 @@ export function Sidebar() {
       setLocation('/');
     }
   };
-  
+
   const handleResetToParent = () => {
+    console.log('Sidebar: handleResetToParent called.');
     resetChildView();
     setLocation('/');
   };
