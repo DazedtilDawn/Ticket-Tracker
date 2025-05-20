@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import jwtDecode from 'jwt-decode';
+import { apiRequest } from '@/lib/queryClient';
 
 interface UserInfo {
   id: number;
@@ -18,7 +19,7 @@ interface AuthState {
   isAuthenticated: boolean;
   autoLoginEnabled: boolean;
   familyUsers: UserInfo[];
-  login: (token: string, user: any) => void;
+  login: (token: string, user: UserInfo) => Promise<void>;
   loginAsUser: (username: string) => Promise<boolean>;
   logout: () => void;
   checkAuth: () => Promise<boolean>;
@@ -42,8 +43,18 @@ export const useAuthStore = create<AuthState>()(
       autoLoginEnabled: true,
       familyUsers: [],
       
-      login: (token: string, user: any) => {
+      login: async (token: string, user: UserInfo) => {
         set({ token, user, isAuthenticated: true });
+        if (user.role === 'parent') {
+          try {
+            const users = await apiRequest('/api/users');
+            if (Array.isArray(users)) {
+              set({ familyUsers: users });
+            }
+          } catch (error) {
+            console.error('Failed to load family users:', error);
+          }
+        }
       },
       
       loginAsUser: async (username: string) => {
