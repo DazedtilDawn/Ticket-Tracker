@@ -777,43 +777,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Delete a goal
   app.delete("/api/goals/:id", auth, async (req: Request, res: Response) => {
-    const id = parseInt(req.params.id);
+    try {
+      const id = parseInt(req.params.id);
 
-    if (isNaN(id)) {
-      return res.status(400).json({ message: "Invalid goal ID" });
-    }
-
-    const user = req.user;
-    const goal = await storage.getGoal(id);
-
-    if (!goal) {
-      return res.status(404).json({ message: "Goal not found" });
-    }
-
-    // Only allow users to delete their own goals or parents can delete any goal
-    if (user.role !== "parent" && goal.user_id !== user.id) {
-      return res.status(403).json({ message: "Not authorized to delete this goal" });
-    }
-
-    const productId = goal.product_id;
-    const deleted = await storage.deleteGoal(id);
-
-    if (deleted) {
-      // Check if there are other goals using this product
-      const otherGoalsWithProduct = await storage.getGoalsByProductId(productId);
-
-      // If no other goals are using this product, delete it as well
-      if (otherGoalsWithProduct.length === 0) {
-        console.log(`No other goals using product ID ${productId}, deleting product`);
-        const productDeleted = await storage.deleteProduct(productId);
-        console.log(`Product ${productId} deletion result:`, productDeleted);
+      if (isNaN(id)) {
+        return res.status(400).json(failure("INVALID_INPUT", "Invalid goal ID"));
       }
 
-      // Broadcast the deletion to all connected clients
-      broadcast("goal:deleted", { id });
-      return res.json({ success: true });
-    } else {
-      return res.status(500).json({ message: "Failed to delete goal" });
+      // Auth middleware guarantees req.user
+      const currentUser = req.user!;
+      const goal = await storage.getGoal(id);
+
+      if (!goal) {
+        return res.status(404).json(failure("NOT_FOUND", "Goal not found"));
+      }
+
+      // Only allow users to delete their own goals or parents can delete any goal
+      if (currentUser.role !== "parent" && goal.user_id !== currentUser.id) {
+        return res.status(403).json(failure("FORBIDDEN", "Not authorized to delete this goal"));
+      }
+
+      const productId = goal.product_id;
+      const goalDeleted = await storage.deleteGoal(id);
+
+      if (goalDeleted) {
+        // Check if there are other goals using this product
+        const otherGoalsWithProduct = await storage.getGoalsByProductId(productId);
+
+        // If no other goals are using this product, attempt to delete it as well
+        if (otherGoalsWithProduct.length === 0) {
+          console.log(`No other goals using product ID ${productId}, attempting to delete product.`);
+          const productActuallyDeleted = await storage.deleteProduct(productId);
+          if (productActuallyDeleted) {
+            console.log(`Product ID ${productId} deleted successfully.`);
+            broadcast("product:deleted", { id: productId });
+          } else {
+            console.warn(
+              `Goal ${id} deleted, but failed to delete unreferenced product ID ${productId}. It might be in use elsewhere or a DB error occurred.`
+            );
+          }
+        }
+
+        // Broadcast the deletion to all connected clients
+        broadcast("goal:deleted", { id });
+        return res.json(success(true));
+      } else {
+        return res.status(500).json(failure("DELETE_FAILED", "Failed to delete goal from storage."));
+      }
+    } catch (error: any) {
+      console.error(`[API ERROR] DELETE /api/goals/${req.params.id}:`, error);
+      return res
+        .status(500)
+        .json(failure("INTERNAL_SERVER_ERROR", error.message || "An unexpected error occurred."));
     }
   });
 
