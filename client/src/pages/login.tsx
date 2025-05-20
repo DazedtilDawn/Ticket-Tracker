@@ -58,8 +58,10 @@ export default function Login() {
   const handleLogin = async (data: z.infer<typeof loginSchema>) => {
     setIsLoading(true);
     try {
-      const response = await apiRequest("POST", "/api/auth/login", data);
-      const result = await response.json();
+      const result = await apiRequest("/api/auth/login", {
+        method: "POST",
+        body: data,
+      });
       
       toast({
         title: "Login successful",
@@ -85,8 +87,10 @@ export default function Login() {
       // Remove confirmPassword before sending
       const { confirmPassword, ...registerData } = data;
       
-      const response = await apiRequest("POST", "/api/auth/register", registerData);
-      const result = await response.json();
+      const result = await apiRequest("/api/auth/register", {
+        method: "POST",
+        body: registerData,
+      });
       
       toast({
         title: "Registration successful",

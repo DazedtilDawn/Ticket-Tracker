@@ -32,8 +32,7 @@ export const useChoreStore = create<ChoreState>((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      const response = await apiRequest('GET', '/api/chores');
-      const data = await response.json();
+      const data = await apiRequest('/api/chores');
       set({ chores: data, isLoading: false });
     } catch (error) {
       set({ error: error.message, isLoading: false });
@@ -44,7 +43,7 @@ export const useChoreStore = create<ChoreState>((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      await apiRequest('POST', '/api/earn', { chore_id: choreId });
+      await apiRequest('/api/earn', { method: 'POST', body: { chore_id: choreId } });
       
       // Mark chore as completed
       const chores = get().chores.map(chore => 
@@ -61,8 +60,10 @@ export const useChoreStore = create<ChoreState>((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      const response = await apiRequest('POST', '/api/chores', chore);
-      const newChore = await response.json();
+      const newChore = await apiRequest('/api/chores', {
+        method: 'POST',
+        body: chore,
+      });
       
       set(state => ({ 
         chores: [...state.chores, newChore],
@@ -77,8 +78,10 @@ export const useChoreStore = create<ChoreState>((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      const response = await apiRequest('PUT', `/api/chores/${id}`, updates);
-      const updatedChore = await response.json();
+      const updatedChore = await apiRequest(`/api/chores/${id}`, {
+        method: 'PUT',
+        body: updates,
+      });
       
       set(state => ({ 
         chores: state.chores.map(chore => 
@@ -95,7 +98,7 @@ export const useChoreStore = create<ChoreState>((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      await apiRequest('DELETE', `/api/chores/${id}`);
+      await apiRequest(`/api/chores/${id}`, { method: 'DELETE' });
       
       set(state => ({ 
         chores: state.chores.filter(chore => chore.id !== id),
