@@ -78,12 +78,13 @@ export const useAuthStore = create<AuthState>()(
       },
       
       logout: () => {
-        set({ 
-          token: null, 
-          user: null, 
+        set({
+          token: null,
+          user: null,
           originalUser: null,
           viewingChildId: null,
-          isAuthenticated: false 
+          isAuthenticated: false,
+          familyUsers: []
         });
       },
       
