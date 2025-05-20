@@ -21,7 +21,7 @@ import {
 const navItems = [
   { path: "/", label: "Home", icon: "ri-dashboard-line" },
   { path: "/chores", label: "Chores", icon: "ri-list-check-2" },
-  { path: "/wishlist", label: "Wishes", icon: "ri-gift-line" },
+  { path: "/family-catalog", label: "Catalog", icon: "ri-store-2-line" }, // Renamed (shortened for mobile)
   { path: "/transactions", label: "Tickets", icon: "ri-exchange-funds-line" },
 ];
 

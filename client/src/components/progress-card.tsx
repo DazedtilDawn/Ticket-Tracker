@@ -88,7 +88,7 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
   const handleSwitchGoal = () => {
     try {
       // Navigate directly to the wishlist page with my-list tab active
-      navigate("/wishlist?tab=my-list");
+      navigate("/family-catalog?tab=my-list");
       
       toast({
         title: "Switch Goals",

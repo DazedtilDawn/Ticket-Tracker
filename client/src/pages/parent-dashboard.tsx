@@ -3,18 +3,17 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth-store";
-import { useStatsStore } from "@/store/stats-store";
-import { createWebSocketConnection, subscribeToChannel } from "@/lib/websocketClient";
-import TransactionsTable from "@/components/transactions-table";
+import { createWebSocketConnection, subscribeToChannel } from "@/lib/websocketClient"; // Corrected import
+import TransactionsTable from "@/components/transactions-table"; // Keep if needed
 import { NewChoreDialog } from "@/components/new-chore-dialog";
 import { BadBehaviorDialog } from "@/components/bad-behavior-dialog";
 import { GoodBehaviorDialog } from "@/components/good-behavior-dialog";
 import { DailyBonusWheel } from "@/components/daily-bonus-wheel";
-import { PurchaseDialog } from "@/components/purchase-dialog";
+import { AddProductDialog } from "@/components/add-product-dialog"; // For adding to catalog
 import ChildProfileCard from "@/components/child-profile-card";
 import ProfileImageModal from "@/components/profile-image-modal";
 import { Button } from "@/components/ui/button";
-import { PlusIcon, UserIcon, MinusCircleIcon, PlusCircleIcon, ShoppingCartIcon, BarChart3Icon, ImageIcon } from "lucide-react";
+import { PlusIcon, UserIcon, MinusCircleIcon, PlusCircleIcon, ImageIcon } from "lucide-react";
 import { format } from "date-fns";
 
 export default function ParentDashboard() {
@@ -262,7 +261,31 @@ export default function ParentDashboard() {
                 user={selectedChild}
               />
             )}
-            
+
+            {/* Family Catalog Quick Actions Section */}
+            <section className="mb-8">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+                <div className="p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Family Catalog</h3>
+                  <div className="flex flex-wrap gap-3">
+                    <AddProductDialog onProductAdded={() => queryClient.invalidateQueries({ queryKey: ["/api/products"] })}>
+                      <Button variant="outline">
+                        <PlusIcon className="mr-2 h-4 w-4" />
+                        Add New Product to Catalog
+                      </Button>
+                    </AddProductDialog>
+                    <Button 
+                      variant="default" 
+                      onClick={() => window.location.href = '/family-catalog'} // Simple navigation
+                    >
+                      View & Manage Full Catalog
+                    </Button>
+                  </div>
+                  {/* Optional: Display a few recent/highlighted catalog items here later */}
+                </div>
+              </div>
+            </section>
+
             {/* Daily Bonus Wheel Management */}
             <section className="mb-8">
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
