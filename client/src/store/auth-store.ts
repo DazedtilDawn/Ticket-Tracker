@@ -199,12 +199,10 @@ export const useAuthStore = create<AuthState>()(
         return !!originalUser && viewingChildId !== null;
       },
       
-      // Get only Kiki and Bryce child users from family users
+      // Get all child users from family users
       getChildUsers: () => {
         const { familyUsers } = get();
-        return familyUsers.filter(user => 
-          user.role === 'child' && (user.name === 'Kiki' || user.name === 'Bryce')
-        );
+        return familyUsers.filter(user => user.role === 'child');
       },
       
       // Get the ID of the active child (either current user if child, or viewingChildId if parent looking as child)

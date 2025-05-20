@@ -55,11 +55,7 @@ export function MobileNav() {
   useEffect(() => {
     // Update child users list whenever family users changes
     if (getChildUsers) {
-      // Filter to only include Bryce and Kiki, exclude "Child User"
-      const filteredChildren = getChildUsers().filter(
-        child => child.name === "Bryce" || child.name === "Kiki"
-      );
-      setChildUsers(filteredChildren);
+      setChildUsers(getChildUsers());
     }
   }, [familyUsers, getChildUsers]);
   
