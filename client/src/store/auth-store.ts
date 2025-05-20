@@ -59,28 +59,17 @@ export const useAuthStore = create<AuthState>()(
       
       loginAsUser: async (username: string) => {
         try {
-          const response = await fetch('/api/auth/login', {
+          const data = await apiRequest('/api/auth/login', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              username,
-              password: 'password', // For family auto-login
-            }),
+            body: { username, password: 'password' },
           });
-          
-          if (!response.ok) {
-            return false;
-          }
-          
-          const data = await response.json();
-          set({ 
+
+          set({
             token: data.token,
             user: data.user,
-            isAuthenticated: true 
+            isAuthenticated: true,
           });
-          
+
           return true;
         } catch (error) {
           console.error('Auto-login failed:', error);
