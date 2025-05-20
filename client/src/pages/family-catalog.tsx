@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlusIcon, ShoppingBag } from "lucide-react";
 
 export default function FamilyCatalogPage() {
-  const { user, isViewingAsChild } = useAuthStore();
+  const { user, isViewingAsChild, getChildUsers } = useAuthStore();
   const { toast } = useToast();
   const [location] = useLocation();
   
@@ -192,22 +192,30 @@ export default function FamilyCatalogPage() {
             </p>
           </div>
           
-          <div className="mt-4 sm:mt-0">
-            <AddProductDialog onProductAdded={() => {
-              queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-              refetch();
-            }}>
-              <Button className="inline-flex items-center">
-                <PlusIcon className="mr-2 h-4 w-4" />
-                Add Item
-              </Button>
-            </AddProductDialog>
-          </div>
+          {/* Only show page-level "Add Item" if it's a child adding to their own wishlist, 
+              otherwise parents use the "Add Product" within the SharedCatalog component context */}
+          {(!isParentView) && (
+            <div className="mt-4 sm:mt-0">
+              <AddProductDialog onProductAdded={() => {
+                queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+                refetch();
+              }}>
+                <Button className="inline-flex items-center">
+                  <PlusIcon className="mr-2 h-4 w-4" />
+                  Add New Item to My Wishlist
+                </Button>
+              </AddProductDialog>
+            </div>
+          )}
         </div>
       </div>
       
       {/* Content container */}
       <div className="p-4 md:p-6 max-w-7xl mx-auto">
+        {/* Page Title for the Catalog View - distinct from the tab name */}
+        {isParentView && activeTab === 'catalog' && (
+          <h2 className="text-2xl font-bold tracking-tight mb-4">Manage Family Catalog</h2>
+        )}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="mb-4">
             {/* Conditional Tabs for Parent vs Child */}
