@@ -18,18 +18,22 @@ const PUBLIC_WS_URL = `${protocol}//${window.location.host}/ws`;
 
 // Initialize WebSocket connection
 export function createWebSocketConnection() {
-  // If there's already an active connection, don't create a new one
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    return ws;
-  }
-
-  // If a connection is in the process of connecting, reuse it
-  if (ws && ws.readyState === WebSocket.CONNECTING) {
-    return ws;
-  }
-
-  // If there's a connection in any other state, close it before creating a new one
+  // If a WebSocket instance exists check its state first
   if (ws) {
+    // Already connected or attempting to connect, so reuse it
+    if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+      return ws;
+    }
+
+    // If the socket is currently closing, let the onclose handler trigger the
+    // reconnection logic instead of forcing a new connection here
+    if (ws.readyState === WebSocket.CLOSING) {
+      return ws;
+    }
+
+    // For any other state (e.g. CLOSED) close the instance before creating a new
+    // connection. Calling close() on a CLOSED socket is a no-op but keeps the logic
+    // explicit.
     ws.close();
   }
   
