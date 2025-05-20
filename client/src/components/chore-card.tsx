@@ -11,7 +11,7 @@ interface ChoreCardProps {
     id: number;
     name: string;
     description: string;
-    tickets: number;
+    base_tickets: number;
     tier: string;
     is_active: boolean;
     image_url?: string;
@@ -123,7 +123,7 @@ export default function ChoreCard({ chore, onComplete, onBonusComplete }: ChoreC
             <div className="ml-3">
               <div className="flex items-center">
                 <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  {chore.tickets} tickets
+                  {chore.base_tickets} tickets
                 </p>
                 {isBonusChore && (
                   <span className="ml-2 text-xs bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 px-2 py-0.5 rounded-md font-semibold">

@@ -5,7 +5,7 @@ interface Chore {
   id: number;
   name: string;
   description: string;
-  tickets: number;
+  base_tickets: number;
   tier: string;
   is_active: boolean;
   completed?: boolean;

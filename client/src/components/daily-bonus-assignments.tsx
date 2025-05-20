@@ -13,7 +13,7 @@ import { formatDistanceToNow } from 'date-fns';
 type Chore = {
   id: number;
   name: string;
-  tickets: number;
+  base_tickets: number;
   emoji: string | null;
   is_active: boolean;
   last_bonus_assigned: string | null;
@@ -188,7 +188,7 @@ export function DailyBonusAssignments() {
                         )}
                         <span>{assignment.assigned_chore.name}</span>
                         <span className="text-sm text-muted-foreground ml-auto">
-                          {assignment.assigned_chore.tickets} tickets
+                          {assignment.assigned_chore.base_tickets} tickets
                         </span>
                       </div>
                     </div>
@@ -221,7 +221,7 @@ export function DailyBonusAssignments() {
                             <div className="flex items-center gap-2">
                               {chore.emoji && <span>{chore.emoji}</span>}
                               <span>{chore.name}</span>
-                              <span className="text-muted-foreground">({chore.tickets} tickets)</span>
+                              <span className="text-muted-foreground">({chore.base_tickets} tickets)</span>
                             </div>
                           </SelectItem>
                         ))}

@@ -39,7 +39,7 @@ const formSchema = z.object({
     message: "Chore name must be at least 2 characters",
   }),
   description: z.string().optional(),
-  tickets: z.coerce.number().int().min(1, {
+  base_tickets: z.coerce.number().int().min(1, {
     message: "Tickets must be at least 1",
   }),
   recurrence: z.enum(["daily", "weekly", "monthly"]),
@@ -72,7 +72,7 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
     defaultValues: {
       name: chore?.name || "",
       description: chore?.description || "",
-      tickets: chore?.tickets || 5,
+      base_tickets: chore?.base_tickets || 5,
       recurrence: chore?.recurrence || "daily",
       image_url: chore?.image_url || "",
       emoji: chore?.emoji || "",
@@ -174,21 +174,23 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
     setIsSubmitting(true);
     
     try {
+      const payload = { ...data, base_tickets: data.base_tickets };
+
       if (isEditMode) {
-        console.log("Sending chore update request:", data);
+        console.log("Sending chore update request:", payload);
         await apiRequest(`/api/chores/${chore.id}`, {
           method: "PUT",
-          body: data
+          body: payload
         });
         toast({
           title: "Chore updated",
           description: "The chore has been updated successfully.",
         });
       } else {
-        console.log("Sending chore create request:", data);
+        console.log("Sending chore create request:", payload);
         await apiRequest("/api/chores", {
-          method: "POST", 
-          body: data
+          method: "POST",
+          body: payload
         });
         toast({
           title: "Chore created",
@@ -269,7 +271,7 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="tickets"
+                name="base_tickets"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Tickets</FormLabel>
