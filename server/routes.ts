@@ -807,6 +807,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Transaction routes
+  /**
+   * Complete a chore and award tickets.
+   *
+   * @route POST /api/complete-chore
+   * @param req.body.chore_id - ID of the chore being completed.
+   * @param [req.body.user_id] - Optional child ID when a parent marks the chore complete.
+   * @returns 201 - JSON containing the created transaction, updated balance and goal
+   * @returns 404 - If the specified chore or user does not exist
+   * @returns 500 - On failure to create the transaction
+   */
   app.post("/api/earn", auth, async (req: Request, res: Response) => {
     try {
       let user = req.user;
@@ -916,6 +926,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * Spend tickets from a user's balance or a specific goal.
+   *
+   * @route POST /api/spend
+   * @param [req.body.tickets] - Number of tickets to spend directly from the balance.
+   * @param [req.body.goal_id] - Goal ID to spend all saved tickets from that goal.
+   * @param [req.body.user_id] - Optional child ID when a parent spends on their behalf.
+   * @param [req.body.reason] - Description of the purchase for the transaction note.
+   * @returns 201 - JSON with the created spend transaction, updated balance and goal.
+   * @returns 400 - On validation errors such as insufficient tickets.
+   */
   app.post("/api/spend", auth, async (req: Request, res: Response) => {
     try {
       const user = req.user;
@@ -2003,6 +2024,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Spin the wheel for daily bonus - parent only
+  /**
+   * Spin the daily bonus wheel for a child.
+   *
+   * @route POST /api/spin-wheel
+   * @param req.body.user_id - ID of the child receiving the spin.
+   * @param req.body.assigned_chore_id - Chore ID assigned for the bonus.
+   * @returns 200 - JSON with the resulting DailyBonus record, awarded tickets and chore info.
+   * @returns 400 - If the user or chore is invalid or the bonus was already spun.
+   */
   app.post("/api/spin-wheel", parentOnly, async (req: Request, res: Response) => {
     try {
       const data = spinWheelSchema.parse(req.body);
