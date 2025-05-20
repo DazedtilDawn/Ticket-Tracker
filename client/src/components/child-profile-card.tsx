@@ -6,11 +6,17 @@ import { ticketsToUSD } from "@/lib/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import ProfileImageUpload from "./profile-image-upload";
-import { User } from "@shared/schema";
 import { Coins, User as UserIcon } from "lucide-react";
 
+interface Child {
+  id: number;
+  name: string;
+  username: string;
+  profile_image_url?: string | null;
+}
+
 interface ChildProfileCardProps {
-  child: User;
+  child: Child;
   balance: number;
   isSelected?: boolean;
   onSelectChild?: (childId: number) => void;

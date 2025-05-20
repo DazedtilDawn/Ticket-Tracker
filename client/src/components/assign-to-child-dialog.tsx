@@ -9,11 +9,12 @@ import { Loader2 } from "lucide-react";
 
 interface AssignToChildDialogProps {
   productId: number;
-  trigger: React.ReactNode;
+  trigger?: React.ReactNode;
   onAssigned?: () => void;
+  children?: React.ReactNode;
 }
 
-export function AssignToChildDialog({ productId, trigger, onAssigned }: AssignToChildDialogProps) {
+export function AssignToChildDialog({ productId, trigger, onAssigned, children }: AssignToChildDialogProps) {
   const { getChildUsers } = useAuthStore();
   const children = getChildUsers();
   const { toast } = useToast();
@@ -51,7 +52,7 @@ export function AssignToChildDialog({ productId, trigger, onAssigned }: AssignTo
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      <DialogTrigger asChild>{trigger || children}</DialogTrigger>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
           <DialogTitle>Add to Child's Wishlist</DialogTitle>

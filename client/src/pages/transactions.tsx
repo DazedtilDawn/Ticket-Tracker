@@ -36,13 +36,19 @@ export default function Transactions() {
   const isParent = user?.role === "parent";
   
   // Fetch users if current user is a parent
-  const { data: users } = useQuery({
+  interface UserInfo {
+    id: number;
+    name: string;
+    role: string;
+  }
+
+  const { data: users = [] } = useQuery<UserInfo[]>({
     queryKey: ["/api/users"],
     enabled: isParent,
   });
   
   // Fetch user balance
-  const { data: stats } = useQuery({
+  const { data: stats } = useQuery<{ balance: number }>({
     queryKey: ["/api/stats", userId ? `?userId=${userId}` : ""],
   });
   
@@ -87,16 +93,18 @@ export default function Transactions() {
   }, [queryClient, userId, user]);
   
   // Fetch transactions for chart data preparation
-  const { data: transactions } = useQuery({
+  import type { Transaction } from "@shared/schema";
+
+  const { data: transactions = [] } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions", userId ? `?userId=${userId}&limit=30` : "?limit=30"],
   });
   
   // Prepare chart data
   const chartData = transactions ? prepareChartData(transactions) : [];
-  
-  function prepareChartData(transactions) {
+
+  function prepareChartData(transactions: Transaction[]) {
     // Group transactions by date
-    const byDate = transactions.reduce((acc, txn) => {
+    const byDate = transactions.reduce((acc: any, txn: Transaction) => {
       const date = new Date(txn.date).toISOString().split('T')[0];
       
       if (!acc[date]) {
@@ -113,7 +121,7 @@ export default function Transactions() {
     }, {});
     
     // Convert to array and sort by date
-    return Object.values(byDate).sort((a, b) => 
+    return Object.values(byDate).sort((a: any, b: any) =>
       new Date(a.date).getTime() - new Date(b.date).getTime()
     );
   }
