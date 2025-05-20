@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import jwtDecode from 'jwt-decode';
 import { apiRequest } from '@/lib/queryClient';
 
-interface UserInfo {
+export interface UserInfo {
   id: number;
   name: string;
   username: string;
