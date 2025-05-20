@@ -68,7 +68,7 @@ export default function Login() {
         description: "Welcome back!",
       });
       
-      login(result.token, result.user);
+      await login(result.token, result.user);
       setLocation("/");
     } catch (error) {
       toast({
@@ -97,7 +97,7 @@ export default function Login() {
         description: "Your account has been created",
       });
       
-      login(result.token, result.user);
+      await login(result.token, result.user);
       setLocation("/");
     } catch (error) {
       toast({
