@@ -35,7 +35,8 @@ export const useChoreStore = create<ChoreState>((set, get) => ({
       const data = await apiRequest('/api/chores', { method: 'GET' });
       set({ chores: data, isLoading: false });
     } catch (error) {
-      set({ error: error.message, isLoading: false });
+      const message = error instanceof Error ? error.message : String(error);
+      set({ error: message, isLoading: false });
     }
   },
   
@@ -56,7 +57,8 @@ export const useChoreStore = create<ChoreState>((set, get) => ({
       
       set({ chores, isLoading: false });
     } catch (error) {
-      set({ error: error.message, isLoading: false });
+      const message = error instanceof Error ? error.message : String(error);
+      set({ error: message, isLoading: false });
     }
   },
   
@@ -75,7 +77,8 @@ export const useChoreStore = create<ChoreState>((set, get) => ({
         isLoading: false 
       }));
     } catch (error) {
-      set({ error: error.message, isLoading: false });
+      const message = error instanceof Error ? error.message : String(error);
+      set({ error: message, isLoading: false });
     }
   },
   
@@ -96,7 +99,8 @@ export const useChoreStore = create<ChoreState>((set, get) => ({
         isLoading: false 
       }));
     } catch (error) {
-      set({ error: error.message, isLoading: false });
+      const message = error instanceof Error ? error.message : String(error);
+      set({ error: message, isLoading: false });
     }
   },
   
@@ -111,7 +115,8 @@ export const useChoreStore = create<ChoreState>((set, get) => ({
         isLoading: false 
       }));
     } catch (error) {
-      set({ error: error.message, isLoading: false });
+      const message = error instanceof Error ? error.message : String(error);
+      set({ error: message, isLoading: false });
     }
   }
 }));

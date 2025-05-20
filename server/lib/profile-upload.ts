@@ -4,6 +4,7 @@ import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { Express, Request, Response } from 'express';
 import { db } from '../db';
+import { storage } from '../storage';
 import { users } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { AuthMiddleware } from './auth';
@@ -57,7 +58,8 @@ export function registerProfileImageRoutes(app: Express) {
         try {
           fs.mkdirSync(profilesDir, { recursive: true, mode: 0o777 });
         } catch (err) {
-          return cb(new Error(`Failed to create profiles directory: ${err.message}`), profilesDir);
+          const msg = err instanceof Error ? err.message : String(err);
+          return cb(new Error(`Failed to create profiles directory: ${msg}`), profilesDir);
         }
       }
       cb(null, profilesDir);
@@ -92,7 +94,7 @@ export function registerProfileImageRoutes(app: Express) {
   app.use('/api/profile-image/:userId', cors());
   
   // Profile image upload endpoint (parent only)
-  app.post('/api/profile-image/:userId', AuthMiddleware, (req: Request, res: Response) => {
+  app.post('/api/profile-image/:userId', AuthMiddleware(storage, 'parent'), (req: Request, res: Response) => {
     const timestamp = new Date().toISOString();
     console.log('[PROFILE] Upload request received:', 
       { userId: req.params.userId, userRole: req.user?.role, timestamp });

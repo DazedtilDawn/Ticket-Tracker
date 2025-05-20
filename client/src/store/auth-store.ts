@@ -65,7 +65,8 @@ export const useAuthStore = create<AuthState>()(
         try {
           const data = await apiRequest('/api/auth/login', {
             method: 'POST',
-            body: { username, password: 'password' },
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password: 'password' }),
           });
 
           set({

@@ -43,12 +43,22 @@ export default function Chores() {
   const [completedChoreName, setCompletedChoreName] = useState("");
   
   // Fetch all chores
-  const { data: chores, isLoading, refetch } = useQuery({
+  interface Chore {
+    id: number;
+    name: string;
+    description: string | null;
+    base_tickets: number;
+    tier: string | null;
+    is_active: boolean;
+    emoji?: string | null;
+  }
+
+  const { data: chores = [], isLoading, refetch } = useQuery<Chore[]>({
     queryKey: ["/api/chores"],
   });
   
   // Also fetch stats to get balance
-  const { data: stats } = useQuery({
+  const { data: stats } = useQuery<{ balance: number }>({
     queryKey: ["/api/stats"],
   });
   
@@ -226,7 +236,8 @@ export default function Chores() {
     mutationFn: async ({ id, is_active }: { id: number; is_active: boolean }) => {
       return apiRequest(`/api/chores/${id}`, {
         method: "PUT",
-        body: { is_active }
+        body: JSON.stringify({ is_active }),
+        headers: { "Content-Type": "application/json" },
       });
     },
     onSuccess: () => {
@@ -248,7 +259,7 @@ export default function Chores() {
   // Delete chore
   const deleteChore = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest("DELETE", `/api/chores/${id}`);
+      return apiRequest(`/api/chores/${id}`, { method: "DELETE" });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/chores"] });
@@ -392,8 +403,8 @@ export default function Chores() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {chores && chores.length > 0 ? (
                   chores
-                    .filter(chore => chore.is_active)
-                    .map(chore => (
+                    .filter((chore: Chore) => chore.is_active)
+                    .map((chore: Chore) => (
                       <ChoreCard 
                         key={chore.id} 
                         chore={chore} 
@@ -434,7 +445,7 @@ export default function Chores() {
                     </TableHeader>
                     <TableBody>
                       {chores && chores.length > 0 ? (
-                        chores.map(chore => (
+                        chores.map((chore: Chore) => (
                           <TableRow key={chore.id}>
                             <TableCell className="font-medium">{chore.name}</TableCell>
                             <TableCell className="max-w-xs truncate">

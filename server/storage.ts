@@ -417,15 +417,11 @@ export class DatabaseStorage implements IStorage {
     
     const [result] = await query;
     
-    // If a result is found but bonus_tickets is null, treat it as 0
-    if (result && result.bonus_tickets === null) {
-      return {
-        ...result,
-        bonus_tickets: 0
-      };
-    }
-    
-    return result;
+    if (!result) return undefined;
+    return {
+      ...result,
+      bonus_tickets: Number(result.bonus_tickets ?? 0),
+    };
   }
   // User operations
   async getUser(id: number): Promise<User | undefined> {

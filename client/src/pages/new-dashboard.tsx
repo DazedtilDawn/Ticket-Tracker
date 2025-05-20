@@ -322,15 +322,10 @@ export default function Dashboard() {
   };
   
   // Handle when a bonus chore is completed
-  const handleBonusChoreComplete = async (choreId: number, dailyBonusId: number) => {
-    console.log(`Bonus chore ${choreId} completed. Daily bonus ID: ${dailyBonusId}`);
-    console.log("Opening spin prompt for bonus chore");
-    
-    // Store the daily bonus ID and chore name for the modals
+  const handleBonusChoreComplete = async (dailyBonusId: number, choreName: string) => {
+    console.log(`Bonus chore completed. Daily bonus ID: ${dailyBonusId}`);
+
     setDailyBonusId(dailyBonusId);
-    
-    // Find the chore name from data
-    const choreName = data?.chores?.find(c => c.id === choreId)?.name || "Bonus Chore";
     setCompletedChoreName(choreName);
     
     // Show the spin prompt

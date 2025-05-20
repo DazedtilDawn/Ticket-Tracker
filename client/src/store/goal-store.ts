@@ -45,7 +45,8 @@ export const useGoalStore = create<GoalState>((set, get) => ({
       const data = await apiRequest('/api/goals', { method: 'GET' });
       set({ goals: data, isLoading: false });
     } catch (error) {
-      set({ error: error.message, isLoading: false });
+      const message = error instanceof Error ? error.message : String(error);
+      set({ error: message, isLoading: false });
     }
   },
   
@@ -60,7 +61,8 @@ export const useGoalStore = create<GoalState>((set, get) => ({
         // No active goal is not an error
         set({ activeGoal: null, isLoading: false });
       } else {
-        set({ error: error.message, isLoading: false });
+        const message = error instanceof Error ? error.message : String(error);
+        set({ error: message, isLoading: false });
       }
     }
   },
@@ -85,7 +87,8 @@ export const useGoalStore = create<GoalState>((set, get) => ({
         set({ activeGoal: newGoal });
       }
     } catch (error) {
-      set({ error: error.message, isLoading: false });
+      const message = error instanceof Error ? error.message : String(error);
+      set({ error: message, isLoading: false });
     }
   },
   
@@ -112,7 +115,8 @@ export const useGoalStore = create<GoalState>((set, get) => ({
         isLoading: false 
       }));
     } catch (error) {
-      set({ error: error.message, isLoading: false });
+      const message = error instanceof Error ? error.message : String(error);
+      set({ error: message, isLoading: false });
     }
   }
 }));

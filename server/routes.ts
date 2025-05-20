@@ -728,7 +728,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         progress: 0
       });
     } catch (error) {
-      return res.status(400).json({ message: error.message });
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(400).json({ message });
     }
   });
 
