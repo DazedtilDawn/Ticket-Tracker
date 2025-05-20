@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { TICKET_CENT_VALUE } from "../../../config/business";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth-store";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -52,12 +53,17 @@ interface AddProductDialogProps {
 
 export function AddProductDialog({ children, onProductAdded }: AddProductDialogProps) {
   const { toast } = useToast();
-  const { user } = useAuthStore();
+  const { user, getChildUsers, isViewingAsChild } = useAuthStore();
+  const viewingAsChild = isViewingAsChild();
+  const childUsers = getChildUsers();
+  const isParent = user?.role === 'parent' && !viewingAsChild;
   const [open, setOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isManualCreating, setIsManualCreating] = useState(false);
   const [searchResult, setSearchResult] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("manual");
+  const [selectedChildIds, setSelectedChildIds] = useState<number[]>([]);
+  const [isAssigning, setIsAssigning] = useState(false);
   
   const manualForm = useForm<ManualValues>({
     resolver: zodResolver(manualSchema),
@@ -123,6 +129,8 @@ export function AddProductDialog({ children, onProductAdded }: AddProductDialogP
       
       // Set search result to the newly created product
       setSearchResult(result);
+
+      onProductAdded();
       
       // Update goal form with product ID
       goalForm.setValue("product_id", result.id);
@@ -170,6 +178,47 @@ export function AddProductDialog({ children, onProductAdded }: AddProductDialogP
       });
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const toggleChildSelection = (id: number, checked: boolean) => {
+    setSelectedChildIds((prev) =>
+      checked ? [...prev, id] : prev.filter((c) => c !== id)
+    );
+  };
+
+  const handleAssignToChildren = async () => {
+    if (!searchResult) return;
+    setIsAssigning(true);
+    try {
+      await Promise.all(
+        selectedChildIds.map((childId) =>
+          apiRequest("/api/goals", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_id: childId, product_id: searchResult.id })
+          })
+        )
+      );
+
+      toast({
+        title: "Wishlists Updated",
+        description: "Product added to selected wishlists.",
+      });
+
+      onProductAdded();
+      setOpen(false);
+      setSearchResult(null);
+      manualForm.reset();
+      setSelectedChildIds([]);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add to wishlists",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAssigning(false);
     }
   };
   
@@ -318,23 +367,57 @@ export function AddProductDialog({ children, onProductAdded }: AddProductDialogP
                   </CardContent>
                 </Card>
                 
-                <Form {...goalForm}>
-                  <form onSubmit={goalForm.handleSubmit(handleAddGoal)}>
-                    <input type="hidden" {...goalForm.register("product_id")} />
-                    <input type="hidden" {...goalForm.register("user_id")} />
-                    
-                    <div className="flex justify-end mt-4">
-                      <Button type="submit" disabled={isCreating} className="w-full">
-                        {isCreating ? (
+                {isParent ? (
+                  <div className="mt-4 space-y-2">
+                    {childUsers.length === 0 ? (
+                      <p className="text-sm text-gray-500">No child accounts found.</p>
+                    ) : (
+                      childUsers.map((child) => (
+                        <label key={child.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            checked={selectedChildIds.includes(child.id)}
+                            onCheckedChange={(c) => toggleChildSelection(child.id, !!c)}
+                          />
+                          <span>{child.name}</span>
+                        </label>
+                      ))
+                    )}
+                    <div className="flex justify-end">
+                      <Button
+                        onClick={handleAssignToChildren}
+                        disabled={isAssigning || selectedChildIds.length === 0}
+                        className="mt-2"
+                      >
+                        {isAssigning ? (
                           <span className="flex items-center justify-center">
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Adding...
+                            Saving...
                           </span>
-                        ) : "Add to Wishlist"}
+                        ) : (
+                          "Add to Selected Wishlists"
+                        )}
                       </Button>
                     </div>
-                  </form>
-                </Form>
+                  </div>
+                ) : (
+                  <Form {...goalForm}>
+                    <form onSubmit={goalForm.handleSubmit(handleAddGoal)}>
+                      <input type="hidden" {...goalForm.register("product_id")} />
+                      <input type="hidden" {...goalForm.register("user_id")} />
+
+                      <div className="flex justify-end mt-4">
+                        <Button type="submit" disabled={isCreating} className="w-full">
+                          {isCreating ? (
+                            <span className="flex items-center justify-center">
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Adding...
+                            </span>
+                          ) : "Add to Wishlist"}
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                )}
               </>
             )}
           </TabsContent>
