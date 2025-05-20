@@ -16,7 +16,7 @@ interface AssignToChildDialogProps {
 
 export function AssignToChildDialog({ productId, trigger, onAssigned, children }: AssignToChildDialogProps) {
   const { getChildUsers } = useAuthStore();
-  const children = getChildUsers();
+  const childUsers = getChildUsers();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);

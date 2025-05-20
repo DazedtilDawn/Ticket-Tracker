@@ -28,6 +28,7 @@ import {
   Legend, 
   ResponsiveContainer 
 } from 'recharts';
+import type { Transaction } from "@shared/schema";
 
 export default function Transactions() {
   const { user } = useAuthStore();
@@ -93,8 +94,6 @@ export default function Transactions() {
   }, [queryClient, userId, user]);
   
   // Fetch transactions for chart data preparation
-  import type { Transaction } from "@shared/schema";
-
   const { data: transactions = [] } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions", userId ? `?userId=${userId}&limit=30` : "?limit=30"],
   });
@@ -105,16 +104,16 @@ export default function Transactions() {
   function prepareChartData(transactions: Transaction[]) {
     // Group transactions by date
     const byDate = transactions.reduce((acc: any, txn: Transaction) => {
-      const date = new Date(txn.date).toISOString().split('T')[0];
+      const date = new Date(txn.created_at || new Date()).toISOString().split('T')[0];
       
       if (!acc[date]) {
         acc[date] = { date, earned: 0, spent: 0 };
       }
       
-      if (txn.delta_tickets > 0) {
-        acc[date].earned += txn.delta_tickets;
+      if (txn.delta > 0) {
+        acc[date].earned += txn.delta;
       } else {
-        acc[date].spent += Math.abs(txn.delta_tickets);
+        acc[date].spent += Math.abs(txn.delta);
       }
       
       return acc;
@@ -127,7 +126,7 @@ export default function Transactions() {
   }
   
   const handleUserChange = (value: string) => {
-    setUserId(value !== user.id.toString() ? value : undefined);
+    setUserId(value !== user?.id.toString() ? value : undefined);
   };
   
   return (
@@ -145,15 +144,15 @@ export default function Transactions() {
           {isParent && users && (
             <div className="mt-4 sm:mt-0 min-w-[200px]">
               <Select 
-                value={userId || user.id.toString()} 
+                value={userId || (user?.id?.toString() || "1")} 
                 onValueChange={handleUserChange}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select User" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={user.id.toString()}>Me ({user.name})</SelectItem>
-                  {users.filter(u => u.id !== user.id).map(u => (
+                  {user && <SelectItem value={user.id.toString()}>Me ({user.name})</SelectItem>}
+                  {users.filter(u => user && u.id !== user.id).map(u => (
                     <SelectItem key={u.id} value={u.id.toString()}>
                       {u.name} ({u.role})
                     </SelectItem>
