@@ -23,7 +23,6 @@ export async function setupVite(app: Express, server: Server) {
   const serverOptions = {
     middlewareMode: true,
     hmr: { server },
-    // allowedHosts is not a valid option here in middleware mode
   };
 
   const vite = await createViteServer({
@@ -36,7 +35,13 @@ export async function setupVite(app: Express, server: Server) {
         process.exit(1);
       },
     },
-    server: serverOptions,
+    server: {
+      ...serverOptions,
+      allowedHosts: [
+        '32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev',
+        '.replit.dev',
+      ],
+    },
     appType: "custom",
   });
 
@@ -68,7 +73,7 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  const distPath = path.resolve(import.meta.dirname, "public");
+  const distPath = path.resolve(import.meta.dirname, "..", "dist", "public");
 
   if (!fs.existsSync(distPath)) {
     throw new Error(
