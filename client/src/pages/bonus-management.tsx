@@ -217,7 +217,7 @@ export default function BonusManagement() {
   interface Chore {
     id: number;
     name: string;
-    tickets: number;
+    base_tickets: number;
     is_active: boolean;
   }
 
