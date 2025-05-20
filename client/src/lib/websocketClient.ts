@@ -22,8 +22,13 @@ export function createWebSocketConnection() {
   if (ws && ws.readyState === WebSocket.OPEN) {
     return ws;
   }
-  
-  // If there's a connection in the process of closing, wait for it to close
+
+  // If a connection is in the process of connecting, reuse it
+  if (ws && ws.readyState === WebSocket.CONNECTING) {
+    return ws;
+  }
+
+  // If there's a connection in any other state, close it before creating a new one
   if (ws) {
     ws.close();
   }
