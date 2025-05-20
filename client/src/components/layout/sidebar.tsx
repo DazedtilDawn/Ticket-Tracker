@@ -20,7 +20,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 const navItems = [
   { path: "/", label: "Dashboard", icon: "ri-dashboard-line" },
   { path: "/chores", label: "Chores", icon: "ri-list-check-2" },
-  { path: "/wishlist", label: "Wishlist", icon: "ri-gift-line" },
+  { path: "/family-catalog", label: "Family Catalog", icon: "ri-store-2-line" }, // Renamed
   { path: "/transactions", label: "Transactions", icon: "ri-exchange-funds-line" },
 ];
 

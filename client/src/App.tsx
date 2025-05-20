@@ -11,7 +11,7 @@ import Dashboard from "@/pages/dashboard";
 import ParentDashboard from "@/pages/parent-dashboard";
 import Login from "@/pages/login";
 import Chores from "@/pages/chores";
-import Wishlist from "@/pages/wishlist";
+import FamilyCatalogPage from "@/pages/family-catalog"; // Renamed import
 import Transactions from "@/pages/transactions";
 import BonusManagement from "@/pages/bonus-management";
 import DebugPage from "@/pages/debug";
@@ -65,8 +65,8 @@ function Router() {
       <Route path="/chores">
         <ProtectedRoute component={Chores} />
       </Route>
-      <Route path="/wishlist">
-        <ProtectedRoute component={Wishlist} />
+      <Route path="/family-catalog"> {/* Renamed path */}
+        <ProtectedRoute component={FamilyCatalogPage} /> {/* Use renamed component */}
       </Route>
       <Route path="/transactions">
         <ProtectedRoute component={Transactions} />

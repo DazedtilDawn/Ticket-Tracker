@@ -19,8 +19,8 @@ interface SharedCatalogProps {
 }
 
 export function SharedCatalog({ onProductSelected }: SharedCatalogProps) {
-  const { user } = useAuthStore();
-  const isParent = user?.role === 'parent';
+  const { user, isViewingAsChild } = useAuthStore();
+  const canManageCatalog = user?.role === 'parent' && !isViewingAsChild(); // Parent managing, not viewing as child
   
   // Get all available products
   const { data: products = [] } = useQuery({
@@ -39,7 +39,7 @@ export function SharedCatalog({ onProductSelected }: SharedCatalogProps) {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold">Family Catalog</h2>
-        {isParent && (
+        {canManageCatalog && (
           <AddProductDialog onProductAdded={refreshCatalog}>
             <Button size="sm">
               <Gift className="mr-2 h-4 w-4" />
@@ -56,7 +56,7 @@ export function SharedCatalog({ onProductSelected }: SharedCatalogProps) {
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
             Products added to the catalog will be available for everyone in the family.
           </p>
-          {isParent && (
+          {canManageCatalog && (
             <AddProductDialog onProductAdded={refreshCatalog}>
               <Button>
                 <Gift className="mr-2 h-4 w-4" />
@@ -99,7 +99,7 @@ export function SharedCatalog({ onProductSelected }: SharedCatalogProps) {
                   </div>
                 </CardContent>
                 <CardFooter className="p-4 pt-0 flex justify-between">
-                  {isParent && (
+                  {canManageCatalog && (
                     <div className="flex space-x-2">
                       <EditProductDialog 
                         product={product} 
@@ -123,10 +123,13 @@ export function SharedCatalog({ onProductSelected }: SharedCatalogProps) {
                       </DeleteProductDialog>
                     </div>
                   )}
+                  {/* Children (or parent viewing as child) see "Add to My Wishlist" */}
+                  {!canManageCatalog && (
                   <Button size="sm" variant="secondary" onClick={() => handleAddToWishlist(product.id)}>
                     Add to Wishlist
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
+                  )}
                 </CardFooter>
               </Card>
             ))}

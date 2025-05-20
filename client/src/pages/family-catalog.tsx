@@ -14,13 +14,14 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlusIcon, ShoppingBag } from "lucide-react";
 
-export default function Wishlist() {
-  const { user } = useAuthStore();
+export default function FamilyCatalogPage() {
+  const { user, isViewingAsChild } = useAuthStore();
   const { toast } = useToast();
   const [location] = useLocation();
   
-  // Default to "my-list" tab unless otherwise specified
-  const [activeTab, setActiveTab] = useState("my-list");
+  // Default tab logic based on role
+  const isParentView = user?.role === 'parent' && !isViewingAsChild();
+  const [activeTab, setActiveTab] = useState(isParentView ? "catalog" : "my-list");
   
   // No URL parameter handling for now - just use the default tab
   // We'll add this feature back once we resolve the type issues
@@ -209,11 +210,18 @@ export default function Wishlist() {
       <div className="p-4 md:p-6 max-w-7xl mx-auto">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="mb-4">
-            <TabsTrigger value="my-list">My Wishlist</TabsTrigger>
+            {/* Conditional Tabs for Parent vs Child */}
+            {!isParentView && (
+              <>
+                <TabsTrigger value="my-list">My Wishlist</TabsTrigger>
+                <TabsTrigger value="active-goal" disabled={!activeGoal}>Active Goal</TabsTrigger>
+              </>
+            )}
             <TabsTrigger value="catalog">Family Catalog</TabsTrigger>
-            <TabsTrigger value="active-goal" disabled={!activeGoal}>Active Goal</TabsTrigger>
           </TabsList>
 
+          {/* My Wishlist Tab - Only for Children or Parent viewing as Child */}
+          {!isParentView && (
           <TabsContent value="my-list">
             {isLoading ? (
               <div className="flex justify-center my-12">
@@ -270,11 +278,18 @@ export default function Wishlist() {
               </>
             )}
           </TabsContent>
+          )}
 
           <TabsContent value="catalog">
-            <SharedCatalog onProductSelected={handleAddToWishlist} />
+            {/* When parent views catalog, onProductSelected might not be needed, or could have different meaning */}
+            {/* For children, onProductSelected adds to their personal wishlist */}
+            <SharedCatalog 
+              onProductSelected={isParentView ? () => {} : handleAddToWishlist} 
+            />
           </TabsContent>
 
+          {/* Active Goal Tab - Only for Children or Parent viewing as Child */}
+          {!isParentView && activeGoal && (
           <TabsContent value="active-goal">
             {activeGoal && (
               <div className="grid grid-cols-1 gap-4">
@@ -305,6 +320,7 @@ export default function Wishlist() {
               </div>
             )}
           </TabsContent>
+          )}
         </Tabs>
       </div>
     </>
