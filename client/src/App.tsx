@@ -6,6 +6,7 @@ import ErrorBoundary from "./components/error-boundary";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
+import { MobileProvider } from "./context/MobileContext";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import ParentDashboard from "@/pages/parent-dashboard";
@@ -112,16 +113,18 @@ function App() {
   
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider defaultTheme="light" storageKey="ticket-tracker-theme">
-          <TooltipProvider>
-            <Toaster />
-            <AppLayout>
-              <Router />
-            </AppLayout>
-          </TooltipProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
+      <MobileProvider>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider defaultTheme="light" storageKey="ticket-tracker-theme">
+            <TooltipProvider>
+              <Toaster />
+              <AppLayout>
+                <Router />
+              </AppLayout>
+            </TooltipProvider>
+          </ThemeProvider>
+        </QueryClientProvider>
+      </MobileProvider>
     </ErrorBoundary>
   );
 }

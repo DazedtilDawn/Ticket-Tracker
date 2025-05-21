@@ -13,7 +13,8 @@ import { DeleteProductDialog } from './delete-product-dialog';
 import { AssignToChildDialog } from './assign-to-child-dialog';
 
 import { useAuthStore, UserInfo } from '@/store/auth-store';
-import { Gift, ArrowRight, PencilIcon, Trash2 } from 'lucide-react';
+import { Gift, ArrowRight, PencilIcon, Trash2, PlusCircle } from 'lucide-react';
+import { CardActions } from '@/components/ui/card-actions';
 
 interface SharedCatalogProps {
   onProductSelected: (productId: number) => void;
@@ -97,42 +98,31 @@ export function SharedCatalog({ onProductSelected }: SharedCatalogProps) {
                       ${(product.price_cents / 100).toFixed(2)}
                     </Badge>
                     <span className="text-sm text-slate-500 dark:text-slate-400">
-                      {product.asin ? 'Amazon' : 'Custom'}
+                      {product.asin && !product.asin.startsWith('MANUAL') ? 'Amazon' : 'Custom'}
                     </span>
                   </div>
                 </CardContent>
-                <CardFooter className="p-4 pt-0">
+                <CardFooter className="p-4 pt-0 flex flex-col gap-2">
                   {canManageCatalog && (
-                    <div className="flex flex-wrap gap-2 w-full justify-start">
-                      <EditProductDialog 
-                        product={product} 
-                        onProductUpdated={refreshCatalog}
-                      >
-                        <Button size="sm" variant="outline">
-                          <PencilIcon className="mr-1 h-3 w-3" />
-                          Edit
-                        </Button>
-                      </EditProductDialog>
-                       
-                      <DeleteProductDialog
-                        productId={product.id}
-                        productTitle={product.title}
-                        onProductDeleted={refreshCatalog}
-                      >
-                      <Button size="sm" variant="destructive" className="bg-red-600 hover:bg-red-700">
-                        <Trash2 className="mr-1 h-3 w-3" />
-                        Delete
-                      </Button>
-                      </DeleteProductDialog>
-                      
+                    <>
+                      <div className="flex w-full justify-between items-center">
+                        <span className="text-xs text-muted-foreground">Manage:</span>
+                        <CardActions
+                          items={[
+                            { label: 'Edit', icon: <PencilIcon className="h-4 w-4" />, onSelect: () => {} },
+                            { label: 'Delete', icon: <Trash2 className="h-4 w-4" />, className: 'text-destructive hover:!bg-destructive/10', onSelect: () => {} },
+                          ]}
+                        />
+                      </div>
                       {childUsers && childUsers.length > 0 && (
                         <AssignToChildDialog productId={product.id} onAssigned={refreshCatalog}>
-                          <Button size="sm" variant="default" className="bg-primary hover:bg-primary/90">
+                          <Button size="sm" variant="default" className="w-full bg-primary hover:bg-primary/90">
+                            <PlusCircle className="mr-2 h-4 w-4" />
                             Add to Child
                           </Button>
                         </AssignToChildDialog>
                       )}
-                    </div>
+                    </>
                   )}
                   {/* Children (or parent viewing as child) see "Add to My Wishlist" */}
                   {!canManageCatalog && (
