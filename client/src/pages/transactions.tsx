@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuthStore } from "@/store/auth-store";
+import { useAuthStore, type UserInfo } from "@/store/auth-store";
 import { useStatsStore } from "@/store/stats-store";
 import { subscribeToChannel } from "@/lib/websocketClient";
 import TransactionsTable from "@/components/transactions-table";
@@ -37,12 +37,6 @@ export default function Transactions() {
   const isParent = user?.role === "parent";
   
   // Fetch users if current user is a parent
-  interface UserInfo {
-    id: number;
-    name: string;
-    role: string;
-  }
-
   const { data: users = [] } = useQuery<UserInfo[]>({
     queryKey: ["/api/users"],
     enabled: isParent,
