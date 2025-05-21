@@ -5,6 +5,7 @@ import { formatTierStyleClass } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
 import { CheckCircle, Award } from "lucide-react";
 import { BonusBadge } from "@/components/bonus-badge";
+import { useMobile } from "@/context/MobileContext";
 
 interface ChoreCardProps {
   chore: {
@@ -35,6 +36,7 @@ export default function ChoreCard({ chore, onComplete, onBonusComplete }: ChoreC
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isViewingAsChild, user } = useAuthStore();
   const viewingAsChild = isViewingAsChild();
+  const { isMobile } = useMobile();
   
   // Handle chore completion with error handling
   const handleComplete = async () => {
@@ -115,7 +117,7 @@ export default function ChoreCard({ chore, onComplete, onBonusComplete }: ChoreC
         </div>
         
         {/* Tickets and action button */}
-        <div className="mt-4 flex items-center justify-between">
+        <div className={`mt-4 ${isMobile ? 'flex flex-col space-y-3' : 'flex items-center justify-between'}`}>
           <div className="flex items-center">
             <div className={`flex items-center justify-center w-10 h-10 rounded-full ${isBonusChore ? 'bg-yellow-100 dark:bg-yellow-900/30' : 'bg-primary-100 dark:bg-primary-900/30'}`}>
               <i className={`ri-ticket-2-line ${isBonusChore ? 'text-yellow-600 dark:text-yellow-400' : 'text-primary-600 dark:text-primary-400'} text-lg`}></i>
@@ -141,19 +143,19 @@ export default function ChoreCard({ chore, onComplete, onBonusComplete }: ChoreC
           
           {/* Action button */}
           {chore.completed ? (
-            <Button 
+            <Button
               disabled
               variant="outline"
-              className="text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 flex items-center"
+              className={`text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 flex items-center ${isMobile ? 'w-full' : ''}`}
             >
               <CheckCircle className="w-4 h-4 mr-1" />
               Completed
             </Button>
           ) : (
-            <Button 
+            <Button
               onClick={handleComplete}
               disabled={isSubmitting}
-              className={`inline-flex items-center ${isBonusChore ? 'bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400' : ''}`}
+              className={`inline-flex items-center ${isBonusChore ? 'bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400' : ''} ${isMobile ? 'w-full py-3 text-base' : ''}`}
             >
               {isSubmitting ? (
                 <>

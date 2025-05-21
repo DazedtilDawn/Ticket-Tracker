@@ -9,6 +9,7 @@ import { createWebSocketConnection, subscribeToChannel, sendMessage } from "@/li
 import ProgressCard from "@/components/progress-card";
 import ChoreCard from "@/components/chore-card";
 import TransactionsTable from "@/components/transactions-table";
+import ChildDashboardHeader from "@/components/child-dashboard-header";
 import { NewChoreDialog } from "@/components/new-chore-dialog";
 import { BadBehaviorDialog } from "@/components/bad-behavior-dialog";
 import { GoodBehaviorDialog } from "@/components/good-behavior-dialog";
@@ -29,6 +30,7 @@ export default function Dashboard() {
   const viewingChild = isViewingAsChild();
   const queryClient = useQueryClient();
   const childUsers = getChildUsers();
+  const isParentView = user?.role === 'parent' && !viewingChild;
   
   // State for bonus spin prompt and wheel
   const [isSpinPromptOpen, setIsSpinPromptOpen] = useState(false);
@@ -716,6 +718,8 @@ export default function Dashboard() {
             </AlertDescription>
           </Alert>
         )}
+
+        {!isParentView && <ChildDashboardHeader />}
         
         {isLoading ? (
           <div className="flex justify-center my-12">
