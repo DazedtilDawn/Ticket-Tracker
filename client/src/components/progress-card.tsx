@@ -201,27 +201,7 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
               </p>
             </div>
             
-            {/* Redesigned ticket display */}
-            <div className="mt-3 sm:mt-0">
-              <div className="flex flex-col items-end">
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-100 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-800/50 mb-2">
-                  <div className="relative">
-                    <Ticket className="w-8 h-8 text-amber-600 dark:text-amber-400" strokeWidth={1.5} />
-                    <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-amber-800 dark:text-amber-300">
-                      {ticketsNeeded}
-                    </span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium text-amber-800 dark:text-amber-300">
-                      {ticketsNeeded} tickets needed
-                    </span>
-                    <span className="text-xs text-amber-700 dark:text-amber-400">
-                      Value: ${(ticketsNeeded * ticketValueInCents / 100).toFixed(2)} USD
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            {/* info now shown in small text under progress bar */}
           </div>
 
           {/* Enhanced ticket value display with more visual elements */}
@@ -262,8 +242,11 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
               </div>
             </div>
           </div>
-          
+
         </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          {ticketsRemaining} tickets to go
+        </p>
       </div>
       
       <div className="p-4 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between flex-wrap gap-2">
