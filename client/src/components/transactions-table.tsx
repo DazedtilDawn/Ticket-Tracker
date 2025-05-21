@@ -13,6 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/store/auth-store";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useMobile } from "@/context/MobileContext";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,6 +42,7 @@ export default function TransactionsTable({ userId, limit = 10 }: TransactionsTa
   const viewingAsChild = isViewingAsChild();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { isMobile } = useMobile();
   const [transactionToDelete, setTransactionToDelete] = useState<number | null>(null);
   const [, navigate] = useLocation();
   
@@ -246,7 +250,88 @@ export default function TransactionsTable({ userId, limit = 10 }: TransactionsTa
       style: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
     };
   };
-  
+
+  if (isMobile) {
+    return (
+      <div className="space-y-3">
+        {isLoading ? (
+          Array.from({ length: limit }).map((_, i) => (
+            <Card key={i} className="p-3 animate-pulse">
+              <Skeleton className="h-4 w-3/4 mb-2" />
+              <Skeleton className="h-4 w-1/2 mb-1" />
+              <Skeleton className="h-4 w-1/4" />
+            </Card>
+          ))
+        ) : transactions && transactions.length > 0 ? (
+          transactions.map((transaction: any) => (
+            <Card key={transaction.id} className="p-3 shadow-sm">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  {formatDate(transaction.created_at)}
+                </span>
+                <span
+                  className={`text-sm font-semibold ${
+                    transaction.delta > 0
+                      ? 'text-green-600 dark:text-green-400'
+                      : transaction.delta < 0
+                      ? 'text-red-600 dark:text-red-400'
+                      : 'text-gray-500 dark:text-gray-400'
+                  }`}
+                >
+                  {transaction.delta > 0 ? `+${transaction.delta}` : transaction.delta} tickets
+                </span>
+              </div>
+              <p className="text-sm font-medium text-gray-900 dark:text-white mb-1 truncate">
+                {getTransactionDescription(transaction)}
+              </p>
+              <div className="flex justify-between items-center">
+                <Badge variant="outline" className={`${getTransactionStatusInfo(transaction).style} text-xs`}>
+                  {getTransactionStatusInfo(transaction).text}
+                </Badge>
+                {(user?.role === 'parent' || user?.id === transaction.user_id) && (
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-gray-400 hover:text-red-500 data-[state=open]:bg-transparent"
+                      onClick={() => setTransactionToDelete(transaction.id)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      <span className="sr-only">Delete transaction</span>
+                    </Button>
+                  </AlertDialogTrigger>
+                )}
+              </div>
+            </Card>
+          ))
+        ) : (
+          <div className="text-center py-6 text-gray-500 dark:text-gray-400">No transactions found</div>
+        )}
+        <AlertDialog open={transactionToDelete !== null} onOpenChange={(open) => !open && setTransactionToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{isViewingAsChild() ? 'Undo this action?' : 'Delete this transaction?'}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {isViewingAsChild()
+                  ? 'This will undo the transaction and adjust your ticket balance. You can only undo recent transactions.'
+                  : 'This will delete the transaction and update the ticket balance. This action cannot be undone.'}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => transactionToDelete && deleteTransactionMutation.mutate(transactionToDelete)}
+                className={isViewingAsChild() ? 'bg-orange-600 hover:bg-orange-700' : 'bg-red-600 hover:bg-red-700'}
+              >
+                {isViewingAsChild() ? 'Undo' : 'Delete'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    );
+  }
+
   return (
     <>
       <AlertDialog open={transactionToDelete !== null} onOpenChange={(open) => !open && setTransactionToDelete(null)}>
