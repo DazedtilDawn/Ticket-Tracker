@@ -719,7 +719,7 @@ export default function Dashboard() {
           </Alert>
         )}
 
-        {!isParentView && <ChildDashboardHeader />}
+        {!isParentView && <ChildDashboardHeader activeGoal={data?.activeGoal} />}
         
         {isLoading ? (
           <div className="flex justify-center my-12">
