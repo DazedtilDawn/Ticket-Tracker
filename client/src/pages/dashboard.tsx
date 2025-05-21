@@ -763,7 +763,7 @@ export default function Dashboard() {
             </section>
             
             {/* Chores Section */}
-            <section className="mb-8">
+            <section id="chores" className="mb-8">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Today's Chores</h3>
                 <div className="flex items-center space-x-2">
@@ -821,7 +821,7 @@ export default function Dashboard() {
             )}
             
             {/* Recent Transactions */}
-            <section>
+            <section id="activity">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Transactions</h3>
                 <a href="/transactions" className="text-sm font-medium text-primary-600 dark:text-primary-400 hover:underline">
