@@ -43,9 +43,9 @@ export function MobileNav() {
   } = useAuthStore();
   const viewingChildId = useAuthStore(state => state.viewingChildId);
 
-  const homeHref = viewingChildId ? '/parent-dashboard' : '/dashboard';
+  // Dashboard route is always '/'; Parent view is handled by ProtectedRoute
   const navItems = [
-    { path: homeHref, label: 'Home', icon: 'ri-dashboard-line' },
+    { path: '/', label: 'Home', icon: 'ri-dashboard-line' },
     { path: '/chores', label: 'Chores', icon: 'ri-list-check-2' },
     { path: '/family-catalog', label: 'Catalog', icon: 'ri-store-2-line' },
     { path: '/transactions', label: 'Tickets', icon: 'ri-exchange-funds-line' },
