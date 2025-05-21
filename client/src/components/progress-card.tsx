@@ -175,116 +175,128 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
   }, [goal.progress, childName, hasShownConfetti, toast]);
   
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex flex-col md:flex-row gap-4 items-start">
-        {/* Larger product image with shadow */}
-        <div className="relative aspect-square flex-shrink-0 overflow-hidden rounded-xl min-h-img mb-4 md:mb-0">
+    <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden shadow-md">
+      {/* Product header with image and info */}
+      <div className="relative flex h-48 sm:h-56 bg-gradient-to-r from-gray-50 to-white dark:from-gray-850 dark:to-gray-800 border-b border-gray-200 dark:border-gray-700">
+        {/* Product image */}
+        <div className="relative w-1/3 h-full overflow-hidden">
           <img
             data-testid="goal-image"
             src={goal.product.image_url || "https://placehold.co/300x300/e5e7eb/a1a1aa?text=No+Image"}
             alt={goal.product.title}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="h-full w-full object-contain shadow-md"
             loading="lazy"
             onError={(e) => {
               e.currentTarget.src = "https://placehold.co/300x300/e5e7eb/a1a1aa?text=Image+Error";
             }}
           />
-          <div className="absolute bottom-2 right-2 bg-white dark:bg-gray-800 px-2 py-1 rounded shadow-sm border border-gray-200 dark:border-gray-700 text-xs font-semibold">
-            {formatPrice(goal.product.price_locked_cents)}
+        </div>
+        
+        {/* Product info */}
+        <div className="w-2/3 p-4 flex flex-col justify-between">
+          <div>
+            <h3 className="font-bold text-gray-900 dark:text-white text-lg line-clamp-2">
+              {goal.product.title}
+            </h3>
+            
+            <div className="mt-1 flex items-center">
+              <span className="bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300 text-sm font-semibold px-2.5 py-0.5 rounded-md flex items-center">
+                <Trophy className="h-3.5 w-3.5 mr-1 text-primary-600 dark:text-primary-400" />
+                Goal: {formatPrice(goal.product.price_locked_cents)}
+              </span>
+            </div>
+          </div>
+          
+          {/* Current progress summary */}
+          <div className="relative z-10">
+            <div className="text-sm text-gray-700 dark:text-gray-300 font-medium">
+              <span className="inline-block bg-white dark:bg-gray-800 px-2 py-1 rounded-md shadow-sm">
+                {Math.floor(goal.progress)}% Complete
+              </span> • 
+              <span className="ml-1 text-gray-600 dark:text-gray-400">
+                {goal.estimatedCompletion ? (
+                  `${goal.estimatedCompletion.weeks > 0 
+                    ? `${goal.estimatedCompletion.weeks} ${goal.estimatedCompletion.weeks === 1 ? 'week' : 'weeks'}` 
+                    : `${goal.estimatedCompletion.days} ${goal.estimatedCompletion.days === 1 ? 'day' : 'days'}`} left`
+                ) : (
+                  'Calculating time...'
+                )}
+              </span>
+            </div>
           </div>
         </div>
         
-        <div className="md:ml-6 flex-1 w-full">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <h4 className="font-medium text-gray-900 dark:text-white text-lg">{goal.product.title}</h4>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Goal Price: {formatPrice(goal.product.price_locked_cents)}
-              </p>
-            </div>
-            
-            {/* info now shown in small text under progress bar */}
+        {/* Price badge */}
+        <div className="absolute top-3 right-3 bg-white dark:bg-gray-800 px-2.5 py-1.5 rounded-md shadow-md border border-gray-200 dark:border-gray-700 text-sm font-semibold flex items-center">
+          <span className="text-green-600 dark:text-green-400">{formatPrice(goal.product.price_locked_cents)}</span>
+        </div>
+      </div>
+      
+      {/* Progress visualization */}
+      <div className="p-4 pt-5">
+        {/* Enhanced progress bar */}
+        <div className="relative h-3 mb-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+          <div 
+            className="absolute top-0 left-0 h-full bg-gradient-to-r from-primary-500 to-primary-400 dark:from-primary-600 dark:to-primary-500 transition-all duration-700 ease-in-out"
+            style={{ width: `${Math.min(100, goal.progress)}%` }}
+          >
+            {/* Animated pulse at progress end to draw attention */}
+            <span className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white shadow-md animate-pulse"></span>
           </div>
-
-          {/* Enhanced ticket value display with improved visuals */}
-          <div className="flex flex-col sm:flex-row gap-3 mt-3 mb-4">
-            <div className="flex-1 p-3 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-800/20 rounded-lg border border-amber-200 dark:border-amber-800/50 shadow-sm">
-              <p className="text-xs uppercase tracking-wide text-amber-700 dark:text-amber-400 font-medium mb-2">Tickets Saved</p>
-              <div className="flex items-center">
-                <TicketDisplay 
-                  balance={goal.tickets_saved} 
-                  size="md" 
-                  className="mr-2"
-                />
-                <div className="text-xs text-amber-600 dark:text-amber-400 font-medium">
-                  ${ticketsMoneySaved} USD
-                </div>
-              </div>
+        </div>
+        
+        {/* Tickets progress with visual indicators */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+          <div className="flex items-center p-3 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-800/20 rounded-lg border border-amber-200 dark:border-amber-800/50 shadow-sm">
+            <div className="flex-shrink-0 mr-3 bg-amber-200 dark:bg-amber-800/30 h-10 w-10 rounded-full flex items-center justify-center">
+              <Ticket className="h-5 w-5 text-amber-700 dark:text-amber-300" />
             </div>
-            
-            <div className="flex-1 p-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/20 rounded-lg border border-blue-200 dark:border-blue-800/50 shadow-sm">
-              <p className="text-xs uppercase tracking-wide text-blue-700 dark:text-blue-400 font-medium mb-2">Tickets Needed</p>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-amber-700 dark:text-amber-400 font-medium">Saved</p>
               <div className="flex items-center">
-                <div className="flex items-center bg-white dark:bg-gray-800 shadow-md rounded-lg px-3 py-2 mr-2">
-                  <Ticket className="h-4 w-4 text-blue-500 dark:text-blue-400 mr-1.5" />
-                  <span className="font-bold text-blue-700 dark:text-blue-300">
-                    {ticketsRemaining}
-                  </span>
-                </div>
-                <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-                  ${ticketsMoneyRemaining} USD
-                </div>
+                <span className="font-bold text-amber-800 dark:text-amber-300 text-lg">{goal.tickets_saved}</span>
+                <span className="ml-1 text-amber-700 dark:text-amber-400 text-sm">tickets</span>
+                <span className="ml-2 text-xs text-amber-600/70 dark:text-amber-400/70">(${ticketsMoneySaved})</span>
               </div>
             </div>
           </div>
           
-          {/* Progress bar */}
-          <div className="mb-2">
-            <div className="flex justify-between mb-1 text-xs">
-              <span className="font-medium text-gray-700 dark:text-gray-300">{Math.min(100, Math.round(goal.progress))}% Complete</span>
-              <span className="text-gray-500 dark:text-gray-400">{ticketsNeeded} total tickets needed</span>
+          <div className="flex items-center p-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/20 rounded-lg border border-blue-200 dark:border-blue-800/50 shadow-sm">
+            <div className="flex-shrink-0 mr-3 bg-blue-200 dark:bg-blue-800/30 h-10 w-10 rounded-full flex items-center justify-center">
+              <Ticket className="h-5 w-5 text-blue-700 dark:text-blue-300" />
             </div>
-            <Progress 
-              value={Math.min(100, goal.progress)} 
-              className="h-2.5 bg-gray-200 dark:bg-gray-700" 
-            />
+            <div>
+              <p className="text-xs uppercase tracking-wide text-blue-700 dark:text-blue-400 font-medium">Needed</p>
+              <div className="flex items-center">
+                <span className="font-bold text-blue-800 dark:text-blue-300 text-lg">{ticketsRemaining}</span>
+                <span className="ml-1 text-blue-700 dark:text-blue-400 text-sm">more</span>
+                <span className="ml-2 text-xs text-blue-600/70 dark:text-blue-400/70">(${ticketsMoneyRemaining})</span>
+              </div>
+            </div>
           </div>
-
         </div>
-        {/* Removed duplicate tickets to go text */}
       </div>
       
-      <div className="p-4 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between flex-wrap gap-2">
-        <div className="text-sm text-gray-500 dark:text-gray-400">
-          <span className="font-medium">Est. completion:</span> {' '}
-          {goal.estimatedCompletion ? (
-            `${goal.estimatedCompletion.weeks > 0 
-              ? `${goal.estimatedCompletion.weeks} ${goal.estimatedCompletion.weeks === 1 ? 'week' : 'weeks'}` 
-              : `${goal.estimatedCompletion.days} ${goal.estimatedCompletion.days === 1 ? 'day' : 'days'}`} at current rate`
-          ) : (
-            'Not enough data to estimate'
-          )}
-        </div>
-        <div className={isMobile ? "flex flex-col gap-2 w-full" : "flex space-x-2"}>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSwitchGoal}
-            className={isMobile ? "w-full" : ""}
-          >
-            Switch Goal
-          </Button>
-          <Button
-            asChild
-            variant="secondary"
-            size="sm"
-            className={isMobile ? "w-full" : ""}
-          >
-            <a href={amazonUrl} target="_blank" rel="noopener noreferrer">
-              View on Amazon
-            </a>
-          </Button>
-        </div>
+      {/* Action buttons */}
+      <div className="px-4 pb-4 flex flex-wrap gap-2 justify-end">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleSwitchGoal}
+          className="text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
+        >
+          Switch Goal
+        </Button>
+        <Button
+          asChild
+          variant="default"
+          size="sm"
+          className="bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400"
+        >
+          <a href={amazonUrl} target="_blank" rel="noopener noreferrer">
+            View on Amazon
+          </a>
+        </Button>
       </div>
     </div>
   );
