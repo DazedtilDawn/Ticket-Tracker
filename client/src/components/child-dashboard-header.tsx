@@ -33,8 +33,8 @@ export default function ChildDashboardHeader({ activeGoal }: ChildDashboardHeade
   return (
     <div className="mb-6 flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm">
       <div className="flex items-center space-x-4">
-        <ProgressRing percent={progress} size={64} strokeWidth={6} color="#fbbf24">
-          <Avatar className="h-12 w-12 border">
+        <ProgressRing percent={progress} radius={38} stroke={6}>
+          <Avatar className="h-14 w-14 border">
             <AvatarImage src={user.profile_image_url || undefined} alt={user.name} />
             <AvatarFallback className="bg-primary-600 text-white text-sm">
               {getInitials(user.name)}

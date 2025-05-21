@@ -40,7 +40,6 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
   const [, navigate] = useLocation();
   const { user, getChildUsers } = useAuthStore();
   const [hasShownConfetti, setHasShownConfetti] = useState(false);
-  const progressContainerRef = useRef<HTMLDivElement>(null);
   const { isMobile } = useMobile();
   
   // Track when we've passed milestone percentages
@@ -264,75 +263,6 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
             </div>
           </div>
           
-          <div className="mt-3" ref={progressContainerRef}>
-            <div className="flex items-center justify-between text-sm mb-1">
-              <span className="text-gray-500 dark:text-gray-400">
-                Progress: {goal.tickets_saved} of {ticketsNeeded} tickets saved
-              </span>
-              <span className="font-medium text-primary-600 dark:text-primary-400">
-                {Math.floor(goal.progress)}%
-              </span>
-            </div>
-
-            {/* Enhanced progress bar with milestones */}
-            <div className="relative">
-              {/* Gradient progress bar */}
-              <div className="relative h-5 w-full rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
-                <div 
-                  className="h-full rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-1000 ease-out"
-                  style={{ width: `${Math.min(100, goal.progress)}%` }}
-                />
-                
-                {/* Milestone markers */}
-                {[25, 50, 75].map(milestone => (
-                  <div 
-                    key={`milestone-${milestone}`}
-                    className={`absolute top-0 bottom-0 flex items-center justify-center ${goal.progress >= milestone ? 'text-white' : 'text-gray-400 dark:text-gray-500'}`}
-                    style={{ left: `${milestone}%`, transform: 'translateX(-50%)' }}
-                  >
-                    {milestone === 25 && (
-                      <div className={`w-4 h-4 rounded-full ${goal.progress >= milestone ? 'bg-blue-500 animate-pulse' : 'bg-gray-300 dark:bg-gray-600'} flex items-center justify-center`}>
-                        <Star className="w-2 h-2" />
-                      </div>
-                    )}
-                    {milestone === 50 && (
-                      <div className={`w-4 h-4 rounded-full ${goal.progress >= milestone ? 'bg-purple-500 animate-pulse' : 'bg-gray-300 dark:bg-gray-600'} flex items-center justify-center`}>
-                        <Star className="w-2 h-2" />
-                      </div>
-                    )}
-                    {milestone === 75 && (
-                      <div className={`w-4 h-4 rounded-full ${goal.progress >= milestone ? 'bg-pink-500 animate-pulse' : 'bg-gray-300 dark:bg-gray-600'} flex items-center justify-center`}>
-                        <Star className="w-2 h-2" />
-                      </div>
-                    )}
-                  </div>
-                ))}
-                
-                {/* Avatar indicator moving along the progress bar */}
-                <div 
-                  className="absolute top-0 transform -translate-y-1/2"
-                  style={{ 
-                    left: `${Math.min(98, Math.max(2, goal.progress))}%`, 
-                    transform: 'translateX(-50%)' 
-                  }}
-                >
-                  <Avatar className="w-6 h-6 border-2 border-white dark:border-gray-900 shadow-md">
-                    <AvatarImage src={profileImageUrl || undefined} alt={childName} />
-                    <AvatarFallback className="text-[10px] bg-primary text-white">
-                      {getInitials(childName)}
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
-              </div>
-              
-              {/* 100% trophy marker */}
-              <div 
-                className={`absolute right-0 top-0 bottom-0 transform translate-x-1/2 flex items-center justify-center ${goal.progress >= 100 ? 'text-yellow-500 animate-bounce-slow' : 'text-gray-400'}`}
-              >
-                <Trophy className="w-6 h-6" />
-              </div>
-            </div>
-          </div>
         </div>
       </div>
       

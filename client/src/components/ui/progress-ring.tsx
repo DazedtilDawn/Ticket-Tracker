@@ -1,58 +1,35 @@
-import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 
 interface ProgressRingProps {
   percent: number;
-  size?: number;
-  strokeWidth?: number;
-  color?: string;
+  radius?: number;
+  stroke?: number;
   children?: ReactNode;
 }
 
-export function ProgressRing({ percent, size = 64, strokeWidth = 4, color = "#10b981", children }: ProgressRingProps) {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference * (1 - Math.min(100, Math.max(0, percent)) / 100);
-
-  const ring = (
-    <svg width={size} height={size} className="block">
-      <circle
-        stroke="currentColor"
-        strokeWidth={strokeWidth}
-        className="text-gray-200 dark:text-gray-700"
-        fill="transparent"
-        r={radius}
-        cx={size / 2}
-        cy={size / 2}
-      />
-      <motion.circle
-        fill="transparent"
-        stroke={color}
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-        r={radius}
-        cx={size / 2}
-        cy={size / 2}
-        strokeDasharray={circumference}
-        strokeDashoffset={offset}
-        initial={{ strokeDashoffset: circumference }}
-        animate={{ strokeDashoffset: offset }}
-        transition={{ ease: "easeOut", duration: 0.5 }}
-      />
-    </svg>
-  );
-
-  if (!children) {
-    return ring;
-  }
+export default function ProgressRing({ percent, radius = 38, stroke = 6, children }: ProgressRingProps) {
+  const r = radius - stroke / 2;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - (percent / 100) * circ;
 
   return (
-    <div style={{ width: size, height: size }} className="relative">
-      {ring}
-      <div className="absolute inset-0 flex items-center justify-center">
-        {children}
-      </div>
-    </div>
+    <svg width={radius * 2} height={radius * 2} className="progress-ring">
+      <circle r={r} cx={radius} cy={radius} stroke="#E5E7EB" strokeWidth={stroke} fill="none" />
+      <circle
+        r={r}
+        cx={radius}
+        cy={radius}
+        stroke="#22C55E"
+        strokeWidth={stroke}
+        fill="none"
+        strokeDasharray={`${circ} ${circ}`}
+        strokeDashoffset={offset}
+        strokeLinecap="round"
+        className="transition-[stroke-dashoffset] duration-700 ease-out"
+      />
+      <foreignObject x="0" y="0" width={radius * 2} height={radius * 2}>
+        <div className="flex items-center justify-center h-full">{children}</div>
+      </foreignObject>
+    </svg>
   );
 }
-export default ProgressRing;

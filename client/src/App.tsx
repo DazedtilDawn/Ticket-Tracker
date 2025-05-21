@@ -4,6 +4,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import ErrorBoundary from "./components/error-boundary";
 import { Toaster } from "@/components/ui/toaster";
+import WebsocketDebugMonitor from "@/components/websocket-debug-monitor";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { MobileProvider } from "./context/MobileContext";
@@ -120,6 +121,7 @@ function App() {
           <ThemeProvider defaultTheme="light" storageKey="ticket-tracker-theme">
             <TooltipProvider>
               <Toaster />
+              {import.meta.env.DEV && <WebsocketDebugMonitor />}
               <AppLayout>
                 <Router />
               </AppLayout>

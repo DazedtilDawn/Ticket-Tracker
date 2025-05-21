@@ -68,12 +68,11 @@ export function createWebSocketConnection() {
       // Reset reconnect attempts on successful connection
       reconnectAttempts = 0;
       
-      // Only show success toast on first successful connection
-      if (!silentReconnect) {
+      // Show a quick success toast in development only
+      if (import.meta.env.DEV && !silentReconnect) {
         toast({
           title: "Realtime connection established",
-          description: "You'll receive real-time updates",
-          variant: "default"
+          duration: 1200,
         });
       }
       
