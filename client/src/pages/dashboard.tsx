@@ -39,6 +39,7 @@ export default function Dashboard() {
   const [isBonusWheelModalOpen, setIsBonusWheelModalOpen] = useState(false);
   const [dailyBonusId, setDailyBonusId] = useState<number | null>(null);
   const [completedChoreName, setCompletedChoreName] = useState("");
+  const [bonusTriggerType, setBonusTriggerType] = useState<'chore_completion' | 'good_behavior_reward' | 'respin' | null>(null);
   
   // State for child summary data
   const [childSummaries, setChildSummaries] = useState<{id: number, name: string, balance: number}[]>([]);
@@ -131,6 +132,8 @@ export default function Dashboard() {
           // Set up the data for the spin prompt modal
           setDailyBonusId(response.daily_bonus_id);
           setCompletedChoreName(response.chore_name || "Daily Bonus");
+          setBonusTriggerType(response.trigger_type || 'chore_completion');
+          console.log(`Detected bonus trigger type: ${response.trigger_type || 'chore_completion'}`);
           setIsSpinPromptOpen(true);
         } else {
           console.log("No unspun bonus found for this user");
@@ -671,6 +674,7 @@ export default function Dashboard() {
         onClose={handleWheelComplete}
         dailyBonusId={dailyBonusId}
         childName={user?.name || ""}
+        triggerType={bonusTriggerType}
       />
       
       {/* Modern Banner Header - replaces traditional header */}
