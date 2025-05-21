@@ -7,8 +7,9 @@ import { TICKET_DOLLAR_VALUE } from "../../../config/business";
 import { useStatsStore } from "@/store/stats-store";
 import { createWebSocketConnection, subscribeToChannel, sendMessage } from "@/lib/websocketClient";
 import ProgressCard from "@/components/progress-card";
-import ChoreCard from "@/components/chore-card";
-import TransactionsTable from "@/components/transactions-table";
+import SwipeableChoreCard from "@/components/swipeable-chore-card";
+import TransactionsMobile from "@/components/transactions-mobile";
+import TransactionsTableDesktop from "@/components/transactions-table-desktop";
 import ChildDashboardHeader from "@/components/child-dashboard-header";
 import MobileSectionTabs from "@/components/mobile-section-tabs";
 import { NewChoreDialog } from "@/components/new-chore-dialog";
@@ -808,9 +809,9 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {data?.chores && data.chores.length > 0 ? (
                   data.chores.map(chore => (
-                    <ChoreCard 
-                      key={chore.id} 
-                      chore={chore} 
+                    <SwipeableChoreCard
+                      key={chore.id}
+                      chore={chore}
                       onComplete={handleChoreComplete}
                       onBonusComplete={handleBonusChoreComplete}
                     />
@@ -839,10 +840,12 @@ export default function Dashboard() {
                 </a>
               </div>
               
-              <TransactionsTable limit={5} />
+              <TransactionsMobile limit={5} />
+              <TransactionsTableDesktop limit={5} />
             </section>
             
-            {/* WebSocket Debug Panel - visible to all users for testing */}
+            {/* WebSocket Debug Panel - visible only in development */}
+            {import.meta.env.DEV && (
               <section className="mt-8 p-4 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -886,6 +889,7 @@ export default function Dashboard() {
                   <p className="text-sm text-gray-500 dark:text-gray-400">No WebSocket events received yet. Try refreshing or performing an action.</p>
                 )}
               </section>
+            )}
             </>
           )}
       </div>

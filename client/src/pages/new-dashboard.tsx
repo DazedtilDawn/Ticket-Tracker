@@ -6,8 +6,9 @@ import { useAuthStore } from "@/store/auth-store";
 import { useStatsStore } from "@/store/stats-store";
 import { createWebSocketConnection, subscribeToChannel, sendMessage } from "@/lib/websocketClient";
 import ProgressCard from "@/components/progress-card";
-import ChoreCard from "@/components/chore-card";
-import TransactionsTable from "@/components/transactions-table";
+import SwipeableChoreCard from "@/components/swipeable-chore-card";
+import TransactionsMobile from "@/components/transactions-mobile";
+import TransactionsTableDesktop from "@/components/transactions-table-desktop";
 import { NewChoreDialog } from "@/components/new-chore-dialog";
 import { BadBehaviorDialog } from "@/components/bad-behavior-dialog";
 import { GoodBehaviorDialog } from "@/components/good-behavior-dialog";
@@ -511,7 +512,8 @@ export default function Dashboard() {
                           View All
                         </a>
                       </div>
-                      <TransactionsTable limit={10} />
+                      <TransactionsMobile limit={10} />
+                      <TransactionsTableDesktop limit={10} />
                     </div>
                   </div>
                 </section>
@@ -569,9 +571,9 @@ export default function Dashboard() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {data?.chores && data.chores.length > 0 ? (
                       data.chores.map(chore => (
-                        <ChoreCard 
-                          key={chore.id} 
-                          chore={chore} 
+                        <SwipeableChoreCard
+                          key={chore.id}
+                          chore={chore}
                           onComplete={handleChoreComplete}
                           onBonusComplete={handleBonusChoreComplete}
                         />
@@ -593,7 +595,8 @@ export default function Dashboard() {
                     </a>
                   </div>
                   
-                  <TransactionsTable limit={5} />
+                  <TransactionsMobile limit={5} />
+                  <TransactionsTableDesktop limit={5} />
                 </section>
               </>
             )}

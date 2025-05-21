@@ -3,7 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore, type UserInfo } from "@/store/auth-store";
 import { useStatsStore } from "@/store/stats-store";
 import { subscribeToChannel } from "@/lib/websocketClient";
-import TransactionsTable from "@/components/transactions-table";
+import TransactionsMobile from "@/components/transactions-mobile";
+import TransactionsTableDesktop from "@/components/transactions-table-desktop";
 import { 
   Card, 
   CardContent, 
@@ -214,7 +215,8 @@ export default function Transactions() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <TransactionsTable userId={userId} limit={25} />
+            <TransactionsMobile userId={userId} limit={25} />
+            <TransactionsTableDesktop userId={userId} limit={25} />
           </CardContent>
         </Card>
       </div>

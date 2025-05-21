@@ -31,7 +31,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { subscribeToChannel } from "@/lib/websocketClient";
 import { useLocation } from "wouter";
 
-interface TransactionsTableProps {
+export interface TransactionsTableProps {
   userId?: string;
   limit?: number;
 }
