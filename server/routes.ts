@@ -48,10 +48,14 @@ function extractAsin(url: string): string {
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
-  // Register only one profile image handler - this is the definitive implementation
-  console.log("[SETUP] Registering profile image routes (v2)...");
+  // Register image upload handlers
+  console.log('[SETUP] Registering profile image routes...');
   registerProfileImageRoutes(app);
-  console.log("[SETUP] Profile image routes registered successfully");
+  console.log('[SETUP] Profile image routes registered successfully');
+  
+  console.log('[SETUP] Registering banner image routes...');
+  registerBannerImageRoutes(app);
+  console.log('[SETUP] Banner image routes registered successfully');
 
   // Create an endpoint to refresh the balances of all users
   app.post("/api/transactions/refresh-balances", async (req: Request, res: Response) => {
