@@ -6,6 +6,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { useStatsStore } from "@/store/stats-store";
 import { ticketsToUSD } from "@/lib/utils";
 import ProgressRing from "@/components/ui/progress-ring";
+import { TicketDisplay } from "@/components/ticket-display";
 
 interface ChildDashboardHeaderProps {
   activeGoal?: { progress: number } | null;
@@ -45,16 +46,12 @@ export default function ChildDashboardHeader({ activeGoal }: ChildDashboardHeade
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
             {user.name}
           </h2>
-          <div className="mt-1 flex items-center space-x-2">
-            <div className="flex items-center space-x-2 rounded-lg bg-pink-100 dark:bg-purple-900 px-2 py-1">
-              <Ticket className="h-5 w-5 text-pink-500 dark:text-purple-300" />
-              <span className="text-xl font-bold text-pink-700 dark:text-purple-200">
-                {balance}
-              </span>
-            </div>
-            <span className="text-xs text-muted-foreground">
-              ({ticketsToUSD(balance)})
-            </span>
+          <div className="mt-2">
+            <TicketDisplay 
+              balance={balance} 
+              size="lg" 
+              className="shadow-md hover:shadow-lg transition-shadow duration-300"
+            />
           </div>
         </div>
       </div>
