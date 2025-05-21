@@ -37,9 +37,8 @@ export function Sidebar() {
   const viewingChildId = useAuthStore(state => state.viewingChildId);
 
   // Dashboard always lives at '/'. Parent/child view is handled in routing logic
-  const homeHref = '/';
   const navItems = [
-    { path: homeHref, label: 'Dashboard', icon: 'ri-dashboard-line' },
+    { path: '/', label: 'Dashboard', icon: 'ri-dashboard-line' },
     { path: '/chores', label: 'Chores', icon: 'ri-list-check-2' },
     { path: '/family-catalog', label: 'Family Catalog', icon: 'ri-store-2-line' },
     { path: '/transactions', label: 'Transactions', icon: 'ri-exchange-funds-line' },
@@ -100,7 +99,7 @@ export function Sidebar() {
   return (
     <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-sm">
       <div className="p-5 border-b border-gray-200 dark:border-gray-700">
-        <a href={homeHref} className="flex items-center space-x-3">
+        <a href="/" className="flex items-center space-x-3">
           <div className="bg-primary-600 p-2 rounded-lg">
             <i className="ri-ticket-2-line text-white text-xl"></i>
           </div>

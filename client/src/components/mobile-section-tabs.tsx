@@ -28,7 +28,7 @@ export default function MobileSectionTabs() {
   }, []);
 
   return (
-    <nav className="child-tabs bg-background flex gap-6 justify-center text-sm py-2 border-b">
+    <nav className="child-tabs sticky top-14 z-20 bg-background/80 backdrop-blur flex gap-6 justify-center text-sm py-2 border-b">
       {SECTIONS.map(({ id, label }) => (
         <a
           key={id}

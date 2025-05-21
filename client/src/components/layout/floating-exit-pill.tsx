@@ -19,10 +19,12 @@ export default function FloatingExitPill() {
     <Button
       onClick={handleClick}
       aria-label="Return to Parent View"
-      className="fixed bottom-20 left-4 z-50 rounded-full px-4 py-2 shadow backdrop-blur-md bg-background/80"
+      className="group fixed bottom-20 left-4 z-50 rounded-full px-3 py-2 shadow backdrop-blur-md bg-background/80 flex items-center gap-1"
     >
-      <ArrowLeft className="h-4 w-4 mr-2" />
-      <span className="text-sm font-medium">Return</span>
+      <ArrowLeft className="h-4 w-4" />
+      <span className="hidden group-hover:inline group-focus-visible:inline sm:inline text-sm font-medium ml-1">
+        Parent View
+      </span>
     </Button>
   );
 }

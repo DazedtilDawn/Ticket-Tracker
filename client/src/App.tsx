@@ -20,7 +20,7 @@ import DebugPage from "@/pages/debug";
 import { useAuthStore } from "./store/auth-store";
 import { Sidebar } from "./components/layout/sidebar";
 import { MobileNav } from "./components/layout/mobile-nav";
-import FloatingExitFab from "./components/layout/floating-exit-fab";
+import FloatingExitPill from "./components/layout/floating-exit-pill";
 
 function ProtectedRoute({ component: Component, ...rest }) {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
@@ -54,7 +54,7 @@ function AppLayout({ children }) {
         {children}
       </main>
       <MobileNav />
-      <FloatingExitFab />
+      <FloatingExitPill />
     </div>
   );
 }
