@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { useAuthStore } from "@/store/auth-store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ImageIcon, Edit2Icon } from "lucide-react";
+import { ImageIcon, Edit2Icon, UserIcon } from "lucide-react";
 
 interface DashboardBannerProps {
   defaultBannerColor?: string;
@@ -89,6 +89,14 @@ export default function DashboardBanner({ defaultBannerColor = "bg-gradient-to-r
               <p className="text-sm text-gray-200">
                 {format(new Date(), "EEEE, MMMM d, yyyy")}
               </p>
+              
+              {/* Show "viewing as" message in the banner for viewing child as parent */}
+              {user?.role === "parent" && useAuthStore.getState().isViewingAsChild() && (
+                <div className="text-xs bg-amber-500/60 text-white px-2 py-1 rounded-full mt-1 inline-flex items-center">
+                  <UserIcon className="h-3 w-3 mr-1" />
+                  Managing {user?.name}'s account
+                </div>
+              )}
             </div>
           </div>
         </div>

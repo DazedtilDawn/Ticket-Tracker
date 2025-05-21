@@ -706,16 +706,6 @@ export default function Dashboard() {
       
       {/* Content container */}
       <div className="p-4 md:p-6 max-w-7xl mx-auto">
-        {/* Child view indicator */}
-        {viewingChild && (
-          <Alert className="mb-6 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800">
-            <UserIcon className="h-4 w-4 text-amber-800 dark:text-amber-300" />
-            <AlertDescription className="text-amber-800 dark:text-amber-300">
-              You are viewing {user?.name}'s dashboard. All actions will affect their account.
-            </AlertDescription>
-          </Alert>
-        )}
-
         {!isParentView && (
           <>
             <ChildDashboardHeader activeGoal={data?.activeGoal} />
