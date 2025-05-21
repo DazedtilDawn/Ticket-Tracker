@@ -745,18 +745,7 @@ export default function Dashboard() {
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Savings Progress</h3>
                     <div className="flex items-center gap-4">
                       {/* Purchase Button - Only show for child or when viewing as child */}
-                      {(viewingChild || user?.role === 'child') && (
-                        <PurchaseDialog onCompleted={() => refetch()}>
-                          <Button
-                            variant="outline"
-                            size="default"
-                            className="flex items-center text-primary-600 border-primary-200 hover:bg-primary-50 hover:text-primary-700 dark:text-primary-400 dark:border-primary-900 dark:hover:bg-primary-950 dark:hover:text-primary-300 h-12"
-                          >
-                            <ShoppingCartIcon className="mr-2 h-5 w-5" />
-                            Spend Tickets
-                          </Button>
-                        </PurchaseDialog>
-                      )}
+                      {/* Spend Tickets button moved to header */}
                     </div>
                   </div>
                   

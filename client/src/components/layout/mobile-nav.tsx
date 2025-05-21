@@ -211,7 +211,7 @@ export function MobileNav() {
       
       {/* Mobile bottom navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg z-50">
-        <div className={`grid ${user?.role === 'parent' && !viewingAsChild ? 'grid-cols-5' : 'grid-cols-4'} h-16`}>
+        <div className={`grid ${user?.role === 'parent' ? 'grid-cols-5' : 'grid-cols-4'} h-16`}>
           {/* Regular navigation items */}
           {navItems.map(item => (
             <a
@@ -227,6 +227,17 @@ export function MobileNav() {
               <span className="text-xs mt-1">{item.label}</span>
             </a>
           ))}
+
+          {/* Switch back to parent when viewing as child */}
+          {viewingAsChild && (
+            <button
+              onClick={handleResetToParent}
+              className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400"
+            >
+              <Crown className="text-xl" />
+              <span className="text-xs mt-1">Parent</span>
+            </button>
+          )}
           
           {/* Parent-only navigation items */}
           {user?.role === 'parent' && !viewingAsChild && parentNavItems.map(item => (

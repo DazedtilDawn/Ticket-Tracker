@@ -528,16 +528,7 @@ export default function Dashboard() {
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Savings Progress</h3>
                         <div className="flex items-center gap-4">
-                          <PurchaseDialog onCompleted={() => refetch()}>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex items-center text-primary-600 border-primary-200 hover:bg-primary-50 hover:text-primary-700 dark:text-primary-400 dark:border-primary-900 dark:hover:bg-primary-950 dark:hover:text-primary-300"
-                            >
-                              <ShoppingCartIcon className="mr-2 h-4 w-4" />
-                              Spend Tickets
-                            </Button>
-                          </PurchaseDialog>
+                          {/* Spend Tickets button moved to header */}
                         </div>
                       </div>
                       
