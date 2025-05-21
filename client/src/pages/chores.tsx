@@ -6,7 +6,7 @@ import { queryClient } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth-store";
 import { useStatsStore } from "@/store/stats-store";
 import { createWebSocketConnection, subscribeToChannel } from "@/lib/websocketClient";
-import ChoreCard from "@/components/chore-card";
+import SwipeableChoreCard from "@/components/swipeable-chore-card";
 import { SpinPromptModal } from "@/components/spin-prompt-modal";
 import { ChildBonusWheel } from "@/components/child-bonus-wheel";
 import { NewChoreDialog } from "@/components/new-chore-dialog";
@@ -405,10 +405,10 @@ export default function Chores() {
                   chores
                     .filter((chore: Chore) => chore.is_active)
                     .map((chore: Chore) => (
-                      <ChoreCard 
-                        key={chore.id} 
-                        chore={chore} 
-                        onComplete={handleChoreComplete} 
+                      <SwipeableChoreCard
+                        key={chore.id}
+                        chore={chore}
+                        onComplete={handleChoreComplete}
                       />
                     ))
                 ) : (

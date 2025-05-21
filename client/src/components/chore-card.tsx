@@ -7,7 +7,7 @@ import { CheckCircle, Award } from "lucide-react";
 import { BonusBadge } from "@/components/bonus-badge";
 import { useMobile } from "@/context/MobileContext";
 
-interface ChoreCardProps {
+export interface ChoreCardProps {
   chore: {
     id: number;
     name: string;

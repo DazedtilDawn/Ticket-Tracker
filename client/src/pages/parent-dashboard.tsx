@@ -4,7 +4,8 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth-store";
 import { createWebSocketConnection, subscribeToChannel } from "@/lib/websocketClient"; // Corrected import
-import TransactionsTable from "@/components/transactions-table"; // Keep if needed
+import TransactionsMobile from "@/components/transactions-mobile";
+import TransactionsTableDesktop from "@/components/transactions-table-desktop";
 import { NewChoreDialog } from "@/components/new-chore-dialog";
 import { BadBehaviorDialog } from "@/components/bad-behavior-dialog";
 import { GoodBehaviorDialog } from "@/components/good-behavior-dialog";
@@ -311,7 +312,8 @@ export default function ParentDashboard() {
                       <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-600"></div>
                     </div>
                   ) : (
-                    <TransactionsTable limit={10} />
+                    <TransactionsMobile limit={10} />
+                    <TransactionsTableDesktop limit={10} />
                   )}
                 </div>
               </div>
