@@ -14,6 +14,7 @@ export const users = pgTable("users", {
   passwordHash: text("password_hash"),
   role: text("role").notNull().default("child"), // "parent" or "child"
   profile_image_url: text("profile_image_url"), // URL to the user's profile image
+  banner_image_url: text("banner_image_url"), // URL to the user's banner image
   balance_cache: integer("balance_cache"),
   created_at: timestamp("created_at", { withTimezone: true }),
   family_id: integer("family_id")

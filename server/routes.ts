@@ -34,6 +34,7 @@ import { success, failure } from "./lib/responses";
 import { TICKET_CENT_VALUE } from "../config/business";
 
 import { registerProfileImageRoutes } from "./lib/profile-upload";
+import { registerBannerImageRoutes } from "./lib/banner-upload";
 
 function extractAsin(url: string): string {
   const asinPattern = /(?:\/dp\/|\/gp\/product\/|\/ASIN\/|%2Fdp%2F)([A-Z0-9]{10})/i;

@@ -9,6 +9,7 @@ export interface UserInfo {
   username: string;
   role: string;
   profile_image_url?: string | null;
+  banner_image_url?: string | null;
 }
 
 interface AuthState {

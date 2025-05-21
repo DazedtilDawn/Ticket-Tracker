@@ -77,30 +77,30 @@ export default function DashboardBanner({ defaultBannerColor = "bg-gradient-to-r
       
       // Create a FormData object to send the file
       const formData = new FormData();
-      formData.append('profileImage', file);
+      formData.append('bannerImage', file);
       
-      // Send the file to the profile image endpoint
-      const response = await fetch('/api/users/profile-image', {
+      // Send the file to the banner image endpoint
+      const response = await fetch('/api/users/banner-image', {
         method: 'POST',
         body: formData,
       });
       
       if (!response.ok) {
-        throw new Error('Failed to upload image');
+        throw new Error('Failed to upload banner image');
       }
       
       // Get the updated user data
       await authStore.refreshUser();
       
       toast({
-        title: "Profile image updated",
-        description: "Your profile image has been updated successfully",
+        title: "Banner image updated",
+        description: "Your dashboard banner has been updated successfully",
       });
     } catch (error) {
-      console.error('Error uploading profile image:', error);
+      console.error('Error uploading banner image:', error);
       toast({
         title: "Upload failed",
-        description: "Failed to upload image. Please try again.",
+        description: "Failed to upload banner image. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -115,8 +115,12 @@ export default function DashboardBanner({ defaultBannerColor = "bg-gradient-to-r
       <div 
         className={`relative w-full h-32 sm:h-48 ${defaultBannerColor} overflow-hidden`}
         style={{
-          // Using profile image as a background if available, otherwise use the default gradient
-          backgroundImage: user?.profile_image_url ? `url(${user.profile_image_url})` : undefined,
+          // Use banner image if available, otherwise use profile image as fallback, or default gradient
+          backgroundImage: user?.banner_image_url 
+            ? `url(${user.banner_image_url})` 
+            : user?.profile_image_url 
+              ? `url(${user.profile_image_url})` 
+              : undefined,
           backgroundSize: 'cover',
           backgroundPosition: 'center center',
           backgroundRepeat: 'no-repeat'
@@ -139,7 +143,7 @@ export default function DashboardBanner({ defaultBannerColor = "bg-gradient-to-r
             ) : (
               <>
                 <ImageIcon className="w-4 h-4 mr-1" />
-                {isEditMode ? "Cancel" : "Change Profile"}
+                {isEditMode ? "Cancel" : "Change Banner"}
               </>
             )}
           </Button>
@@ -166,10 +170,10 @@ export default function DashboardBanner({ defaultBannerColor = "bg-gradient-to-r
                 disabled={isUploading}
               >
                 <UploadIcon className="w-4 h-4 mr-2" />
-                Choose Profile Image
+                Choose Banner Image
               </Button>
-              <p className="text-white text-sm mt-2">Recommended size: 1200×1200 pixels</p>
-              <p className="text-white/70 text-xs mt-1">Your profile image will be used for your banner</p>
+              <p className="text-white text-sm mt-2">Recommended size: 1200×300 pixels</p>
+              <p className="text-white/70 text-xs mt-1">This will be your dashboard banner background</p>
             </div>
           </div>
         )}
