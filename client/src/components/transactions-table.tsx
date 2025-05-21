@@ -55,7 +55,7 @@ export default function TransactionsTable({ userId, limit = 10 }: TransactionsTa
   
   const queryUrl = `/api/transactions${effectiveUserId ? `?userId=${effectiveUserId}` : ''}${limit ? `${effectiveUserId ? '&' : '?'}limit=${limit}` : ''}`;
   
-  const { data: transactions, isLoading, refetch } = useQuery({
+  const { data: transactions = [], isLoading, refetch } = useQuery<any[]>({
     queryKey: [queryUrl],
     // Add automatic refetching to ensure we always have fresh data
     refetchInterval: 5000, // Refresh every 5 seconds as a backup

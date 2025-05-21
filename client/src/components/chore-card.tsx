@@ -11,9 +11,9 @@ export interface ChoreCardProps {
   chore: {
     id: number;
     name: string;
-    description: string;
+    description: string | null;
     base_tickets: number;
-    tier: string;
+    tier: string | null;
     is_active: boolean;
     image_url?: string;
     emoji?: string | null;
@@ -110,7 +110,7 @@ export default function ChoreCard({ chore, onComplete, onBonusComplete }: ChoreC
             </p>
           </div>
           <div className="ml-4 flex-shrink-0">
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white ${formatTierStyleClass(chore.tier)}`}>
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white ${formatTierStyleClass(chore.tier ?? '')}`}>
               {chore.tier}
             </span>
           </div>

@@ -38,11 +38,12 @@ export function EditProductDialog({ product, children, onProductUpdated }: EditP
     try {
       await apiRequest(`/api/products/${product.id}`, {
         method: "PUT",
-        body: {
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           title: values.title,
           price_cents: Math.round(parseFloat(values.price_cents) * 100),
           image_url: values.image_url || null
-        }
+        })
       });
       toast({ title: "Product updated" });
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });

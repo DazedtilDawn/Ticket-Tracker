@@ -63,7 +63,7 @@ export function BadBehaviorDialog({ children, onCompleted }: BadBehaviorDialogPr
     resolver: zodResolver(formSchema),
     defaultValues: {
       user_id: "",
-      tickets: "1",
+      tickets: 1,
       reason: "",
     },
   });
@@ -105,7 +105,7 @@ export function BadBehaviorDialog({ children, onCompleted }: BadBehaviorDialogPr
   const onSubmit = (data: FormValues) => {
     badBehaviorMutation.mutate({
       user_id: parseInt(data.user_id),
-      tickets: parseInt(data.tickets),
+      tickets: data.tickets,
       reason: data.reason,
     });
   };

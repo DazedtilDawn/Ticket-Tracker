@@ -4,9 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth-store";
 import { createWebSocketConnection, subscribeToChannel } from "@/lib/websocketClient"; // Corrected import
-import { useMobile } from "@/hooks/use-mobile";
-import TransactionsMobile from "@/components/transactions-mobile";
-import TransactionsTableDesktop from "@/components/transactions-table-desktop";
+import TransactionsTable from "@/components/transactions-table";
 import { NewChoreDialog } from "@/components/new-chore-dialog";
 import { BadBehaviorDialog } from "@/components/bad-behavior-dialog";
 import { GoodBehaviorDialog } from "@/components/good-behavior-dialog";
@@ -19,7 +17,6 @@ import { PlusIcon, UserIcon, MinusCircleIcon, PlusCircleIcon, ImageIcon } from "
 import { format } from "date-fns";
 
 export default function ParentDashboard() {
-  const { isMobile } = useMobile();
   const { user, setFamilyUsers, switchChildView, getChildUsers } = useAuthStore();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -309,13 +306,13 @@ export default function ParentDashboard() {
                       View All
                     </a>
                   </div>
-                  {isTransactionsLoading ? (
-                    <div className="flex justify-center my-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-600"></div>
-                    </div>
-                  ) : (
-                    isMobile ? <TransactionsMobile limit={10} /> : <TransactionsTableDesktop limit={10} />
-                  )}
+                    {isTransactionsLoading ? (
+                      <div className="flex justify-center my-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-600"></div>
+                      </div>
+                    ) : (
+                      <TransactionsTable limit={10} />
+                    )}
                 </div>
               </div>
             </section>

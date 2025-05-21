@@ -26,7 +26,7 @@ export function SharedCatalog({ onProductSelected }: SharedCatalogProps) {
   const canManageCatalog = user?.role === 'parent' && !isViewingAsChild();
   
   // Get all available products
-  const { data: products = [] } = useQuery({
+  const { data: products = [] } = useQuery<any[]>({
     queryKey: ["/api/products"],
   });
 

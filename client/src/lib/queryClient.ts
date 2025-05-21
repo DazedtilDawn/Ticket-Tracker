@@ -80,10 +80,8 @@ export async function apiRequest(
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
-export const getQueryFn: <T>(options: {
-  on401: UnauthorizedBehavior;
-}) => QueryFunction<T> =
-  ({ on401: unauthorizedBehavior }) =>
+export const getQueryFn =
+  <T,>({ on401: unauthorizedBehavior }: { on401: UnauthorizedBehavior }): QueryFunction<T | null> =>
   async ({ queryKey }) => {
     // Check if we're viewing as a child
     const authStore = JSON.parse(localStorage.getItem('ticket-tracker-auth') || '{}');

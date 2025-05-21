@@ -19,17 +19,17 @@ export function showToast(
 }
 
 export function showSuccessToast(
+  toastFn: ReturnType<typeof useToast>["toast"],
   title: string,
-  description?: string, 
-  toastFn: ReturnType<typeof useToast>["toast"]
+  description?: string
 ) {
   showToast({ title, description }, toastFn);
 }
 
 export function showErrorToast(
+  toastFn: ReturnType<typeof useToast>["toast"],
   title: string,
-  description?: string,
-  toastFn: ReturnType<typeof useToast>["toast"] 
+  description?: string
 ) {
   showToast({ title, description, variant: "destructive" }, toastFn);
 }

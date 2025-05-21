@@ -13,6 +13,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/auth-store';
+import { useToast } from '@/hooks/use-toast';
 import { showErrorToast } from '@/lib/toast';
 import { ChevronDownIcon, LogOutIcon, UserIcon, Users, Crown } from 'lucide-react';
 
@@ -26,6 +27,7 @@ interface UserInfo {
 
 export function AccountSwitcher() {
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const {
     user: currentUser,
     originalUser,
@@ -94,10 +96,10 @@ export function AccountSwitcher() {
       if (success) {
         setLocation('/');
       } else {
-        showErrorToast(`Failed to switch to ${user.name}'s account`);
+        showErrorToast(toast, `Failed to switch to ${user.name}'s account`);
       }
     } catch (error) {
-      showErrorToast('An error occurred while switching accounts');
+      showErrorToast(toast, 'An error occurred while switching accounts');
     }
   };
 

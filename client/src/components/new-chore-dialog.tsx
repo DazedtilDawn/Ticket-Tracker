@@ -180,7 +180,8 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
         console.log("Sending chore update request:", payload);
         await apiRequest(`/api/chores/${chore.id}`, {
           method: "PUT",
-          body: payload
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
         });
         toast({
           title: "Chore updated",
@@ -190,7 +191,8 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
         console.log("Sending chore create request:", payload);
         await apiRequest("/api/chores", {
           method: "POST",
-          body: payload
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
         });
         toast({
           title: "Chore created",
@@ -200,7 +202,7 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
       
       onChoreCreated();
       setOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "Failed to save chore",

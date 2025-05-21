@@ -4,7 +4,7 @@ import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { Express, Request, Response } from 'express';
 import { db } from '../db';
-import { storage } from '../storage';
+import { storage as appStorage } from '../storage';
 import { users } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { AuthMiddleware } from './auth';
@@ -51,7 +51,7 @@ export function registerProfileImageRoutes(app: Express) {
   }
   
   // Configure multer with disk storage for reliability
-  const storage = multer.diskStorage({
+  const diskStorage = multer.diskStorage({
     destination: function(req, file, cb) {
       // Double-check directory exists before writing
       if (!fs.existsSync(profilesDir)) {
@@ -73,7 +73,7 @@ export function registerProfileImageRoutes(app: Express) {
   
   // Create multer instance for handling uploads
   const upload = multer({
-    storage: storage,
+    storage: diskStorage,
     limits: { 
       fileSize: 5 * 1024 * 1024, // 5MB limit
       files: 1 // Only one file per request
@@ -94,7 +94,7 @@ export function registerProfileImageRoutes(app: Express) {
   app.use('/api/profile-image/:userId', cors());
   
   // Profile image upload endpoint (parent only)
-  app.post('/api/profile-image/:userId', AuthMiddleware(storage, 'parent'), (req: Request, res: Response) => {
+  app.post('/api/profile-image/:userId', AuthMiddleware(appStorage, 'parent'), (req: Request, res: Response) => {
     const timestamp = new Date().toISOString();
     console.log('[PROFILE] Upload request received:', 
       { userId: req.params.userId, userRole: req.user?.role, timestamp });
