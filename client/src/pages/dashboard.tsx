@@ -10,6 +10,7 @@ import ProgressCard from "@/components/progress-card";
 import ChoreCard from "@/components/chore-card";
 import TransactionsTable from "@/components/transactions-table";
 import ChildDashboardHeader from "@/components/child-dashboard-header";
+import MobileSectionTabs from "@/components/mobile-section-tabs";
 import { NewChoreDialog } from "@/components/new-chore-dialog";
 import { BadBehaviorDialog } from "@/components/bad-behavior-dialog";
 import { GoodBehaviorDialog } from "@/components/good-behavior-dialog";
@@ -536,6 +537,9 @@ export default function Dashboard() {
   // Handle earn transaction completion (from child components)
   const handleChoreComplete = async (choreId: number) => {
     try {
+      navigator.vibrate?.(24);
+    } catch {}
+    try {
       // If we're viewing as a child, include the userId in the request
       const payload: any = { chore_id: choreId };
       
@@ -719,7 +723,12 @@ export default function Dashboard() {
           </Alert>
         )}
 
-        {!isParentView && <ChildDashboardHeader activeGoal={data?.activeGoal} />}
+        {!isParentView && (
+          <>
+            <ChildDashboardHeader activeGoal={data?.activeGoal} />
+            <MobileSectionTabs />
+          </>
+        )}
         
         {isLoading ? (
           <div className="flex justify-center my-12">
@@ -734,42 +743,11 @@ export default function Dashboard() {
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Savings Progress</h3>
                     <div className="flex items-center gap-4">
-                      {/* Enhanced ticket balance display with larger graphics */}
-                      <div className="flex items-center bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-800/20 px-4 py-3 rounded-lg border border-amber-200 dark:border-amber-800/50 shadow-sm">
-                        <div className="relative mr-3">
-                          <div className="relative">
-                            <Ticket className="h-12 w-12 text-amber-500 dark:text-amber-400" strokeWidth={1.5} />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <span className="text-xl font-bold text-amber-700 dark:text-amber-300">
-                                {balance || data?.balance || 0}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="absolute -right-1 -top-1">
-                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-gray-800">
-                              {user?.role === 'child' ? '🎯' : '👑'}
-                            </span>
-                          </div>
-                        </div>
-                        
-                        <div className="flex flex-col">
-                          <span className="text-xs uppercase tracking-wider text-amber-700/80 dark:text-amber-400/80 font-medium">
-                            Current Balance
-                          </span>
-                          <span className="text-lg font-bold text-amber-800 dark:text-amber-300">
-                            {balance || data?.balance || 0} Tickets
-                          </span>
-                          <span className="text-xs text-amber-600/80 dark:text-amber-500/80">
-                            Worth: ${((balance || data?.balance || 0) * TICKET_DOLLAR_VALUE).toFixed(2)} USD
-                          </span>
-                        </div>
-                      </div>
-                      
                       {/* Purchase Button - Only show for child or when viewing as child */}
                       {(viewingChild || user?.role === 'child') && (
                         <PurchaseDialog onCompleted={() => refetch()}>
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="default"
                             className="flex items-center text-primary-600 border-primary-200 hover:bg-primary-50 hover:text-primary-700 dark:text-primary-400 dark:border-primary-900 dark:hover:bg-primary-950 dark:hover:text-primary-300 h-12"
                           >

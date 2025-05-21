@@ -33,15 +33,14 @@ export default function ChildDashboardHeader({ activeGoal }: ChildDashboardHeade
   return (
     <div className="mb-6 flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm">
       <div className="flex items-center space-x-4">
-        <div className="relative w-14 h-14">
-          <ProgressRing percent={progress} size={56} strokeWidth={4} color="#fbbf24" />
-          <Avatar className="h-10 w-10 absolute inset-0 m-auto border">
+        <ProgressRing percent={progress} size={64} strokeWidth={6} color="#fbbf24">
+          <Avatar className="h-12 w-12 border">
             <AvatarImage src={user.profile_image_url || undefined} alt={user.name} />
             <AvatarFallback className="bg-primary-600 text-white text-sm">
               {getInitials(user.name)}
             </AvatarFallback>
           </Avatar>
-        </div>
+        </ProgressRing>
         <div>
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
             {user.name}
@@ -53,8 +52,8 @@ export default function ChildDashboardHeader({ activeGoal }: ChildDashboardHeade
                 {balance}
               </span>
             </div>
-            <span className="text-xs text-pink-600 dark:text-purple-400">
-              {ticketsToUSD(balance)}
+            <span className="text-xs text-muted-foreground">
+              ({ticketsToUSD(balance)})
             </span>
           </div>
         </div>

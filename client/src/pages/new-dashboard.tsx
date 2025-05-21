@@ -18,6 +18,7 @@ import { PurchaseDialog } from "@/components/purchase-dialog";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { PlusIcon, UserIcon, MinusCircleIcon, PlusCircleIcon, ShoppingCartIcon, BarChart3Icon } from "lucide-react";
+import MobileSectionTabs from "@/components/mobile-section-tabs";
 import { format } from "date-fns";
 
 export default function Dashboard() {
@@ -311,6 +312,10 @@ export default function Dashboard() {
   // Handle when a chore is completed (regular chore)
   const handleChoreComplete = async (choreId: number) => {
     console.log(`Chore ${choreId} completed. Updating UI.`);
+
+    try {
+      navigator.vibrate?.(24);
+    } catch {}
     
     // We don't need to manually update the UI here because:
     // 1. The server will emit a transaction:earn WebSocket event
@@ -419,6 +424,7 @@ export default function Dashboard() {
           </div>
         ) : (
           <>
+            <MobileSectionTabs />
             {/* Parent Dashboard - Only visible when not viewing a child */}
             {user?.role === 'parent' && !viewingChild ? (
               <>
@@ -520,14 +526,9 @@ export default function Dashboard() {
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Savings Progress</h3>
                         <div className="flex items-center gap-4">
-                          <span className="text-sm text-gray-500 dark:text-gray-400">
-                            Current Balance: <span className="font-semibold text-primary-600 dark:text-primary-400">
-                              {balance || data?.balance || 0} tickets
-                            </span>
-                          </span>
                           <PurchaseDialog onCompleted={() => refetch()}>
-                            <Button 
-                              variant="outline" 
+                            <Button
+                              variant="outline"
                               size="sm"
                               className="flex items-center text-primary-600 border-primary-200 hover:bg-primary-50 hover:text-primary-700 dark:text-primary-400 dark:border-primary-900 dark:hover:bg-primary-950 dark:hover:text-primary-300"
                             >
