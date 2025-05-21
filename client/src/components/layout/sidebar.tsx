@@ -36,7 +36,8 @@ export function Sidebar() {
   const { user, isViewingAsChild, switchChildView, resetChildView, getChildUsers, familyUsers } = useAuthStore();
   const viewingChildId = useAuthStore(state => state.viewingChildId);
 
-  const homeHref = viewingChildId ? '/parent-dashboard' : '/dashboard';
+  // Dashboard always lives at '/'. Parent/child view is handled in routing logic
+  const homeHref = '/';
   const navItems = [
     { path: homeHref, label: 'Dashboard', icon: 'ri-dashboard-line' },
     { path: '/chores', label: 'Chores', icon: 'ri-list-check-2' },
