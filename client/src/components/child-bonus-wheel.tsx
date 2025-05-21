@@ -61,6 +61,7 @@ interface ChildBonusWheelProps {
   onClose: () => void;
   dailyBonusId: number | null;
   childName: string;
+  triggerType?: 'chore_completion' | 'good_behavior_reward' | 'respin';
 }
 
 export function ChildBonusWheel({

@@ -80,7 +80,10 @@ export function SpinPromptModal({
             🌟 BONUS TIME, {childName}! 🌟
           </DialogTitle>
           <DialogDescription className="text-center">
-            You completed your special bonus chore: <strong>{choreName}</strong>!
+            {choreName === "Good Behavior" 
+              ? <span>You earned a special bonus spin for <strong>good behavior</strong>!</span>
+              : <span>You completed your special bonus chore: <strong>{choreName}</strong>!</span>
+            }
           </DialogDescription>
         </DialogHeader>
         
