@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useToast } from '@/hooks/use-toast';
 import { showErrorToast } from '@/lib/toast';
 
 interface UserInfo {
@@ -18,6 +19,7 @@ interface UserInfo {
 
 export function FamilyUserSelector() {
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const { loginAsUser, setFamilyUsers, autoLoginEnabled, setAutoLoginEnabled } = useAuthStore();
 
   // Fetch all users
@@ -78,7 +80,7 @@ export function FamilyUserSelector() {
   
   // Show error toast with proper typing
   const showError = (message: string) => {
-    showErrorToast(message);
+    showErrorToast(toast, message);
   };
 
   if (isLoading) {

@@ -137,7 +137,7 @@ export function AddProductDialog({ children, onProductAdded }: AddProductDialogP
       
       // Switch to the product display section
       setActiveTab("preview");
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Creation Error",
         description: error.message || "Failed to create product",
@@ -170,7 +170,7 @@ export function AddProductDialog({ children, onProductAdded }: AddProductDialogP
       setOpen(false);
       setSearchResult(null);
       manualForm.reset();
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "Failed to add product to wishlist",

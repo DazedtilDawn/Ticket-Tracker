@@ -76,7 +76,7 @@ export function GoodBehaviorDialog({ children, onCompleted }: GoodBehaviorDialog
     defaultValues: {
       user_id: "",
       rewardType: "tickets",
-      tickets: "1",
+      tickets: 1,
       reason: "",
     },
   });

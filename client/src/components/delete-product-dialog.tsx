@@ -36,8 +36,8 @@ export function DeleteProductDialog({
   const [step, setStep] = useState(1);
   
   // Check if this product is being used in any goals
-  const { data: usageCheck, isLoading: checkingUsage } = useQuery({
-    queryKey: ["/api/goals", `?productId=${productId}`], 
+  const { data: usageCheck = [], isLoading: checkingUsage } = useQuery<any[]>({
+    queryKey: ["/api/goals", `?productId=${productId}`],
     enabled: step === 1,
   });
   

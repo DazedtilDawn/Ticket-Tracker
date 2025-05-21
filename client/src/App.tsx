@@ -22,7 +22,7 @@ import { Sidebar } from "./components/layout/sidebar";
 import { MobileNav } from "./components/layout/mobile-nav";
 import FloatingExitPill from "./components/layout/floating-exit-pill";
 
-function ProtectedRoute({ component: Component, ...rest }) {
+function ProtectedRoute({ component: Component, ...rest }: { component: React.ComponentType<any> } & Record<string, any>) {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const user = useAuthStore(state => state.user);
   const isViewingAsChild = useAuthStore(state => state.isViewingAsChild);
@@ -40,7 +40,7 @@ function ProtectedRoute({ component: Component, ...rest }) {
   return <Component {...rest} />;
 }
 
-function AppLayout({ children }) {
+function AppLayout({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   
   if (!isAuthenticated) {

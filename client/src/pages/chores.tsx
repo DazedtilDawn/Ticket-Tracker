@@ -213,7 +213,7 @@ export default function Chores() {
         handleBonusChoreComplete(data.daily_bonus_id, data.chore ? data.chore.name : "Daily Bonus Chore");
       }
       
-    } catch (error) {
+    } catch (error: any) {
       // Handle error states with specific messages
       const errorMessage = error.message || "Failed to complete chore";
       
