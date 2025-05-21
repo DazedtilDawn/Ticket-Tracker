@@ -7,6 +7,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { useState, useEffect, useRef } from "react";
 import { Ticket, Star, Trophy } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useMobile } from "@/context/MobileContext";
 import { TICKET_CENT_VALUE } from "../../../config/business";
 
 // Import confetti for celebrations
@@ -40,6 +41,7 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
   const { user, getChildUsers } = useAuthStore();
   const [hasShownConfetti, setHasShownConfetti] = useState(false);
   const progressContainerRef = useRef<HTMLDivElement>(null);
+  const { isMobile } = useMobile();
   
   // Track when we've passed milestone percentages
   const [passedMilestones, setPassedMilestones] = useState({
@@ -345,11 +347,21 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
             'Not enough data to estimate'
           )}
         </div>
-        <div className="flex space-x-2">
-          <Button variant="outline" size="sm" onClick={handleSwitchGoal}>
+        <div className={isMobile ? "flex flex-col gap-2 w-full" : "flex space-x-2"}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSwitchGoal}
+            className={isMobile ? "w-full" : ""}
+          >
             Switch Goal
           </Button>
-          <Button asChild variant="secondary" size="sm">
+          <Button
+            asChild
+            variant="secondary"
+            size="sm"
+            className={isMobile ? "w-full" : ""}
+          >
             <a href={amazonUrl} target="_blank" rel="noopener noreferrer">
               View on Amazon
             </a>
