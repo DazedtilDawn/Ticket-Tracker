@@ -14,9 +14,6 @@ interface AndroidInterface {
   clearNotification(id: string): void;
 }
 
-// TypeScript type declaration for navigator.vibrate
-type VibratePattern = number | number[];
-
 // Check if running inside Android WebView
 const isAndroidApp = (): boolean => {
   return typeof (window as any).Android !== 'undefined';
@@ -45,7 +42,12 @@ export const vibrate = (pattern: number | number[]): void => {
     }
   } else if ('vibrate' in navigator) {
     // Fall back to Web Vibration API
-    (navigator as ExtendedNavigator).vibrate(pattern);
+    try {
+      // @ts-ignore - TypeScript doesn't know about navigator.vibrate
+      navigator.vibrate(pattern);
+    } catch (e) {
+      console.error('Vibration failed:', e);
+    }
   }
   // Silently fail if vibration is not supported
 };
@@ -94,25 +96,42 @@ export const hapticFeedback = {
   // For pattern vibrations, we need to check if navigator.vibrate supports patterns
   // For Android interface we'll use sequential vibrations
   success: () => {
-    if (navigator.vibrate && typeof navigator.vibrate === 'function') {
-      // Web browsers that support vibration patterns
-      navigator.vibrate([40, 30, 80]);
-    } else {
-      // Simple fallback
+    try {
+      // @ts-ignore - Handle browser vibration API
+      if (navigator.vibrate && typeof navigator.vibrate === 'function') {
+        // @ts-ignore - Web browsers that support vibration patterns
+        navigator.vibrate([40, 30, 80]);
+      } else {
+        // Simple fallback
+        vibrate(80);
+      }
+    } catch (e) {
       vibrate(80);
     }
   },
   error: () => {
-    if (navigator.vibrate && typeof navigator.vibrate === 'function') {
-      navigator.vibrate([80, 50, 80, 50, 80]);
-    } else {
+    try {
+      // @ts-ignore - Handle browser vibration API
+      if (navigator.vibrate && typeof navigator.vibrate === 'function') {
+        // @ts-ignore - Web browsers that support vibration patterns
+        navigator.vibrate([80, 50, 80, 50, 80]);
+      } else {
+        vibrate(100);
+      }
+    } catch (e) {
       vibrate(100);
     }
   },
   warning: () => {
-    if (navigator.vibrate && typeof navigator.vibrate === 'function') {
-      navigator.vibrate([50, 30, 50]);
-    } else {
+    try {
+      // @ts-ignore - Handle browser vibration API
+      if (navigator.vibrate && typeof navigator.vibrate === 'function') {
+        // @ts-ignore - Web browsers that support vibration patterns
+        navigator.vibrate([50, 30, 50]);
+      } else {
+        vibrate(60);
+      }
+    } catch (e) {
       vibrate(60);
     }
   }
