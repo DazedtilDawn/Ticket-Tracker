@@ -141,6 +141,8 @@ export function GoodBehaviorDialog({ children, onCompleted }: GoodBehaviorDialog
   });
 
   const onSubmit = (data: FormValues) => {
+    console.log("Form submission data:", data);
+    
     const payload: FormDataType = {
       user_id: parseInt(data.user_id),
       reason: data.reason || "",
@@ -153,6 +155,7 @@ export function GoodBehaviorDialog({ children, onCompleted }: GoodBehaviorDialog
     }
     // For bonus spin, we don't send the tickets parameter at all
     
+    console.log("Submitting payload to /api/good-behavior:", payload);
     goodBehaviorMutation.mutate(payload);
   };
 

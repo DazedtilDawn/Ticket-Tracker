@@ -674,7 +674,7 @@ export default function Dashboard() {
         onClose={handleWheelComplete}
         dailyBonusId={dailyBonusId}
         childName={user?.name || ""}
-        triggerType={bonusTriggerType}
+        triggerType={bonusTriggerType || undefined}
       />
       
       {/* Modern Banner Header - replaces traditional header */}
