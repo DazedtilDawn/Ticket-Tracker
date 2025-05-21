@@ -20,7 +20,7 @@ import DebugPage from "@/pages/debug";
 import { useAuthStore } from "./store/auth-store";
 import { Sidebar } from "./components/layout/sidebar";
 import { MobileNav } from "./components/layout/mobile-nav";
-import FloatingExitPill from "./components/layout/floating-exit-pill";
+import ChildViewBanner from "./components/layout/child-view-banner";
 
 function ProtectedRoute({ component: Component, ...rest }: { component: React.ComponentType<any> } & Record<string, any>) {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
@@ -51,10 +51,10 @@ function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="flex flex-col md:flex-row min-h-screen">
       <Sidebar />
       <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+        <ChildViewBanner />
         {children}
       </main>
       <MobileNav />
-      <FloatingExitPill />
     </div>
   );
 }
