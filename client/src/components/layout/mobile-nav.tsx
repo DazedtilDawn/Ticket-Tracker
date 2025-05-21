@@ -17,14 +17,6 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 
-// Navigation items with icons
-const navItems = [
-  { path: "/", label: "Home", icon: "ri-dashboard-line" },
-  { path: "/chores", label: "Chores", icon: "ri-list-check-2" },
-  { path: "/family-catalog", label: "Catalog", icon: "ri-store-2-line" }, // Renamed (shortened for mobile)
-  { path: "/transactions", label: "Tickets", icon: "ri-exchange-funds-line" },
-];
-
 // Parent-only navigation items
 const parentNavItems = [
   { path: "/bonus-management", label: "Bonus Mgmt", icon: "ri-award-line" },
@@ -41,14 +33,23 @@ interface UserInfo {
 export function MobileNav() {
   const [location, setLocation] = useLocation();
   const { theme, setTheme } = useTheme();
-  const { 
-    user, 
-    isViewingAsChild, 
+  const {
+    user,
+    isViewingAsChild,
     switchChildView,
     resetChildView,
     getChildUsers,
     familyUsers
   } = useAuthStore();
+  const viewingChildId = useAuthStore(state => state.viewingChildId);
+
+  const homeHref = viewingChildId ? '/parent-dashboard' : '/dashboard';
+  const navItems = [
+    { path: homeHref, label: 'Home', icon: 'ri-dashboard-line' },
+    { path: '/chores', label: 'Chores', icon: 'ri-list-check-2' },
+    { path: '/family-catalog', label: 'Catalog', icon: 'ri-store-2-line' },
+    { path: '/transactions', label: 'Tickets', icon: 'ri-exchange-funds-line' },
+  ];
   
   const [childUsers, setChildUsers] = useState<UserInfo[]>([]);
   
@@ -209,7 +210,7 @@ export function MobileNav() {
       </div>
       
       {/* Mobile bottom navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg z-10">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg z-50">
         <div className={`grid ${user?.role === 'parent' && !viewingAsChild ? 'grid-cols-5' : 'grid-cols-4'} h-16`}>
           {/* Regular navigation items */}
           {navItems.map(item => (

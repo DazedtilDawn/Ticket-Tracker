@@ -16,14 +16,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
-// Navigation items with icons
-const navItems = [
-  { path: "/", label: "Dashboard", icon: "ri-dashboard-line" },
-  { path: "/chores", label: "Chores", icon: "ri-list-check-2" },
-  { path: "/family-catalog", label: "Family Catalog", icon: "ri-store-2-line" }, // Renamed
-  { path: "/transactions", label: "Transactions", icon: "ri-exchange-funds-line" },
-];
-
 // Parent-only navigation items
 const parentNavItems = [
   { path: "/bonus-management", label: "Bonus Management", icon: "ri-award-line" },
@@ -42,6 +34,15 @@ export function Sidebar() {
   const [location, setLocation] = useLocation();
   const { theme, setTheme } = useTheme();
   const { user, isViewingAsChild, switchChildView, resetChildView, getChildUsers, familyUsers } = useAuthStore();
+  const viewingChildId = useAuthStore(state => state.viewingChildId);
+
+  const homeHref = viewingChildId ? '/parent-dashboard' : '/dashboard';
+  const navItems = [
+    { path: homeHref, label: 'Dashboard', icon: 'ri-dashboard-line' },
+    { path: '/chores', label: 'Chores', icon: 'ri-list-check-2' },
+    { path: '/family-catalog', label: 'Family Catalog', icon: 'ri-store-2-line' },
+    { path: '/transactions', label: 'Transactions', icon: 'ri-exchange-funds-line' },
+  ];
   const [childUsers, setChildUsers] = useState<UserInfo[]>([]);
   
   useEffect(() => {
@@ -98,12 +99,12 @@ export function Sidebar() {
   return (
     <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-sm">
       <div className="p-5 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center space-x-3">
+        <a href={homeHref} className="flex items-center space-x-3">
           <div className="bg-primary-600 p-2 rounded-lg">
             <i className="ri-ticket-2-line text-white text-xl"></i>
           </div>
           <h1 className="text-xl font-bold font-quicksand text-gray-800 dark:text-white">TicketTracker</h1>
-        </div>
+        </a>
       </div>
       
       {/* Quick access section - MOVED ABOVE NAVIGATION
