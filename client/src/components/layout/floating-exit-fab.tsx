@@ -16,12 +16,13 @@ export default function FloatingExitFab() {
   };
 
   return (
-    <Button
+    <button
       onClick={handleClick}
-      aria-label="Return to Parent"
-      className="fixed bottom-4 left-4 z-50 rounded-full p-3 shadow bg-primary text-white hover:bg-primary/90"
+      aria-label="Return to parent"
+      className="fixed bottom-4 left-4 bg-amber-200 text-amber-900 rounded-full shadow-lg px-3 py-2 flex items-center gap-1 hover:bg-amber-300 focus-visible:outline transition-all"
     >
-      <ArrowLeft className="h-5 w-5" />
-    </Button>
+      <ArrowLeft className="h-4 w-4" />
+      <span className="hidden sm:inline">Parent</span>
+    </button>
   );
 }

@@ -5,6 +5,7 @@ import { useStatsStore } from "@/store/stats-store";
 import { subscribeToChannel } from "@/lib/websocketClient";
 import TransactionsMobile from "@/components/transactions-mobile";
 import TransactionsTableDesktop from "@/components/transactions-table-desktop";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { 
   Card, 
   CardContent, 
@@ -36,6 +37,7 @@ export default function Transactions() {
   const { balance, updateBalance } = useStatsStore();
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const isParent = user?.role === "parent";
+  const isDesktop = useMediaQuery('(min-width: 640px)');
   
   // Fetch users if current user is a parent
   const { data: users = [] } = useQuery<UserInfo[]>({
@@ -215,8 +217,11 @@ export default function Transactions() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <TransactionsMobile userId={userId} limit={25} />
-            <TransactionsTableDesktop userId={userId} limit={25} />
+            {isDesktop ? (
+              <TransactionsTableDesktop userId={userId} limit={25} />
+            ) : (
+              <TransactionsMobile userId={userId} limit={25} />
+            )}
           </CardContent>
         </Card>
       </div>
