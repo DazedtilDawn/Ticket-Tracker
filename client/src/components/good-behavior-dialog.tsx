@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/radio-group";
 import { Card, CardContent } from "@/components/ui/card";
 
+// Schema for form validation
 const formSchema = z.object({
   user_id: z.string().min(1, "Please select a child"),
   rewardType: z.enum(["tickets", "spin"]),
@@ -82,7 +83,7 @@ export function GoodBehaviorDialog({ children, onCompleted }: GoodBehaviorDialog
     defaultValues: {
       user_id: "",
       rewardType: "tickets",
-      tickets: 1,
+      tickets: "1", // Note: Must be a string for the form control
       reason: "",
     },
   });
@@ -91,7 +92,7 @@ export function GoodBehaviorDialog({ children, onCompleted }: GoodBehaviorDialog
   const rewardType = form.watch("rewardType");
 
   // Update the title message based on the reward type
-  const [dialogTitle, setDialogTitle] = useState("Add Bonus Tickets");
+  const [dialogTitle, setDialogTitle] = useState("Award Bonus Tickets");
   const [dialogDescription, setDialogDescription] = useState(
     "Reward good behavior with bonus tickets. This will update the child's balance."
   );
@@ -108,15 +109,17 @@ export function GoodBehaviorDialog({ children, onCompleted }: GoodBehaviorDialog
 
   const goodBehaviorMutation = useMutation({
     mutationFn: async (data: FormDataType) => {
+      console.log("[MUTATION] Sending request with data:", data);
       return await apiRequest("/api/good-behavior", {
         method: "POST",
         body: JSON.stringify(data),
       });
     },
     onSuccess: (response) => {
-      const rewardType = form.getValues("rewardType");
-      const actionText = rewardType === "tickets" ? "added" : "awarded";
-      const descriptionText = rewardType === "tickets" 
+      console.log("[MUTATION] Success response:", response);
+      const selectedRewardType = form.getValues("rewardType");
+      const actionText = selectedRewardType === "tickets" ? "added" : "awarded";
+      const descriptionText = selectedRewardType === "tickets" 
         ? "Bonus tickets have been added for good behavior" 
         : "A bonus wheel spin has been awarded for good behavior";
       
@@ -125,29 +128,36 @@ export function GoodBehaviorDialog({ children, onCompleted }: GoodBehaviorDialog
         description: descriptionText,
       });
       
-      // Invalidate relevant queries
+      // Invalidate relevant queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/daily-bonus/unspun'] });
       
       // Close dialog and reset form
       setOpen(false);
-      form.reset();
+      form.reset({
+        user_id: "",
+        rewardType: "tickets",
+        tickets: "1",
+        reason: "",
+      });
       
       if (onCompleted) {
         onCompleted();
       }
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error("[MUTATION] Error:", error);
       toast({
         title: "Error",
-        description: "Failed to process the good behavior reward. Please try again.",
+        description: error.message || "Failed to process the good behavior reward. Please try again.",
         variant: "destructive",
       });
     },
   });
 
-  const onSubmit = (data: FormValues) => {
-    console.log("Form submission data:", data);
+  const handleFormSubmit = (data: FormValues) => {
+    console.log("[FORM] Submitting form with data:", data);
     
     const payload: FormDataType = {
       user_id: parseInt(data.user_id),
@@ -159,14 +169,8 @@ export function GoodBehaviorDialog({ children, onCompleted }: GoodBehaviorDialog
     if (data.rewardType === "tickets" && data.tickets) {
       payload.tickets = data.tickets;
     }
-    // For bonus spin, we don't send the tickets parameter at all
     
-    console.log("Submitting payload to /api/good-behavior:", payload);
-    
-    // Close dialog to avoid double-clicks
-    if (data.rewardType === "spin") {
-      setOpen(false);
-    }
+    console.log("[FORM] Final payload for API:", payload);
     
     // Submit the request
     goodBehaviorMutation.mutate(payload);
@@ -183,7 +187,7 @@ export function GoodBehaviorDialog({ children, onCompleted }: GoodBehaviorDialog
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-5">
             <FormField
               control={form.control}
               name="user_id"
@@ -192,7 +196,7 @@ export function GoodBehaviorDialog({ children, onCompleted }: GoodBehaviorDialog
                   <FormLabel>Child</FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -224,7 +228,7 @@ export function GoodBehaviorDialog({ children, onCompleted }: GoodBehaviorDialog
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
                       className="flex flex-col space-y-1"
                     >
                       <FormItem className="flex items-center space-x-3 space-y-0">
