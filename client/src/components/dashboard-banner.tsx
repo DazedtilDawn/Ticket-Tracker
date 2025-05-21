@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { format } from "date-fns";
 import { useAuthStore } from "@/store/auth-store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ImageIcon, Edit2Icon, UserIcon } from "lucide-react";
+import { ImageIcon, UploadIcon, UserIcon } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface DashboardBannerProps {
   defaultBannerColor?: string;
@@ -11,7 +13,11 @@ interface DashboardBannerProps {
 
 export default function DashboardBanner({ defaultBannerColor = "bg-gradient-to-r from-primary-500/30 via-primary-400/20 to-primary-300/30" }: DashboardBannerProps) {
   const { user } = useAuthStore();
+  const authStore = useAuthStore(); // Get the full store to access refreshUser
+  const { toast } = useToast();
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Calculate initials for fallback
   const getInitials = (name: string) => {
@@ -23,10 +29,84 @@ export default function DashboardBanner({ defaultBannerColor = "bg-gradient-to-r
       ?.substring(0, 2) || "?";
   };
   
-  // For future implementation - this would handle banner image upload
-  const handleBannerUpload = () => {
-    // Future implementation - would open file picker and upload banner image
-    setIsEditMode(false);
+  // Opens the file picker when clicked
+  const handleBannerButtonClick = () => {
+    if (isEditMode) {
+      setIsEditMode(false);
+      return;
+    }
+    
+    // Trigger file input click
+    setIsEditMode(true);
+    
+    // After a short delay to ensure the DOM is updated
+    setTimeout(() => {
+      if (fileInputRef.current) {
+        fileInputRef.current.click();
+      }
+    }, 100);
+  };
+  
+  // Handles the actual file upload when a file is selected
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Only allow images
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file (JPG, PNG, etc.)",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // File size check (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Maximum file size is 5MB",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      setIsUploading(true);
+      
+      // Create a FormData object to send the file
+      const formData = new FormData();
+      formData.append('profileImage', file);
+      
+      // Send the file to the profile image endpoint
+      const response = await fetch('/api/users/profile-image', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+      
+      // Get the updated user data
+      await authStore.refreshUser();
+      
+      toast({
+        title: "Profile image updated",
+        description: "Your profile image has been updated successfully",
+      });
+    } catch (error) {
+      console.error('Error uploading profile image:', error);
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload image. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+      setIsEditMode(false);
+    }
   };
   
   return (
@@ -38,7 +118,8 @@ export default function DashboardBanner({ defaultBannerColor = "bg-gradient-to-r
           // Using profile image as a background if available, otherwise use the default gradient
           backgroundImage: user?.profile_image_url ? `url(${user.profile_image_url})` : undefined,
           backgroundSize: 'cover',
-          backgroundPosition: 'center'
+          backgroundPosition: 'center center',
+          backgroundRepeat: 'no-repeat'
         }}
       >
         {/* Edit banner button (only visible for self or parent) */}
@@ -47,26 +128,48 @@ export default function DashboardBanner({ defaultBannerColor = "bg-gradient-to-r
             variant="outline"
             size="sm"
             className="absolute top-2 right-2 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-700"
-            onClick={() => setIsEditMode(!isEditMode)}
+            onClick={handleBannerButtonClick}
+            disabled={isUploading}
           >
-            <ImageIcon className="w-4 h-4 mr-1" />
-            {isEditMode ? "Cancel" : "Change Banner"}
+            {isUploading ? (
+              <>
+                <div className="animate-spin mr-1 h-4 w-4 border-2 border-b-transparent border-white rounded-full"></div>
+                Uploading...
+              </>
+            ) : (
+              <>
+                <ImageIcon className="w-4 h-4 mr-1" />
+                {isEditMode ? "Cancel" : "Change Profile"}
+              </>
+            )}
           </Button>
         )}
         
-        {/* Banner upload UI - would be implemented in the future */}
+        {/* File input - hidden but accessible via the button */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileChange}
+          disabled={isUploading}
+        />
+        
+        {/* Banner upload UI - shown when in edit mode */}
         {isEditMode && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10">
             <div className="text-center">
               <Button
                 variant="default"
                 className="bg-white text-gray-800 hover:bg-gray-100"
-                onClick={handleBannerUpload}
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
               >
-                <ImageIcon className="w-4 h-4 mr-2" />
-                Choose Banner Image
+                <UploadIcon className="w-4 h-4 mr-2" />
+                Choose Profile Image
               </Button>
-              <p className="text-white text-sm mt-2">Recommended size: 1200×300 pixels</p>
+              <p className="text-white text-sm mt-2">Recommended size: 1200×1200 pixels</p>
+              <p className="text-white/70 text-xs mt-1">Your profile image will be used for your banner</p>
             </div>
           </div>
         )}

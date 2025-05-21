@@ -23,6 +23,7 @@ interface AuthState {
   loginAsUser: (username: string) => Promise<boolean>;
   logout: () => void;
   checkAuth: () => Promise<boolean>;
+  refreshUser: () => Promise<void>; // Added to refresh user data
   switchChildView: (childUser: UserInfo) => void;
   resetChildView: () => void;
   isViewingAsChild: () => boolean;
@@ -216,6 +217,33 @@ export const useAuthStore = create<AuthState>()(
       // Update the family users list
       setFamilyUsers: (users: UserInfo[]) => {
         set({ familyUsers: users });
+      },
+      
+      // Refresh the current user data
+      refreshUser: async () => {
+        const { user, token, viewingChildId } = get();
+        
+        if (!user || !token) return;
+        
+        try {
+          // Get fresh user data from the server
+          const users = await apiRequest('/api/users');
+          
+          if (users && Array.isArray(users)) {
+            // Set the family users list
+            set({ familyUsers: users });
+            
+            // Find and update the current user
+            const currentUserId = viewingChildId || user.id;
+            const updatedUser = users.find(u => u.id === currentUserId);
+            
+            if (updatedUser) {
+              set({ user: updatedUser });
+            }
+          }
+        } catch (error) {
+          console.error('Failed to refresh user data:', error);
+        }
       }
     }),
     {
