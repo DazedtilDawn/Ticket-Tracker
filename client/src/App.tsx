@@ -17,6 +17,7 @@ import FamilyCatalogPage from "@/pages/family-catalog"; // Renamed import
 import Transactions from "@/pages/transactions";
 import BonusManagement from "@/pages/bonus-management";
 import DebugPage from "@/pages/debug";
+import DebugChorePage from "@/pages/debug-chore";
 import { useAuthStore } from "./store/auth-store";
 import { Sidebar } from "./components/layout/sidebar";
 import { MobileNav } from "./components/layout/mobile-nav";
@@ -80,6 +81,9 @@ function Router() {
       </Route>
       <Route path="/debug">
         <ProtectedRoute component={DebugPage} />
+      </Route>
+      <Route path="/debug-chore">
+        <ProtectedRoute component={DebugChorePage} />
       </Route>
       <Route component={NotFound} />
     </Switch>
