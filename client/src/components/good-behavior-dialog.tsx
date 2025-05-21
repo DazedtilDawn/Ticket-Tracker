@@ -44,11 +44,17 @@ import { Card, CardContent } from "@/components/ui/card";
 const formSchema = z.object({
   user_id: z.string().min(1, "Please select a child"),
   rewardType: z.enum(["tickets", "spin"]),
-  tickets: z.string().transform((val) => parseInt(val, 10)).refine(
-    (val) => val > 0, 
-    { message: "Must add at least 1 ticket" }
-  ).optional(),
+  tickets: z.string().transform((val) => parseInt(val, 10)).optional(),
   reason: z.string().optional(),
+}).refine(data => {
+  // Only require tickets if rewardType is 'tickets'
+  if (data.rewardType === 'tickets') {
+    return data.tickets !== undefined && data.tickets > 0;
+  }
+  return true;
+}, {
+  message: "Must add at least 1 ticket when awarding tickets directly",
+  path: ["tickets"]
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -156,6 +162,13 @@ export function GoodBehaviorDialog({ children, onCompleted }: GoodBehaviorDialog
     // For bonus spin, we don't send the tickets parameter at all
     
     console.log("Submitting payload to /api/good-behavior:", payload);
+    
+    // Close dialog to avoid double-clicks
+    if (data.rewardType === "spin") {
+      setOpen(false);
+    }
+    
+    // Submit the request
     goodBehaviorMutation.mutate(payload);
   };
 

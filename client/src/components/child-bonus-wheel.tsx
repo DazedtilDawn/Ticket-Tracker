@@ -68,7 +68,8 @@ export function ChildBonusWheel({
   isOpen,
   onClose,
   dailyBonusId,
-  childName
+  childName,
+  triggerType = 'chore_completion'
 }: ChildBonusWheelProps) {
   /* ----- local UI state ----------------------------------------*/
   const [isSpinning, setIsSpinning] = useState(false);
