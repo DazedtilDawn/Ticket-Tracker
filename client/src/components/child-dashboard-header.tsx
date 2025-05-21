@@ -5,8 +5,13 @@ import { PurchaseDialog } from "@/components/purchase-dialog";
 import { useAuthStore } from "@/store/auth-store";
 import { useStatsStore } from "@/store/stats-store";
 import { ticketsToUSD } from "@/lib/utils";
+import ProgressRing from "@/components/ui/progress-ring";
 
-export default function ChildDashboardHeader() {
+interface ChildDashboardHeaderProps {
+  activeGoal?: { progress: number } | null;
+}
+
+export default function ChildDashboardHeader({ activeGoal }: ChildDashboardHeaderProps) {
   const { user, isViewingAsChild } = useAuthStore();
   const { balance } = useStatsStore();
   const viewingChild = isViewingAsChild();
@@ -23,15 +28,20 @@ export default function ChildDashboardHeader() {
 
   const showPurchase = viewingChild || user.role === "child";
 
+  const progress = activeGoal?.progress ?? 0;
+
   return (
     <div className="mb-6 flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm">
       <div className="flex items-center space-x-4">
-        <Avatar className="h-14 w-14 border">
-          <AvatarImage src={user.profile_image_url || undefined} alt={user.name} />
-          <AvatarFallback className="bg-primary-600 text-white text-sm">
-            {getInitials(user.name)}
-          </AvatarFallback>
-        </Avatar>
+        <div className="relative w-14 h-14">
+          <ProgressRing percent={progress} size={56} strokeWidth={4} color="#fbbf24" />
+          <Avatar className="h-10 w-10 absolute inset-0 m-auto border">
+            <AvatarImage src={user.profile_image_url || undefined} alt={user.name} />
+            <AvatarFallback className="bg-primary-600 text-white text-sm">
+              {getInitials(user.name)}
+            </AvatarFallback>
+          </Avatar>
+        </div>
         <div>
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
             {user.name}
