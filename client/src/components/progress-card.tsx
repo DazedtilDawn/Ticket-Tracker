@@ -9,6 +9,7 @@ import { Ticket, Star, Trophy } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useMobile } from "@/context/MobileContext";
 import { TICKET_CENT_VALUE } from "../../../config/business";
+import { TicketDisplay } from "@/components/ticket-display";
 
 // Import confetti for celebrations
 import confetti from "canvas-confetti";
@@ -205,49 +206,52 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
             {/* info now shown in small text under progress bar */}
           </div>
 
-          {/* Enhanced ticket value display with more visual elements */}
-          <div className="flex items-center mt-2 mb-3 p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-md border border-emerald-100 dark:border-emerald-900/30">
-            <div className="flex items-center mr-4">
-              <div className="relative mr-2">
-                <Ticket className="w-6 h-6 text-emerald-600 dark:text-emerald-400" strokeWidth={1.5} />
-                <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-emerald-800 dark:text-emerald-300">
-                  ✓
-                </span>
-              </div>
-              <div>
-                <span className="text-sm font-medium text-emerald-800 dark:text-emerald-300">
-                  {goal.tickets_saved} tickets saved
-                </span>
-                <p className="text-xs text-emerald-600 dark:text-emerald-400">
+          {/* Enhanced ticket value display with improved visuals */}
+          <div className="flex flex-col sm:flex-row gap-3 mt-3 mb-4">
+            <div className="flex-1 p-3 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-800/20 rounded-lg border border-amber-200 dark:border-amber-800/50 shadow-sm">
+              <p className="text-xs uppercase tracking-wide text-amber-700 dark:text-amber-400 font-medium mb-2">Tickets Saved</p>
+              <div className="flex items-center">
+                <TicketDisplay 
+                  balance={goal.tickets_saved} 
+                  size="md" 
+                  className="mr-2"
+                />
+                <div className="text-xs text-amber-600 dark:text-amber-400 font-medium">
                   ${ticketsMoneySaved} USD
-                </p>
+                </div>
               </div>
             </div>
             
-            <div className="h-8 border-r border-emerald-200 dark:border-emerald-700 mx-2"></div>
-            
-            <div className="flex items-center">
-              <div className="relative mr-2">
-                <Ticket className="w-6 h-6 text-emerald-600/70 dark:text-emerald-400/70" strokeWidth={1.5} />
-                <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-emerald-800/70 dark:text-emerald-300/70">
-                  →
-                </span>
-              </div>
-              <div>
-                <span className="text-sm font-medium text-emerald-800/80 dark:text-emerald-300/80">
-                  {ticketsRemaining} tickets to go
-                </span>
-                <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70">
+            <div className="flex-1 p-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/20 rounded-lg border border-blue-200 dark:border-blue-800/50 shadow-sm">
+              <p className="text-xs uppercase tracking-wide text-blue-700 dark:text-blue-400 font-medium mb-2">Tickets Needed</p>
+              <div className="flex items-center">
+                <div className="flex items-center bg-white dark:bg-gray-800 shadow-md rounded-lg px-3 py-2 mr-2">
+                  <Ticket className="h-4 w-4 text-blue-500 dark:text-blue-400 mr-1.5" />
+                  <span className="font-bold text-blue-700 dark:text-blue-300">
+                    {ticketsRemaining}
+                  </span>
+                </div>
+                <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">
                   ${ticketsMoneyRemaining} USD
-                </p>
+                </div>
               </div>
             </div>
           </div>
+          
+          {/* Progress bar */}
+          <div className="mb-2">
+            <div className="flex justify-between mb-1 text-xs">
+              <span className="font-medium text-gray-700 dark:text-gray-300">{Math.min(100, Math.round(goal.progress))}% Complete</span>
+              <span className="text-gray-500 dark:text-gray-400">{ticketsNeeded} total tickets needed</span>
+            </div>
+            <Progress 
+              value={Math.min(100, goal.progress)} 
+              className="h-2.5 bg-gray-200 dark:bg-gray-700" 
+            />
+          </div>
 
         </div>
-        <p className="mt-2 text-xs text-muted-foreground">
-          {ticketsRemaining} tickets to go
-        </p>
+        {/* Removed duplicate tickets to go text */}
       </div>
       
       <div className="p-4 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between flex-wrap gap-2">
