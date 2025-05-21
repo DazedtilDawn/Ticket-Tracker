@@ -234,16 +234,162 @@ export default function ProgressCard({ goal, onRefresh }: ProgressCardProps) {
       
       {/* Progress visualization */}
       <div className="p-4 pt-5">
-        {/* Enhanced progress bar */}
-        <div className="relative h-3 mb-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        {/* Interactive Journey Progress Bar */}
+        <div className="relative h-10 mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-600 shadow-inner">
+          {/* Path/Road Background */}
+          <div className="absolute inset-0 flex items-center px-1">
+            <div className="w-full h-2 bg-gray-300 dark:bg-gray-600 rounded-full mx-1"></div>
+          </div>
+          
+          {/* Milestone Markers */}
+          <div className="absolute inset-0 flex justify-between px-2">
+            {/* Start Marker */}
+            <div className="w-6 h-6 -ml-1 rounded-full bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-500 flex items-center justify-center text-xs font-bold" 
+                 title="Starting Point">
+              <span className="text-gray-700 dark:text-gray-300">0%</span>
+            </div>
+            
+            {/* 25% Milestone */}
+            <div className={`w-6 h-6 transform -translate-x-1/2 rounded-full flex items-center justify-center transition-all duration-500 ${goal.progress >= 25 
+              ? "bg-yellow-100 dark:bg-yellow-900 border-2 border-yellow-400 dark:border-yellow-600" 
+              : "bg-gray-200 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600"}`}
+                 title="25% Complete">
+              <span className={`text-xs font-bold ${goal.progress >= 25 ? "text-yellow-700 dark:text-yellow-300" : "text-gray-500 dark:text-gray-400"}`}>
+                25%
+              </span>
+            </div>
+            
+            {/* 50% Milestone */}
+            <div className={`w-7 h-7 transform -translate-x-1/2 rounded-full flex items-center justify-center transition-all duration-500 ${goal.progress >= 50 
+              ? "bg-orange-100 dark:bg-orange-900 border-2 border-orange-400 dark:border-orange-600" 
+              : "bg-gray-200 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600"}`}
+                 title="50% Complete">
+              <span className={`text-xs font-bold ${goal.progress >= 50 ? "text-orange-700 dark:text-orange-300" : "text-gray-500 dark:text-gray-400"}`}>
+                50%
+              </span>
+            </div>
+            
+            {/* 75% Milestone */}
+            <div className={`w-7 h-7 transform -translate-x-1/2 rounded-full flex items-center justify-center transition-all duration-500 ${goal.progress >= 75 
+              ? "bg-pink-100 dark:bg-pink-900 border-2 border-pink-400 dark:border-pink-600"
+              : "bg-gray-200 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600"}`}
+                 title="75% Complete">
+              <span className={`text-xs font-bold ${goal.progress >= 75 ? "text-pink-700 dark:text-pink-300" : "text-gray-500 dark:text-gray-400"}`}>
+                75%
+              </span>
+            </div>
+            
+            {/* 100% Milestone - Goal */}
+            <div className={`w-8 h-8 -mr-1 rounded-full shadow-md flex items-center justify-center transition-all duration-500 ${goal.progress >= 100 
+              ? "bg-green-100 dark:bg-green-900 border-2 border-green-500 dark:border-green-500 animate-pulse" 
+              : "bg-gray-100 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-500"}`}
+                 title="Goal Complete!">
+              <span className={`text-xs font-bold ${goal.progress >= 100 ? "text-green-700 dark:text-green-300" : "text-gray-500 dark:text-gray-400"}`}>
+                {goal.progress >= 100 ? "🎉" : "100%"}
+              </span>
+            </div>
+          </div>
+          
+          {/* Progress Character/Indicator */}
+          <div className="absolute top-0 left-0 h-full flex items-center pointer-events-none animate-bounce-slow"
+               style={{ left: `${Math.min(98, Math.max(1, goal.progress))}%` }}>
+            <div className="w-10 h-10 rounded-full bg-primary-500 dark:bg-primary-600 border-2 border-white dark:border-gray-800 shadow-md flex items-center justify-center
+                           transition-all duration-1000 z-10">
+              {/* Avatar for child's character */}
+              {profileImageUrl ? (
+                <img 
+                  src={profileImageUrl} 
+                  alt={childName} 
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+              ) : (
+                <span className="text-white font-bold">{getInitials(childName || "Goal")}</span>
+              )}
+            </div>
+          </div>
+          
+          {/* Progress fill background */}
           <div 
-            className="absolute top-0 left-0 h-full bg-gradient-to-r from-primary-500 to-primary-400 dark:from-primary-600 dark:to-primary-500 transition-all duration-700 ease-in-out"
+            className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-200 via-indigo-200 to-purple-200 
+                      dark:from-blue-900/30 dark:via-indigo-900/30 dark:to-purple-900/30 
+                      transition-all duration-1000 ease-in-out"
             style={{ width: `${Math.min(100, goal.progress)}%` }}
-          >
-            {/* Animated pulse at progress end to draw attention */}
-            <span className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white shadow-md animate-pulse"></span>
+          />
+          
+          {/* Progress percentage display */}
+          <div className="absolute top-0 right-4 mt-1 px-2 py-0.5 rounded-md bg-white/80 dark:bg-gray-800/80 text-xs font-bold text-gray-700 dark:text-gray-300 shadow">
+            {Math.floor(goal.progress)}% Complete
           </div>
         </div>
+        
+        {/* Achievement badges collection with tooltips */}
+        {(goal.progress >= 25 || goal.progress >= 50 || goal.progress >= 75 || goal.progress >= 100) && (
+          <div className="relative p-3 mb-4 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 shadow-inner">
+            <h4 className="text-sm font-semibold text-slate-600 dark:text-slate-300 mb-1.5 text-center">Achievement Badges</h4>
+            
+            <div className="flex flex-wrap gap-3 justify-center items-center">
+              {/* 25% Milestone Badge */}
+              <div className={`relative group cursor-pointer ${goal.progress >= 25 ? 'animate-milestone-glow' : 'opacity-40'}`}>
+                <div className={`p-2 bg-yellow-100 dark:bg-yellow-900/50 rounded-full border-2 ${goal.progress >= 25 ? 'border-yellow-400 dark:border-yellow-600' : 'border-gray-300 dark:border-gray-600'}`} 
+                     title="25% Milestone">
+                  <span className="text-xl block">🌟</span>
+                </div>
+                
+                {/* Tooltip on hover */}
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 w-32 bg-black/80 text-white text-xs rounded py-1 px-2 hidden group-hover:block pointer-events-none">
+                  <div className="text-center font-medium">{goal.progress >= 25 ? 'Star Collector!' : 'Locked'}</div>
+                  <div className="text-center text-xs mt-0.5">{goal.progress >= 25 ? 'Reached 25% of goal' : 'Reach 25% to unlock'}</div>
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-black/80"></div>
+                </div>
+              </div>
+              
+              {/* 50% Milestone Badge */}
+              <div className={`relative group cursor-pointer ${goal.progress >= 50 ? 'animate-milestone-glow' : 'opacity-40'}`}>
+                <div className={`p-2 bg-orange-100 dark:bg-orange-900/50 rounded-full border-2 ${goal.progress >= 50 ? 'border-orange-400 dark:border-orange-600' : 'border-gray-300 dark:border-gray-600'}`} 
+                     title="50% Milestone">
+                  <span className="text-xl block">🏆</span>
+                </div>
+                
+                {/* Tooltip on hover */}
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 w-32 bg-black/80 text-white text-xs rounded py-1 px-2 hidden group-hover:block pointer-events-none">
+                  <div className="text-center font-medium">{goal.progress >= 50 ? 'Halfway Champion!' : 'Locked'}</div>
+                  <div className="text-center text-xs mt-0.5">{goal.progress >= 50 ? 'Reached 50% of goal' : 'Reach 50% to unlock'}</div>
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-black/80"></div>
+                </div>
+              </div>
+              
+              {/* 75% Milestone Badge */}
+              <div className={`relative group cursor-pointer ${goal.progress >= 75 ? 'animate-milestone-glow' : 'opacity-40'}`}>
+                <div className={`p-2 bg-pink-100 dark:bg-pink-900/50 rounded-full border-2 ${goal.progress >= 75 ? 'border-pink-400 dark:border-pink-600' : 'border-gray-300 dark:border-gray-600'}`} 
+                     title="75% Milestone">
+                  <span className="text-xl block">🚀</span>
+                </div>
+                
+                {/* Tooltip on hover */}
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 w-32 bg-black/80 text-white text-xs rounded py-1 px-2 hidden group-hover:block pointer-events-none">
+                  <div className="text-center font-medium">{goal.progress >= 75 ? 'Almost There!' : 'Locked'}</div>
+                  <div className="text-center text-xs mt-0.5">{goal.progress >= 75 ? 'Reached 75% of goal' : 'Reach 75% to unlock'}</div>
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-black/80"></div>
+                </div>
+              </div>
+              
+              {/* 100% Milestone Badge */}
+              <div className={`relative group cursor-pointer ${goal.progress >= 100 ? 'animate-milestone-glow' : 'opacity-40'}`}>
+                <div className={`p-2 bg-green-100 dark:bg-green-900/50 rounded-full border-2 ${goal.progress >= 100 ? 'border-green-400 dark:border-green-600 animate-pulse' : 'border-gray-300 dark:border-gray-600'}`} 
+                     title="Goal Complete!">
+                  <span className="text-xl block">{goal.progress >= 100 ? '🎉' : '🏁'}</span>
+                </div>
+                
+                {/* Tooltip on hover */}
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 w-32 bg-black/80 text-white text-xs rounded py-1 px-2 hidden group-hover:block pointer-events-none">
+                  <div className="text-center font-medium">{goal.progress >= 100 ? 'Goal Complete!' : 'Finish Line'}</div>
+                  <div className="text-center text-xs mt-0.5">{goal.progress >= 100 ? 'You did it! Congrats!' : 'Reach 100% to unlock'}</div>
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-black/80"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         
         {/* Tickets progress with visual indicators */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">

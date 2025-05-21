@@ -3,6 +3,36 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  /* Custom animation for the goal progress character */
+  @keyframes bounce-slow {
+    0%, 100% {
+      transform: translateY(-10%) translateX(-50%);
+      animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    }
+    50% {
+      transform: translateY(0) translateX(-50%);
+      animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    }
+  }
+  .animate-bounce-slow {
+    animation: bounce-slow 3s infinite;
+  }
+  
+  /* Milestone achievement glow effect */
+  @keyframes milestone-glow {
+    0%, 100% {
+      box-shadow: 0 0 5px 2px rgba(250, 204, 21, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 10px 3px rgba(250, 204, 21, 0.7);
+    }
+  }
+  .animate-milestone-glow {
+    animation: milestone-glow 2s infinite;
+  }
+}
+
 :root {
       --background: 0 0% 100%;
 --foreground: 20 14.3% 4.1%;

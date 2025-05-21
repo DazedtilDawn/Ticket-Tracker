@@ -101,19 +101,35 @@ export default function DashboardBanner({ defaultBannerColor = "bg-gradient-to-r
       try {
         result = JSON.parse(responseData);
         console.log('Banner upload successful:', result);
+        
+        if (result && result.banner_image_url) {
+          // Update banner in the auth store
+          authStore.updateUserBannerImage(result.banner_image_url);
+          
+          // Force a refresh of the banner image with cache busting
+          const cacheBuster = Date.now();
+          const newBannerUrl = `${result.banner_image_url}?t=${cacheBuster}`;
+          console.log('Setting new banner URL with cache buster:', newBannerUrl);
+          
+          // Update banner URL in component state
+          document.querySelectorAll('[data-banner-container]').forEach((el) => {
+            (el as HTMLElement).style.backgroundImage = `url('${newBannerUrl}')`;
+          });
+        }
       } catch (e) {
         console.warn('Response was not valid JSON:', responseData);
       }
       
-      // Force reload the page to show the new banner
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
-      
+      // Show success toast
       toast({
         title: "Banner image updated",
         description: "Your dashboard banner has been updated successfully",
       });
+      
+      // Force reload the page to show the new banner after a short delay
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } catch (error) {
       console.error('Error uploading banner image:', error);
       toast({
@@ -131,14 +147,14 @@ export default function DashboardBanner({ defaultBannerColor = "bg-gradient-to-r
     <div className="relative overflow-hidden rounded-lg shadow-sm mb-6">
       {/* Banner image or gradient background */}
       <div 
+        data-banner-container
         className={`relative w-full h-32 sm:h-48 ${defaultBannerColor} overflow-hidden`}
         style={{
-          // Use banner image if available, otherwise use profile image as fallback, or default gradient
+          // Only use banner image if available, otherwise use default gradient
+          // We no longer use profile image as banner fallback to create separation between the two
           backgroundImage: user?.banner_image_url 
-            ? `url(${user.banner_image_url})` 
-            : user?.profile_image_url 
-              ? `url(${user.profile_image_url})` 
-              : undefined,
+            ? `url(${user.banner_image_url}?t=${Date.now()})` // Add cache buster
+            : undefined,
           backgroundSize: 'cover',
           backgroundPosition: 'center center',
           backgroundRepeat: 'no-repeat'

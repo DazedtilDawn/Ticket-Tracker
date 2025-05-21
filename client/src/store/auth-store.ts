@@ -32,6 +32,7 @@ interface AuthState {
   getActiveChildId: () => number | null;
   setAutoLoginEnabled: (enabled: boolean) => void;
   setFamilyUsers: (users: UserInfo[]) => void;
+  updateUserBannerImage: (bannerImageUrl: string) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -227,6 +228,8 @@ export const useAuthStore = create<AuthState>()(
         if (!user || !token) return;
         
         try {
+          console.log('Refreshing user data for user ID:', user.id);
+          
           // Get fresh user data from the server
           const users = await apiRequest('/api/users');
           
@@ -239,12 +242,38 @@ export const useAuthStore = create<AuthState>()(
             const updatedUser = users.find(u => u.id === currentUserId);
             
             if (updatedUser) {
+              console.log('User data refreshed successfully:', updatedUser);
               set({ user: updatedUser });
             }
           }
         } catch (error) {
           console.error('Failed to refresh user data:', error);
         }
+      },
+      
+      // Update user's banner image
+      updateUserBannerImage: (bannerImageUrl: string) => {
+        const { user } = get();
+        if (!user) return;
+        
+        console.log('Updating banner image URL to:', bannerImageUrl);
+        
+        // Create an updated user with the new banner image URL
+        const updatedUser = {
+          ...user,
+          banner_image_url: bannerImageUrl
+        };
+        
+        // Update the user in state
+        set({ user: updatedUser });
+        
+        // Also update in family users array
+        const { familyUsers } = get();
+        const updatedFamilyUsers = familyUsers.map(u => 
+          u.id === user.id ? { ...u, banner_image_url: bannerImageUrl } : u
+        );
+        
+        set({ familyUsers: updatedFamilyUsers });
       }
     }),
     {
