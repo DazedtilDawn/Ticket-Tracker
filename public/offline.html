@@ -6,105 +6,141 @@
   <title>Offline - Ticket Tracker</title>
   <style>
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
+      height: 100vh;
       margin: 0;
       padding: 20px;
+      color: white;
       text-align: center;
-      background-color: #f5f7ff;
-      color: #333;
     }
     
-    .container {
-      max-width: 500px;
-      padding: 2rem;
+    .offline-container {
+      background-color: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 80%;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+    
+    .ticket-icon {
+      width: 100px;
+      height: 80px;
       background-color: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      margin: 0 auto 24px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 10px;
     }
     
-    img {
-      width: 150px;
-      height: auto;
-      margin-bottom: 1rem;
+    .ticket-icon::before,
+    .ticket-icon::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: repeating-linear-gradient(to right, transparent, transparent 4px, #ddd 4px, #ddd 8px);
+    }
+    
+    .ticket-icon::before {
+      top: 40%;
+    }
+    
+    .ticket-icon::after {
+      top: 60%;
+    }
+    
+    .ticket-price {
+      font-weight: bold;
+      color: #6366f1;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
     }
     
     h1 {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-      color: #6366f1;
+      font-size: 24px;
+      margin: 0 0 16px 0;
     }
     
     p {
-      font-size: 1.1rem;
-      line-height: 1.5;
-      margin-bottom: 1.5rem;
+      margin-bottom: 24px;
+      opacity: 0.9;
     }
     
-    button {
-      background-color: #6366f1;
-      color: white;
+    .retry-button {
+      background-color: white;
+      color: #4f46e5;
       border: none;
       border-radius: 8px;
       padding: 12px 24px;
-      font-size: 1rem;
-      font-weight: 600;
+      font-size: 16px;
+      font-weight: bold;
       cursor: pointer;
-      transition: background-color 0.2s;
+      transition: all 0.2s;
     }
     
-    button:hover {
-      background-color: #4f46e5;
+    .retry-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
     }
     
-    .tips {
-      margin-top: 2rem;
-      padding-top: 1rem;
-      border-top: 1px solid #e0e0e0;
+    .wifi-icon {
+      margin-bottom: 20px;
+      position: relative;
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 20px;
     }
     
-    .tips h2 {
-      font-size: 1.2rem;
-      color: #6366f1;
+    .wifi-icon svg {
+      width: 100%;
+      height: 100%;
     }
     
-    .tips ul {
-      text-align: left;
-      padding-left: 1.5rem;
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     
-    .tips li {
-      margin-bottom: 0.5rem;
+    .offline-container {
+      animation: fadeIn 0.5s ease-out;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <img src="/icons/icon-192x192.png" alt="Ticket Tracker Logo">
-    <h1>You're Offline</h1>
-    <p>Looks like you're not connected to the internet right now. Some features of Ticket Tracker may not be available until you're back online.</p>
-    
-    <button onclick="window.location.reload()">Try Again</button>
-    
-    <div class="tips">
-      <h2>While you're offline:</h2>
-      <ul>
-        <li>You can still view previously loaded goals and progress</li>
-        <li>Check your current saved tickets</li>
-        <li>Review which chores need to be completed</li>
-      </ul>
+  <div class="offline-container">
+    <div class="wifi-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="1" y1="1" x2="23" y2="23"></line>
+        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+        <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
+        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+        <line x1="12" y1="20" x2="12.01" y2="20"></line>
+      </svg>
     </div>
+    
+    <div class="ticket-icon">
+      <div class="ticket-price">
+        <span>25¢</span>
+        <span>25¢</span>
+      </div>
+    </div>
+    
+    <h1>You're Offline</h1>
+    <p>It looks like you've lost connection to the internet. Check your connection and try again.</p>
+    
+    <button class="retry-button" onclick="window.location.reload()">Try Again</button>
   </div>
-
-  <script>
-    // Listen for online status
-    window.addEventListener('online', () => {
-      window.location.reload();
-    });
-  </script>
 </body>
 </html>
