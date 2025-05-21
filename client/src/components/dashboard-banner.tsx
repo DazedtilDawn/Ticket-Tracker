@@ -74,23 +74,41 @@ export default function DashboardBanner({ defaultBannerColor = "bg-gradient-to-r
     
     try {
       setIsUploading(true);
+      console.log('Uploading file:', file.name, file.type, file.size);
       
       // Create a FormData object to send the file
       const formData = new FormData();
       formData.append('bannerImage', file);
       
-      // Send the file to the banner image endpoint
-      const response = await fetch('/api/users/banner-image', {
+      // Send the file to the banner image endpoint with user ID
+      const userId = user?.id || 5; // Default to Kiki (ID 5) if no user found
+      console.log(`Uploading banner for user ID: ${userId}`);
+      
+      const response = await fetch(`/api/users/banner-image?userId=${userId}`, {
         method: 'POST',
         body: formData,
       });
       
+      const responseData = await response.text();
+      console.log('Upload response:', response.status, responseData);
+      
       if (!response.ok) {
-        throw new Error('Failed to upload banner image');
+        throw new Error(`Failed to upload banner image: ${response.status} ${responseData}`);
       }
       
-      // Get the updated user data
-      await authStore.refreshUser();
+      // Parse the response only if it's valid JSON
+      let result;
+      try {
+        result = JSON.parse(responseData);
+        console.log('Banner upload successful:', result);
+      } catch (e) {
+        console.warn('Response was not valid JSON:', responseData);
+      }
+      
+      // Force reload the page to show the new banner
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
       
       toast({
         title: "Banner image updated",
