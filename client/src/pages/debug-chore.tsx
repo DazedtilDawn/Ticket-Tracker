@@ -89,8 +89,8 @@ export function DebugChorePage() {
         method: "POST",
         body: JSON.stringify({ 
           user_id: 5,
-          tickets: 10, 
-          reason: "Outstanding behavior today" 
+          rewardType: "spin", // This is what was missing - specifying we want a spin opportunity
+          reason: "Outstanding behavior today"
         }),
       });
       
