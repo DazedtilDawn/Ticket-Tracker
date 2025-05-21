@@ -271,17 +271,19 @@ export default function TransactionsTable({ userId, limit = 10 }: TransactionsTa
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 {formatDate(transaction.created_at)}
               </span>
-              <span
-                className={`text-sm font-semibold ${
+              <div className={`flex items-center rounded-md px-2 py-1 ${
                   transaction.delta > 0
-                    ? 'text-green-600 dark:text-green-400'
+                    ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400'
                     : transaction.delta < 0
-                    ? 'text-red-600 dark:text-red-400'
-                    : 'text-gray-500 dark:text-gray-400'
+                    ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                    : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
                 }`}
               >
-                {transaction.delta > 0 ? `+${transaction.delta}` : transaction.delta} tickets
-              </span>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                </svg>
+                <span className="font-semibold">{transaction.delta > 0 ? `+${transaction.delta}` : transaction.delta}</span>
+              </div>
             </div>
             <p className="text-sm font-medium text-gray-900 dark:text-white mb-1 truncate">
               {getTransactionDescription(transaction)}
@@ -345,14 +347,19 @@ export default function TransactionsTable({ userId, limit = 10 }: TransactionsTa
                     <TableCell className="text-sm font-medium text-gray-900 dark:text-white">
                       {getTransactionDescription(transaction)}
                     </TableCell>
-                    <TableCell className={`text-sm font-semibold ${
-                      transaction.delta > 0
-                        ? 'text-green-600 dark:text-green-400'
-                        : transaction.delta < 0
-                          ? 'text-red-600 dark:text-red-400'
-                          : 'text-gray-500 dark:text-gray-400'
-                    }`}>
-                      {transaction.delta > 0 ? `+${transaction.delta}` : transaction.delta}
+                    <TableCell>
+                      <div className={`inline-flex items-center px-2 py-1 rounded-md ${
+                        transaction.delta > 0
+                          ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                          : transaction.delta < 0
+                            ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                            : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+                      }`}>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                        </svg>
+                        <span className="font-semibold">{transaction.delta > 0 ? `+${transaction.delta}` : transaction.delta}</span>
+                      </div>
                     </TableCell>
                     <TableCell>
                       {(() => {
