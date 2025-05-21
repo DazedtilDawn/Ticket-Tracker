@@ -19,9 +19,9 @@ import { DailyBonusWheel } from "@/components/daily-bonus-wheel";
 import { SpinPromptModal } from "@/components/spin-prompt-modal";
 import { ChildBonusWheel } from "@/components/child-bonus-wheel";
 import { PurchaseDialog } from "@/components/purchase-dialog";
+import DashboardBanner from "@/components/dashboard-banner";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { PlusIcon, UserIcon, MinusCircleIcon, PlusCircleIcon, ShoppingCartIcon, BarChart3Icon, Ticket } from "lucide-react";
 import { format } from "date-fns";
 
@@ -673,44 +673,36 @@ export default function Dashboard() {
         childName={user?.name || ""}
       />
       
-      {/* Header */}
-      <div className="bg-white dark:bg-gray-800 shadow-sm">
-        <div className="px-4 py-5 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center space-x-4">
-            {/* Show profile avatar for child view */}
-            {viewingChild && (
-              <div className="hidden sm:block">
-                <Avatar className="h-16 w-16 border-2 border-gray-200 dark:border-gray-700">
-                  <AvatarImage 
-                    src={user?.profile_image_url || undefined} 
-                    alt={`${user?.name}'s profile`} 
-                  />
-                  <AvatarFallback className="bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200">
-                    {user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
-            )}
+      {/* Modern Banner Header - replaces traditional header */}
+      {viewingChild ? (
+        <DashboardBanner defaultBannerColor={
+          user?.name === "Kiki" ? "bg-gradient-to-r from-pink-500/30 via-purple-400/20 to-indigo-300/30" :
+          user?.name === "Bryce" ? "bg-gradient-to-r from-blue-500/30 via-cyan-400/20 to-teal-300/30" :
+          "bg-gradient-to-r from-primary-500/30 via-primary-400/20 to-primary-300/30"
+        } />
+      ) : (
+        <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg mb-6">
+          <div className="px-4 py-5 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Dashboard</h2>
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 {format(new Date(), "EEEE, MMMM d, yyyy")}
               </p>
             </div>
-          </div>
-          
-          <div className="mt-4 sm:mt-0 flex items-center space-x-3">
-            {user?.role === "parent" && !viewingChild && (
-              <NewChoreDialog onChoreCreated={refetch}>
-                <Button className="inline-flex items-center">
-                  <PlusIcon className="mr-2 h-4 w-4" />
-                  New Chore
-                </Button>
-              </NewChoreDialog>
-            )}
+            
+            <div className="mt-4 sm:mt-0 flex items-center space-x-3">
+              {user?.role === "parent" && !viewingChild && (
+                <NewChoreDialog onChoreCreated={refetch}>
+                  <Button className="inline-flex items-center">
+                    <PlusIcon className="mr-2 h-4 w-4" />
+                    New Chore
+                  </Button>
+                </NewChoreDialog>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
       
       {/* Content container */}
       <div className="p-4 md:p-6 max-w-7xl mx-auto">
