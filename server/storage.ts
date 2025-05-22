@@ -11,6 +11,8 @@ import {
   InsertTransaction,
   DailyBonus,
   InsertDailyBonus,
+  AwardedItem,
+  InsertAwardedItem,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -64,11 +66,16 @@ export interface IStorage {
   assignDailyBonusChore(childId: number, date: string): Promise<DailyBonus | null>;
   assignDailyBonusesToAllChildren(date?: string): Promise<Record<number, DailyBonus | null>>;
   getChoreWithBonus(choreId: number, date?: string, userId?: number): Promise<(Chore & { bonus_tickets: number }) | undefined>;
+  
+  // Trophy Award operations
+  awardItemToChild(award: InsertAwardedItem): Promise<AwardedItem>;
+  getChildTrophies(childId: number): Promise<(AwardedItem & { product: Product })[]>;
+  deleteAwardedItem(id: number): Promise<boolean>;
 }
 
 import { db } from "./db";
 import {
-  users, chores, products, goals, transactions, dailyBonus
+  users, chores, products, goals, transactions, dailyBonus, awardedItems
 } from "@shared/schema";
 import { eq, and, desc, gte, sql, ilike, lt, ne } from "drizzle-orm";
 import { TICKET_CENT_VALUE } from "../config/business";

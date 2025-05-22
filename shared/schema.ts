@@ -93,6 +93,16 @@ export const dailyBonus = pgTable("daily_bonus", {
   };
 });
 
+// Trophy Award System - Step 1: Dedicated transaction model for trophy awards
+export const awardedItems = pgTable("awarded_items", {
+  id: serial("id").primaryKey(),
+  child_id: integer("child_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  item_id: integer("item_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+  awarded_by: integer("awarded_by").notNull().references(() => users.id, { onDelete: "cascade" }),
+  custom_note: text("custom_note"), // Optional custom note from parent
+  awarded_at: timestamp("awarded_at", { withTimezone: true }).defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -184,6 +194,11 @@ export const insertDailyBonusSchema = createInsertSchema(dailyBonus).omit({
   created_at: true
 });
 
+export const insertAwardedItemSchema = createInsertSchema(awardedItems).omit({
+  id: true,
+  awarded_at: true,
+});
+
 // Spin wheel schema for parents
 export const spinWheelSchema = z.object({
   user_id: z.number().int().positive(),
@@ -208,6 +223,8 @@ export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type DailyBonus = typeof dailyBonus.$inferSelect;
 export type InsertDailyBonus = z.infer<typeof insertDailyBonusSchema>;
+export type AwardedItem = typeof awardedItems.$inferSelect;
+export type InsertAwardedItem = z.infer<typeof insertAwardedItemSchema>;
 export type Login = z.infer<typeof loginSchema>;
 export type AmazonSearch = z.infer<typeof amazonSearchSchema>;
 export type ManualProduct = z.infer<typeof manualProductSchema>;
