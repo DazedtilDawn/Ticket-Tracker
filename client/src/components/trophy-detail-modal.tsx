@@ -228,11 +228,11 @@ export function TrophyDetailModal({ isOpen, onClose, trophy, userId }: TrophyDet
                   <Label htmlFor="picture" className="block text-sm font-medium">
                     Trophy Image
                   </Label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2">
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full flex items-center justify-center"
+                      className="w-full flex items-center justify-center h-10 px-4 text-base"
                       onClick={() => document.getElementById("image-upload")?.click()}
                     >
                       <Upload className="h-4 w-4 mr-2" />
