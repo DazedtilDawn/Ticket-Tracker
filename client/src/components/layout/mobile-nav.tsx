@@ -211,7 +211,7 @@ export function MobileNav() {
       
       {/* Mobile bottom navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg z-50">
-        <div className={`grid ${user?.role === 'parent' ? 'grid-cols-5' : 'grid-cols-4'} h-16`}>
+        <div className={`grid ${user?.role === 'parent' ? 'grid-cols-5' : 'grid-cols-4'} h-20 pt-1`}>
           {/* Regular navigation items */}
           {navItems.map(item => (
             <a
@@ -232,10 +232,10 @@ export function MobileNav() {
           {viewingAsChild && (
             <button
               onClick={handleResetToParent}
-              className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400"
+              className="flex flex-col items-center justify-center bg-amber-50 dark:bg-amber-900/30 rounded-lg py-1 px-2 mx-1 text-amber-600 dark:text-amber-400"
             >
-              <Crown className="text-xl" />
-              <span className="text-xs mt-1">Parent</span>
+              <Crown className="text-xl mb-1" />
+              <span className="text-xs font-medium">Parent</span>
             </button>
           )}
           
@@ -258,7 +258,7 @@ export function MobileNav() {
       </div>
       
       {/* Add padding at the bottom to prevent content from being hidden behind the mobile nav */}
-      <div className="md:hidden h-16"></div>
+      <div className="md:hidden h-20"></div>
     </>
   );
 }
