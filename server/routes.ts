@@ -2450,6 +2450,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const statsCache: Record<string, { data: any, timestamp: number }> = {};
   const STATS_CACHE_TTL = 15000; // 15 seconds TTL
   
+  // Test endpoint for trophy system - Step 1 verification
+  app.post("/api/test-trophy", auth, async (req: Request, res: Response) => {
+    try {
+      const { child_id, item_id } = req.body;
+      const awarded_by = req.user.id;
+      
+      // Test awarding an item
+      const award = await storage.awardItemToChild({
+        child_id,
+        item_id,
+        awarded_by,
+        custom_note: "Test trophy award"
+      });
+      
+      // Test retrieving trophies
+      const trophies = await storage.getChildTrophies(child_id);
+      
+      res.json({
+        success: true,
+        award,
+        trophies
+      });
+    } catch (error) {
+      console.error("Trophy test error:", error);
+      res.status(500).json({ error: "Trophy test failed" });
+    }
+  });
+
   app.get("/api/stats", auth, async (req: Request, res: Response) => {
     const { userId } = req.query;
     const user = req.user;
