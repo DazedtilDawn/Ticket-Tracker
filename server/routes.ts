@@ -2262,6 +2262,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Simple in-memory cache for stats API to reduce database load
+  const statsCache: Record<string, { data: any, timestamp: number }> = {};
+  const STATS_CACHE_TTL = 15000; // 15 seconds TTL
+  
   app.get("/api/stats", auth, async (req: Request, res: Response) => {
     const { userId } = req.query;
     const user = req.user;
@@ -2272,6 +2276,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     const targetUserId = userId ? parseInt(userId as string) : user.id;
+    const cacheKey = `stats_${targetUserId}`;
+    
+    // Check cache first
+    const now = Date.now();
+    const cacheEntry = statsCache[cacheKey];
+    if (cacheEntry && (now - cacheEntry.timestamp < STATS_CACHE_TTL)) {
+      console.log(`[CACHE HIT] Serving cached stats for user ${targetUserId}, age: ${(now - cacheEntry.timestamp)/1000}s`);
+      return res.json(cacheEntry.data);
+    }
+    
+    console.log(`[CACHE MISS] Fetching fresh stats for user ${targetUserId}`);
 
     // Get balance
     const balance = await storage.getUserBalance(targetUserId);
