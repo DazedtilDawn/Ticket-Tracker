@@ -593,8 +593,12 @@ export default function Dashboard() {
                     </a>
                   </div>
                   
-                  <TransactionsMobile limit={5} />
-                  <TransactionsTableDesktop limit={5} />
+                  {/* Only render one transaction component based on viewport size to avoid duplicate API calls */}
+                  {isMobile ? (
+                    <TransactionsMobile limit={5} />
+                  ) : (
+                    <TransactionsTableDesktop limit={5} />
+                  )}
                 </section>
               </>
             )}
