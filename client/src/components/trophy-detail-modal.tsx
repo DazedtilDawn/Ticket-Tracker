@@ -195,7 +195,7 @@ export function TrophyDetailModal({ isOpen, onClose, trophy, userId }: TrophyDet
                     <img
                       src={previewUrl || trophy?.imageUrl}
                       alt={trophy?.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain object-center"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = "/placeholder-product.png";
                       }}

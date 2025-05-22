@@ -1019,10 +1019,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           const fileExtension = req.file.originalname.split('.').pop()?.toLowerCase() || 'jpg';
           const fileName = `trophy_${uuidv4()}.${fileExtension}`;
-          const filePath = path.join(__dirname, '../public/uploads/trophies', fileName);
+          // Use proper path resolution for ESM modules
+          const uploadsDir = path.resolve('./public/uploads/trophies');
+          const filePath = path.join(uploadsDir, fileName);
           
           // Ensure directory exists
-          await fs.promises.mkdir(path.join(__dirname, '../public/uploads/trophies'), { recursive: true });
+          await fs.promises.mkdir(uploadsDir, { recursive: true });
           
           // Write file
           await fs.promises.writeFile(filePath, req.file.buffer);
