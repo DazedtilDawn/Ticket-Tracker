@@ -14,6 +14,7 @@ import { AddProductDialog } from './add-product-dialog';
 import { EditProductDialog } from './edit-product-dialog';
 import { DeleteProductDialog } from './delete-product-dialog';
 import { AssignToChildDialog } from './assign-to-child-dialog';
+import { AwardToChildDialog } from './award-to-child-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -359,12 +360,21 @@ export function SharedCatalog({ onProductSelected }: SharedCatalogProps) {
                             />
                           </div>
                           {childUsers && childUsers.length > 0 && (
-                            <AssignToChildDialog productId={product.id} onAssigned={refreshCatalog}>
-                              <Button size="sm" variant="default" className="w-full bg-primary hover:bg-primary/90">
-                                <PlusCircle className="mr-2 h-4 w-4" />
-                                Add to Child
-                              </Button>
-                            </AssignToChildDialog>
+                            <div className="space-y-2">
+                              <AssignToChildDialog productId={product.id} onAssigned={refreshCatalog}>
+                                <Button size="sm" variant="default" className="w-full bg-primary hover:bg-primary/90">
+                                  <PlusCircle className="mr-2 h-4 w-4" />
+                                  Add to Wishlist
+                                </Button>
+                              </AssignToChildDialog>
+                              
+                              <AwardToChildDialog product={product}>
+                                <Button size="sm" variant="default" className="w-full bg-amber-600 hover:bg-amber-700">
+                                  <Trophy className="mr-2 h-4 w-4" />
+                                  Award to Child
+                                </Button>
+                              </AwardToChildDialog>
+                            </div>
                           )}
                         </>
                       )}
