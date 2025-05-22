@@ -109,7 +109,7 @@ export default function SwipeableChoreCard(props: ChoreCardProps) {
     // Find the most recent completion of this chore
     const choreToUndo = recentlyCompletedChores.find(c => c.choreId === props.chore.id);
     
-    if (!choreToUndo || !choreToUndo.transactionId) {
+    if (!choreToUndo) {
       setIsShowingUndo(false);
       return;
     }
@@ -119,22 +119,24 @@ export default function SwipeableChoreCard(props: ChoreCardProps) {
     setIsUndoing(true);
     
     try {
-      console.log("Attempting to undo transaction:", choreToUndo.transactionId);
-      
-      // Delete the transaction using the API
-      const response = await fetch(`/api/transactions/${choreToUndo.transactionId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Failed to delete transaction: ${response.status}`);
+      // If we don't have a transaction ID, we can't directly delete it
+      if (!choreToUndo.transactionId) {
+        console.error("No transaction ID available for undo operation");
+        throw new Error("Couldn't find the transaction to undo");
       }
       
-      console.log("Successfully deleted transaction:", choreToUndo.transactionId);
+      console.log("Attempting to undo transaction:", choreToUndo.transactionId);
+      
+      // Use TanStack Query's mutation functionality for better error handling
+      const { queryClient } = await import('@/lib/queryClient');
+      const { apiRequest } = await import('@/lib/api');
+      
+      // Make the API request to delete the transaction
+      const result = await apiRequest(`/api/transactions/${choreToUndo.transactionId}`, {
+        method: 'DELETE'
+      });
+      
+      console.log("Successfully deleted transaction:", choreToUndo.transactionId, result);
       
       // Remove from recently completed chores
       const index = recentlyCompletedChores.findIndex(c => c.choreId === props.chore.id);
@@ -150,16 +152,16 @@ export default function SwipeableChoreCard(props: ChoreCardProps) {
       // Hide the undo UI
       setIsShowingUndo(false);
       
-      // Refresh the data by invalidating the related queries
-      try {
-        // Import queryClient dynamically to avoid circular dependencies
-        const { queryClient } = await import('@/lib/queryClient');
-        queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/chores'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
-      } catch (error) {
-        console.error("Failed to refresh queries:", error);
-      }
+      // Refresh all the relevant data
+      queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/chores'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      
+      // Force immediate refetches
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ['/api/stats'] });
+        queryClient.refetchQueries({ queryKey: ['/api/chores'] });
+      }, 100);
     } catch (error) {
       console.error("Failed to undo chore completion:", error);
       toast({
