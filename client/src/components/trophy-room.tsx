@@ -445,9 +445,13 @@
 
           // Fetch purchase history using the authenticated query system
           const { data: purchasesData = [], isLoading } = useQuery({
-            queryKey: targetUserId 
-              ? [`/api/transactions/purchases?userId=${targetUserId}`]
-              : ['/api/transactions/purchases'],
+            queryKey: ['/api/transactions/purchases', targetUserId],
+            queryFn: async () => {
+              const url = targetUserId 
+                ? `/api/transactions/purchases?userId=${targetUserId}` 
+                : '/api/transactions/purchases';
+              return await apiRequest(url, { method: 'GET' });
+            },
             enabled: !!targetUserId,
           });
 
