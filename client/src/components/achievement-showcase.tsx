@@ -237,7 +237,7 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
   };
 
   // Get rarity color class
-  const getRarityColorClass = (rarity: string) => {
+  const getRarityColorClass = (rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary') => {
     switch(rarity) {
       case 'legendary': return "border-amber-400 bg-gradient-to-b from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900";
       case 'epic': return "border-purple-400 bg-gradient-to-b from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900";
@@ -263,7 +263,7 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Tabs defaultValue="grid" value={view} onValueChange={(value) => setView(value as 'grid' | 'list')}>
+            <Tabs defaultValue="grid" value={view} onValueChange={(val: string) => setView(val as 'grid' | 'list')}>
               <TabsList className="bg-amber-100/20 border border-amber-300/30">
                 <TabsTrigger value="grid" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">
                   Gallery View
@@ -398,7 +398,7 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
                           <div className="absolute bottom-2 right-2 flex flex-col space-y-1">
                             <Badge 
                               className="bg-blue-500 hover:bg-blue-600 cursor-pointer"
-                              onClick={(e) => {
+                              onClick={(e: React.MouseEvent) => {
                                 e.stopPropagation();
                                 setSelectedAchievement(achievement);
                                 setIsDetailViewOpen(true);
@@ -409,7 +409,7 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
                             </Badge>
                             <Badge 
                               className="bg-red-500 hover:bg-red-600 cursor-pointer"
-                              onClick={(e) => handleDeleteAchievement(achievement, e)}
+                              onClick={(e: React.MouseEvent) => handleDeleteAchievement(achievement, e)}
                             >
                               <Trash2 className="h-3 w-3 mr-1" />
                               Delete
@@ -487,7 +487,7 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
                               variant="outline"
                               size="sm"
                               className="px-2 py-1 h-auto"
-                              onClick={(e) => {
+                              onClick={(e: React.MouseEvent) => {
                                 e.stopPropagation();
                                 setSelectedAchievement(achievement);
                                 setIsDetailViewOpen(true);
@@ -500,7 +500,7 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
                               variant="outline"
                               size="sm"
                               className="px-2 py-1 h-auto text-red-500 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950"
-                              onClick={(e) => {
+                              onClick={(e: React.MouseEvent) => {
                                 e.stopPropagation();
                                 handleDeleteAchievement(achievement, e);
                               }}
