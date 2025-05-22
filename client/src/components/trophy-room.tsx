@@ -162,6 +162,13 @@ export function TrophyRoom({ userId }: { userId?: number }) {
       [trophyId]: note
     }));
   };
+  
+  // Confirm trophy deletion
+  const confirmDeleteTrophy = () => {
+    if (trophyToDelete) {
+      deleteTrophyMutation.mutate(trophyToDelete.transactionId);
+    }
+  };
 
   // Load saved happiness ratings and notes from localStorage
   useEffect(() => {
@@ -305,17 +312,24 @@ export function TrophyRoom({ userId }: { userId?: number }) {
                             </Badge>
                           </div>
                         )}
-                        <div 
-                          className="absolute top-2 left-2"
-                          onClick={(e) => {
-                            e.stopPropagation(); // Prevent card click
-                            setSelectedTrophy(trophy);
-                            setIsDetailViewOpen(true);
-                          }}
-                        >
-                          <Badge className="bg-blue-500 hover:bg-blue-600 cursor-pointer">
+                        <div className="absolute top-2 left-2 flex space-x-1">
+                          <Badge 
+                            className="bg-blue-500 hover:bg-blue-600 cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent card click
+                              setSelectedTrophy(trophy);
+                              setIsDetailViewOpen(true);
+                            }}
+                          >
                             <Pencil className="h-3 w-3 mr-1" />
-                            Customize
+                            Edit
+                          </Badge>
+                          <Badge 
+                            className="bg-red-500 hover:bg-red-600 cursor-pointer"
+                            onClick={(e) => handleDeleteTrophy(trophy, e)}
+                          >
+                            <Trash2 className="h-3 w-3 mr-1" />
+                            Delete
                           </Badge>
                         </div>
                       </div>
@@ -519,6 +533,50 @@ export function TrophyRoom({ userId }: { userId?: number }) {
           userId={targetUserId}
         />
       )}
+      
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center text-red-600">
+              <AlertTriangle className="h-5 w-5 mr-2" />
+              Delete Trophy
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this trophy? This action cannot be undone.
+              {trophyToDelete && (
+                <div className="mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded-md">
+                  <p className="font-medium">{trophyToDelete.title}</p>
+                  <p className="text-sm text-gray-500">{format(new Date(trophyToDelete.purchaseDate), "MMMM d, yyyy")}</p>
+                  <p className="text-sm text-amber-600">{trophyToDelete.ticketCost} tickets</p>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => setTrophyToDelete(null)}
+              disabled={deleteTrophyMutation.isPending}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeleteTrophy}
+              disabled={deleteTrophyMutation.isPending}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {deleteTrophyMutation.isPending ? (
+                <>
+                  <span className="animate-spin mr-2">⟳</span>
+                  Deleting...
+                </>
+              ) : (
+                "Delete Trophy"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
