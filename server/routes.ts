@@ -979,12 +979,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const transactionId = parseInt(req.body.transaction_id);
       const name = req.body.name;
+      // Get description from request but only use it to append to the note field
       const description = req.body.description || '';
       const userId = parseInt(req.body.user_id);
       const catalogItemId = req.body.catalog_item_id ? parseInt(req.body.catalog_item_id) : null;
       
       console.log("Trophy update request:", { 
-        transactionId, name, description, userId, catalogItemId,
+        transactionId, name, noteAddition: description, userId, catalogItemId,
         files: req.file ? "File included" : "No file"
       });
       
