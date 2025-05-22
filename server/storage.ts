@@ -1064,6 +1064,39 @@ export class DatabaseStorage implements IStorage {
       return null;
     }
   }
+
+  // Trophy Award operations - Step 1 implementation
+  async awardItemToChild(award: InsertAwardedItem): Promise<AwardedItem> {
+    const result = await db.insert(awardedItems).values(award).returning();
+    return result[0];
+  }
+
+  async getChildTrophies(childId: number): Promise<(AwardedItem & { product: Product })[]> {
+    const result = await db
+      .select({
+        id: awardedItems.id,
+        child_id: awardedItems.child_id,
+        item_id: awardedItems.item_id,
+        awarded_by: awardedItems.awarded_by,
+        custom_note: awardedItems.custom_note,
+        awarded_at: awardedItems.awarded_at,
+        product: products
+      })
+      .from(awardedItems)
+      .innerJoin(products, eq(awardedItems.item_id, products.id))
+      .where(eq(awardedItems.child_id, childId))
+      .orderBy(desc(awardedItems.awarded_at));
+
+    return result.map(row => ({
+      ...row,
+      product: row.product
+    }));
+  }
+
+  async deleteAwardedItem(id: number): Promise<boolean> {
+    const result = await db.delete(awardedItems).where(eq(awardedItems.id, id));
+    return result.rowCount > 0;
+  }
 }
 
 // Initialize with DatabaseStorage
