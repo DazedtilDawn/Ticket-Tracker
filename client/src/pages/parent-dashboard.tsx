@@ -815,7 +815,6 @@ export default function ParentDashboard() {
                         <GoodBehaviorDialog>
                           <Button 
                             className="w-full justify-start text-white bg-green-600 hover:bg-green-700"
-                            variant="success"
                           >
                             <PlusCircleIcon className="mr-2 h-4 w-4" /> Good Behavior
                           </Button>

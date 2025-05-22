@@ -2168,8 +2168,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const targetUserId = userId ? parseInt(userId as string) : user.id;
     const limitNum = limit ? parseInt(limit as string) : 10;
 
+    // If this is a parent viewing all transactions (no specific userId provided),
+    // and they're not currently viewing as a child, filter to only show
+    // transactions for Bryce (id: 4) and Kiki (id: 5)
+    if (user.role === "parent" && !userId) {
+      // Get transactions for both Bryce and Kiki
+      const bryceTransactions = await storage.getUserTransactionsWithDetails(4, limitNum);
+      const kikiTransactions = await storage.getUserTransactionsWithDetails(5, limitNum);
+      
+      // Combine and sort by date (newest first)
+      const combinedTransactions = [...bryceTransactions, ...kikiTransactions]
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, limitNum); // Apply the limit to the combined result
+      
+      return res.json(combinedTransactions);
+    }
+    
+    // Regular case - single user's transactions
     const transactions = await storage.getUserTransactionsWithDetails(targetUserId, limitNum);
-
     return res.json(transactions);
   });
 
