@@ -983,6 +983,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = parseInt(req.body.user_id);
       const catalogItemId = req.body.catalog_item_id ? parseInt(req.body.catalog_item_id) : null;
       
+      console.log("Trophy update request:", { 
+        transactionId, name, description, userId, catalogItemId,
+        files: req.file ? "File included" : "No file"
+      });
+      
       // Validate inputs
       if (!transactionId || isNaN(transactionId)) {
         return res.status(400).json({ success: false, message: "Invalid transaction ID" });
@@ -1003,9 +1008,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Prepare update data
+      // The database only has a 'note' field - not a 'description' field
       const updateData: any = {
-        note: name,
-        description: description
+        note: name + (description ? ` - ${description}` : '')
       };
       
       // Handle image upload
