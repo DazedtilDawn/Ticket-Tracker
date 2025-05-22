@@ -24,7 +24,7 @@ import DashboardBanner from "@/components/dashboard-banner";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { PlusIcon, UserIcon, MinusCircleIcon, PlusCircleIcon, ShoppingCartIcon, BarChart3Icon, Ticket, Trophy } from "lucide-react";
-import { AchievementShowcase } from "@/components/achievement-showcase";
+import { AchievementShowcase } from "@/components/achievement-showcase-new";
 import { format } from "date-fns";
 
 export default function Dashboard() {

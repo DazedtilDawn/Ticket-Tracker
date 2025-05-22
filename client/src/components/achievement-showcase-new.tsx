@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { 
-  Trophy, ShoppingBag, Star, HeartHandshake, Ticket as TicketIcon, 
-  Pencil, Trash2, AlertTriangle, Award, Gamepad2, Book, Shirt, 
+  Trophy, ShoppingBag, Star, Ticket as TicketIcon, 
+  Pencil, Trash2, AlertTriangle, Gamepad2, Book, Shirt, 
   Gift, Utensils, Smartphone, Gem, Sparkles, Crown, Layers, BadgeCheck
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { 
   AlertDialog, AlertDialogAction, AlertDialogCancel, 
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter, 
@@ -79,7 +79,7 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
   };
 
   // Fetch purchase history
-  const { data: purchasesData = [], isLoading } = useQuery({
+  const { data: purchasesData, isLoading } = useQuery({
     queryKey: ['/api/transactions/purchases', targetUserId],
     queryFn: async () => {
       const url = targetUserId ? 
@@ -93,7 +93,8 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
 
   // Transform purchases into achievement items with category and rarity
   const purchases = Array.isArray(purchasesData) ? purchasesData : [];
-  const achievementItems: AchievementItem[] = purchases.map((purchase: any) => {
+  
+  const achievementItems = purchases.map((purchase: any) => {
     // Try to get custom image URL from metadata if it exists
     let customImageUrl = undefined;
     let description = '';
@@ -115,13 +116,13 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
       }
     }
     
-    const displayTitle = purchase.note || purchase.product?.title || 'Mystery Item';
+    const displayTitle = purchase.note || (purchase.product ? purchase.product.title : 'Mystery Item');
     const ticketCost = Math.abs(purchase.delta);
     
     return {
       id: purchase.id,
       title: displayTitle,
-      imageUrl: customImageUrl || purchase.product?.image_url || '/placeholder-product.png',
+      imageUrl: customImageUrl || (purchase.product ? purchase.product.image_url : '/placeholder-product.png'),
       purchaseDate: purchase.created_at,
       ticketCost: ticketCost,
       transactionId: purchase.id,
@@ -201,17 +202,18 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
   // Generate achievement stats
   const totalItems = achievementItems.length;
   const totalTicketsSpent = achievementItems.reduce((sum, item) => sum + item.ticketCost, 0);
+  
   const mostValuableAchievement = achievementItems.length > 0 
     ? achievementItems.reduce((prev, current) => (prev.ticketCost > current.ticketCost) ? prev : current) 
     : null;
 
   // Group achievements by category
-  const achievementsByCategory = achievementItems.reduce((acc, achievement) => {
+  const achievementsByCategory = achievementItems.reduce((acc: Record<string, AchievementItem[]>, achievement) => {
     const category = achievement.category;
     if (!acc[category]) acc[category] = [];
     acc[category].push(achievement);
     return acc;
-  }, {} as Record<string, AchievementItem[]>);
+  }, {});
 
   // Get category icon
   const getCategoryIcon = (category: string) => {
@@ -264,7 +266,7 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Tabs defaultValue="grid" value={view} onValueChange={(val: string) => setView(val as 'grid' | 'list')}>
+            <Tabs defaultValue="grid" value={view} onValueChange={(val) => setView(val as 'grid' | 'list')}>
               <TabsList className="bg-amber-100/20 border border-amber-300/30">
                 <TabsTrigger value="grid" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">
                   Gallery View
@@ -391,7 +393,8 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
                             alt={achievement.title}
                             className="w-full h-full object-contain object-center"
                             onError={(e) => {
-                              (e.target as HTMLImageElement).src = '/placeholder-product.png';
+                              const target = e.target as HTMLImageElement;
+                              target.src = '/placeholder-product.png';
                             }}
                           />
                           
@@ -461,7 +464,8 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
                               alt={achievement.title}
                               className="h-full w-full object-cover"
                               onError={(e) => {
-                                (e.target as HTMLImageElement).src = '/placeholder-product.png';
+                                const target = e.target as HTMLImageElement;
+                                target.src = '/placeholder-product.png';
                               }}
                             />
                           </div>
