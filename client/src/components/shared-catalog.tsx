@@ -15,6 +15,7 @@ import { EditProductDialog } from './edit-product-dialog';
 import { DeleteProductDialog } from './delete-product-dialog';
 import { AssignToChildDialog } from './assign-to-child-dialog';
 import AwardTrophyDialog from './award-trophy-dialog';
+import { PurchaseDialog } from './purchase-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -374,12 +375,25 @@ export function SharedCatalog({ onProductSelected }: SharedCatalogProps) {
                           </div>
                           {childUsers && childUsers.length > 0 && (
                             <div className="space-y-2">
-                              <AssignToChildDialog productId={product.id} onAssigned={refreshCatalog}>
-                                <Button size="sm" variant="default" className="w-full bg-primary hover:bg-primary/90">
-                                  <PlusCircle className="mr-2 h-4 w-4" />
-                                  Add to Wishlist
-                                </Button>
-                              </AssignToChildDialog>
+                              <div className="flex gap-2">
+                                <AssignToChildDialog productId={product.id} onAssigned={refreshCatalog}>
+                                  <Button size="sm" variant="default" className="flex-1 bg-primary hover:bg-primary/90">
+                                    <PlusCircle className="mr-2 h-4 w-4" />
+                                    Add to Wishlist
+                                  </Button>
+                                </AssignToChildDialog>
+                                
+                                <PurchaseDialog productId={product.id} productTitle={product.title} ticketCost={calculateTickets(product.price_cents)}>
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    className="flex-1 border-green-600 text-green-600 hover:bg-green-50"
+                                  >
+                                    <ShoppingCart className="mr-2 h-4 w-4" />
+                                    Purchase ({calculateTickets(product.price_cents)} 🎫)
+                                  </Button>
+                                </PurchaseDialog>
+                              </div>
                               
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>

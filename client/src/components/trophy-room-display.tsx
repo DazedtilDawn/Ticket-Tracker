@@ -34,8 +34,16 @@ export default function TrophyRoomDisplay({ childId, childName }: TrophyRoomDisp
   // Fetch trophies for the child
   const { data: trophiesData, isLoading, error } = useQuery<{ trophies: TrophyItem[] }>({
     queryKey: ["trophies", childId],
+    queryFn: () => apiRequest(`/api/child/${childId}/trophies`),
     staleTime: 0, // Always fetch fresh data when invalidated
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
+    retry: (failureCount, error: any) => {
+      // Don't retry auth errors
+      if (error?.message?.includes('Authentication required')) {
+        return false;
+      }
+      return failureCount < 3;
+    }
   });
 
   const trophies = trophiesData?.trophies || [];
