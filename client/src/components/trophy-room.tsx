@@ -1,7 +1,7 @@
         import { useState, useEffect, useCallback, useMemo } from "react";
         import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
         import { format } from "date-fns";
-        import { getQueryFn } from "@/lib/queryClient";
+        import { apiRequest } from "@/lib/queryClient";
         import { 
           Trophy, ShoppingBag, Star, Ticket as TicketIcon, 
           Pencil, Trash2, AlertTriangle, Gamepad2, Book, Shirt, 
@@ -446,8 +446,13 @@
 
           // Fetch purchase history using the authenticated query system
           const { data: purchasesData = [], isLoading } = useQuery({
-            queryKey: targetUserId ? [`/api/transactions/purchases?userId=${targetUserId}`] : ['/api/transactions/purchases'],
-            queryFn: getQueryFn({ on401: "returnNull" }),
+            queryKey: ['/api/transactions/purchases', targetUserId],
+            queryFn: async () => {
+              const url = targetUserId 
+                ? `/api/transactions/purchases?userId=${targetUserId}` 
+                : '/api/transactions/purchases';
+              return await apiRequest(url, { method: 'GET' });
+            },
             enabled: !!targetUserId,
           });
 
