@@ -45,7 +45,7 @@ export default function SwipeableChoreCard(props: ChoreCardProps) {
       const completedChore: CompletedChore = {
         choreId: props.chore.id,
         timestamp: Date.now(),
-        transactionId: result?.transaction_id
+        transactionId: result?.transaction?.id || result?.transaction_id
       };
       
       // Remove any previous instances of this chore
@@ -119,7 +119,15 @@ export default function SwipeableChoreCard(props: ChoreCardProps) {
       setIsShowingUndo(false);
       
       // Refresh the data by invalidating the related queries
-      // This will be handled in the dashboard component with the event bus
+      try {
+        // Import queryClient dynamically to avoid circular dependencies
+        const { queryClient } = await import('@/lib/queryClient');
+        queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/chores'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      } catch (error) {
+        console.error("Failed to refresh queries:", error);
+      }
     } catch (error) {
       console.error("Failed to undo chore completion:", error);
       toast({
