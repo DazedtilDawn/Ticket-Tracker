@@ -34,7 +34,8 @@ import {
   Ticket, 
   InfoIcon, 
   SlidersHorizontal,
-  Tag
+  Tag,
+  Trophy
 } from 'lucide-react';
 import { CardActions } from '@/components/ui/card-actions';
 
