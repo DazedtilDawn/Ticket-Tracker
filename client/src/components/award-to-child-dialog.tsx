@@ -63,21 +63,25 @@ export function AwardToChildDialog({ product, children }: AwardToChildDialogProp
     setIsSubmitting(true);
     
     try {
-      // Create a transaction that represents the award
-      // We use the "spend" endpoint with special metadata to mark it as a direct award
-      await apiRequest("/api/spend", {
+      // Create a transaction that represents the award as a gift (positive transaction)
+      // We'll create it as a "manual_add" transaction with special metadata
+      await apiRequest("/api/transactions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           user_id: selectedChildId,
-          tickets: product.price_cents / 25, // Convert cents to tickets based on the TICKET_CENT_VALUE (25)
-          reason: product.title,
+          delta: 0, // No change to balance - this is just a trophy
+          type: "spend", // Mark as spend so it shows up in Trophy Room
+          source: "family_contrib",
+          note: product.title,
           metadata: JSON.stringify({
             award_type: "parent_gift",
             product_id: product.id,
             custom_image_url: product.image_url,
             description: customNote || `Special award from parent: ${product.title}`,
-            awarded_date: awardedDate
+            awarded_date: awardedDate,
+            product_title: product.title,
+            product_price_cents: product.price_cents
           })
         }),
       });
