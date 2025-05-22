@@ -216,15 +216,17 @@ export default function ParentDashboard() {
         <div className="px-4 py-5 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Parent Command Center</h2>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center">
-              {format(new Date(), "EEEE, MMMM d, yyyy")}
+            <div className="mt-1 flex items-center gap-3">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {format(new Date(), "EEEE, MMMM d, yyyy")}
+              </p>
               {!isLoading && (
-                <Badge variant="outline" className="ml-3 flex items-center gap-1">
+                <Badge variant="outline" className="flex items-center gap-1">
                   <CheckCircle2 className="h-3 w-3 text-green-500" />
                   <span>{choreCounts.completed}/{choreCounts.total} Chores Done</span>
                 </Badge>
               )}
-            </p>
+            </div>
           </div>
           
           <div className="mt-4 sm:mt-0 flex flex-wrap items-center gap-2">
