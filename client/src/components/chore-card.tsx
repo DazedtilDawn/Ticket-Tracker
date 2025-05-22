@@ -79,9 +79,10 @@ export default function ChoreCard({ chore, onComplete, onBonusComplete }: ChoreC
             data-testid="goal-image"
             src={chore.image_url}
             alt={chore.name}
-            className="w-full h-full object-contain md:object-cover"
+            className="w-full h-full object-contain"
             loading="lazy"
             onError={(e) => {
+              console.error("Failed to load chore image:", chore.image_url);
               e.currentTarget.style.display = 'none';
             }}
           />
