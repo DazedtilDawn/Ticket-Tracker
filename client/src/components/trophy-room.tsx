@@ -149,22 +149,16 @@ export function TrophyRoom({ userId }: { userId?: number }) {
             <h2 className="text-xl font-bold">Trophy Room</h2>
           </div>
           <div className="flex items-center space-x-2">
-            <TabsList>
-              <TabsTrigger 
-                value="grid" 
-                onClick={() => setView('grid')}
-                className={view === 'grid' ? 'bg-amber-100 text-amber-900' : ''}
-              >
-                Grid View
-              </TabsTrigger>
-              <TabsTrigger 
-                value="timeline" 
-                onClick={() => setView('timeline')}
-                className={view === 'timeline' ? 'bg-amber-100 text-amber-900' : ''}
-              >
-                Timeline
-              </TabsTrigger>
-            </TabsList>
+            <Tabs defaultValue="grid" value={view} onValueChange={(value) => setView(value as 'grid' | 'timeline')}>
+              <TabsList>
+                <TabsTrigger value="grid">
+                  Grid View
+                </TabsTrigger>
+                <TabsTrigger value="timeline">
+                  Timeline
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
         </div>
 
