@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { 
   Trophy, ShoppingBag, Star, HeartHandshake, Sparkles, Ticket as TicketIcon, 
   Edit, Pencil, Trash2, AlertTriangle, Award, Gamepad2, Book, Shirt, 
-  Gift, Utensils, Smartphone, Gem, Zap, Crown
+  Gift, Utensils, Smartphone, Gem, Zap, Crown, BadgeCheck, Layers
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -235,22 +235,31 @@ export function TrophyRoom({ userId }: { userId?: number }) {
   return (
     <div className="relative">
       <div className="flex flex-col space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center space-x-2 mb-4 md:mb-0">
-            <Trophy className="h-6 w-6 text-amber-500" />
-            <h2 className="text-xl font-bold">Trophy Room</h2>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Tabs defaultValue="grid" value={view} onValueChange={(value) => setView(value as 'grid' | 'timeline')}>
-              <TabsList>
-                <TabsTrigger value="grid">
-                  Grid View
-                </TabsTrigger>
-                <TabsTrigger value="timeline">
-                  Timeline
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+        {/* Custom banner header with premium feel */}
+        <div className="relative rounded-lg overflow-hidden mb-2">
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-800 via-amber-600 to-amber-800 opacity-90"></div>
+          <div className="relative flex flex-col md:flex-row md:items-center md:justify-between p-6">
+            <div className="flex items-center space-x-4 mb-4 md:mb-0">
+              <div className="bg-amber-100 dark:bg-amber-800 p-3 rounded-full shadow-inner border-2 border-amber-300 dark:border-amber-500">
+                <Crown className="h-6 w-6 text-amber-600 dark:text-amber-300" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white">Achievement Gallery</h2>
+                <p className="text-amber-200 text-sm">Your personal collection of rewards and accomplishments</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Tabs defaultValue="grid" value={view} onValueChange={(value) => setView(value as 'grid' | 'timeline')}>
+                <TabsList className="bg-amber-100/20 border border-amber-300/30">
+                  <TabsTrigger value="grid" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">
+                    Gallery View
+                  </TabsTrigger>
+                  <TabsTrigger value="timeline" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">
+                    Timeline
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
           </div>
         </div>
 
@@ -315,18 +324,51 @@ export function TrophyRoom({ userId }: { userId?: number }) {
               </Card>
             </div>
 
-            {/* Grid View */}
+            {/* Grid View with Category Sections */}
             {view === 'grid' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {trophyItems.map((trophy) => (
-                  <motion.div
-                    key={trophy.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                    whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                    onClick={() => handleViewTrophy(trophy)}
-                  >
+              <div className="space-y-8">
+                {/* Group trophies by category */}
+                {Object.entries(
+                  trophyItems.reduce((acc, trophy) => {
+                    const category = trophy.category || 'Miscellaneous';
+                    if (!acc[category]) acc[category] = [];
+                    acc[category].push(trophy);
+                    return acc;
+                  }, {} as Record<string, TrophyItem[]>)
+                ).map(([category, categoryTrophies]) => (
+                  <div key={category} className="space-y-4">
+                    {/* Category Banner */}
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-gradient-to-r 
+                        from-transparent 
+                        via-amber-600/20
+                        to-transparent 
+                        rounded-md">
+                      </div>
+                      <div className="relative flex items-center p-2 pl-4">
+                        {category === 'Games' && <Gamepad2 className="h-5 w-5 text-amber-500 mr-2" />}
+                        {category === 'Toys' && <Gift className="h-5 w-5 text-amber-500 mr-2" />}
+                        {category === 'Books' && <Book className="h-5 w-5 text-amber-500 mr-2" />}
+                        {category === 'Electronics' && <Smartphone className="h-5 w-5 text-amber-500 mr-2" />}
+                        {category === 'Clothing' && <Shirt className="h-5 w-5 text-amber-500 mr-2" />}
+                        {category === 'Treats' && <Utensils className="h-5 w-5 text-amber-500 mr-2" />}
+                        {category === 'Miscellaneous' && <Award className="h-5 w-5 text-amber-500 mr-2" />}
+                        <h3 className="text-lg font-semibold">{category}</h3>
+                        <div className="ml-3 h-px bg-amber-200/50 flex-grow"></div>
+                      </div>
+                    </div>
+                    
+                    {/* Category Trophies Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pl-4">
+                      {categoryTrophies.map((trophy) => (
+                        <motion.div
+                          key={trophy.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3 }}
+                          whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                          onClick={() => handleViewTrophy(trophy)}
+                        >
                     {/* Dynamic card styling based on trophy rarity */}
                     <Card 
                       className={cn(
