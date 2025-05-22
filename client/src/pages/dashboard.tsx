@@ -903,16 +903,16 @@ export default function Dashboard() {
               )}
             </section>
             
-            {/* Trophy Room Section */}
+            {/* Trophy Showcase Section */}
             <section id="trophies" className="mt-8 mb-8">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
                   <Trophy className="w-5 h-5 mr-2 text-amber-500" />
-                  My Trophy Room
+                  Trophy Showcase
                 </h3>
                 <div className="flex items-center">
                   <span className="text-sm text-gray-500 dark:text-gray-400">
-                    Collect more items by completing goals!
+                    Your personal collection of rewards and achievements
                   </span>
                 </div>
               </div>

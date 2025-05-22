@@ -1,13 +1,23 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Trophy, ShoppingBag, Star, HeartHandshake, Sparkles, Ticket as TicketIcon, Edit, Pencil } from "lucide-react";
+import { Trophy, ShoppingBag, Star, HeartHandshake, Sparkles, Ticket as TicketIcon, Edit, Pencil, Trash2, AlertTriangle } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/store/auth-store";
 import { apiRequest } from "@/lib/queryClient";
@@ -29,11 +39,15 @@ interface TrophyItem {
 export function TrophyRoom({ userId }: { userId?: number }) {
   const { user } = useAuthStore();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedTrophy, setSelectedTrophy] = useState<TrophyItem | null>(null);
   const [isDetailViewOpen, setIsDetailViewOpen] = useState(false);
   const [happinessRatings, setHappinessRatings] = useState<Record<number, number>>({});
   const [notes, setNotes] = useState<Record<number, string>>({});
   const [view, setView] = useState<'grid' | 'timeline'>('grid');
+  const [trophyToDelete, setTrophyToDelete] = useState<TrophyItem | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isManageMode, setIsManageMode] = useState(false);
 
   // Use userId from props if provided, otherwise use the logged-in user
   const targetUserId = userId || user?.id;
@@ -94,6 +108,41 @@ export function TrophyRoom({ userId }: { userId?: number }) {
   const handleCloseDetail = () => {
     setIsDetailViewOpen(false);
     setTimeout(() => setSelectedTrophy(null), 300); // Wait for animation to complete
+  };
+  
+  // Delete trophy mutation
+  const deleteTrophyMutation = useMutation({
+    mutationFn: async (transactionId: number) => {
+      const response = await apiRequest(`/api/transactions/${transactionId}`, {
+        method: 'DELETE',
+      });
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions/purchases'] });
+      toast({
+        title: 'Trophy deleted',
+        description: 'The trophy has been removed from your collection',
+        variant: 'default',
+      });
+      setTrophyToDelete(null);
+      setIsDeleteDialogOpen(false);
+    },
+    onError: (error) => {
+      console.error('Failed to delete trophy:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete trophy. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  });
+  
+  // Open delete confirmation dialog
+  const handleDeleteTrophy = (trophy: TrophyItem, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+    setTrophyToDelete(trophy);
+    setIsDeleteDialogOpen(true);
   };
 
   // Functions moved to TrophyDetailModal component
