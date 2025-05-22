@@ -67,86 +67,62 @@ export default function TransactionsTable({ userId, limit = 10 }: TransactionsTa
     // Only fetch once on mount, then rely on WebSocket events to trigger updates
   });
   
-  // Set up WebSocket listeners for transaction events
+  // Set up WebSocket listeners for transaction events - using a debounced approach
   useEffect(() => {
     console.log("Setting up WebSocket listeners in TransactionsTable component");
     
-    // Set up individual channel subscriptions for better targeting
-    const earnSubscription = subscribeToChannel("transaction:earn", (data) => {
-      console.log("TransactionsTable received earn event:", data);
-      
-      // Always refresh the transaction list when a transaction is earned, regardless of user
-      // This helps ensure parent dashboard shows all child transactions
-      console.log("TransactionsTable: transaction:earn event - forcing complete refresh");
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-      
-      // First immediate refetch
-      queryClient.refetchQueries({ queryKey: [queryUrl], exact: false });
-      
-      // Force direct refetch of this component's data
-      refetch();
-      
-      // Also do a delayed refetch to ensure all backend processing is complete
-      setTimeout(() => {
-        console.log("TransactionsTable: executing delayed refetch after transaction:earn");
-        refetch();
-      }, 300);
-    });
+    // Debounce function to prevent multiple refetches in quick succession
+    let refetchTimeoutId: NodeJS.Timeout | null = null;
     
-    const spendSubscription = subscribeToChannel("transaction:spend", (data) => {
-      console.log("TransactionsTable received spend event:", data);
-      console.log("TransactionsTable: transaction:spend event - forcing complete refresh");
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+    const debouncedRefetch = () => {
+      // Clear any existing timeout
+      if (refetchTimeoutId) {
+        clearTimeout(refetchTimeoutId);
+      }
       
-      // First immediate refetch
-      queryClient.refetchQueries({ queryKey: [queryUrl], exact: false });
-      
-      // Force direct refetch of this component's data
-      refetch();
-      
-      // Also do a delayed refetch to ensure all backend processing is complete
-      setTimeout(() => {
-        console.log("TransactionsTable: executing delayed refetch after transaction:spend");
+      // Set a new timeout
+      refetchTimeoutId = setTimeout(() => {
         refetch();
+        refetchTimeoutId = null;
       }, 300);
-    });
+    };
     
-    const deleteSubscription = subscribeToChannel("transaction:delete", (data) => {
-      console.log("TransactionsTable received delete event:", data);
+    // Simple change handler that works for all transaction events
+    const handleTransactionChange = (eventType: string, data: any) => {
+      console.log(`TransactionsTable received ${eventType} event:`, data);
       
-      // Always refresh transaction list when a transaction is deleted
-      console.log("TransactionsTable: transaction:delete event - forcing complete refresh");
+      // Just invalidate the queries once - TanStack Query will handle deduplication
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       
-      // First immediate refetch
-      queryClient.refetchQueries({ queryKey: [queryUrl], exact: false });
-      
-      // Also do an immediate refetch for this specific component
-      refetch();
-      
-      // Force delayed refetches to ensure all backend processing is complete
-      setTimeout(() => {
-        console.log("TransactionsTable: executing delayed refetch after transaction:delete");
-        queryClient.refetchQueries({ queryKey: [queryUrl], exact: false });
-        refetch();
-      }, 100);
-      
-      // One more refetch after a longer delay to catch any stragglers
-      setTimeout(() => {
-        console.log("TransactionsTable: executing final delayed refetch after transaction:delete");
-        refetch();
-      }, 500);
-    });
+      // Schedule a single debounced refetch
+      debouncedRefetch();
+    };
+    
+    // Set up consolidated event handlers for all transaction types
+    const earnSubscription = subscribeToChannel("transaction:earn", 
+      (data) => handleTransactionChange("earn", data)
+    );
+    
+    const spendSubscription = subscribeToChannel("transaction:spend", 
+      (data) => handleTransactionChange("spend", data)
+    );
+    
+    const deleteSubscription = subscribeToChannel("transaction:delete", 
+      (data) => handleTransactionChange("delete", data)
+    );
     
     return () => {
-      // Clean up the subscriptions
+      // Clean up the subscriptions and any pending timeout
+      if (refetchTimeoutId) {
+        clearTimeout(refetchTimeoutId);
+      }
       if (typeof earnSubscription === 'function') earnSubscription();
       if (typeof spendSubscription === 'function') spendSubscription();
       if (typeof deleteSubscription === 'function') deleteSubscription();
     };
   }, [queryClient, queryUrl]);
   
-  // Delete transaction mutation
+  // Delete transaction mutation with simplified refetching
   const deleteTransactionMutation = useMutation({
     mutationFn: async (transactionId: number) => {
       return await apiRequest(`/api/transactions/${transactionId}`, {
@@ -159,27 +135,12 @@ export default function TransactionsTable({ userId, limit = 10 }: TransactionsTa
         description: "The transaction has been successfully removed.",
       });
       
-      // Immediately invalidate queries to refresh the data
+      // Invalidate the relevant queries - let React Query handle the rest
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
       
-      // Force a direct refetch of transactions with a small delay to allow the WebSocket event to process
-      setTimeout(() => {
-        console.log("Forcing immediate refetch after transaction deletion");
-        // Refetch all transaction queries
-        queryClient.refetchQueries({ 
-          queryKey: ["/api/transactions"],
-          exact: false
-        });
-        
-        // Also trigger a direct refetch for this specific component's data
-        refetch();
-        
-        // And another refetch after a slightly longer delay to ensure backend has completed all processing
-        setTimeout(() => {
-          refetch();
-        }, 300);
-      }, 50);
+      // The WebSocket event handler will trigger a refetch automatically
+      // so we don't need redundant refetch calls here
       
       setTransactionToDelete(null);
     },
