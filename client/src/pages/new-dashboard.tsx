@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -109,12 +109,19 @@ export default function Dashboard() {
 
   const activeChildId = useAuthStore((s) => s.getActiveChildId()); // ← resolve once
 
+  // UseRef to track if we've already checked for a bonus
+  const hasCheckedBonus = useRef(false);
+
   useEffect(() => {
     if (!activeChildId) return;        // store not hydrated yet
+    if (hasCheckedBonus.current) return; // Only check once per session
+    
+    // Mark as checked
+    hasCheckedBonus.current = true;
 
     const checkForUnspunBonus = async () => {
       try {
-        console.log("[Bonus] polling /unspun for id:", activeChildId);
+        console.log("[Bonus] checking for unspun bonus once for id:", activeChildId);
 
         const response = await apiRequest(
           `/api/daily-bonus/unspun?user_id=${activeChildId}`,
@@ -150,10 +157,10 @@ export default function Dashboard() {
       }
     };
     
-    // Run once now, then every 30 s
+    // Just check once on load - no more constant polling
     checkForUnspunBonus();
-    const id = setInterval(checkForUnspunBonus, 30_000);
-    return () => clearInterval(id);
+    
+    // We'll rely on WebSocket events for real-time updates instead of polling
   }, [activeChildId]);   // ← re-run when child changes or store hydrates
   
   // Fetch user stats, chores, and transactions
