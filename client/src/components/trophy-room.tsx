@@ -327,8 +327,57 @@ export function TrophyRoom({ userId }: { userId?: number }) {
                     whileHover={{ y: -5, transition: { duration: 0.2 } }}
                     onClick={() => handleViewTrophy(trophy)}
                   >
-                    <Card className="overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 border-amber-200 dark:border-amber-800">
+                    {/* Dynamic card styling based on trophy rarity */}
+                    <Card 
+                      className={cn(
+                        "overflow-hidden cursor-pointer transition-all duration-200 relative h-full",
+                        trophy.rarity === 'legendary' && "border-2 border-amber-500 shadow-lg shadow-amber-200 dark:shadow-amber-900/30",
+                        trophy.rarity === 'epic' && "border-2 border-purple-500 shadow-md shadow-purple-200 dark:shadow-purple-900/30",
+                        trophy.rarity === 'rare' && "border-2 border-blue-500 shadow-md shadow-blue-200 dark:shadow-blue-900/30", 
+                        trophy.rarity === 'uncommon' && "border-2 border-green-500 shadow-sm shadow-green-200 dark:shadow-green-900/30",
+                        trophy.rarity === 'common' && "border border-gray-300 dark:border-gray-700"
+                      )}
+                    >
+                      {/* Rarity indicator */}
+                      <div className={cn(
+                        "absolute top-0 left-0 right-0 h-1 z-10",
+                        trophy.rarity === 'legendary' && "bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400",
+                        trophy.rarity === 'epic' && "bg-gradient-to-r from-purple-400 via-fuchsia-300 to-purple-400",
+                        trophy.rarity === 'rare' && "bg-gradient-to-r from-blue-400 to-indigo-400",
+                        trophy.rarity === 'uncommon' && "bg-gradient-to-r from-green-400 to-emerald-400",
+                        trophy.rarity === 'common' && "bg-gradient-to-r from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-700"
+                      )} />
+                      
+                      {/* Category icon badge */}
+                      <div className="absolute -top-3 left-3 z-20">
+                        <Badge className={cn(
+                          "px-3 py-1 rounded-full",
+                          trophy.rarity === 'legendary' && "bg-amber-500 text-white",
+                          trophy.rarity === 'epic' && "bg-purple-500 text-white",
+                          trophy.rarity === 'rare' && "bg-blue-500 text-white",
+                          trophy.rarity === 'uncommon' && "bg-green-500 text-white",
+                          trophy.rarity === 'common' && "bg-gray-500 text-white"
+                        )}>
+                          {trophy.category === 'Games' && <Gamepad2 className="h-3 w-3 mr-1" />}
+                          {trophy.category === 'Toys' && <Gift className="h-3 w-3 mr-1" />}
+                          {trophy.category === 'Books' && <Book className="h-3 w-3 mr-1" />}
+                          {trophy.category === 'Electronics' && <Smartphone className="h-3 w-3 mr-1" />}
+                          {trophy.category === 'Clothing' && <Shirt className="h-3 w-3 mr-1" />}
+                          {trophy.category === 'Treats' && <Utensils className="h-3 w-3 mr-1" />}
+                          {trophy.category === 'Misc' && <Award className="h-3 w-3 mr-1" />}
+                          {trophy.category}
+                        </Badge>
+                      </div>
+                      
                       <div className="h-48 overflow-hidden relative">
+                        {/* Rarity effect overlay */}
+                        {trophy.rarity === 'legendary' && (
+                          <div className="absolute inset-0 bg-gradient-to-b from-amber-100/30 to-transparent z-10 pointer-events-none" />
+                        )}
+                        {trophy.rarity === 'epic' && (
+                          <div className="absolute inset-0 bg-gradient-to-b from-purple-100/20 to-transparent z-10 pointer-events-none" />
+                        )}
+                        
                         <img 
                           src={trophy.imageUrl} 
                           alt={trophy.title}
@@ -338,12 +387,25 @@ export function TrophyRoom({ userId }: { userId?: number }) {
                             (e.target as HTMLImageElement).src = '/placeholder-product.png';
                           }}
                         />
+                        
                         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                          <Badge className="bg-amber-500 hover:bg-amber-600">
-                            <TicketIcon className="h-3 w-3 mr-1" />
+                          <Badge className={cn(
+                            "flex items-center",
+                            trophy.rarity === 'legendary' && "bg-amber-500 hover:bg-amber-600",
+                            trophy.rarity === 'epic' && "bg-purple-500 hover:bg-purple-600",
+                            trophy.rarity === 'rare' && "bg-blue-500 hover:bg-blue-600",
+                            trophy.rarity === 'uncommon' && "bg-green-500 hover:bg-green-600",
+                            trophy.rarity === 'common' && "bg-gray-500 hover:bg-gray-600"
+                          )}>
+                            {trophy.rarity === 'legendary' && <Crown className="h-3 w-3 mr-1" />}
+                            {trophy.rarity === 'epic' && <Gem className="h-3 w-3 mr-1" />}
+                            {trophy.rarity === 'rare' && <Sparkles className="h-3 w-3 mr-1" />}
+                            {trophy.rarity === 'uncommon' && <Star className="h-3 w-3 mr-1" />}
+                            {(trophy.rarity === 'common' || !trophy.rarity) && <TicketIcon className="h-3 w-3 mr-1" />}
                             {trophy.ticketCost} tickets
                           </Badge>
                         </div>
+                        
                         {trophy.happiness && trophy.happiness > 0 && (
                           <div className="absolute top-2 right-2">
                             <Badge className="bg-pink-500 hover:bg-pink-600">
@@ -352,7 +414,8 @@ export function TrophyRoom({ userId }: { userId?: number }) {
                             </Badge>
                           </div>
                         )}
-                        <div className="absolute top-2 left-2 flex space-x-1">
+                        
+                        <div className="absolute top-6 right-2 flex flex-col space-y-1">
                           <Badge 
                             className="bg-blue-500 hover:bg-blue-600 cursor-pointer"
                             onClick={(e) => {
@@ -373,8 +436,17 @@ export function TrophyRoom({ userId }: { userId?: number }) {
                           </Badge>
                         </div>
                       </div>
+                      
                       <CardContent className="p-4">
-                        <h3 className="font-bold truncate">{trophy.title}</h3>
+                        <h3 className={cn(
+                          "font-bold truncate",
+                          trophy.rarity === 'legendary' && "text-amber-600 dark:text-amber-400",
+                          trophy.rarity === 'epic' && "text-purple-600 dark:text-purple-400",
+                          trophy.rarity === 'rare' && "text-blue-600 dark:text-blue-400",
+                          trophy.rarity === 'uncommon' && "text-green-600 dark:text-green-400"
+                        )}>
+                          {trophy.title}
+                        </h3>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
                           {format(new Date(trophy.purchaseDate), "MMMM d, yyyy")}
                         </p>
