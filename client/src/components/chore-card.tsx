@@ -74,15 +74,20 @@ export default function ChoreCard({ chore, onComplete, onBonusComplete }: ChoreC
     <Card className={`overflow-hidden border ${isBonusChore ? 'border-yellow-400 dark:border-yellow-600' : 'border-gray-200 dark:border-gray-700'} hover:shadow-md transition-all duration-200 ${isBonusChore ? 'bg-gradient-to-b from-yellow-50 to-white dark:from-gray-900 dark:to-gray-800' : ''}`}>
       {/* Chore image (if available) */}
       {chore.image_url && (
-        <div className="w-full h-48 sm:h-56 md:h-64 overflow-hidden relative bg-gray-100 dark:bg-gray-800">
+        <div className="w-full h-48 sm:h-56 md:h-64 overflow-hidden relative bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
           <img
-            data-testid="goal-image"
+            data-testid="chore-image"
             src={chore.image_url}
             alt={chore.name}
-            className="w-full h-full object-contain"
+            className="max-w-full max-h-full object-contain p-2"
             loading="lazy"
             onError={(e) => {
               console.error("Failed to load chore image:", chore.image_url);
+              // Replace with a fallback icon instead of hiding
+              const fallbackDiv = document.createElement('div');
+              fallbackDiv.className = "w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center";
+              fallbackDiv.innerHTML = `<span class="text-3xl">${chore.emoji || '🧹'}</span>`;
+              e.currentTarget.parentNode?.appendChild(fallbackDiv);
               e.currentTarget.style.display = 'none';
             }}
           />
