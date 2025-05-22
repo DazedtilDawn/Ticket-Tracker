@@ -53,18 +53,28 @@ export function TrophyRoom({ userId }: { userId?: number }) {
   const trophyItems: TrophyItem[] = purchases.map((purchase: any) => {
     // Try to get custom image URL from metadata if it exists
     let customImageUrl = undefined;
+    
+    // Handle both string and object metadata formats
     if (purchase.metadata) {
-      try {
-        const metadata = JSON.parse(purchase.metadata);
-        customImageUrl = metadata.custom_image_url;
-      } catch (error) {
-        console.log('Failed to parse metadata for trophy:', purchase.id);
+      if (typeof purchase.metadata === 'string') {
+        try {
+          const metadata = JSON.parse(purchase.metadata);
+          customImageUrl = metadata.custom_image_url;
+        } catch (error) {
+          console.log(`Failed to parse string metadata for trophy ${purchase.id}:`, error);
+        }
+      } else if (typeof purchase.metadata === 'object') {
+        // Already an object, no need to parse
+        customImageUrl = purchase.metadata.custom_image_url;
       }
     }
     
+    // If trophy has a note but no custom name, use that as the title
+    const displayTitle = purchase.note || purchase.product?.title || 'Mystery Item';
+    
     return {
       id: purchase.id,
-      title: purchase.product?.title || purchase.note || 'Mystery Item',
+      title: displayTitle,
       imageUrl: customImageUrl || purchase.product?.image_url || '/placeholder-product.png',
       purchaseDate: purchase.created_at,
       ticketCost: Math.abs(purchase.delta),
