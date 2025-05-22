@@ -67,6 +67,9 @@ function Router() {
       <Route path="/">
         <ProtectedRoute component={Dashboard} />
       </Route>
+      <Route path="/child">
+        <ProtectedRoute component={Dashboard} />
+      </Route>
       <Route path="/chores">
         <ProtectedRoute component={Chores} />
       </Route>
