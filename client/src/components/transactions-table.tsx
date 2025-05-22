@@ -55,11 +55,9 @@ export default function TransactionsTable({ userId, limit = 10 }: TransactionsTa
   
   const queryUrl = `/api/transactions${effectiveUserId ? `?userId=${effectiveUserId}` : ''}${limit ? `${effectiveUserId ? '&' : '?'}limit=${limit}` : ''}`;
   
-  // Add a cache key based on the component instance to avoid duplicate requests
-  const instanceId = useState(() => Math.random().toString(36).substring(2, 9))[0];
-  
+  // Use a consistent query key to allow React Query to deduplicate requests
   const { data: transactions = [], isLoading, refetch } = useQuery<any[]>({
-    queryKey: [queryUrl, { instance: instanceId }],
+    queryKey: [queryUrl],
     // Rely on WebSocket events, no polling
     refetchInterval: false, // Disable automatic polling completely
     staleTime: Infinity,    // Data never becomes stale automatically

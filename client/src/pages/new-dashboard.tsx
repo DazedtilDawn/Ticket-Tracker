@@ -26,6 +26,7 @@ import { format } from "date-fns";
 export default function Dashboard() {
   const { user, isViewingAsChild, originalUser, setFamilyUsers, switchChildView, resetChildView, getChildUsers } = useAuthStore();
   const { balance, updateBalance } = useStatsStore();
+  const { isMobile } = useMobile();
   const { toast } = useToast();
   const viewingChild = isViewingAsChild();
   const queryClient = useQueryClient();
