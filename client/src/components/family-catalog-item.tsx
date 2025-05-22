@@ -86,7 +86,7 @@ export default function FamilyCatalogItem({ product }: FamilyCatalogItemProps) {
         </CardHeader>
         
         <CardContent className="pt-0">
-          {children.length > 0 ? (
+          {isParent && children.length > 0 ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 
@@ -113,7 +113,7 @@ export default function FamilyCatalogItem({ product }: FamilyCatalogItemProps) {
             </DropdownMenu>
           ) : (
             <div className="text-center text-gray-500 text-sm py-2">
-              Available in catalog
+              {isParent ? "No children found" : "Available in catalog"}
             </div>
           )}
           
