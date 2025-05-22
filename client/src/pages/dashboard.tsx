@@ -199,7 +199,9 @@ export default function Dashboard() {
   
   const { data, isLoading, error, refetch } = useQuery<StatsResponse>({
     queryKey: ["/api/stats"],
-    refetchInterval: 60000, // Refresh every minute
+    queryFn: getCachedQueryFn({ on401: "throw", cacheDuration: 30000 }), // Cache for 30 seconds
+    refetchInterval: 120000, // Refresh every 2 minutes instead of every minute
+    staleTime: 60000, // Consider data fresh for 1 minute
   });
   
   // Update stats store whenever data changes

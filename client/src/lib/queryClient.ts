@@ -132,13 +132,91 @@ export const getQueryFn =
     return json as T;
   };
 
+// Create a request cache to limit frequency of API calls
+const requestCache: Record<string, { timestamp: number, data: any }> = {};
+
+// Enhanced query function with local caching
+export const getCachedQueryFn = <T,>({ on401: unauthorizedBehavior, cacheDuration = 0 }: 
+  { on401: UnauthorizedBehavior, cacheDuration?: number }): QueryFunction<T | null> =>
+  async ({ queryKey }) => {
+    // Build URL with query params if needed
+    let url = queryKey[0] as string;
+    const cacheKey = Array.isArray(queryKey) ? queryKey.join('|') : String(queryKey);
+    
+    // Check if we're viewing as a child
+    const authStore = JSON.parse(localStorage.getItem('ticket-tracker-auth') || '{}');
+    const viewingChildId = authStore?.state?.viewingChildId;
+    
+    // For child-specific endpoints, add userId param when in child view
+    if (viewingChildId && (
+      url.includes('/api/goals') || 
+      url.includes('/api/transactions') || 
+      url.includes('/api/stats')
+    )) {
+      const separator = url.includes('?') ? '&' : '?';
+      url = `${url}${separator}userId=${viewingChildId}`;
+    }
+    
+    // Check if we have a cached response that's still valid
+    if (cacheDuration > 0 && requestCache[cacheKey]) {
+      const cachedData = requestCache[cacheKey];
+      const now = Date.now();
+      if (now - cachedData.timestamp < cacheDuration) {
+        console.log(`Using cached data for ${url} (age: ${(now - cachedData.timestamp)/1000}s)`);
+        return cachedData.data as T;
+      }
+    }
+    
+    // Get token from auth store
+    const token = authStore?.state?.token;
+    
+    // Prepare headers
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+    
+    const res = await fetch(url, {
+      headers,
+      credentials: "include",
+    });
+
+    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+      return null;
+    }
+
+    await throwIfResNotOk(res);
+    const jsonRes = res.clone();
+    const json = await jsonRes.json();
+    
+    if (json && typeof json.success === "boolean") {
+      if (json.success) {
+        // Store in cache if caching is enabled
+        if (cacheDuration > 0) {
+          requestCache[cacheKey] = { timestamp: Date.now(), data: json.data };
+        }
+        return json.data as T;
+      }
+      const err: any = new Error(json.error?.msg || "Request failed");
+      err.code = json.error?.code;
+      throw err;
+    }
+    
+    // Store in cache if caching is enabled
+    if (cacheDuration > 0) {
+      requestCache[cacheKey] = { timestamp: Date.now(), data: json };
+    }
+    return json as T;
+  };
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      queryFn: getQueryFn({ on401: "throw" }),
+      queryFn: getCachedQueryFn({ on401: "throw", cacheDuration: 0 }), // Default no cache
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: Infinity,
+      staleTime: 30000, // Default 30 second stale time
+      gcTime: 5 * 60 * 1000, // Keep data in cache for 5 minutes
       retry: false,
     },
     mutations: {
