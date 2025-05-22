@@ -434,6 +434,19 @@ export function TrophyRoom({ userId }: { userId?: number }) {
           </motion.div>
         </div>
       )}
+
+      {/* Trophy Detail Modal */}
+      {selectedTrophy && (
+        <TrophyDetailModal
+          isOpen={isDetailViewOpen}
+          onClose={() => {
+            setIsDetailViewOpen(false);
+            setSelectedTrophy(null);
+          }}
+          trophy={selectedTrophy}
+          userId={targetUserId}
+        />
+      )}
     </div>
   );
 }
