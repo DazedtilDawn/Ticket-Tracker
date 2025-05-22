@@ -199,6 +199,12 @@ export const insertAwardedItemSchema = createInsertSchema(awardedItems).omit({
   awarded_at: true,
 });
 
+// Trophy award schema for awarding items to children
+export const awardItemSchema = z.object({
+  item_id: z.number().int().positive("Item ID must be a positive number"),
+  custom_note: z.string().optional()
+});
+
 // Spin wheel schema for parents
 export const spinWheelSchema = z.object({
   user_id: z.number().int().positive(),
@@ -235,3 +241,4 @@ export type GoodBehavior = z.infer<typeof goodBehaviorSchema>;
 export type DeleteTransaction = z.infer<typeof deleteTransactionSchema>;
 export type SpinWheel = z.infer<typeof spinWheelSchema>;
 export type BonusSpin = z.infer<typeof bonusSpinSchema>;
+export type AwardItem = z.infer<typeof awardItemSchema>;

@@ -24,7 +24,8 @@ import {
   spinWheelSchema,
   insertDailyBonusSchema,
   dailyBonus,
-  bonusSpinSchema
+  bonusSpinSchema,
+  awardItemSchema
 } from "@shared/schema";
 import { createJwt, verifyJwt, AuthMiddleware } from "./lib/auth";
 import { DailyBonusAssignmentMiddleware } from "./lib/daily-bonus-middleware";
