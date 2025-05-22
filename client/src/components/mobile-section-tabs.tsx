@@ -5,6 +5,7 @@ import { scrollToHash } from "@/lib/scrollToHash";
 const SECTIONS = [
   { id: "chores", label: "Chores" },
   { id: "activity", label: "Activity" },
+  { id: "trophies", label: "Trophies" },
 ];
 
 export default function MobileSectionTabs() {

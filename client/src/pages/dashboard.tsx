@@ -23,7 +23,7 @@ import { PurchaseDialog } from "@/components/purchase-dialog";
 import DashboardBanner from "@/components/dashboard-banner";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { PlusIcon, UserIcon, MinusCircleIcon, PlusCircleIcon, ShoppingCartIcon, BarChart3Icon, Ticket } from "lucide-react";
+import { PlusIcon, UserIcon, MinusCircleIcon, PlusCircleIcon, ShoppingCartIcon, BarChart3Icon, Ticket, Trophy } from "lucide-react";
 import { format } from "date-fns";
 
 export default function Dashboard() {
@@ -900,6 +900,24 @@ export default function Dashboard() {
               ) : (
                 <TransactionsTableDesktop limit={5} />
               )}
+            </section>
+            
+            {/* Trophy Room Section */}
+            <section id="trophies" className="mt-8 mb-8">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                  <Trophy className="w-5 h-5 mr-2 text-amber-500" />
+                  My Trophy Room
+                </h3>
+                <div className="flex items-center">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                    Collect more items by completing goals!
+                  </span>
+                </div>
+              </div>
+              
+              {/* Import the TrophyRoom component with the current user's ID */}
+              <TrophyRoom userId={viewingChildId || user?.id} />
             </section>
             
             {/* WebSocket Debug Panel - visible only in development */}
