@@ -2451,55 +2451,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const statsCache: Record<string, { data: any, timestamp: number }> = {};
   const STATS_CACHE_TTL = 15000; // 15 seconds TTL
   
-  // Award an item to a child - Parent only
+  /**
+   * Award an item to a child - creates a trophy entry
+   * 
+   * @route POST /api/child/:childId/award-item
+   * @param req.params.childId - ID of the child to award the item to
+   * @param req.body.item_id - ID of the item/product to award
+   * @param req.body.custom_note - Optional custom note for the award
+   * @returns 201 - JSON with success status and award details
+   * @returns 400 - On validation errors
+   * @returns 404 - If child or item not found
+   */
   app.post("/api/child/:childId/award-item", parentOnly, async (req: Request, res: Response) => {
     try {
       const childId = parseInt(req.params.childId);
-      const { itemId, custom_note } = req.body;
-      const parentId = req.user.id;
-      
-      if (isNaN(childId) || isNaN(itemId)) {
-        return res.status(400).json({ error: "Invalid child ID or item ID" });
+      if (isNaN(childId)) {
+        return res.status(400).json({ error: "Invalid child ID" });
       }
-      
-      // Verify child exists and is actually a child
+
+      // Validate request body using schema
+      const validatedData = awardItemSchema.parse(req.body);
+      const { item_id, custom_note } = validatedData;
+
+      // Verify the child exists and is actually a child
       const child = await storage.getUser(childId);
       if (!child || child.role !== 'child') {
         return res.status(404).json({ error: "Child not found" });
       }
-      
-      // Verify item exists (assuming it's a product from catalog)
-      const item = await storage.getProduct(itemId);
+
+      // Verify the item exists
+      const item = await storage.getProduct(item_id);
       if (!item) {
         return res.status(404).json({ error: "Item not found" });
       }
-      
+
       // Award the item
       const award = await storage.awardItemToChild({
         child_id: childId,
-        item_id: itemId,
-        awarded_by: parentId,
-        custom_note: custom_note || `Awarded ${item.title}`
+        item_id: item_id,
+        awarded_by: req.user!.id,
+        custom_note: custom_note || null
       });
-      
-      // Broadcast the award event for real-time updates
-      broadcast("trophy:awarded", {
-        child_id: childId,
+
+      // Broadcast the award to all connected clients for real-time updates
+      broadcast("trophy:awarded", { 
+        child_id: childId, 
+        item: { 
+          id: item.id, 
+          title: item.title, 
+          image_url: item.image_url 
+        },
         award,
-        item: {
-          id: item.id,
-          title: item.title,
-          image_url: item.image_url
-        }
+        awarded_by_name: req.user!.name
       });
-      
-      res.status(201).json({
-        success: true,
-        award,
-        message: `Successfully awarded ${item.title} to ${child.name}`
-      });
-    } catch (error) {
+
+      res.status(201).json({ success: true, award, item });
+    } catch (error: any) {
       console.error("Error awarding item:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
       res.status(500).json({ error: "Failed to award item" });
     }
   });

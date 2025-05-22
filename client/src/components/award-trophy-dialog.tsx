@@ -34,9 +34,12 @@ export default function AwardTrophyDialog({
 
   const awardMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest(`/api/child/${childId}/award-item`, "POST", {
-        item_id: itemId,
-        custom_note: customNote.trim() || undefined
+      return apiRequest(`/api/child/${childId}/award-item`, {
+        method: "POST",
+        body: {
+          item_id: itemId,
+          custom_note: customNote.trim() || undefined
+        }
       });
     },
     onSuccess: (response) => {

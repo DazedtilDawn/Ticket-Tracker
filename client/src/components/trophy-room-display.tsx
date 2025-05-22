@@ -3,8 +3,8 @@ import { useEffect } from "react";
 import { Trophy, Gift, Calendar, User, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { subscribeToChannel } from "@/lib/websocket";
-import { useAuthStore } from "@/stores/auth";
+import { subscribeToChannel } from "@/lib/websocket-client";
+import { useAuthStore } from "@/store/auth-store";
 
 interface TrophyItem {
   id: number;
@@ -41,7 +41,7 @@ export default function TrophyRoomDisplay({ childId, childName }: TrophyRoomDisp
 
   // Set up WebSocket listener for real-time trophy updates
   useEffect(() => {
-    const unsubscribe = subscribeToChannel("trophy:awarded", (data) => {
+    const unsubscribe = subscribeToChannel("trophy:awarded", (data: any) => {
       console.log("Received trophy:awarded event:", data);
       
       // Check if this trophy was awarded to the current child
