@@ -72,33 +72,24 @@ export default function ChoreCard({ chore, onComplete, onBonusComplete }: ChoreC
   
   return (
     <Card className={`overflow-hidden border ${isBonusChore ? 'border-yellow-400 dark:border-yellow-600' : 'border-gray-200 dark:border-gray-700'} hover:shadow-md transition-all duration-200 ${isBonusChore ? 'bg-gradient-to-b from-yellow-50 to-white dark:from-gray-900 dark:to-gray-800' : ''}`}>
-      {/* Chore image (if available) */}
-      {chore.image_url && (
-        <div className="w-full h-48 sm:h-56 md:h-64 overflow-hidden relative bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-          <img
-            data-testid="chore-image"
-            src={chore.image_url}
-            alt={chore.name}
-            className="max-w-full max-h-full object-contain p-2"
-            loading="lazy"
-            onError={(e) => {
-              console.error("Failed to load chore image:", chore.image_url);
-              // Replace with a fallback icon instead of hiding
-              const fallbackDiv = document.createElement('div');
-              fallbackDiv.className = "w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center";
-              fallbackDiv.innerHTML = `<span class="text-3xl">${chore.emoji || '🧹'}</span>`;
-              e.currentTarget.parentNode?.appendChild(fallbackDiv);
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-          {isBonusChore && (
-            <div className="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 rounded-md text-xs font-bold flex items-center shadow-sm">
-              <Award className="w-4 h-4 mr-1" />
-              BONUS
-            </div>
-          )}
+      {/* Chore image display */}
+      <div className="w-full h-48 sm:h-56 md:h-64 overflow-hidden relative bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+        {/* Use emoji fallback for all chores to ensure consistent appearance */}
+        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/40 flex items-center justify-center shadow-md">
+          <span className="text-4xl">{chore.emoji || (
+            chore.tier === 'rare' ? '🌟' : 
+            chore.tier === 'uncommon' ? '✨' : 
+            chore.tier === 'common' ? '🧹' : '📋'
+          )}</span>
         </div>
-      )}
+        
+        {isBonusChore && (
+          <div className="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 rounded-md text-xs font-bold flex items-center shadow-sm">
+            <Award className="w-4 h-4 mr-1" />
+            BONUS
+          </div>
+        )}
+      </div>
       
       {/* Chore content */}
       <CardContent className="p-5">
