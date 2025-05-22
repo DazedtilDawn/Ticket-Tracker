@@ -73,6 +73,24 @@ export function TrophyRoom({ userId }: { userId?: number }) {
     setTimeout(() => setSelectedTrophy(null), 300); // Wait for animation to complete
   };
 
+  // Functions moved to TrophyDetailModal component
+  
+  // For backward compatibility
+  const handleSetHappiness = (trophyId: number, rating: number) => {
+    setHappinessRatings(prev => ({
+      ...prev,
+      [trophyId]: rating
+    }));
+  };
+
+  // For backward compatibility
+  const handleSaveNote = (trophyId: number, note: string) => {
+    setNotes(prev => ({
+      ...prev,
+      [trophyId]: note
+    }));
+  };
+
   // Load saved happiness ratings and notes from localStorage
   useEffect(() => {
     try {

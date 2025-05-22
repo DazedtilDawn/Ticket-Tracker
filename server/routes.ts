@@ -6,6 +6,8 @@ import { db, pool } from "./db";
 import path from "path";
 import fs from "fs";
 import { eq } from "drizzle-orm";
+import multer from "multer";
+import { v4 as uuidv4 } from "uuid";
 import { users } from "../shared/schema";
 import {
   loginSchema,
@@ -956,6 +958,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("[API Error]", error);
       return res.status(400).json({ message: error.message || "Invalid request" });
+    }
+  });
+
+  /**
+   * Update a trophy (transaction) with custom details
+   * 
+   * @route POST /api/trophies/update
+   * @param req.body.transaction_id - ID of the transaction (trophy) to update
+   * @param req.body.name - Custom name for the trophy
+   * @param req.body.description - Custom description for the trophy
+   * @param [req.body.image] - Optional image file upload
+   * @param [req.body.catalog_item_id] - Optional catalog item ID to use its image
+   * @param req.body.user_id - ID of the user who owns the trophy
+   * @returns 200 - JSON with success status and updated trophy details
+   * @returns 400 - On validation errors
+   * @returns 404 - If trophy not found
+   */
+  app.post("/api/trophies/update", auth, multer({ storage: multer.memoryStorage() }).single('image'), async (req: Request, res: Response) => {
+    try {
+      const transactionId = parseInt(req.body.transaction_id);
+      const name = req.body.name;
+      const description = req.body.description || '';
+      const userId = parseInt(req.body.user_id);
+      const catalogItemId = req.body.catalog_item_id ? parseInt(req.body.catalog_item_id) : null;
+      
+      // Validate inputs
+      if (!transactionId || isNaN(transactionId)) {
+        return res.status(400).json({ success: false, message: "Invalid transaction ID" });
+      }
+      
+      if (!userId || isNaN(userId)) {
+        return res.status(400).json({ success: false, message: "Invalid user ID" });
+      }
+      
+      // Check if transaction exists and belongs to the user
+      const transaction = await storage.getTransaction(transactionId);
+      if (!transaction) {
+        return res.status(404).json({ success: false, message: "Trophy not found" });
+      }
+      
+      if (transaction.user_id !== userId && req.user?.role !== 'parent') {
+        return res.status(403).json({ success: false, message: "You don't have permission to update this trophy" });
+      }
+      
+      // Prepare update data
+      const updateData: any = {
+        note: name,
+        description: description
+      };
+      
+      // Handle image upload
+      if (req.file) {
+        try {
+          const fileExtension = req.file.originalname.split('.').pop()?.toLowerCase() || 'jpg';
+          const fileName = `trophy_${uuidv4()}.${fileExtension}`;
+          const filePath = path.join(__dirname, '../public/uploads/trophies', fileName);
+          
+          // Ensure directory exists
+          await fs.promises.mkdir(path.join(__dirname, '../public/uploads/trophies'), { recursive: true });
+          
+          // Write file
+          await fs.promises.writeFile(filePath, req.file.buffer);
+          
+          // Set image URL in update data
+          updateData.custom_image_url = `/uploads/trophies/${fileName}`;
+        } catch (error) {
+          console.error('Failed to save trophy image:', error);
+          return res.status(500).json({ success: false, message: "Failed to save image" });
+        }
+      } else if (catalogItemId) {
+        // Use catalog item image
+        const catalogItem = await storage.getProduct(catalogItemId);
+        if (catalogItem) {
+          updateData.custom_image_url = catalogItem.image_url;
+        }
+      }
+      
+      // Update transaction in database
+      // Since we don't have a direct method to update transactions, we'll create a simplified approach
+      try {
+        // Use a query to update the transaction
+        const query = `
+          UPDATE transactions 
+          SET note = $1, description = $2${updateData.custom_image_url ? ', custom_image_url = $3' : ''} 
+          WHERE id = $${updateData.custom_image_url ? '4' : '3'}
+          RETURNING *
+        `;
+        
+        const params = updateData.custom_image_url
+          ? [updateData.note, updateData.description, updateData.custom_image_url, transactionId]
+          : [updateData.note, updateData.description, transactionId];
+        
+        const result = await pool.query(query, params);
+        
+        if (result.rows.length > 0) {
+          // Broadcast update
+          broadcast("trophy:update", {
+            transactionId,
+            userId,
+            updates: updateData
+          });
+          
+          return res.status(200).json({
+            success: true,
+            message: "Trophy updated successfully",
+            trophy: result.rows[0]
+          });
+        } else {
+          return res.status(404).json({ success: false, message: "Failed to update trophy" });
+        }
+      } catch (error) {
+        console.error('Database error updating trophy:', error);
+        return res.status(500).json({ success: false, message: "Database error" });
+      }
+    } catch (error) {
+      console.error('Trophy update error:', error);
+      return res.status(500).json({ success: false, message: "Internal server error" });
     }
   });
 
