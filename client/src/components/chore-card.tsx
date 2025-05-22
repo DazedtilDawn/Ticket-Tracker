@@ -110,7 +110,7 @@ export default function ChoreCard({ chore, onComplete, onBonusComplete }: ChoreC
             )}</span>
           </div>
         )}
-      </div>
+      
         
         {isBonusChore && (
           <div className="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 rounded-md text-xs font-bold flex items-center shadow-sm">
