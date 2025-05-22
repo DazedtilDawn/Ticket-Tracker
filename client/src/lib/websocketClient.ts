@@ -183,7 +183,11 @@ export function createWebSocketConnection() {
   return ws;
 }
 
-// Listen for specific channel events
+// Track active debounce timers by event type
+const debounceTimers: Record<string, NodeJS.Timeout> = {};
+const DEBOUNCE_DELAY = 300; // ms
+
+// Listen for specific channel events with built-in debouncing
 export function subscribeToChannel(event: string, callback: (data: any) => void) {
   console.log(`Subscribing to WebSocket channel: ${event}`);
   
@@ -209,11 +213,35 @@ export function subscribeToChannel(event: string, callback: (data: any) => void)
         console.log(`Event match for "${event}" - received "${wsEvent}"`);
       }
       
-      // Pass the entire event object to the callback
-      callback({
-        event: wsEvent,
-        data: wsData
-      });
+      // Use global debouncing for each event type to prevent multiple callbacks
+      // For transaction-related events, apply additional debouncing
+      if (wsEvent.startsWith('transaction:') || event.startsWith('transaction:')) {
+        // Create a specific key for this subscription to prevent cross-component interference
+        const debounceKey = `${event}:${wsEvent}`;
+        
+        // Clear any existing timer for this event
+        if (debounceTimers[debounceKey]) {
+          clearTimeout(debounceTimers[debounceKey]);
+        }
+        
+        // Set a new timer
+        debounceTimers[debounceKey] = setTimeout(() => {
+          // Pass the entire event object to the callback
+          callback({
+            event: wsEvent,
+            data: wsData
+          });
+          
+          // Clean up the timer reference
+          delete debounceTimers[debounceKey];
+        }, DEBOUNCE_DELAY);
+      } else {
+        // For non-transaction events, execute immediately
+        callback({
+          event: wsEvent,
+          data: wsData
+        });
+      }
     }
   };
   

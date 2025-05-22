@@ -63,6 +63,26 @@ export default function Transactions() {
   useEffect(() => {
     console.log("Setting up WebSocket listeners for transaction events on transactions page");
     
+    // Debounce function to prevent multiple refetches in quick succession
+    let refetchTimeoutId: NodeJS.Timeout | null = null;
+    
+    const debouncedRefetch = () => {
+      // Clear any existing timeout
+      if (refetchTimeoutId) {
+        clearTimeout(refetchTimeoutId);
+      }
+      
+      // Set a new timeout
+      refetchTimeoutId = setTimeout(() => {
+        // Only invalidate queries once - don't force an immediate refetch
+        // as the new global debouncing in websocketClient.ts will handle this
+        queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+        
+        refetchTimeoutId = null;
+      }, 300);
+    };
+    
     // Set up a connection to listen for all transaction types
     const transactionSubscription = subscribeToChannel("transaction:", (data) => {
       console.log("Received any transaction event on transactions page:", data);
@@ -72,17 +92,17 @@ export default function Transactions() {
       const currentViewingId = userId ? parseInt(userId) : user?.id;
       
       if (transactionUserId && currentViewingId && transactionUserId === currentViewingId) {
-        console.log("Transaction is for the current user view, refreshing transaction list");
-        // Invalidate queries to reload the transactions
-        queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
-        // Force a refetch to ensure we have the latest data
-        queryClient.refetchQueries({ queryKey: ["/api/transactions"] });
+        console.log("Transaction is for the current user view, scheduling debounced refresh");
+        // Schedule a single debounced refresh
+        debouncedRefetch();
       }
     });
     
     return () => {
-      // Clean up subscriptions when component unmounts
+      // Clean up subscriptions and any pending timeout when component unmounts
+      if (refetchTimeoutId) {
+        clearTimeout(refetchTimeoutId);
+      }
       if (typeof transactionSubscription === 'function') {
         transactionSubscription();
       }

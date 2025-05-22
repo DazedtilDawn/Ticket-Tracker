@@ -521,8 +521,11 @@ export default function Dashboard() {
                           View All
                         </a>
                       </div>
-                      <TransactionsMobile limit={10} />
-                      <TransactionsTableDesktop limit={10} />
+                      {isMobile ? (
+                        <TransactionsMobile limit={10} />
+                      ) : (
+                        <TransactionsTableDesktop limit={10} />
+                      )}
                     </div>
                   </div>
                 </section>
