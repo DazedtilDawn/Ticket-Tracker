@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Trophy, ShoppingBag, Star, HeartHandshake, Sparkles, Ticket as TicketIcon } from "lucide-react";
+import { Trophy, ShoppingBag, Star, HeartHandshake, Sparkles, Ticket as TicketIcon, Edit, Pencil } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/store/auth-store";
 import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
+import { TrophyDetailModal } from "@/components/trophy-detail-modal";
 
 // Types for our trophy items
 interface TrophyItem {
@@ -60,7 +61,7 @@ export function TrophyRoom({ userId }: { userId?: number }) {
     note: notes[purchase.id] || ''
   }));
 
-  // View trophy details
+  // View trophy details with customization options
   const handleViewTrophy = (trophy: TrophyItem) => {
     setSelectedTrophy(trophy);
     setIsDetailViewOpen(true);
@@ -70,52 +71,6 @@ export function TrophyRoom({ userId }: { userId?: number }) {
   const handleCloseDetail = () => {
     setIsDetailViewOpen(false);
     setTimeout(() => setSelectedTrophy(null), 300); // Wait for animation to complete
-  };
-
-  // Save happiness rating
-  const handleSetHappiness = (trophyId: number, rating: number) => {
-    setHappinessRatings(prev => ({
-      ...prev,
-      [trophyId]: rating
-    }));
-
-    // Save to localStorage for persistence between sessions
-    try {
-      const savedRatings = JSON.parse(localStorage.getItem('trophyHappinessRatings') || '{}');
-      savedRatings[trophyId] = rating;
-      localStorage.setItem('trophyHappinessRatings', JSON.stringify(savedRatings));
-    } catch (error) {
-      console.error('Failed to save happiness rating:', error);
-    }
-
-    toast({
-      title: "Happiness Rating Saved!",
-      description: "Your rating has been saved for this item.",
-      variant: "default"
-    });
-  };
-
-  // Save note
-  const handleSaveNote = (trophyId: number, note: string) => {
-    setNotes(prev => ({
-      ...prev,
-      [trophyId]: note
-    }));
-
-    // Save to localStorage for persistence between sessions
-    try {
-      const savedNotes = JSON.parse(localStorage.getItem('trophyNotes') || '{}');
-      savedNotes[trophyId] = note;
-      localStorage.setItem('trophyNotes', JSON.stringify(savedNotes));
-    } catch (error) {
-      console.error('Failed to save note:', error);
-    }
-
-    toast({
-      title: "Note Saved!",
-      description: "Your note has been saved for this item.",
-      variant: "default"
-    });
   };
 
   // Load saved happiness ratings and notes from localStorage
