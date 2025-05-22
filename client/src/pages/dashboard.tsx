@@ -24,6 +24,7 @@ import DashboardBanner from "@/components/dashboard-banner";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { PlusIcon, UserIcon, MinusCircleIcon, PlusCircleIcon, ShoppingCartIcon, BarChart3Icon, Ticket, Trophy } from "lucide-react";
+import { TrophyRoom } from "@/components/trophy-room";
 import { format } from "date-fns";
 
 export default function Dashboard() {
@@ -917,7 +918,7 @@ export default function Dashboard() {
               </div>
               
               {/* Import the TrophyRoom component with the current user's ID */}
-              <TrophyRoom userId={viewingChildId || user?.id} />
+              <TrophyRoom userId={isViewingAsChild ? originalUser?.selectedChildId : user?.id} />
             </section>
             
             {/* WebSocket Debug Panel - visible only in development */}
