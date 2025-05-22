@@ -380,7 +380,7 @@ export default function FamilyCatalogPage() {
           )}
 
           <TabsContent value="catalog">
-            {/* For children, onProductSelected adds to their personal wishlist */}
+            {/* Both parent and child users should see the enhanced catalog */}
             <SharedCatalog 
               onProductSelected={isParentView ? () => {} : handleAddToWishlist} 
             />
