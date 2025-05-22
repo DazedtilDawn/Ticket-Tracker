@@ -106,10 +106,12 @@ export function TrophyDetailModal({ isOpen, onClose, trophy, userId }: TrophyDet
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       onClose();
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      console.error("Trophy update error:", error);
       toast({
         title: "Error updating trophy",
-        description: error.message || "There was a problem updating your trophy.",
+        description: error?.message || 
+          (error?.error ? error.error : "There was a problem updating your trophy. Please try again."),
         variant: "destructive",
       });
     },

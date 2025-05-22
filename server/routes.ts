@@ -1043,17 +1043,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update transaction in database
       // Since we don't have a direct method to update transactions, we'll create a simplified approach
       try {
-        // Use a query to update the transaction
+        // Use a query to update the transaction - Only use fields that exist in our schema
         const query = `
           UPDATE transactions 
-          SET note = $1, description = $2${updateData.custom_image_url ? ', custom_image_url = $3' : ''} 
-          WHERE id = $${updateData.custom_image_url ? '4' : '3'}
+          SET note = $1${updateData.custom_image_url ? ', custom_image_url = $2' : ''} 
+          WHERE id = $${updateData.custom_image_url ? '3' : '2'}
           RETURNING *
         `;
         
         const params = updateData.custom_image_url
-          ? [updateData.note, updateData.description, updateData.custom_image_url, transactionId]
-          : [updateData.note, updateData.description, transactionId];
+          ? [updateData.note, updateData.custom_image_url, transactionId]
+          : [updateData.note, transactionId];
         
         const result = await pool.query(query, params);
         
@@ -1075,11 +1075,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       } catch (error) {
         console.error('Database error updating trophy:', error);
-        return res.status(500).json({ success: false, message: "Database error" });
+        return res.status(500).json({ 
+          success: false, 
+          message: "There was a problem saving your trophy changes to the database.",
+          error: error instanceof Error ? error.message : String(error)
+        });
       }
     } catch (error) {
       console.error('Trophy update error:', error);
-      return res.status(500).json({ success: false, message: "Internal server error" });
+      return res.status(500).json({ 
+        success: false, 
+        message: "Trophy update failed. Please try again or contact support.",
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
