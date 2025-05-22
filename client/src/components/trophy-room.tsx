@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Trophy, ShoppingBag, Star, HeartHandshake, Sparkles, TicketIcon } from "lucide-react";
-import { Motion, AnimatePresence, motion } from "framer-motion";
+import { Trophy, ShoppingBag, Star, HeartHandshake, Sparkles, Ticket as TicketIcon } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -258,7 +258,7 @@ export function TrophyRoom({ userId }: { userId?: number }) {
                             {trophy.ticketCost} tickets
                           </Badge>
                         </div>
-                        {trophy.happiness > 0 && (
+                        {trophy.happiness && trophy.happiness > 0 && (
                           <div className="absolute top-2 right-2">
                             <Badge className="bg-pink-500 hover:bg-pink-600">
                               <HeartHandshake className="h-3 w-3 mr-1" />
@@ -318,7 +318,7 @@ export function TrophyRoom({ userId }: { userId?: number }) {
                                 <TicketIcon className="h-3 w-3 mr-1" />
                                 {trophy.ticketCost} tickets
                               </Badge>
-                              {trophy.happiness > 0 && (
+                              {trophy.happiness && trophy.happiness > 0 && (
                                 <Badge className="bg-pink-500 hover:bg-pink-600">
                                   <HeartHandshake className="h-3 w-3 mr-1" />
                                   {trophy.happiness}/5

@@ -2188,6 +2188,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const transactions = await storage.getUserTransactionsWithDetails(targetUserId, limitNum);
     return res.json(transactions);
   });
+  
+  // Get purchase history for the trophy room
+  app.get("/api/transactions/purchases", auth, async (req: Request, res: Response) => {
+    try {
+      const { userId } = req.query;
+      const user = req.user;
+      
+      // Parents can view any user's purchases, children can only view their own
+      if (user.role !== "parent" && userId && parseInt(userId as string) !== user.id) {
+        return res.status(403).json({ message: "Not authorized to view these purchases" });
+      }
+      
+      const targetUserId = userId ? parseInt(userId as string) : user.id;
+      
+      console.log(`[PURCHASES] Fetching purchase history for user ${targetUserId}`);
+      
+      // Get transactions with type "spend" that have associated product info
+      const transactions = await storage.getUserTransactionsWithDetails(targetUserId, 100);
+      
+      // Filter to only include "spend" transactions
+      const purchases = transactions.filter(t => 
+        t.type === "spend" && 
+        // Either has a goal with a product, or has a note about the purchase
+        (t.goal?.product || t.note)
+      );
+      
+      console.log(`[PURCHASES] Found ${purchases.length} purchases for user ${targetUserId}`);
+      
+      return res.json(purchases);
+    } catch (error) {
+      console.error("Error fetching purchase history:", error);
+      return res.status(500).json({ error: "Failed to fetch purchase history" });
+    }
+  });
 
   app.delete("/api/transactions/:id", auth, async (req: Request, res: Response) => {
     const { id } = req.params;
