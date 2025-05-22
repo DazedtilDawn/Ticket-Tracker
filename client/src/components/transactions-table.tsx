@@ -57,12 +57,54 @@ export default function TransactionsTable({ userId, limit = 10 }: TransactionsTa
   
   // Use a consistent query key to allow React Query to deduplicate requests
   const { data: transactions = [], isLoading, refetch } = useQuery<any[]>({
-    queryKey: [queryUrl],
+    queryKey: ["/api/transactions", effectiveUserId || "all", limit], // Structured query key for better cache control
     // Rely on WebSocket events, no polling
     refetchInterval: false, // Disable automatic polling completely
-    staleTime: Infinity,    // Data never becomes stale automatically
-    gcTime: Infinity,       // Keep in cache permanently
-    // Only fetch once on mount, then rely on WebSocket events to trigger updates
+    staleTime: 120000,      // Stay fresh for 2 minutes
+    gcTime: 300000,         // Keep in cache for 5 minutes
+    // Cached data loading with optimized fetching
+    queryFn: async () => {
+      console.log(`[OPTIMIZED] Loading transactions from cache or API: ${queryUrl}`);
+      
+      try {
+        // Check session storage cache first
+        const cacheKey = `transactions_${effectiveUserId || "all"}_${limit}`;
+        const cachedData = sessionStorage.getItem(cacheKey);
+        const cachedTime = sessionStorage.getItem(`${cacheKey}_time`);
+        
+        // If we have cached data less than 30 seconds old, use it
+        if (cachedData && cachedTime) {
+          const age = Date.now() - parseInt(cachedTime);
+          if (age < 30000) { // 30 seconds
+            console.log(`[CACHE HIT] Using cached transactions, age: ${age}ms`);
+            return JSON.parse(cachedData);
+          }
+        }
+        
+        // Cache miss or stale, fetch fresh data
+        const response = await fetch(queryUrl, {
+          credentials: 'include',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Cache the fresh data
+        sessionStorage.setItem(cacheKey, JSON.stringify(data));
+        sessionStorage.setItem(`${cacheKey}_time`, Date.now().toString());
+        
+        return data;
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+        throw error;
+      }
+    }
   });
   
   // Set up WebSocket listeners for transaction events - using a debounced approach

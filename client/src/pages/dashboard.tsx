@@ -116,15 +116,20 @@ export default function Dashboard() {
 
   const activeChildId = useAuthStore((s) => s.getActiveChildId()); // ← resolve once
 
-  // UseRef to track if we've already checked for a bonus
-  const hasCheckedBonus = useRef(false);
+  // Track if we've checked for a bonus for each child ID
+  const checkedBonusForChildIds = useRef<Record<number, boolean>>({});
 
   useEffect(() => {
     if (!activeChildId) return;        // store not hydrated yet
-    if (hasCheckedBonus.current) return; // Only check once per session
     
-    // Mark as checked
-    hasCheckedBonus.current = true;
+    // Check if we've already performed this check for this child
+    if (checkedBonusForChildIds.current[activeChildId]) {
+      console.log(`[Optimization] Skipping bonus check for child ${activeChildId} - already checked this session`);
+      return;
+    }
+    
+    // Mark this child as checked
+    checkedBonusForChildIds.current[activeChildId] = true;
 
     const checkForUnspunBonus = async () => {
       try {
