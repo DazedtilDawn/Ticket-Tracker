@@ -50,16 +50,29 @@ export function TrophyRoom({ userId }: { userId?: number }) {
   });
 
   // Transform purchases into trophy items
-  const trophyItems: TrophyItem[] = purchases.map((purchase: any) => ({
-    id: purchase.id,
-    title: purchase.product?.title || purchase.note || 'Mystery Item',
-    imageUrl: purchase.product?.image_url || '/placeholder-product.png',
-    purchaseDate: purchase.created_at,
-    ticketCost: Math.abs(purchase.delta),
-    transactionId: purchase.id,
-    happiness: happinessRatings[purchase.id] || 0,
-    note: notes[purchase.id] || ''
-  }));
+  const trophyItems: TrophyItem[] = purchases.map((purchase: any) => {
+    // Try to get custom image URL from metadata if it exists
+    let customImageUrl = undefined;
+    if (purchase.metadata) {
+      try {
+        const metadata = JSON.parse(purchase.metadata);
+        customImageUrl = metadata.custom_image_url;
+      } catch (error) {
+        console.log('Failed to parse metadata for trophy:', purchase.id);
+      }
+    }
+    
+    return {
+      id: purchase.id,
+      title: purchase.product?.title || purchase.note || 'Mystery Item',
+      imageUrl: customImageUrl || purchase.product?.image_url || '/placeholder-product.png',
+      purchaseDate: purchase.created_at,
+      ticketCost: Math.abs(purchase.delta),
+      transactionId: purchase.id,
+      happiness: happinessRatings[purchase.id] || 0,
+      note: notes[purchase.id] || ''
+    };
+  });
 
   // View trophy details with customization options
   const handleViewTrophy = (trophy: TrophyItem) => {

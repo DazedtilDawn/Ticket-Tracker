@@ -1032,8 +1032,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Write file
           fs.writeFileSync(filePath, req.file.buffer);
           
-          // Set image URL in update data
-          updateData.custom_image_url = `/uploads/trophies/${fileName}`;
+          // Store image URL in metadata (JSON) field instead of custom_image_url which doesn't exist
+          const metadata = { custom_image_url: `/uploads/trophies/${fileName}` };
+          updateData.metadata = JSON.stringify(metadata);
           
           console.log('Trophy image saved successfully at:', filePath);
         } catch (error) {
@@ -1054,24 +1055,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Use a query to update the transaction - Only use fields that exist in our schema
         const query = `
           UPDATE transactions 
-          SET note = $1${updateData.custom_image_url ? ', custom_image_url = $2' : ''} 
-          WHERE id = $${updateData.custom_image_url ? '3' : '2'}
+          SET note = $1${updateData.metadata ? ', metadata = $2' : ''} 
+          WHERE id = $${updateData.metadata ? '3' : '2'}
           RETURNING *
         `;
         
-        const params = updateData.custom_image_url
-          ? [updateData.note, updateData.custom_image_url, transactionId]
+        const params = updateData.metadata
+          ? [updateData.note, updateData.metadata, transactionId]
           : [updateData.note, transactionId];
+          
+        console.log('Executing SQL query:', { query, params });
         
         const result = await pool.query(query, params);
         
         if (result.rows.length > 0) {
-          // Broadcast update
-          broadcast("trophy:update", {
+          // Broadcast update - but ensure we only include fields that actually exist
+          // Make a modified version of updateData for websocket broadcasting
+          const broadcastData = {
             transactionId,
             userId,
-            updates: updateData
-          });
+            updates: {
+              note: updateData.note,
+              // Include image URL from metadata if present
+              imageUrl: updateData.metadata ? JSON.parse(updateData.metadata).custom_image_url : undefined
+            }
+          };
+          broadcast("trophy:update", broadcastData);
           
           return res.status(200).json({
             success: true,
