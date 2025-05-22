@@ -1,260 +1,261 @@
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Trophy, ImageIcon, Save, X } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { 
+  Card, 
+  CardContent 
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Camera, Upload, Pencil, TicketIcon } from "lucide-react";
 
 interface TrophyDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
-  trophy: any; // Will be properly typed later
+  trophy: TrophyItem; 
   userId: number | undefined;
 }
 
+interface TrophyItem {
+  id: number;
+  title: string;
+  imageUrl: string;
+  purchaseDate: string;
+  ticketCost: number;
+  transactionId: number;
+  happiness?: number;
+  note?: string;
+}
+
+const formSchema = z.object({
+  name: z.string().min(1, "Trophy name is required"),
+  description: z.string().optional(),
+  transaction_id: z.number(),
+  user_id: z.number(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
 export function TrophyDetailModal({ isOpen, onClose, trophy, userId }: TrophyDetailModalProps) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [catalogItems, setCatalogItems] = useState<any[]>([]);
-  const [selectedCatalogItem, setSelectedCatalogItem] = useState("");
-  
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [useCatalogImage, setUseCatalogImage] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
-  // Initialize form with trophy data
-  useEffect(() => {
-    if (trophy) {
-      setName(trophy.note || trophy.product?.title || "My Trophy");
-      setDescription(trophy.description || "");
-      setImagePreview(trophy.custom_image_url || trophy.product?.image_url || "");
-    }
-  }, [trophy]);
-  
-  // Fetch catalog items for dropdown
-  useEffect(() => {
-    const fetchCatalogItems = async () => {
-      try {
-        const items = await apiRequest('/api/products');
-        if (Array.isArray(items)) {
-          setCatalogItems(items);
-        }
-      } catch (error) {
-        console.error("Failed to fetch catalog items:", error);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: trophy?.title || "",
+      description: trophy?.note || "",
+      transaction_id: trophy?.transactionId || 0,
+      user_id: userId || 0,
+    },
+  });
+
+  const updateTrophyMutation = useMutation({
+    mutationFn: async (data: FormValues & { image?: File }) => {
+      const formData = new FormData();
+      formData.append("transaction_id", data.transaction_id.toString());
+      formData.append("name", data.name);
+      formData.append("description", data.description || "");
+      formData.append("user_id", data.user_id.toString());
+      
+      if (data.image) {
+        formData.append("image", data.image);
       }
-    };
-    
-    fetchCatalogItems();
-  }, []);
-  
-  // Handle image file selection
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+      return apiRequest("/api/trophies/update", {
+        method: "POST",
+        body: formData,
+        // Don't set Content-Type, let the browser set it with the boundary
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Trophy updated!",
+        description: "Your trophy has been customized successfully.",
+      });
+      // Invalidate queries to refresh the trophy data
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions/purchases"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      onClose();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error updating trophy",
+        description: error.message || "There was a problem updating your trophy.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = (values: FormValues) => {
+    updateTrophyMutation.mutate({
+      ...values,
+      image: selectedFile || undefined,
+    });
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setImageFile(file);
+      setSelectedFile(file);
+      setUseCatalogImage(false);
+      
+      // Create a preview URL
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        setPreviewUrl(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
   };
-  
-  // Handle catalog item selection
-  const handleCatalogItemChange = (value: string) => {
-    setSelectedCatalogItem(value);
-    const item = catalogItems.find(item => item.id.toString() === value);
-    if (item) {
-      setImagePreview(item.image_url);
-    }
-  };
-  
-  // Save trophy customizations
-  const handleSave = async () => {
-    if (!userId || !trophy?.id) {
-      toast({
-        title: "Error",
-        description: "Missing user ID or trophy ID",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsLoading(true);
-    
-    try {
-      // Create FormData for file upload
-      const formData = new FormData();
-      formData.append('name', name);
-      formData.append('description', description);
-      formData.append('transaction_id', trophy.id.toString());
-      formData.append('user_id', userId.toString());
-      
-      if (imageFile) {
-        formData.append('image', imageFile);
-      } else if (selectedCatalogItem) {
-        formData.append('catalog_item_id', selectedCatalogItem);
-      }
-      
-      // Update trophy
-      const result = await apiRequest('/api/trophies/update', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          // Don't set Content-Type here - it will be set automatically for FormData
-        }
-      });
-      
-      if (result?.success) {
-        toast({
-          title: "Trophy updated",
-          description: "Your trophy has been customized successfully.",
-        });
-        
-        // Invalidate queries to refresh data
-        queryClient.invalidateQueries({queryKey: ['/api/transactions/purchases']});
-        queryClient.invalidateQueries({queryKey: ['/api/trophies']});
-        
-        onClose();
-      } else {
-        throw new Error(result?.message || "Failed to update trophy");
-      }
-    } catch (error) {
-      console.error("Error updating trophy:", error);
-      toast({
-        title: "Update failed",
-        description: "There was a problem updating your trophy. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-amber-500" />
-            Trophy Details
-          </DialogTitle>
+          <DialogTitle>Customize Your Trophy</DialogTitle>
           <DialogDescription>
-            Customize your trophy to make it special!
+            Personalize your trophy with a custom name, description, or image.
           </DialogDescription>
         </DialogHeader>
-        
-        <div className="grid gap-4 py-4">
-          {/* Trophy name */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="trophy-name" className="text-right">
-              Name
-            </Label>
-            <Input
-              id="trophy-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="col-span-3"
-              placeholder="My Special Trophy"
-            />
-          </div>
-          
-          {/* Trophy description */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="trophy-description" className="text-right">
-              Description
-            </Label>
-            <Textarea
-              id="trophy-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="col-span-3"
-              placeholder="Describe your achievement..."
-            />
-          </div>
-          
-          {/* Trophy image */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label className="text-right">Trophy Image</Label>
-            <div className="col-span-3 space-y-2">
-              {/* Image preview */}
-              <div className="flex justify-center">
-                {imagePreview ? (
-                  <img 
-                    src={imagePreview} 
-                    alt="Trophy preview" 
-                    className="h-40 w-40 object-contain border rounded-md"
-                  />
-                ) : (
-                  <div className="h-40 w-40 border rounded-md flex items-center justify-center bg-muted">
-                    <ImageIcon className="h-10 w-10 text-muted-foreground" />
-                  </div>
-                )}
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Trophy Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="My Special Trophy" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem className="mt-4">
+                      <FormLabel>Description/Note</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Add a special note about this trophy..."
+                          className="h-24"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Add a personal note about this achievement
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-              
-              {/* Image upload */}
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="trophy-image" className="cursor-pointer">
-                  <div className="flex items-center gap-2 rounded-md border p-2 justify-center hover:bg-muted">
-                    <ImageIcon className="h-4 w-4" />
-                    <span>Upload custom image</span>
+
+              <div className="space-y-4">
+                <Card className="overflow-hidden">
+                  <div className="h-40 overflow-hidden relative">
+                    <img
+                      src={previewUrl || trophy?.imageUrl}
+                      alt={trophy?.title}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "/placeholder-product.png";
+                      }}
+                    />
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                      <Badge className="bg-amber-500 hover:bg-amber-600">
+                        <TicketIcon className="h-3 w-3 mr-1" />
+                        {trophy?.ticketCost} tickets
+                      </Badge>
+                    </div>
                   </div>
-                  <Input
-                    id="trophy-image"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="hidden"
-                  />
-                </Label>
-                
-                {/* Catalog item selection */}
-                <div className="space-y-1">
-                  <Label htmlFor="catalog-item">Or choose from catalog</Label>
-                  <Select value={selectedCatalogItem} onValueChange={handleCatalogItemChange}>
-                    <SelectTrigger id="catalog-item">
-                      <SelectValue placeholder="Select a catalog item" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {catalogItems.map((item) => (
-                        <SelectItem key={item.id} value={item.id.toString()}>
-                          {item.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                </Card>
+
+                <div className="space-y-3">
+                  <Label htmlFor="picture" className="block text-sm font-medium">
+                    Trophy Image
+                  </Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => document.getElementById("image-upload")?.click()}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload Image
+                    </Button>
+                    <input
+                      id="image-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-        
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isLoading}>
-            <X className="h-4 w-4 mr-2" />
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={isLoading}>
-            {isLoading ? (
-              <span className="flex items-center gap-1">
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                Saving...
-              </span>
-            ) : (
-              <>
-                <Save className="h-4 w-4 mr-2" />
-                Save Trophy
-              </>
-            )}
-          </Button>
-        </DialogFooter>
+
+            <DialogFooter className="pt-4">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={updateTrophyMutation.isPending}
+              >
+                {updateTrophyMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Save Trophy
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

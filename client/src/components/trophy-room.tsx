@@ -233,6 +233,19 @@ export function TrophyRoom({ userId }: { userId?: number }) {
                             </Badge>
                           </div>
                         )}
+                        <div 
+                          className="absolute top-2 left-2"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent card click
+                            setSelectedTrophy(trophy);
+                            setIsDetailViewOpen(true);
+                          }}
+                        >
+                          <Badge className="bg-blue-500 hover:bg-blue-600 cursor-pointer">
+                            <Pencil className="h-3 w-3 mr-1" />
+                            Customize
+                          </Badge>
+                        </div>
                       </div>
                       <CardContent className="p-4">
                         <h3 className="font-bold truncate">{trophy.title}</h3>
@@ -276,9 +289,22 @@ export function TrophyRoom({ userId }: { userId?: number }) {
                             />
                           </div>
                           <div className="p-4 md:w-3/4">
-                            <p className="text-sm text-amber-600 dark:text-amber-400 mb-1">
-                              {format(new Date(trophy.purchaseDate), "MMMM d, yyyy")}
-                            </p>
+                            <div className="flex justify-between items-center">
+                              <p className="text-sm text-amber-600 dark:text-amber-400 mb-1">
+                                {format(new Date(trophy.purchaseDate), "MMMM d, yyyy")}
+                              </p>
+                              <Badge 
+                                className="bg-blue-500 hover:bg-blue-600 cursor-pointer"
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent card click
+                                  setSelectedTrophy(trophy);
+                                  setIsDetailViewOpen(true);
+                                }}
+                              >
+                                <Pencil className="h-3 w-3 mr-1" />
+                                Edit Trophy
+                              </Badge>
+                            </div>
                             <h3 className="font-bold mb-2">{trophy.title}</h3>
                             <div className="flex items-center space-x-2">
                               <Badge className="bg-amber-500 hover:bg-amber-600">
