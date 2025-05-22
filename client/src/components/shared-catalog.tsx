@@ -14,7 +14,7 @@ import { AddProductDialog } from './add-product-dialog';
 import { EditProductDialog } from './edit-product-dialog';
 import { DeleteProductDialog } from './delete-product-dialog';
 import { AssignToChildDialog } from './assign-to-child-dialog';
-import { AwardToChildDialog } from './award-to-child-dialog';
+import AwardTrophyDialog from './award-trophy-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
