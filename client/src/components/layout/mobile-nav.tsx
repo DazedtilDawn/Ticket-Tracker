@@ -49,6 +49,7 @@ export function MobileNav() {
     { path: '/chores', label: 'Chores', icon: 'ri-list-check-2' },
     { path: '/family-catalog', label: 'Catalog', icon: 'ri-store-2-line' },
     { path: '/transactions', label: 'Tickets', icon: 'ri-exchange-funds-line' },
+    { path: '/parent-dashboard', label: 'Parent', icon: 'ri-user-settings-line' },
   ];
   
   const [childUsers, setChildUsers] = useState<UserInfo[]>([]);
@@ -211,9 +212,9 @@ export function MobileNav() {
       
       {/* Mobile bottom navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg z-50">
-        <div className={`grid ${user?.role === 'parent' ? 'grid-cols-5' : 'grid-cols-4'} h-20 pt-1`}>
-          {/* Regular navigation items */}
-          {navItems.map(item => (
+        <div className="grid grid-cols-5 h-20 pt-1">
+          {/* First 4 navigation items */}
+          {navItems.slice(0, 4).map(item => (
             <a
               key={item.path}
               href={item.path}
@@ -228,8 +229,8 @@ export function MobileNav() {
             </a>
           ))}
 
-          {/* Switch back to parent when viewing as child */}
-          {viewingAsChild && (
+          {/* 5th button: Switch back to parent when viewing as child, otherwise show Parent Dashboard */}
+          {viewingAsChild ? (
             <button
               onClick={handleResetToParent}
               className="flex flex-col items-center justify-center bg-amber-50 dark:bg-amber-900/30 rounded-lg py-1 px-2 mx-1 text-amber-600 dark:text-amber-400"
@@ -237,23 +238,19 @@ export function MobileNav() {
               <Crown className="text-xl mb-1" />
               <span className="text-xs font-medium">Parent</span>
             </button>
-          )}
-          
-          {/* Parent-only navigation items */}
-          {user?.role === 'parent' && !viewingAsChild && parentNavItems.map(item => (
+          ) : (
             <a
-              key={item.path}
-              href={item.path}
+              href="/parent-dashboard"
               className={`flex flex-col items-center justify-center ${
-                location === item.path
+                location === "/parent-dashboard"
                   ? "text-amber-600 dark:text-amber-400"
                   : "text-gray-500 dark:text-gray-400"
               }`}
             >
-              <i className={`${item.icon} text-xl`}></i>
-              <span className="text-xs mt-1">{item.label}</span>
+              <i className="ri-user-settings-line text-xl"></i>
+              <span className="text-xs mt-1">Parent</span>
             </a>
-          ))}
+          )}
         </div>
       </div>
       
