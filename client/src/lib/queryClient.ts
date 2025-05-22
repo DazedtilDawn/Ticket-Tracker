@@ -136,8 +136,9 @@ export const getQueryFn =
 const requestCache: Record<string, { timestamp: number, data: any }> = {};
 
 // Enhanced query function with local caching
+// Fix Type issues by ensuring we don't return null for StatsResponse
 export const getCachedQueryFn = <T,>({ on401: unauthorizedBehavior, cacheDuration = 0 }: 
-  { on401: UnauthorizedBehavior, cacheDuration?: number }): QueryFunction<T | null> =>
+  { on401: UnauthorizedBehavior, cacheDuration?: number }): QueryFunction<T> =>
   async ({ queryKey }) => {
     // Build URL with query params if needed
     let url = queryKey[0] as string;
@@ -181,8 +182,9 @@ export const getCachedQueryFn = <T,>({ on401: unauthorizedBehavior, cacheDuratio
       credentials: "include",
     });
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
+    if (res.status === 401) {
+      // For 401 errors we throw regardless of configuration to maintain the correct return type
+      throw new Error("Unauthorized");
     }
 
     await throwIfResNotOk(res);
@@ -209,10 +211,11 @@ export const getCachedQueryFn = <T,>({ on401: unauthorizedBehavior, cacheDuratio
     return json as T;
   };
 
+// Configure the global query client with our enhanced caching system
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      queryFn: getCachedQueryFn({ on401: "throw", cacheDuration: 0 }), // Default no cache
+      queryFn: getQueryFn({ on401: "throw" }), // Keep using the original query function by default
       refetchInterval: false,
       refetchOnWindowFocus: false,
       staleTime: 30000, // Default 30 second stale time
@@ -224,3 +227,27 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+// Create API-specific cache configurations to apply in components
+export const apiCacheConfigs = {
+  // Static data that rarely changes
+  lowFrequency: {
+    queryFn: getCachedQueryFn({ on401: "throw", cacheDuration: 120000 }), // 2 minute cache
+    staleTime: 120000,
+    refetchInterval: 300000, // 5 minute refresh
+  },
+  
+  // Data that changes occasionally
+  mediumFrequency: {
+    queryFn: getCachedQueryFn({ on401: "throw", cacheDuration: 30000 }), // 30 second cache
+    staleTime: 60000, // 1 minute stale time
+    refetchInterval: 120000, // 2 minute refresh
+  },
+  
+  // Data that changes frequently
+  highFrequency: {
+    queryFn: getCachedQueryFn({ on401: "throw", cacheDuration: 5000 }), // 5 second cache
+    staleTime: 10000, // 10 second stale time
+    refetchInterval: 60000, // 1 minute refresh
+  }
+};

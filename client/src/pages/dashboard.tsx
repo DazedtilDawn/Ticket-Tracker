@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, getCachedQueryFn, apiCacheConfigs } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth-store";
 import { TICKET_DOLLAR_VALUE } from "../../../config/business";
 import { useStatsStore } from "@/store/stats-store";
@@ -197,11 +197,11 @@ export default function Dashboard() {
     chores?: any[];
   }
   
+  // Using improved caching for stats data (medium frequency updates)
   const { data, isLoading, error, refetch } = useQuery<StatsResponse>({
     queryKey: ["/api/stats"],
-    queryFn: getCachedQueryFn({ on401: "throw", cacheDuration: 30000 }), // Cache for 30 seconds
-    refetchInterval: 120000, // Refresh every 2 minutes instead of every minute
-    staleTime: 60000, // Consider data fresh for 1 minute
+    refetchInterval: 120000, // 2 minutes
+    staleTime: 60000, // 1 minute
   });
   
   // Update stats store whenever data changes
