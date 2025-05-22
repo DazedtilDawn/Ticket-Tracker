@@ -266,92 +266,7 @@ export default function ParentDashboard() {
             
             {/* Overview Tab */}
             <TabsContent value="overview" className="mt-4">
-              {/* Quick Stats Overview */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <Card className="bg-gradient-to-br from-primary-50 to-white dark:from-gray-700 dark:to-gray-800">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base font-medium flex items-center">
-                      <Activity className="h-4 w-4 mr-1 text-primary-600" />
-                      Family Economy
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-3xl font-bold text-primary-700 dark:text-primary-300">
-                          {childSummaries.reduce((sum, child) => sum + child.balance, 0)}
-                        </p>
-                        <p className="text-sm text-muted-foreground">Tickets in circulation</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-semibold">{childSummaries.length}</p>
-                        <p className="text-sm text-muted-foreground">Active children</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card className="bg-gradient-to-br from-green-50 to-white dark:from-gray-700 dark:to-gray-800">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base font-medium flex items-center">
-                      <CheckCircle2 className="h-4 w-4 mr-1 text-green-600" />
-                      Chore Completion
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-3xl font-bold text-green-700 dark:text-green-300">
-                          {choreCounts.completed}/{choreCounts.total}
-                        </p>
-                        <p className="text-sm text-muted-foreground">Chores completed today</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-semibold">
-                          {choreCounts.total > 0 
-                            ? Math.round((choreCounts.completed / choreCounts.total) * 100)
-                            : 0}%
-                        </p>
-                        <p className="text-sm text-muted-foreground">Completion rate</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card className="bg-gradient-to-br from-amber-50 to-white dark:from-gray-700 dark:to-gray-800">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base font-medium flex items-center">
-                      <Star className="h-4 w-4 mr-1 text-amber-600" />
-                      Reward Status
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-3xl font-bold text-amber-700 dark:text-amber-300">
-                          {transactions && Array.isArray(transactions) 
-                            ? transactions.filter(t => 
-                                t.type === 'earn' && 
-                                new Date(t.created_at).toDateString() === new Date().toDateString()
-                              ).length
-                            : 0}
-                        </p>
-                        <p className="text-sm text-muted-foreground">Rewards today</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-semibold">
-                          {transactions && Array.isArray(transactions) 
-                            ? transactions.filter(t => t.type === 'earn' && t.source === 'bonus_spin').length
-                            : 0}
-                        </p>
-                        <p className="text-sm text-muted-foreground">Pending bonuses</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-              
-              {/* Child Cards Row */}
+              {/* Child Cards Row - Moved to top for easy access */}
               <div className="mb-6">
                 <h3 className="text-lg font-semibold mb-4">Child Profiles</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -500,6 +415,91 @@ export default function ParentDashboard() {
                     </div>
                   )}
                 </div>
+              </div>
+              
+              {/* Quick Stats Overview */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <Card className="bg-gradient-to-br from-primary-50 to-white dark:from-gray-700 dark:to-gray-800">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base font-medium flex items-center">
+                      <Activity className="h-4 w-4 mr-1 text-primary-600" />
+                      Family Economy
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-3xl font-bold text-primary-700 dark:text-primary-300">
+                          {childSummaries.reduce((sum, child) => sum + child.balance, 0)}
+                        </p>
+                        <p className="text-sm text-muted-foreground">Tickets in circulation</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-semibold">{childSummaries.length}</p>
+                        <p className="text-sm text-muted-foreground">Active children</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card className="bg-gradient-to-br from-green-50 to-white dark:from-gray-700 dark:to-gray-800">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base font-medium flex items-center">
+                      <CheckCircle2 className="h-4 w-4 mr-1 text-green-600" />
+                      Chore Completion
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-3xl font-bold text-green-700 dark:text-green-300">
+                          {choreCounts.completed}/{choreCounts.total}
+                        </p>
+                        <p className="text-sm text-muted-foreground">Chores completed today</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-semibold">
+                          {choreCounts.total > 0 
+                            ? Math.round((choreCounts.completed / choreCounts.total) * 100)
+                            : 0}%
+                        </p>
+                        <p className="text-sm text-muted-foreground">Completion rate</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card className="bg-gradient-to-br from-amber-50 to-white dark:from-gray-700 dark:to-gray-800">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base font-medium flex items-center">
+                      <Star className="h-4 w-4 mr-1 text-amber-600" />
+                      Reward Status
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-3xl font-bold text-amber-700 dark:text-amber-300">
+                          {transactions && Array.isArray(transactions) 
+                            ? transactions.filter(t => 
+                                t.type === 'earn' && 
+                                new Date(t.created_at).toDateString() === new Date().toDateString()
+                              ).length
+                            : 0}
+                        </p>
+                        <p className="text-sm text-muted-foreground">Rewards today</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-semibold">
+                          {transactions && Array.isArray(transactions) 
+                            ? transactions.filter(t => t.type === 'earn' && t.source === 'bonus_spin').length
+                            : 0}
+                        </p>
+                        <p className="text-sm text-muted-foreground">Pending bonuses</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
               
               {/* Action Toolbar */}
