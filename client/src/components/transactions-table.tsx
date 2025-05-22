@@ -55,11 +55,16 @@ export default function TransactionsTable({ userId, limit = 10 }: TransactionsTa
   
   const queryUrl = `/api/transactions${effectiveUserId ? `?userId=${effectiveUserId}` : ''}${limit ? `${effectiveUserId ? '&' : '?'}limit=${limit}` : ''}`;
   
+  // Add a cache key based on the component instance to avoid duplicate requests
+  const instanceId = useState(() => Math.random().toString(36).substring(2, 9))[0];
+  
   const { data: transactions = [], isLoading, refetch } = useQuery<any[]>({
-    queryKey: [queryUrl],
-    // Add automatic refetching to ensure we always have fresh data
-    refetchInterval: 5000, // Refresh every 5 seconds as a backup
-    staleTime: 2000,       // Consider data stale after 2 seconds
+    queryKey: [queryUrl, { instance: instanceId }],
+    // Rely on WebSocket events, no polling
+    refetchInterval: false, // Disable automatic polling completely
+    staleTime: Infinity,    // Data never becomes stale automatically
+    gcTime: Infinity,       // Keep in cache permanently
+    // Only fetch once on mount, then rely on WebSocket events to trigger updates
   });
   
   // Set up WebSocket listeners for transaction events
