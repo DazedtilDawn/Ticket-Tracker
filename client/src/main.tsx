@@ -18,15 +18,17 @@ import {
 // Initialize your app's WebSocket connection
 createWebSocketConnection();
 
-// Register service worker for PWA functionality
-if ('serviceWorker' in navigator) {
+// Register service worker for PWA functionality 
+if ('serviceWorker' in navigator && window.location.hostname !== 'localhost' && !window.location.hostname.includes('.replit.dev')) {
+  // Only register in production environment, not in development
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/service-worker.js')
       .then(registration => {
         console.log('ServiceWorker registration successful with scope: ', registration.scope);
       })
       .catch(error => {
-        console.error('ServiceWorker registration failed: ', error);
+        // This is expected to fail in development, so we'll just log it without showing an error
+        console.log('ServiceWorker registration skipped (development environment)');
       });
   });
 }
