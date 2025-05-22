@@ -1,7 +1,6 @@
         import { useState, useEffect, useCallback, useMemo } from "react";
         import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
         import { format } from "date-fns";
-        import { apiRequest } from "@/lib/queryClient";
         import { 
           Trophy, ShoppingBag, Star, Ticket as TicketIcon, 
           Pencil, Trash2, AlertTriangle, Gamepad2, Book, Shirt, 
@@ -444,8 +443,17 @@
 
           const targetUserId = userId || user?.id;
 
-          // Fetch purchase history using the authenticated query system
-          const { data: purchasesData = [], isLoading } = useQuery({
+          // Fetch awarded trophies using the new trophy system
+          const { data: trophiesResponse, isLoading: trophiesLoading } = useQuery({
+            queryKey: ['trophies', targetUserId],
+            queryFn: async () => {
+              return await apiRequest(`/api/child/${targetUserId}/trophies`, { method: 'GET' });
+            },
+            enabled: !!targetUserId,
+          });
+
+          // Also fetch purchase history for backward compatibility
+          const { data: purchasesData = [], isLoading: purchasesLoading } = useQuery({
             queryKey: ['/api/transactions/purchases', targetUserId],
             queryFn: async () => {
               const url = targetUserId 
@@ -456,17 +464,34 @@
             enabled: !!targetUserId,
           });
 
-          // Transform purchases into trophy items
-          const trophyItems: TrophyItem[] = useMemo(() => {
-            const purchases = Array.isArray(purchasesData) ? purchasesData : [];
+          const isLoading = trophiesLoading || purchasesLoading;
 
-            return purchases.map((purchase: any) => {
+          // Combine awarded trophies and purchase history
+          const trophyItems: TrophyItem[] = useMemo(() => {
+            const awardedTrophies = trophiesResponse?.trophies || [];
+            const purchases = Array.isArray(purchasesData) ? purchasesData : [];
+            
+            // Transform awarded trophies
+            const awardedItems: TrophyItem[] = awardedTrophies.map((trophy: any) => ({
+              id: `awarded-${trophy.id}`,
+              title: trophy.product.title,
+              imageUrl: trophy.product.image_url || '/placeholder-product.png',
+              purchaseDate: trophy.awarded_at,
+              ticketCost: 0, // Awarded items don't cost tickets
+              transactionId: 0,
+              note: trophy.custom_note || 'Awarded by parent',
+              category: guessCategory(trophy.product.title),
+              rarity: 'legendary' as const, // Awarded items are special
+            }));
+            
+            // Transform purchase history  
+            const purchaseItems: TrophyItem[] = purchases.map((purchase: any) => {
               const { customImageUrl, description } = parseMetadata(purchase.metadata);
               const displayTitle = purchase.note || purchase.product?.title || 'Mystery Item';
               const ticketCost = Math.abs(purchase.delta);
 
               return {
-                id: purchase.id,
+                id: `purchase-${purchase.id}`,
                 title: displayTitle,
                 imageUrl: customImageUrl || purchase.product?.image_url || '/placeholder-product.png',
                 purchaseDate: purchase.created_at,
@@ -477,7 +502,11 @@
                 rarity: getRarity(ticketCost),
               };
             });
-          }, [purchasesData]);
+            
+            // Combine and sort by date (newest first)
+            return [...awardedItems, ...purchaseItems]
+              .sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime());
+          }, [trophiesResponse, purchasesData]);
 
           // Group trophies by category
           const trophiesByCategory = useMemo(() => {

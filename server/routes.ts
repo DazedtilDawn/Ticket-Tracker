@@ -2450,31 +2450,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const statsCache: Record<string, { data: any, timestamp: number }> = {};
   const STATS_CACHE_TTL = 15000; // 15 seconds TTL
   
-  // Test endpoint for trophy system - Step 1 verification
-  app.post("/api/test-trophy", auth, async (req: Request, res: Response) => {
+  // Award an item to a child - Parent only
+  app.post("/api/child/:childId/award-item", parentOnly, async (req: Request, res: Response) => {
     try {
-      const { child_id, item_id } = req.body;
-      const awarded_by = req.user.id;
+      const childId = parseInt(req.params.childId);
+      const { itemId, custom_note } = req.body;
+      const parentId = req.user.id;
       
-      // Test awarding an item
+      if (isNaN(childId) || isNaN(itemId)) {
+        return res.status(400).json({ error: "Invalid child ID or item ID" });
+      }
+      
+      // Verify child exists and is actually a child
+      const child = await storage.getUser(childId);
+      if (!child || child.role !== 'child') {
+        return res.status(404).json({ error: "Child not found" });
+      }
+      
+      // Verify item exists (assuming it's a product from catalog)
+      const item = await storage.getProduct(itemId);
+      if (!item) {
+        return res.status(404).json({ error: "Item not found" });
+      }
+      
+      // Award the item
       const award = await storage.awardItemToChild({
-        child_id,
-        item_id,
-        awarded_by,
-        custom_note: "Test trophy award"
+        child_id: childId,
+        item_id: itemId,
+        awarded_by: parentId,
+        custom_note: custom_note || `Awarded ${item.title}`
       });
       
-      // Test retrieving trophies
-      const trophies = await storage.getChildTrophies(child_id);
+      // Broadcast the award event for real-time updates
+      broadcast("trophy:awarded", {
+        child_id: childId,
+        award,
+        item: {
+          id: item.id,
+          title: item.title,
+          image_url: item.image_url
+        }
+      });
+      
+      res.status(201).json({
+        success: true,
+        award,
+        message: `Successfully awarded ${item.title} to ${child.name}`
+      });
+    } catch (error) {
+      console.error("Error awarding item:", error);
+      res.status(500).json({ error: "Failed to award item" });
+    }
+  });
+
+  // Get a child's trophies
+  app.get("/api/child/:childId/trophies", auth, async (req: Request, res: Response) => {
+    try {
+      const childId = parseInt(req.params.childId);
+      const user = req.user;
+      
+      if (isNaN(childId)) {
+        return res.status(400).json({ error: "Invalid child ID" });
+      }
+      
+      // Parents can view any child's trophies, children can only view their own
+      if (user.role !== "parent" && user.id !== childId) {
+        return res.status(403).json({ error: "Not authorized to view these trophies" });
+      }
+      
+      // Get trophies with item details
+      const trophies = await storage.getChildTrophies(childId);
       
       res.json({
         success: true,
-        award,
-        trophies
+        trophies,
+        child_id: childId
       });
     } catch (error) {
-      console.error("Trophy test error:", error);
-      res.status(500).json({ error: "Trophy test failed" });
+      console.error("Error fetching trophies:", error);
+      res.status(500).json({ error: "Failed to fetch trophies" });
     }
   });
 
