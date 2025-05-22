@@ -22,7 +22,7 @@ import {
   TrendingUp, 
   Sparkles
 } from "lucide-react";
-import { TICKET_CENT_VALUE } from "../../config/business";
+import { TICKET_CENT_VALUE } from "../../../config/business";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
