@@ -979,8 +979,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const transactionId = parseInt(req.body.transaction_id);
       const name = req.body.name;
-      // Get note_addition from request (we're using this instead of description to match db column names)
-      const description = req.body.note_addition || '';
+      // Match client parameter names - client sends "description"
+      const description = req.body.description || '';
       const userId = parseInt(req.body.user_id);
       const catalogItemId = req.body.catalog_item_id ? parseInt(req.body.catalog_item_id) : null;
       
