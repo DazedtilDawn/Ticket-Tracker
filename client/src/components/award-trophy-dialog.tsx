@@ -36,9 +36,12 @@ export default function AwardTrophyDialog({
     mutationFn: async () => {
       return apiRequest(`/api/child/${childId}/award-item`, {
         method: "POST",
-        body: {
+        body: JSON.stringify({
           item_id: itemId,
           custom_note: customNote.trim() || undefined
+        }),
+        headers: {
+          'Content-Type': 'application/json'
         }
       });
     },

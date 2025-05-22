@@ -15,6 +15,7 @@ import { EditProductDialog } from './edit-product-dialog';
 import { DeleteProductDialog } from './delete-product-dialog';
 import { AssignToChildDialog } from './assign-to-child-dialog';
 import AwardTrophyDialog from './award-trophy-dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -86,6 +87,11 @@ export function SharedCatalog({ onProductSelected }: SharedCatalogProps) {
   const childUsers = getChildUsers() || [];
   const canManageCatalog = user?.role === 'parent' && !isViewingAsChild();
   
+  // State for trophy award dialog
+  const [selectedChild, setSelectedChild] = useState<any | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+  const [isAwardDialogOpen, setIsAwardDialogOpen] = useState(false);
+  
   // Get all available products
   const { data: products = [] } = useQuery<any[]>({
     queryKey: ["/api/products"],
@@ -139,6 +145,12 @@ export function SharedCatalog({ onProductSelected }: SharedCatalogProps) {
   // Calculate and format ticket price
   const calculateTickets = (priceInCents: number) => {
     return Math.ceil(priceInCents / TICKET_CENT_VALUE);
+  };
+
+  const handleCloseAwardDialog = () => {
+    setIsAwardDialogOpen(false);
+    setSelectedChild(null);
+    setSelectedProduct(null);
   };
 
   return (
@@ -369,12 +381,34 @@ export function SharedCatalog({ onProductSelected }: SharedCatalogProps) {
                                 </Button>
                               </AssignToChildDialog>
                               
-                              <AwardToChildDialog product={product}>
-                                <Button size="sm" variant="default" className="w-full bg-amber-600 hover:bg-amber-700">
-                                  <Trophy className="mr-2 h-4 w-4" />
-                                  Award to Child
-                                </Button>
-                              </AwardToChildDialog>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button 
+                                    size="sm" 
+                                    variant="default" 
+                                    className="w-full bg-amber-600 hover:bg-amber-700"
+                                  >
+                                    <Trophy className="mr-2 h-4 w-4" />
+                                    Award as Trophy
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-56">
+                                  {childUsers.map((child: any) => (
+                                    <DropdownMenuItem 
+                                      key={child.id}
+                                      onClick={() => {
+                                        setSelectedChild(child);
+                                        setSelectedProduct(product);
+                                        setIsAwardDialogOpen(true);
+                                      }}
+                                      className="cursor-pointer"
+                                    >
+                                      <Trophy className="h-4 w-4 mr-2 text-yellow-500" />
+                                      Award to {child.name}
+                                    </DropdownMenuItem>
+                                  ))}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           )}
                         </>
@@ -514,6 +548,19 @@ export function SharedCatalog({ onProductSelected }: SharedCatalogProps) {
             </div>
           )}
         </ScrollArea>
+      )}
+      
+      {/* Trophy Award Dialog */}
+      {selectedChild && selectedProduct && (
+        <AwardTrophyDialog
+          isOpen={isAwardDialogOpen}
+          onClose={handleCloseAwardDialog}
+          childId={selectedChild.id}
+          childName={selectedChild.name}
+          itemId={selectedProduct.id}
+          itemTitle={selectedProduct.title}
+          itemImage={selectedProduct.image_url || undefined}
+        />
       )}
     </div>
   );
