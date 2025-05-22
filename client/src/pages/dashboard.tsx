@@ -586,6 +586,12 @@ export default function Dashboard() {
       
       // Still refetch to update other parts of the UI
       refetch();
+      
+      // Return the response with the transaction ID for the undo functionality
+      return {
+        transaction: response.transaction,
+        transaction_id: response.transaction?.id || response.transaction_id
+      };
     } catch (error: any) {
       toast({
         title: "Error",

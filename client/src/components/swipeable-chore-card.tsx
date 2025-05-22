@@ -41,11 +41,31 @@ export default function SwipeableChoreCard(props: ChoreCardProps) {
       // Actually complete the chore
       const result = await props.onComplete(props.chore.id);
       
+      // Extract the transaction ID from the API response
+      let transactionId = null;
+      
+      // Log the response structure to debug
+      console.log("Chore completion response:", result);
+      
+      // Handle different response formats
+      if (result?.transaction?.id) {
+        // Direct transaction object
+        transactionId = result.transaction.id;
+      } else if (result?.transaction_id) {
+        // Flattened transaction_id property
+        transactionId = result.transaction_id;
+      } else if (result?.id) {
+        // Direct ID (some API responses might have this format)
+        transactionId = result.id;
+      }
+      
+      console.log("Extracted transaction ID:", transactionId);
+      
       // Store the completed chore for potential undo
       const completedChore: CompletedChore = {
         choreId: props.chore.id,
         timestamp: Date.now(),
-        transactionId: result?.transaction?.id || result?.transaction_id
+        transactionId: transactionId
       };
       
       // Remove any previous instances of this chore
@@ -99,10 +119,22 @@ export default function SwipeableChoreCard(props: ChoreCardProps) {
     setIsUndoing(true);
     
     try {
+      console.log("Attempting to undo transaction:", choreToUndo.transactionId);
+      
       // Delete the transaction using the API
-      await fetch(`/api/transactions/${choreToUndo.transactionId}`, {
+      const response = await fetch(`/api/transactions/${choreToUndo.transactionId}`, {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to delete transaction: ${response.status}`);
+      }
+      
+      console.log("Successfully deleted transaction:", choreToUndo.transactionId);
       
       // Remove from recently completed chores
       const index = recentlyCompletedChores.findIndex(c => c.choreId === props.chore.id);
