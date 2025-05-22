@@ -87,8 +87,8 @@ export default function ParentDashboard() {
           setFamilyUsers(users);
           console.log("Successfully loaded family users:", users);
           
-          // Refresh all balances
-          await apiRequest('/api/transactions/refresh-balances', { 
+          // Only refresh balances once
+          const balanceResponse = await apiRequest('/api/transactions/refresh-balances', { 
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
           });
@@ -98,11 +98,8 @@ export default function ParentDashboard() {
           const summaries = await Promise.all(
             children.map(async (child) => {
               try {
-                // Get user balance from the refresh response
-                const balanceResponse = await apiRequest('/api/transactions/refresh-balances', { 
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' }
-                });
+                // Use the balance data we already have from the single refresh call
+                // No need to call refresh-balances again for each child
                 
                 // Find the balance for this specific child
                 let correctBalance = 0;
