@@ -4,6 +4,7 @@ import { Trophy, Gift, Calendar, User, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { subscribeToChannel } from "@/lib/websocketClient";
+import { apiRequest } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth-store";
 
 interface TrophyItem {

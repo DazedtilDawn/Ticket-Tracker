@@ -39,10 +39,7 @@ export default function AwardTrophyDialog({
         body: JSON.stringify({
           item_id: itemId,
           custom_note: customNote.trim() || undefined
-        }),
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        })
       });
     },
     onSuccess: (response) => {
