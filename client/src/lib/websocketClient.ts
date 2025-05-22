@@ -187,6 +187,11 @@ export function createWebSocketConnection() {
 const debounceTimers: Record<string, NodeJS.Timeout> = {};
 const DEBOUNCE_DELAY = 300; // ms
 
+// Enhanced cache for recently seen events to prevent duplicate processing
+// This is useful for event bursts that may come from different components
+const recentEventCache: Record<string, {timestamp: number, data: any}> = {};
+const EVENT_CACHE_TTL = 2000; // 2 seconds
+
 // Listen for specific channel events with built-in debouncing
 export function subscribeToChannel(event: string, callback: (data: any) => void) {
   console.log(`Subscribing to WebSocket channel: ${event}`);
@@ -211,6 +216,31 @@ export function subscribeToChannel(event: string, callback: (data: any) => void)
         console.log(`Caught all-events subscriber for "${wsEvent}"`);
       } else {
         console.log(`Event match for "${event}" - received "${wsEvent}"`);
+      }
+      
+      // First check the recently seen events cache to avoid redundant processing
+      const eventCacheKey = `${event}:${wsEvent}:${JSON.stringify(wsData).slice(0, 100)}`;
+      const now = Date.now();
+      const cachedEvent = recentEventCache[eventCacheKey];
+      
+      if (cachedEvent && (now - cachedEvent.timestamp < EVENT_CACHE_TTL)) {
+        console.log(`[OPTIMIZED] Skipping duplicate event "${wsEvent}" (seen ${(now - cachedEvent.timestamp)/1000}s ago)`);
+        return;
+      }
+      
+      // Store in recently seen cache
+      recentEventCache[eventCacheKey] = {
+        timestamp: now,
+        data: wsData
+      };
+      
+      // Clean up old cache entries periodically
+      if (now % 10 === 0) { // Clean up approximately every 10 events
+        Object.keys(recentEventCache).forEach(key => {
+          if (now - recentEventCache[key].timestamp > EVENT_CACHE_TTL) {
+            delete recentEventCache[key];
+          }
+        });
       }
       
       // Use global debouncing for each event type to prevent multiple callbacks
