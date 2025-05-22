@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Trophy, ShoppingBag, Star, HeartHandshake, Sparkles, Ticket as TicketIcon, Edit, Pencil, Trash2, AlertTriangle } from "lucide-react";
+import { 
+  Trophy, ShoppingBag, Star, HeartHandshake, Sparkles, Ticket as TicketIcon, 
+  Edit, Pencil, Trash2, AlertTriangle, Award, Gamepad2, Book, Shirt, 
+  Gift, Utensils, Smartphone, Gem, Zap, Crown
+} from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +38,8 @@ interface TrophyItem {
   transactionId: number;
   happiness?: number; // Optional happiness rating
   note?: string; // Optional note from the child
+  rarity?: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'; // Rarity category
+  category?: string; // Product category (e.g., "Games", "Toys", "Electronics")
 }
 
 export function TrophyRoom({ userId }: { userId?: number }) {
@@ -51,6 +57,33 @@ export function TrophyRoom({ userId }: { userId?: number }) {
 
   // Use userId from props if provided, otherwise use the logged-in user
   const targetUserId = userId || user?.id;
+  
+  // Helper function to determine rarity based on ticket cost
+  const getRarity = (ticketCost: number): 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' => {
+    if (ticketCost >= 100) return 'legendary';
+    if (ticketCost >= 50) return 'epic';
+    if (ticketCost >= 20) return 'rare';
+    if (ticketCost >= 10) return 'uncommon';
+    return 'common';
+  };
+  
+  // Helper function to guess category based on product title
+  const guessCategory = (title: string): string => {
+    const lowerTitle = title.toLowerCase();
+    if (lowerTitle.includes('minecraft') || lowerTitle.includes('game') || lowerTitle.includes('play')) 
+      return 'Games';
+    if (lowerTitle.includes('lego') || lowerTitle.includes('toy') || lowerTitle.includes('figure')) 
+      return 'Toys';
+    if (lowerTitle.includes('book') || lowerTitle.includes('comic') || lowerTitle.includes('read')) 
+      return 'Books';
+    if (lowerTitle.includes('phone') || lowerTitle.includes('tablet') || lowerTitle.includes('computer')) 
+      return 'Electronics';
+    if (lowerTitle.includes('shirt') || lowerTitle.includes('shoes') || lowerTitle.includes('wear')) 
+      return 'Clothing';
+    if (lowerTitle.includes('candy') || lowerTitle.includes('snack') || lowerTitle.includes('food')) 
+      return 'Treats';
+    return 'Misc';
+  };
 
   // Fetch purchase history
   const { data: purchases = [], isLoading } = useQuery({
@@ -86,15 +119,22 @@ export function TrophyRoom({ userId }: { userId?: number }) {
     // If trophy has a note but no custom name, use that as the title
     const displayTitle = purchase.note || purchase.product?.title || 'Mystery Item';
     
+    // Determine trophy category and rarity
+    const ticketCost = Math.abs(purchase.delta);
+    const category = guessCategory(displayTitle);
+    const rarity = getRarity(ticketCost);
+    
     return {
       id: purchase.id,
       title: displayTitle,
       imageUrl: customImageUrl || purchase.product?.image_url || '/placeholder-product.png',
       purchaseDate: purchase.created_at,
-      ticketCost: Math.abs(purchase.delta),
+      ticketCost: ticketCost,
       transactionId: purchase.id,
       happiness: happinessRatings[purchase.id] || 0,
-      note: notes[purchase.id] || ''
+      note: notes[purchase.id] || '',
+      category: category,
+      rarity: rarity
     };
   });
 
