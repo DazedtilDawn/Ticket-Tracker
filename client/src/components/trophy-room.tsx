@@ -226,7 +226,7 @@ export function TrophyRoom({ userId }: { userId?: number }) {
                         <img 
                           src={trophy.imageUrl} 
                           alt={trophy.title}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-contain object-center"
                           onError={(e) => {
                             // Handle image load errors
                             (e.target as HTMLImageElement).src = '/placeholder-product.png';

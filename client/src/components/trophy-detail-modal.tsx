@@ -232,7 +232,7 @@ export function TrophyDetailModal({ isOpen, onClose, trophy, userId }: TrophyDet
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full"
+                      className="w-full flex items-center justify-center"
                       onClick={() => document.getElementById("image-upload")?.click()}
                     >
                       <Upload className="h-4 w-4 mr-2" />
