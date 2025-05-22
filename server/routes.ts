@@ -979,8 +979,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const transactionId = parseInt(req.body.transaction_id);
       const name = req.body.name;
-      // Get description from request but only use it to append to the note field
-      const description = req.body.description || '';
+      // Get note_addition from request (we're using this instead of description to match db column names)
+      const description = req.body.note_addition || '';
       const userId = parseInt(req.body.user_id);
       const catalogItemId = req.body.catalog_item_id ? parseInt(req.body.catalog_item_id) : null;
       
@@ -1042,10 +1042,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(500).json({ success: false, message: "Failed to save image" });
         }
       } else if (catalogItemId) {
-        // Use catalog item image
+        // Use catalog item image - store in metadata field
         const catalogItem = await storage.getProduct(catalogItemId);
         if (catalogItem) {
-          updateData.custom_image_url = catalogItem.image_url;
+          const metadata = { custom_image_url: catalogItem.image_url };
+          updateData.metadata = JSON.stringify(metadata);
         }
       }
       

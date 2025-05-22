@@ -94,7 +94,9 @@ export function TrophyDetailModal({ isOpen, onClose, trophy, userId }: TrophyDet
       const formData = new FormData();
       formData.append("transaction_id", data.transaction_id.toString());
       formData.append("name", data.name);
-      formData.append("description", data.description || "");
+      // We need to handle description differently since the server API expects 'note'
+      // But we're calling it 'description' in the UI for user-friendliness
+      formData.append("note_addition", data.description || "");
       formData.append("user_id", data.user_id.toString());
       
       if (data.image) {
