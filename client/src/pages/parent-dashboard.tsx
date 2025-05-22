@@ -63,6 +63,7 @@ export default function ParentDashboard() {
   const [expandedChildId, setExpandedChildId] = useState<number | null>(null);
   const [choreCounts, setChoreCounts] = useState({ total: 0, completed: 0 });
   const [viewMode, setViewMode] = useState('grid');
+  const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
   const weekDates = getWeekDates();
   
   // Function to toggle child card expansion
@@ -224,9 +225,9 @@ export default function ParentDashboard() {
           </div>
           
           <div className="mt-4 sm:mt-0 flex flex-wrap items-center gap-2">
-            <Button size="sm" variant="outline" className="flex items-center gap-1" onClick={() => setViewMode(prev => prev === 'grid' ? 'list' : 'grid')}>
+            <Button size="sm" variant="outline" className="flex items-center gap-1" onClick={() => setDisplayMode(prev => prev === 'grid' ? 'list' : 'grid')}>
               <Filter className="h-4 w-4" /> 
-              {viewMode === 'grid' ? 'List View' : 'Grid View'}
+              {displayMode === 'grid' ? 'List View' : 'Grid View'}
             </Button>
             
             <Button size="sm" variant="default" className="flex items-center" onClick={() => refetch()}>
@@ -374,7 +375,7 @@ export default function ParentDashboard() {
                                 
                                 <div className="flex gap-1">
                                   <GoodBehaviorDialog initialChildId={child.id}>
-                                    <Button size="sm" variant="success" className="text-white bg-green-600">
+                                    <Button size="sm" className="text-white bg-green-600 hover:bg-green-700">
                                       <PlusCircleIcon className="h-3 w-3 mr-1" /> Reward
                                     </Button>
                                   </GoodBehaviorDialog>
@@ -435,7 +436,10 @@ export default function ParentDashboard() {
                         <p className="text-sm text-muted-foreground">Tickets in circulation</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-semibold">{childSummaries.length}</p>
+                        <p className="text-lg font-semibold">{
+                          // Only count Bryce and Kiki as active children
+                          childSummaries.filter(child => child.id === 4 || child.id === 5).length
+                        }</p>
                         <p className="text-sm text-muted-foreground">Active children</p>
                       </div>
                     </div>

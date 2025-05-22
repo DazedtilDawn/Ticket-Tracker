@@ -69,9 +69,10 @@ type FormDataType = {
 interface GoodBehaviorDialogProps {
   children: React.ReactNode;
   onCompleted?: () => void;
+  initialChildId?: number;
 }
 
-export function GoodBehaviorDialog({ children, onCompleted }: GoodBehaviorDialogProps) {
+export function GoodBehaviorDialog({ children, onCompleted, initialChildId }: GoodBehaviorDialogProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -81,12 +82,19 @@ export function GoodBehaviorDialog({ children, onCompleted }: GoodBehaviorDialog
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      user_id: "",
+      user_id: initialChildId ? initialChildId.toString() : "",
       rewardType: "tickets",
       tickets: "1", // Note: Must be a string for the form control
       reason: "",
     },
   });
+  
+  // Update form value when initialChildId changes or dialog opens
+  useEffect(() => {
+    if (initialChildId && open) {
+      form.setValue('user_id', initialChildId.toString());
+    }
+  }, [initialChildId, form, open]);
 
   // Watch for reward type changes to conditionally show form fields
   const rewardType = form.watch("rewardType");

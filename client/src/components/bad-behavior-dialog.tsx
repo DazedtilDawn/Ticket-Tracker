@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -50,9 +50,10 @@ type FormDataType = { user_id: number; tickets: number; reason?: string };
 interface BadBehaviorDialogProps {
   children: React.ReactNode;
   onCompleted?: () => void;
+  initialChildId?: number;
 }
 
-export function BadBehaviorDialog({ children, onCompleted }: BadBehaviorDialogProps) {
+export function BadBehaviorDialog({ children, onCompleted, initialChildId }: BadBehaviorDialogProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -62,11 +63,18 @@ export function BadBehaviorDialog({ children, onCompleted }: BadBehaviorDialogPr
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      user_id: "",
+      user_id: initialChildId ? initialChildId.toString() : "",
       tickets: 1,
       reason: "",
     },
   });
+  
+  // Update form value when initialChildId changes or dialog opens
+  useEffect(() => {
+    if (initialChildId && open) {
+      form.setValue('user_id', initialChildId.toString());
+    }
+  }, [initialChildId, form, open]);
 
   const badBehaviorMutation = useMutation({
     mutationFn: async (data: FormDataType) => {
