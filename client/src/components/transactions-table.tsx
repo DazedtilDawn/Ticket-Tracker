@@ -82,10 +82,14 @@ export default function TransactionsTable({ userId, limit = 10 }: TransactionsTa
         }
         
         // Cache miss or stale, fetch fresh data
+        // Use the proper auth token from our auth store
+        const authStore = JSON.parse(localStorage.getItem('ticket-tracker-auth') || '{}');
+        const token = authStore?.state?.token;
+        
         const response = await fetch(queryUrl, {
           credentials: 'include',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+            'Authorization': token ? `Bearer ${token}` : '',
           }
         });
         

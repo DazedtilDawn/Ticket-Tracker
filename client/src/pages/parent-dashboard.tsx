@@ -188,20 +188,26 @@ export default function ParentDashboard() {
     };
   }, [user?.id, queryClient]);
   
-  // Fetch data
+  // Fetch data with optimized caching strategies
   const { data: transactions, isLoading: isTransactionsLoading } = useQuery({
     queryKey: ["/api/transactions"],
-    refetchInterval: 60000, // Refresh every minute
+    staleTime: 60000,      // Consider fresh for 1 minute
+    refetchInterval: 180000, // Refresh every 3 minutes instead of every minute
+    gcTime: 300000,        // Keep in cache for 5 minutes
   });
   
   const { data: chores, isLoading: isChoresLoading } = useQuery({
     queryKey: ["/api/chores"],
-    refetchInterval: 60000,
+    staleTime: 120000,      // Consider fresh for 2 minutes - chores change less frequently
+    refetchInterval: 300000, // Refresh every 5 minutes
+    gcTime: 600000,         // Keep in cache for 10 minutes
   });
   
   const { isLoading: isStatsLoading, refetch } = useQuery({
     queryKey: ["/api/stats"],
-    refetchInterval: 60000,
+    staleTime: 60000,       // Consider fresh for 1 minute
+    refetchInterval: 120000, // Refresh every 2 minutes
+    gcTime: 300000,         // Keep in cache for 5 minutes
   });
   
   const isLoading = isStatsLoading || isChoresLoading || isTransactionsLoading;

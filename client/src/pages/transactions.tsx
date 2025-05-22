@@ -45,9 +45,11 @@ export default function Transactions() {
     enabled: isParent,
   });
   
-  // Fetch user balance
+  // Fetch user balance with longer caching times
   const { data: stats } = useQuery<{ balance: number }>({
-    queryKey: ["/api/stats", userId ? `?userId=${userId}` : ""],
+    queryKey: ["/api/stats", userId || "self"],
+    staleTime: 60000,    // Consider fresh for 1 minute
+    refetchInterval: 120000, // Only poll every 2 minutes
   });
   
   // Update the stats store whenever the stats data changes

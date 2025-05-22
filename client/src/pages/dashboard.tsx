@@ -114,22 +114,26 @@ export default function Dashboard() {
    *  mounts, the viewed child changes, or every 30 s while open.
    *  ----------------------------------------------------------------*/
 
-  const activeChildId = useAuthStore((s) => s.getActiveChildId()); // ← resolve once
+  const activeChildId = useAuthStore((s) => s.getActiveChildId()); 
 
-  // Track if we've checked for a bonus for each child ID
-  const checkedBonusForChildIds = useRef<Record<number, boolean>>({});
-
+  // Use sessionStorage to persistently track which children we've already checked
+  // This ensures we don't check repeatedly on page refreshes or navigation
   useEffect(() => {
-    if (!activeChildId) return;        // store not hydrated yet
+    if (!activeChildId) return; // store not hydrated yet
     
-    // Check if we've already performed this check for this child
-    if (checkedBonusForChildIds.current[activeChildId]) {
-      console.log(`[Optimization] Skipping bonus check for child ${activeChildId} - already checked this session`);
+    // Create a storage key specific to this child and today's date
+    // This ensures we check once per day per child
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const storageKey = `bonus_check_${activeChildId}_${today}`;
+    
+    // Check if we've already performed this check today
+    if (sessionStorage.getItem(storageKey) === 'true') {
+      console.log(`[Optimization] Skipping bonus check for child ${activeChildId} - already checked today`);
       return;
     }
     
-    // Mark this child as checked
-    checkedBonusForChildIds.current[activeChildId] = true;
+    // Mark as checked for this child for today
+    sessionStorage.setItem(storageKey, 'true');
 
     const checkForUnspunBonus = async () => {
       try {
