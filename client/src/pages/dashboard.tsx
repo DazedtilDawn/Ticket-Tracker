@@ -918,7 +918,7 @@ export default function Dashboard() {
               </div>
               
               {/* Import the TrophyRoom component with the current user's ID */}
-              <TrophyRoom userId={viewingChild ? getActiveChildId() : user?.id} />
+              <TrophyRoom userId={viewingChild && originalUser ? viewingChildId : user?.id} />
             </section>
             
             {/* WebSocket Debug Panel - visible only in development */}
