@@ -80,6 +80,17 @@ export function TrophyDetailModal({ isOpen, onClose, trophy, userId }: TrophyDet
 
   const updateTrophyMutation = useMutation({
     mutationFn: async (data: FormValues & { image?: File }) => {
+      // Log what we're sending to help with debugging
+      console.log("Trophy update data:", {
+        transactionId: data.transaction_id,
+        name: data.name,
+        description: data.description || "",
+        userId: data.user_id,
+        hasImage: !!data.image,
+        imageType: data.image?.type,
+        imageSize: data.image?.size
+      });
+      
       const formData = new FormData();
       formData.append("transaction_id", data.transaction_id.toString());
       formData.append("name", data.name);
@@ -101,17 +112,19 @@ export function TrophyDetailModal({ isOpen, onClose, trophy, userId }: TrophyDet
         title: "Trophy updated!",
         description: "Your trophy has been customized successfully.",
       });
-      // Invalidate queries to refresh the trophy data
+      
+      // Invalidate all relevant queries to ensure UI updates
       queryClient.invalidateQueries({ queryKey: ["/api/transactions/purchases"] });
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      
+      // Clear form and close modal
       onClose();
     },
     onError: (error: any) => {
       console.error("Trophy update error:", error);
       toast({
         title: "Error updating trophy",
-        description: error?.message || 
-          (error?.error ? error.error : "There was a problem updating your trophy. Please try again."),
+        description: "There was a problem updating your trophy. Please try again.",
         variant: "destructive",
       });
     },

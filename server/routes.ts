@@ -1019,18 +1019,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           const fileExtension = req.file.originalname.split('.').pop()?.toLowerCase() || 'jpg';
           const fileName = `trophy_${uuidv4()}.${fileExtension}`;
-          // Use proper path resolution for ESM modules
-          const uploadsDir = path.resolve('./public/uploads/trophies');
+          
+          // Use process.cwd() which is safe in ESM modules (no __dirname)
+          const uploadsDir = path.join(process.cwd(), 'public/uploads/trophies');
           const filePath = path.join(uploadsDir, fileName);
           
-          // Ensure directory exists
-          await fs.promises.mkdir(uploadsDir, { recursive: true });
+          // Ensure directory exists using synchronous method to avoid any async issues
+          if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+          }
           
           // Write file
-          await fs.promises.writeFile(filePath, req.file.buffer);
+          fs.writeFileSync(filePath, req.file.buffer);
           
           // Set image URL in update data
           updateData.custom_image_url = `/uploads/trophies/${fileName}`;
+          
+          console.log('Trophy image saved successfully at:', filePath);
         } catch (error) {
           console.error('Failed to save trophy image:', error);
           return res.status(500).json({ success: false, message: "Failed to save image" });
