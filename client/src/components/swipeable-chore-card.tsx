@@ -128,8 +128,7 @@ export default function SwipeableChoreCard(props: ChoreCardProps) {
       console.log("Attempting to undo transaction:", choreToUndo.transactionId);
       
       // Use TanStack Query's mutation functionality for better error handling
-      const { queryClient } = await import('@/lib/queryClient');
-      const { apiRequest } = await import('@/lib/api');
+      const { queryClient, apiRequest } = await import('@/lib/queryClient');
       
       // Make the API request to delete the transaction
       const result = await apiRequest(`/api/transactions/${choreToUndo.transactionId}`, {
