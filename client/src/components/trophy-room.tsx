@@ -88,12 +88,7 @@ export function TrophyRoom({ userId }: { userId?: number }) {
   // Fetch purchase history
   const { data: purchases = [], isLoading } = useQuery({
     queryKey: ['/api/transactions/purchases', targetUserId],
-    queryFn: async () => {
-      const response = await apiRequest(`/api/transactions/purchases?userId=${targetUserId}`, {
-        method: 'GET'
-      });
-      return response || [];
-    }
+    enabled: !!targetUserId, // Only run when we have a target user ID
   });
 
   // Transform purchases into trophy items
