@@ -206,11 +206,64 @@ export default function Dashboard() {
     chores?: any[];
   }
   
-  // Using improved caching for stats data (medium frequency updates)
+  // Using enhanced caching for stats data with local storage fallback
   const { data, isLoading, error, refetch } = useQuery<StatsResponse>({
     queryKey: ["/api/stats"],
-    refetchInterval: 120000, // 2 minutes
-    staleTime: 60000, // 1 minute
+    refetchInterval: 180000, // 3 minutes - reduced frequency
+    staleTime: 90000,      // 1.5 minutes - longer stale time
+    gcTime: 300000,        // 5 minutes cache retention
+    queryFn: async ({ queryKey }) => {
+      // Cache key based on query and current user/child view
+      const authStore = JSON.parse(localStorage.getItem('ticket-tracker-auth') || '{}');
+      const viewingChildId = authStore?.state?.viewingChildId || '';
+      const cacheKey = `stats_${viewingChildId}`;
+      
+      // Check session storage for a recent cache hit
+      try {
+        const cachedData = sessionStorage.getItem(cacheKey);
+        const cachedTime = sessionStorage.getItem(`${cacheKey}_time`);
+        
+        if (cachedData && cachedTime) {
+          const age = Date.now() - parseInt(cachedTime);
+          if (age < 30000) { // 30 seconds
+            console.log(`[CACHE HIT] Using cached stats, age: ${age}ms`);
+            return JSON.parse(cachedData);
+          }
+        }
+        
+        // Cache miss or stale, make the API call
+        console.log(`[CACHE MISS] Fetching fresh stats data`);
+        
+        // Build proper URL with child ID if needed
+        let url = queryKey[0] as string;
+        if (viewingChildId) {
+          url = `${url}?userId=${viewingChildId}`;
+        }
+        
+        const token = authStore?.state?.token;
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': token ? `Bearer ${token}` : '',
+          },
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Cache the fresh data
+        sessionStorage.setItem(cacheKey, JSON.stringify(data));
+        sessionStorage.setItem(`${cacheKey}_time`, Date.now().toString());
+        
+        return data;
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+        throw error;
+      }
+    }
   });
   
   // Update stats store whenever data changes
