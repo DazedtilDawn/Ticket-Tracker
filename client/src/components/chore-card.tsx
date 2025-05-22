@@ -7,6 +7,26 @@ import { CheckCircle, Award } from "lucide-react";
 import { BonusBadge } from "@/components/bonus-badge";
 import { useMobile } from "@/context/MobileContext";
 
+// Function to map chore names to Minecraft-themed images
+function getMinecraftImageForChore(choreName: string): string {
+  const choreImageMap: Record<string, string> = {
+    'Clean Bedroom': '/uploads/chores/Gemini_Generated_Image_rzgvvkrzgvvkrzgv.jpg',
+    'Make Bed': '/uploads/chores/Gemini_Generated_Image_rzgvvkrzgvvkrzgv.jpg',
+    'Brush Teeth': '/uploads/chores/Gemini_Generated_Image_3c9ot53c9ot53c9o.jpg',
+    'Feed Dogs': '/uploads/chores/Gemini_Generated_Image_w6842kw6842kw684.jpg',
+    'Clean Basement': '/uploads/chores/Gemini_Generated_Image_6gs8ee6gs8ee6gs8.jpg',
+    'Clean off Dining Room table of Toys': '/uploads/chores/Gemini_Generated_Image_few2j6few2j6few2.jpg',
+    'Eat Breakfast': '/uploads/chores/Gemini_Generated_Image_hqt3b2hqt3b2hqt3.jpg',
+    'Eat Lunch': '/uploads/chores/Gemini_Generated_Image_hqt3b2hqt3b2hqt3.jpg',
+    'Eat Dinner': '/uploads/chores/Gemini_Generated_Image_hqt3b2hqt3b2hqt3.jpg',
+    'Take Plates to Sink': '/uploads/chores/Gemini_Generated_Image_jlghj0jlghj0jlgh.jpg',
+    'Wash Windows with Mom': '/uploads/chores/Gemini_Generated_Image_w6842kw6842kw684.jpg',
+  };
+
+  // Return the mapped image or a default image
+  return choreImageMap[choreName] || '/uploads/chores/Gemini_Generated_Image_r2pxpor2pxpor2px.jpg';
+}
+
 export interface ChoreCardProps {
   chore: {
     id: number;
@@ -74,14 +94,14 @@ export default function ChoreCard({ chore, onComplete, onBonusComplete }: ChoreC
     <Card className={`overflow-hidden border ${isBonusChore ? 'border-yellow-400 dark:border-yellow-600' : 'border-gray-200 dark:border-gray-700'} hover:shadow-md transition-all duration-200 ${isBonusChore ? 'bg-gradient-to-b from-yellow-50 to-white dark:from-gray-900 dark:to-gray-800' : ''}`}>
       {/* Chore image display */}
       <div className="w-full h-48 sm:h-56 md:h-64 overflow-hidden relative bg-gradient-to-b from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/30 flex items-center justify-center">
-        {/* Using emoji icons based on the chore tier for consistency */}
-        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/40 flex items-center justify-center shadow-md">
-          <span className="text-4xl">{chore.emoji || (
-            chore.tier === 'rare' ? '🌟' : 
-            chore.tier === 'uncommon' ? '✨' : 
-            chore.tier === 'common' ? '🧹' : '📋'
-          )}</span>
-        </div>
+        {/* Minecraft-themed images for chores */}
+        <img 
+          src={getMinecraftImageForChore(chore.name)}
+          alt={chore.name}
+          className="max-w-full max-h-full object-contain p-3"
+          style={{ maxHeight: "100%", maxWidth: "100%" }}
+          loading="lazy"
+        />
         
         {isBonusChore && (
           <div className="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 rounded-md text-xs font-bold flex items-center shadow-sm">
