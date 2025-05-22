@@ -6,6 +6,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { TICKET_DOLLAR_VALUE } from "../../../config/business";
 import { useStatsStore } from "@/store/stats-store";
 import { createWebSocketConnection, subscribeToChannel, sendMessage } from "@/lib/websocketClient";
+import { useMobile } from "@/context/MobileContext";
 import ProgressCard from "@/components/progress-card";
 import SwipeableChoreCard from "@/components/swipeable-chore-card";
 import TransactionsMobile from "@/components/transactions-mobile";
@@ -29,6 +30,7 @@ export default function Dashboard() {
   const { user, isViewingAsChild, originalUser, setFamilyUsers, switchChildView, resetChildView, getChildUsers } = useAuthStore();
   const { balance, updateBalance } = useStatsStore();
   const { toast } = useToast();
+  const { isMobile } = useMobile();
   const viewingChild = isViewingAsChild();
   const queryClient = useQueryClient();
   const childUsers = getChildUsers();

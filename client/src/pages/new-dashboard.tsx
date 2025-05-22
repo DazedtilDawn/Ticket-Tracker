@@ -5,6 +5,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth-store";
 import { useStatsStore } from "@/store/stats-store";
 import { createWebSocketConnection, subscribeToChannel, sendMessage } from "@/lib/websocketClient";
+import { useMobile } from "@/context/MobileContext";
 import ProgressCard from "@/components/progress-card";
 import SwipeableChoreCard from "@/components/swipeable-chore-card";
 import TransactionsMobile from "@/components/transactions-mobile";
