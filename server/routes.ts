@@ -65,13 +65,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all users
       const allUsers = await storage.getUsers();
 
-      // Update balances for each user
+      // Update balances for each user - use the storage method to ensure consistency
+      // across all API endpoints
       const results = await Promise.all(
         allUsers.map(async (user) => {
-          // Recalculate balance from transactions
-          const transactions = await storage.getUserTransactions(user.id);
-          const balance = transactions.reduce((sum, t) => sum + t.delta, 0);
-
+          // Use the same getUserBalance method that the /api/stats endpoint uses
+          // This ensures consistency between Parent Command Center and child dashboard
+          const balance = await storage.getUserBalance(user.id);
           return { userId: user.id, balance };
         })
       );
