@@ -428,6 +428,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.json(sanitizedUsers);
   });
 
+  // ---------------------------------------------------------------------------
+  // Family / Child profile routes
+  // ---------------------------------------------------------------------------
+
+  /**
+   * GET /api/family/children
+   * Returns the list of *active* (non-archived) children that belong to the
+   * authenticated parent.  Requires `auth` middleware (parent or child token),
+   * but we return 403 if the requester is not a parent.
+   *
+   * Response: Child[] with minimally-needed fields
+   */
+  app.get("/api/family/children", auth, async (req: Request, res: Response) => {
+    // @ts-ignore – AuthMiddleware put `user` on the request object
+    const requester = req.user as User;
+
+    if (requester.role !== "parent") {
+      return res.status(403).json({ message: "Only parent accounts may access children list" });
+    }
+
+    try {
+      const children = await storage.getChildrenForParent(requester.id);
+
+      // Sanitize: never leak passwordHash etc.
+      const sanitized = children.map((c) => ({
+        id: c.id,
+        name: c.name,
+        username: c.username,
+        profile_image_url: c.profile_image_url,
+        banner_color_preference: c.banner_color_preference,
+      }));
+
+      return res.json(sanitized);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return res.status(500).json({ message: msg });
+    }
+  });
+
   // Chore routes
   app.get("/api/chores", auth, async (req: Request, res: Response) => {
     const activeOnly = req.query.activeOnly !== "false";
