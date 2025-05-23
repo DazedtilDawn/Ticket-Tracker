@@ -152,6 +152,12 @@ export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
 });
 
+// 🔸 Schema used when a parent adds a child profile through POST /api/family/children
+export const insertChildSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  profile_image_url: z.string().url("Must be a valid URL").optional(),
+});
+
 export const insertChoreSchema = createInsertSchema(chores).omit({
   id: true,
 });

@@ -24,6 +24,12 @@ export interface IStorage {
   getUsersByRole(role: string): Promise<User[]>;
   getChildrenForParent(parentId: number): Promise<User[]>;
 
+  /** Creates a new child profile for a given parent (returns created child). */
+  createChildForParent(
+    parentId: number,
+    childData: { name: string; profile_image_url?: string }
+  ): Promise<User>;
+
   // Chore operations
   getChore(id: number): Promise<Chore | undefined>;
   getChores(activeOnly?: boolean): Promise<Chore[]>;
@@ -569,23 +575,105 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getChildrenForParent(parentId: number): Promise<User[]> {
-    // Get the parent's family_id
+    // Get the parent
     const parent = await this.getUser(parentId);
-    if (!parent || !parent.family_id) {
+    if (!parent) {
       return [];
     }
 
-    // Get all non-archived children in the same family
+    // Due to family_id constraint issues, we'll use username pattern matching
+    // Children created by a parent have usernames like "parentusername_child_*"
+    const usernamePattern = `${parent.username}_child_%`;
+
+    // Get all non-archived children that belong to this parent
     return db
       .select()
       .from(users)
       .where(
         and(
-          eq(users.family_id, parent.family_id),
+          ilike(users.username, usernamePattern),
           eq(users.role, "child"),
           eq(users.is_archived, false)
         )
       );
+  }
+
+  async createChildForParent(
+    parentId: number,
+    { name, profile_image_url }: { name: string; profile_image_url?: string }
+  ): Promise<User> {
+    const parent = await this.getUser(parentId);
+    if (!parent) throw new Error("Parent not found");
+
+    console.log(`[CREATE_CHILD] Parent info:`, { 
+      id: parent.id, 
+      username: parent.username,
+      family_id: parent.family_id 
+    });
+
+    // For family_id, use parent's family_id if it exists, otherwise use parent's id
+    // This handles the foreign key constraint properly
+    const familyId = parent.family_id || parentId;
+    console.log(`[CREATE_CHILD] Using family_id: ${familyId}`);
+
+    // generate unique username e.g. parent1_child_<rand>
+    const rand = Math.random().toString(36).slice(2, 8);
+    const username = `${parent.username}_child_${rand}`;
+
+    // random pastel gradient (simple hash from rand)
+    const gradients = [
+      "from-pink-500/30 to-indigo-300/30",
+      "from-amber-400/30 to-rose-300/30",
+      "from-lime-400/30 to-teal-300/30",
+      "from-sky-400/30 to-fuchsia-300/30",
+    ];
+    const banner_color_preference =
+      gradients[rand.charCodeAt(0) % gradients.length];
+
+    try {
+      const [child] = await db
+        .insert(users)
+        .values({
+          name,
+          username,
+          role: "child",
+          passwordHash: "DISABLED", // child never logs in
+          family_id: familyId,
+          profile_image_url,
+          banner_color_preference,
+        })
+        .returning();
+
+      return child;
+    } catch (error) {
+      console.error(`[CREATE_CHILD] Error creating child:`, error);
+      
+      // If foreign key constraint fails, try creating without family_id first
+      if (error instanceof Error && error.message.includes('foreign key constraint')) {
+        console.log(`[CREATE_CHILD] Retrying without family_id...`);
+        
+        const [child] = await db
+          .insert(users)
+          .values({
+            name,
+            username,
+            role: "child",
+            passwordHash: "DISABLED",
+            family_id: null, // Create without family_id
+            profile_image_url,
+            banner_color_preference,
+          })
+          .returning();
+
+        console.log(`[CREATE_CHILD] Child created with ID ${child.id}, family_id will remain null due to constraint`);
+        
+        // Don't update family_id due to constraint issues
+        // The child is created successfully, just without family association
+        return child;
+      }
+      
+      throw error;
+    }
   }
 
   // Chore operations

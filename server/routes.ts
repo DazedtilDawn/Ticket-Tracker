@@ -26,6 +26,7 @@ import {
   dailyBonus,
   bonusSpinSchema,
   awardItemSchema,
+  insertChildSchema,
 } from "@shared/schema";
 import { createJwt, verifyJwt, AuthMiddleware } from "./lib/auth";
 import { DailyBonusAssignmentMiddleware } from "./lib/daily-bonus-middleware";
@@ -466,6 +467,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: msg });
     }
   });
+
+  /**
+   * POST /api/family/children
+   * Body: { name: string, profile_image_url?: string }
+   * Creates a new child profile for the authenticated parent.
+   */
+  app.post(
+    "/api/family/children",
+    auth,
+    async (req: Request, res: Response) => {
+      // @ts-ignore set by AuthMiddleware
+      const requester = req.user as User;
+      if (requester.role !== "parent") {
+        return res
+          .status(403)
+          .json({ message: "Only parents may create child profiles" });
+      }
+
+      try {
+        const data = insertChildSchema.parse(req.body);
+        const child = await storage.createChildForParent(requester.id, data);
+        return res.status(201).json({
+          id: child.id,
+          name: child.name,
+          username: child.username,
+          profile_image_url: child.profile_image_url,
+          banner_color_preference: child.banner_color_preference,
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return res.status(400).json({ message: msg });
+      }
+    }
+  );
 
   // Chore routes
   app.get("/api/chores", auth, async (req: Request, res: Response) => {
