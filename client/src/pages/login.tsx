@@ -39,7 +39,7 @@ const registerSchema = loginSchema
   .extend({
     name: z.string().min(2, { message: "Name must be at least 2 characters" }),
     confirmPassword: z.string().min(4),
-    role: z.enum(["parent", "child"]),
+    role: z.enum(["parent"]),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -50,7 +50,7 @@ export default function Login() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { login } = useAuthStore();
-  const [activeTab, setActiveTab] = useState("family");
+  const [activeTab, setActiveTab] = useState("login");
   const [isLoading, setIsLoading] = useState(false);
 
   // Login form
@@ -105,12 +105,13 @@ export default function Login() {
   const handleRegister = async (data: z.infer<typeof registerSchema>) => {
     setIsLoading(true);
     try {
-      // Remove confirmPassword before sending
+      // Remove confirmPassword before sending and ensure role is parent
       const { confirmPassword, ...registerData } = data;
+      const finalData = { ...registerData, role: "parent" };
 
       const result = await apiRequest("/api/auth/register", {
         method: "POST",
-        body: JSON.stringify(registerData),
+        body: JSON.stringify(finalData),
         headers: { "Content-Type": "application/json" },
       });
 
@@ -165,7 +166,7 @@ export default function Login() {
 
         <Tabs
           defaultValue="login"
-          value={activeTab === "family" ? "login" : activeTab}
+          value={activeTab}
           onValueChange={setActiveTab}
         >
           <TabsList className="grid grid-cols-2 mx-6 mb-6">
@@ -321,38 +322,6 @@ export default function Login() {
                       )}
                     />
 
-                    <FormField
-                      control={registerForm.control}
-                      name="role"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Account Type</FormLabel>
-                          <div className="flex space-x-4">
-                            <label className="flex items-center space-x-2 cursor-pointer">
-                              <input
-                                type="radio"
-                                className="h-4 w-4 text-primary-600 focus:ring-primary-500"
-                                value="parent"
-                                checked={field.value === "parent"}
-                                onChange={() => field.onChange("parent")}
-                              />
-                              <span>Parent</span>
-                            </label>
-                            <label className="flex items-center space-x-2 cursor-pointer">
-                              <input
-                                type="radio"
-                                className="h-4 w-4 text-primary-600 focus:ring-primary-500"
-                                value="child"
-                                checked={field.value === "child"}
-                                onChange={() => field.onChange("child")}
-                              />
-                              <span>Child</span>
-                            </label>
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
                   </CardContent>
 
                   <CardFooter>
