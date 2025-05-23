@@ -1,10 +1,33 @@
-import { pgTable, text, serial, integer, boolean, timestamp, uniqueIndex, varchar, date, smallint, pgEnum } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  serial,
+  integer,
+  boolean,
+  timestamp,
+  uniqueIndex,
+  varchar,
+  date,
+  smallint,
+  pgEnum,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Define enums for the schema
-export const bonusTriggerEnum = pgEnum('bonus_trigger', ['chore_completion', 'good_behavior_reward', 'respin']);
-export const txnSourceEnum = pgEnum('txn_source', ['chore', 'bonus_spin', 'manual_add', 'manual_deduct', 'undo', 'family_contrib']);
+export const bonusTriggerEnum = pgEnum("bonus_trigger", [
+  "chore_completion",
+  "good_behavior_reward",
+  "respin",
+]);
+export const txnSourceEnum = pgEnum("txn_source", [
+  "chore",
+  "bonus_spin",
+  "manual_add",
+  "manual_deduct",
+  "undo",
+  "family_contrib",
+]);
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -15,9 +38,12 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("child"), // "parent" or "child"
   profile_image_url: text("profile_image_url"), // URL to the user's profile image
   banner_image_url: text("banner_image_url"), // URL to the user's banner image
+  /** Parent-centric additions */
+  banner_color_preference: text("banner_color_preference"), // e.g. "from-pink-500 to-indigo-300"
+  is_archived: boolean("is_archived").notNull().default(false),
   balance_cache: integer("balance_cache"),
   created_at: timestamp("created_at", { withTimezone: true }),
-  family_id: integer("family_id")
+  family_id: integer("family_id"),
 });
 
 export const chores = pgTable("chores", {
@@ -48,57 +74,75 @@ export const products = pgTable("products", {
 
 export const goals = pgTable("goals", {
   id: serial("id").primaryKey(),
-  user_id: integer("user_id").notNull().references(() => users.id),
-  product_id: integer("product_id").notNull().references(() => products.id),
+  user_id: integer("user_id")
+    .notNull()
+    .references(() => users.id),
+  product_id: integer("product_id")
+    .notNull()
+    .references(() => products.id),
   tickets_saved: integer("tickets_saved").notNull().default(0),
   is_active: boolean("is_active").default(true),
 });
 
-export const transactions = pgTable(
-  "transactions",
-  {
-    id: serial("id").primaryKey(),
-    user_id: integer("user_id").notNull().references(() => users.id),
-    chore_id: integer("chore_id").references(() => chores.id),
-    goal_id: integer("goal_id").references(() => goals.id),
-    delta: integer("delta").notNull(), // Ticket amount (positive or negative)
-    created_at: timestamp("created_at").defaultNow(),
-    type: text("type").notNull().default("earn"), // "earn", "spend"
-    note: text("note"), // Description of the transaction
-    source: txnSourceEnum("source").notNull().default('chore'), // Where the transaction originated
-    ref_id: integer("ref_id"), // For undo: original transactions.id; For bonus_spin: daily_bonus.id
-    reason: text("reason"), // For manual adjustments, undo
-    metadata: text("metadata"), // JSON metadata
-    to_shared_goal_id: integer("to_shared_goal_id"), // For shared goal contributions
-  }
-);
+export const transactions = pgTable("transactions", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id")
+    .notNull()
+    .references(() => users.id),
+  chore_id: integer("chore_id").references(() => chores.id),
+  goal_id: integer("goal_id").references(() => goals.id),
+  delta: integer("delta").notNull(), // Ticket amount (positive or negative)
+  created_at: timestamp("created_at").defaultNow(),
+  type: text("type").notNull().default("earn"), // "earn", "spend"
+  note: text("note"), // Description of the transaction
+  source: txnSourceEnum("source").notNull().default("chore"), // Where the transaction originated
+  ref_id: integer("ref_id"), // For undo: original transactions.id; For bonus_spin: daily_bonus.id
+  reason: text("reason"), // For manual adjustments, undo
+  metadata: text("metadata"), // JSON metadata
+  to_shared_goal_id: integer("to_shared_goal_id"), // For shared goal contributions
+});
 
 // Daily bonus feature - adds a special bonus to one chore per day per child
-export const dailyBonus = pgTable("daily_bonus", {
-  id: serial("id").primaryKey(),
-  bonus_date: date("bonus_date").notNull(), // Date the bonus was assigned
-  user_id: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  assigned_chore_id: integer("assigned_chore_id").references(() => chores.id, { onDelete: "set null" }), // Allows bonus via good behavior without a specific chore
-  is_override: boolean("is_override").notNull().default(false), // Indicates if this was manually assigned
-  is_spun: boolean("is_spun").notNull().default(false), // Tracks if the bonus wheel has been spun
-  trigger_type: bonusTriggerEnum("trigger_type").notNull(), // What triggered this bonus (chore completion or good behavior)
-  spin_result_tickets: smallint("spin_result_tickets"), // Number of tickets won from spinning the wheel
-  created_at: timestamp("created_at").defaultNow(),
-}, (table) => {
-  return {
-    uniqDateUser: uniqueIndex("uniq_date_user_idx").on(
-      table.bonus_date,
-      table.user_id
-    ),
-  };
-});
+export const dailyBonus = pgTable(
+  "daily_bonus",
+  {
+    id: serial("id").primaryKey(),
+    bonus_date: date("bonus_date").notNull(), // Date the bonus was assigned
+    user_id: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    assigned_chore_id: integer("assigned_chore_id").references(
+      () => chores.id,
+      { onDelete: "set null" },
+    ), // Allows bonus via good behavior without a specific chore
+    is_override: boolean("is_override").notNull().default(false), // Indicates if this was manually assigned
+    is_spun: boolean("is_spun").notNull().default(false), // Tracks if the bonus wheel has been spun
+    trigger_type: bonusTriggerEnum("trigger_type").notNull(), // What triggered this bonus (chore completion or good behavior)
+    spin_result_tickets: smallint("spin_result_tickets"), // Number of tickets won from spinning the wheel
+    created_at: timestamp("created_at").defaultNow(),
+  },
+  (table) => {
+    return {
+      uniqDateUser: uniqueIndex("uniq_date_user_idx").on(
+        table.bonus_date,
+        table.user_id,
+      ),
+    };
+  },
+);
 
 // Trophy Award System - Step 1: Dedicated transaction model for trophy awards
 export const awardedItems = pgTable("awarded_items", {
   id: serial("id").primaryKey(),
-  child_id: integer("child_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  item_id: integer("item_id").notNull().references(() => products.id, { onDelete: "cascade" }),
-  awarded_by: integer("awarded_by").notNull().references(() => users.id, { onDelete: "cascade" }),
+  child_id: integer("child_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  item_id: integer("item_id")
+    .notNull()
+    .references(() => products.id, { onDelete: "cascade" }),
+  awarded_by: integer("awarded_by")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   custom_note: text("custom_note"), // Optional custom note from parent
   awarded_at: timestamp("awarded_at", { withTimezone: true }).defaultNow(),
 });
@@ -136,7 +180,7 @@ export const loginSchema = z.object({
 
 // Amazon product search schema
 export const amazonSearchSchema = z.object({
-  amazonUrl: z.string().url()
+  amazonUrl: z.string().url(),
 });
 
 // Manual product creation schema
@@ -149,49 +193,57 @@ export const manualProductSchema = z.object({
 
 export const updateProductSchema = z.object({
   title: z.string().min(1, "Title is required").optional(),
-  price_cents: z.coerce.number().min(1, "Price must be greater than 0").optional(),
+  price_cents: z.coerce
+    .number()
+    .min(1, "Price must be greater than 0")
+    .optional(),
   image_url: z.string().url("Please enter a valid image URL").optional(),
 });
 
 // Chore completion schema
 export const completeChoreSchema = z.object({
   chore_id: z.number().int().positive(),
-  user_id: z.number().int().positive().optional() // Optional user_id for when parents complete chores for children
+  user_id: z.number().int().positive().optional(), // Optional user_id for when parents complete chores for children
 });
 
 // Bad behavior schema for deducting tickets
 export const badBehaviorSchema = z.object({
   user_id: z.number().int().positive(),
   reason: z.string().optional(), // Make reason optional
-  tickets: z.number().int().positive("Must deduct at least 1 ticket")
+  tickets: z.number().int().positive("Must deduct at least 1 ticket"),
 });
 
 // Good behavior schema for adding bonus tickets or spin
-export const goodBehaviorSchema = z.object({
-  user_id: z.number().int().positive(),
-  reason: z.string().optional(),
-  rewardType: z.enum(['tickets', 'spin']),
-  tickets: z.number().int().positive("Must add at least 1 ticket").optional()
-}).refine(data => {
-  // If rewardType is 'tickets', tickets must be present
-  if (data.rewardType === 'tickets') {
-    return !!data.tickets;
-  }
-  return true;
-}, {
-  message: "Tickets amount is required when rewardType is 'tickets'",
-  path: ["tickets"]
-});
+export const goodBehaviorSchema = z
+  .object({
+    user_id: z.number().int().positive(),
+    reason: z.string().optional(),
+    rewardType: z.enum(["tickets", "spin"]),
+    tickets: z.number().int().positive("Must add at least 1 ticket").optional(),
+  })
+  .refine(
+    (data) => {
+      // If rewardType is 'tickets', tickets must be present
+      if (data.rewardType === "tickets") {
+        return !!data.tickets;
+      }
+      return true;
+    },
+    {
+      message: "Tickets amount is required when rewardType is 'tickets'",
+      path: ["tickets"],
+    },
+  );
 
 // Transaction deletion schema
 export const deleteTransactionSchema = z.object({
-  transaction_id: z.number().int().positive()
+  transaction_id: z.number().int().positive(),
 });
 
 // Daily bonus schema
 export const insertDailyBonusSchema = createInsertSchema(dailyBonus).omit({
   id: true,
-  created_at: true
+  created_at: true,
 });
 
 export const insertAwardedItemSchema = createInsertSchema(awardedItems).omit({
@@ -202,18 +254,18 @@ export const insertAwardedItemSchema = createInsertSchema(awardedItems).omit({
 // Trophy award schema for awarding items to children
 export const awardItemSchema = z.object({
   item_id: z.number().int().positive("Item ID must be a positive number"),
-  custom_note: z.string().optional()
+  custom_note: z.string().optional(),
 });
 
 // Spin wheel schema for parents
 export const spinWheelSchema = z.object({
   user_id: z.number().int().positive(),
-  assigned_chore_id: z.number().int().positive()
+  assigned_chore_id: z.number().int().positive(),
 });
 
 // Bonus spin schema for the wheel spin endpoint
 export const bonusSpinSchema = z.object({
-  daily_bonus_id: z.number().int().positive()
+  daily_bonus_id: z.number().int().positive(),
 });
 
 // Types
