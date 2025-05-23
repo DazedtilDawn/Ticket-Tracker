@@ -10,6 +10,7 @@ export interface UserInfo {
   role: string;
   profile_image_url?: string | null;
   banner_image_url?: string | null;
+  banner_color_preference?: string | null;
 }
 
 interface AuthState {

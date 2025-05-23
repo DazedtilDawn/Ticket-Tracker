@@ -11,34 +11,38 @@ interface DashboardBannerProps {
   defaultBannerColor?: string;
 }
 
-export default function DashboardBanner({ defaultBannerColor = "bg-gradient-to-r from-primary-500/30 via-primary-400/20 to-primary-300/30" }: DashboardBannerProps) {
+export default function DashboardBanner({
+  defaultBannerColor = "bg-gradient-to-r from-primary-500/30 via-primary-400/20 to-primary-300/30",
+}: DashboardBannerProps) {
   const { user } = useAuthStore();
   const authStore = useAuthStore(); // Get the full store to access refreshUser
   const { toast } = useToast();
   const [isEditMode, setIsEditMode] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Calculate initials for fallback
   const getInitials = (name: string) => {
-    return name
-      ?.split(" ")
-      ?.map((n) => n[0])
-      ?.join("")
-      ?.toUpperCase()
-      ?.substring(0, 2) || "?";
+    return (
+      name
+        ?.split(" ")
+        ?.map((n) => n[0])
+        ?.join("")
+        ?.toUpperCase()
+        ?.substring(0, 2) || "?"
+    );
   };
-  
+
   // Opens the file picker when clicked
   const handleBannerButtonClick = () => {
     if (isEditMode) {
       setIsEditMode(false);
       return;
     }
-    
+
     // Trigger file input click
     setIsEditMode(true);
-    
+
     // After a short delay to ensure the DOM is updated
     setTimeout(() => {
       if (fileInputRef.current) {
@@ -46,118 +50,130 @@ export default function DashboardBanner({ defaultBannerColor = "bg-gradient-to-r
       }
     }, 100);
   };
-  
+
   // Handles the actual file upload when a file is selected
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     // Only allow images
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith("image/")) {
       toast({
         title: "Invalid file type",
         description: "Please select an image file (JPG, PNG, etc.)",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
-    
+
     // File size check (5MB max)
     if (file.size > 5 * 1024 * 1024) {
       toast({
         title: "File too large",
         description: "Maximum file size is 5MB",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
-    
+
     try {
       setIsUploading(true);
-      console.log('Uploading file:', file.name, file.type, file.size);
-      
+      console.log("Uploading file:", file.name, file.type, file.size);
+
       // Create a FormData object to send the file
       const formData = new FormData();
-      formData.append('bannerImage', file);
-      
+      formData.append("bannerImage", file);
+
       // Send the file to the banner image endpoint with user ID
       const userId = user?.id || 5; // Default to Kiki (ID 5) if no user found
       console.log(`Uploading banner for user ID: ${userId}`);
-      
+
       const response = await fetch(`/api/users/banner-image?userId=${userId}`, {
-        method: 'POST',
+        method: "POST",
         body: formData,
       });
-      
+
       const responseData = await response.text();
-      console.log('Upload response:', response.status, responseData);
-      
+      console.log("Upload response:", response.status, responseData);
+
       if (!response.ok) {
-        throw new Error(`Failed to upload banner image: ${response.status} ${responseData}`);
+        throw new Error(
+          `Failed to upload banner image: ${response.status} ${responseData}`,
+        );
       }
-      
+
       // Parse the response only if it's valid JSON
       let result;
       try {
         result = JSON.parse(responseData);
-        console.log('Banner upload successful:', result);
-        
+        console.log("Banner upload successful:", result);
+
         if (result && result.banner_image_url) {
           // Update banner in the auth store
           authStore.updateUserBannerImage(result.banner_image_url);
-          
+
           // Force a refresh of the banner image with cache busting
           const cacheBuster = Date.now();
           const newBannerUrl = `${result.banner_image_url}?t=${cacheBuster}`;
-          console.log('Setting new banner URL with cache buster:', newBannerUrl);
-          
+          console.log(
+            "Setting new banner URL with cache buster:",
+            newBannerUrl,
+          );
+
           // Update banner URL in component state
-          document.querySelectorAll('[data-banner-container]').forEach((el) => {
-            (el as HTMLElement).style.backgroundImage = `url('${newBannerUrl}')`;
+          document.querySelectorAll("[data-banner-container]").forEach((el) => {
+            (el as HTMLElement).style.backgroundImage =
+              `url('${newBannerUrl}')`;
           });
         }
       } catch (e) {
-        console.warn('Response was not valid JSON:', responseData);
+        console.warn("Response was not valid JSON:", responseData);
       }
-      
+
       // Show success toast
       toast({
         title: "Banner image updated",
         description: "Your dashboard banner has been updated successfully",
       });
-      
+
       // Force reload the page to show the new banner after a short delay
       setTimeout(() => {
         window.location.reload();
       }, 1500);
     } catch (error) {
-      console.error('Error uploading banner image:', error);
+      console.error("Error uploading banner image:", error);
       toast({
         title: "Upload failed",
         description: "Failed to upload banner image. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsUploading(false);
       setIsEditMode(false);
     }
   };
-  
+
   return (
     <div className="relative overflow-hidden rounded-lg shadow-sm mb-6">
       {/* Banner image or gradient background */}
-      <div 
+      <div
         data-banner-container
-        className={`relative w-full h-32 sm:h-48 ${defaultBannerColor} overflow-hidden`}
+        className={`relative w-full h-32 sm:h-48 ${
+          // Use banner image if available, otherwise use user's banner color preference or default
+          user?.banner_image_url
+            ? ""
+            : user?.banner_color_preference
+            ? `bg-gradient-to-r ${user.banner_color_preference}`
+            : defaultBannerColor
+        } overflow-hidden`}
         style={{
-          // Only use banner image if available, otherwise use default gradient
-          // We no longer use profile image as banner fallback to create separation between the two
-          backgroundImage: user?.banner_image_url 
+          // Only use banner image if available, otherwise gradient is handled by className
+          backgroundImage: user?.banner_image_url
             ? `url(${user.banner_image_url}?t=${Date.now()})` // Add cache buster
             : undefined,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center center',
-          backgroundRepeat: 'no-repeat'
+          backgroundSize: "cover",
+          backgroundPosition: "center center",
+          backgroundRepeat: "no-repeat",
         }}
       >
         {/* Edit banner button (only visible for self or parent) */}
@@ -182,7 +198,7 @@ export default function DashboardBanner({ defaultBannerColor = "bg-gradient-to-r
             )}
           </Button>
         )}
-        
+
         {/* File input - hidden but accessible via the button */}
         <input
           type="file"
@@ -192,7 +208,7 @@ export default function DashboardBanner({ defaultBannerColor = "bg-gradient-to-r
           onChange={handleFileChange}
           disabled={isUploading}
         />
-        
+
         {/* Banner upload UI - shown when in edit mode */}
         {isEditMode && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10">
@@ -206,38 +222,43 @@ export default function DashboardBanner({ defaultBannerColor = "bg-gradient-to-r
                 <UploadIcon className="w-4 h-4 mr-2" />
                 Choose Banner Image
               </Button>
-              <p className="text-white text-sm mt-2">Recommended size: 1200×300 pixels</p>
-              <p className="text-white/70 text-xs mt-1">This will be your dashboard banner background</p>
+              <p className="text-white text-sm mt-2">
+                Recommended size: 1200×300 pixels
+              </p>
+              <p className="text-white/70 text-xs mt-1">
+                This will be your dashboard banner background
+              </p>
             </div>
           </div>
         )}
-        
+
         {/* Profile information overlay */}
         <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent text-white flex items-end">
           <div className="flex items-center gap-3">
             <Avatar className="h-16 w-16 border-2 border-white shadow-md">
-              <AvatarImage 
-                src={user?.profile_image_url || undefined} 
+              <AvatarImage
+                src={user?.profile_image_url || undefined}
                 alt={`${user?.name}'s profile`}
               />
               <AvatarFallback className="bg-primary-600 text-white">
                 {user?.name ? getInitials(user.name) : "?"}
               </AvatarFallback>
             </Avatar>
-            
+
             <div>
               <h1 className="text-xl font-bold">{user?.name || "Dashboard"}</h1>
               <p className="text-sm text-gray-200">
                 {format(new Date(), "EEEE, MMMM d, yyyy")}
               </p>
-              
+
               {/* Show "viewing as" message in the banner for viewing child as parent */}
-              {user?.role === "parent" && useAuthStore.getState().isViewingAsChild() && (
-                <div className="text-xs bg-amber-500/60 text-white px-2 py-1 rounded-full mt-1 inline-flex items-center">
-                  <UserIcon className="h-3 w-3 mr-1" />
-                  Managing {user?.name}'s account
-                </div>
-              )}
+              {user?.role === "parent" &&
+                useAuthStore.getState().isViewingAsChild() && (
+                  <div className="text-xs bg-amber-500/60 text-white px-2 py-1 rounded-full mt-1 inline-flex items-center">
+                    <UserIcon className="h-3 w-3 mr-1" />
+                    Managing {user?.name}'s account
+                  </div>
+                )}
             </div>
           </div>
         </div>
