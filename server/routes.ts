@@ -5,7 +5,7 @@ import { storage } from "./storage";
 import { db, pool } from "./db";
 import path from "path";
 import fs from "fs";
-import { eq } from "drizzle-orm";
+import { eq, and, ilike } from "drizzle-orm";
 import multer from "multer";
 import { v4 as uuidv4 } from "uuid";
 import { users } from "../shared/schema";
@@ -27,6 +27,8 @@ import {
   bonusSpinSchema,
   awardItemSchema,
   insertChildSchema,
+  updateChildSchema,
+  archiveChildSchema,
 } from "@shared/schema";
 import { createJwt, verifyJwt, AuthMiddleware } from "./lib/auth";
 import { DailyBonusAssignmentMiddleware } from "./lib/daily-bonus-middleware";
@@ -435,9 +437,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   /**
    * GET /api/family/children
-   * Returns the list of *active* (non-archived) children that belong to the
-   * authenticated parent.  Requires `auth` middleware (parent or child token),
-   * but we return 403 if the requester is not a parent.
+   * Returns the list of children that belong to the authenticated parent.
+   * By default returns only active (non-archived) children.
+   * Use ?includeArchived=true to include archived children.
    *
    * Response: Child[] with minimally-needed fields
    */
@@ -449,8 +451,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(403).json({ message: "Only parent accounts may access children list" });
     }
 
+    const includeArchived = req.query.includeArchived === 'true';
+
     try {
-      const children = await storage.getChildrenForParent(requester.id);
+      // Get the parent
+      const parent = await storage.getUser(requester.id);
+      if (!parent) {
+        return res.status(404).json({ message: "Parent not found" });
+      }
+
+      // Use username pattern matching
+      const usernamePattern = `${parent.username}_child_%`;
+
+      // Build query conditions
+      const conditions: any[] = [
+        ilike(users.username, usernamePattern),
+        eq(users.role, "child")
+      ];
+
+      // Only filter out archived if not including them
+      if (!includeArchived) {
+        conditions.push(eq(users.is_archived, false));
+      }
+
+      // Get children
+      const children = await db
+        .select()
+        .from(users)
+        .where(and(...conditions));
 
       // Sanitize: never leak passwordHash etc.
       const sanitized = children.map((c) => ({
@@ -459,6 +487,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         username: c.username,
         profile_image_url: c.profile_image_url,
         banner_color_preference: c.banner_color_preference,
+        is_archived: c.is_archived,
       }));
 
       return res.json(sanitized);
@@ -496,6 +525,151 @@ export async function registerRoutes(app: Express): Promise<Server> {
           banner_color_preference: child.banner_color_preference,
         });
       } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return res.status(400).json({ message: msg });
+      }
+    }
+  );
+
+  /**
+   * PUT /api/family/children/:childId
+   * Updates a child's profile (name and/or profile image).
+   * Auth: parent only, must own the child.
+   */
+  app.put(
+    "/api/family/children/:childId",
+    auth,
+    async (req: Request, res: Response) => {
+      // @ts-ignore - req.user is set by auth middleware
+      const requester = req.user as User;
+      if (requester.role !== "parent") {
+        return res.status(403).json({ message: "Only parents may update child profiles" });
+      }
+
+      const childId = parseInt(req.params.childId);
+      if (isNaN(childId)) {
+        return res.status(400).json({ message: "Invalid childId" });
+      }
+
+      try {
+        // Validate the request body
+        const data = updateChildSchema.parse(req.body);
+        
+        // Update the child (storage.updateChildForParent will verify ownership)
+        const updatedChild = await storage.updateChildForParent(
+          requester.id,
+          childId,
+          data
+        );
+
+        // Return the updated child data
+        return res.json({
+          id: updatedChild.id,
+          name: updatedChild.name,
+          username: updatedChild.username,
+          profile_image_url: updatedChild.profile_image_url,
+          banner_color_preference: updatedChild.banner_color_preference,
+        });
+      } catch (err) {
+        if (err instanceof Error) {
+          if (err.message.includes("not found") || err.message.includes("does not belong")) {
+            return res.status(404).json({ message: err.message });
+          }
+        }
+        const msg = err instanceof Error ? err.message : String(err);
+        return res.status(400).json({ message: msg });
+      }
+    }
+  );
+
+  /**
+   * PATCH /api/family/children/:childId/archive
+   * Body: { archived: boolean }
+   * Soft-archive (or un-archive) a child account.
+   *
+   * – parent-only
+   * – verifies child belongs to calling parent
+   */
+  app.patch(
+    "/api/family/children/:childId/archive",
+    auth,
+    async (req: Request, res: Response) => {
+      // @ts-ignore - req.user is set by auth middleware
+      const requester = req.user as User;
+      if (requester.role !== "parent") {
+        return res.status(403).json({ message: "Only parents may archive children" });
+      }
+
+      const childId = parseInt(req.params.childId);
+      if (isNaN(childId)) {
+        return res.status(400).json({ message: "Invalid childId" });
+      }
+
+      try {
+        // Validate body
+        const { archived } = archiveChildSchema.parse(req.body);
+
+        // Use archiveChildForParent which verifies ownership
+        const updated = await storage.archiveChildForParent(
+          requester.id,
+          childId,
+          archived
+        );
+
+        return res.json({
+          id: updated.id,
+          name: updated.name,
+          is_archived: updated.is_archived,
+        });
+      } catch (err) {
+        if (err instanceof Error) {
+          if (err.message.includes("not found") || err.message.includes("does not belong")) {
+            return res.status(404).json({ message: err.message });
+          }
+        }
+        const msg = err instanceof Error ? err.message : String(err);
+        return res.status(400).json({ message: msg });
+      }
+    },
+  );
+
+  /**
+   * DELETE /api/family/children/:childId
+   * Permanently deletes a child profile.
+   * Auth: parent only, must own the child.
+   */
+  app.delete(
+    "/api/family/children/:childId",
+    auth,
+    async (req: Request, res: Response) => {
+      // @ts-ignore - req.user is set by auth middleware
+      const requester = req.user as User;
+      if (requester.role !== "parent") {
+        return res.status(403).json({ message: "Only parents may delete child profiles" });
+      }
+
+      const childId = parseInt(req.params.childId);
+      if (isNaN(childId)) {
+        return res.status(400).json({ message: "Invalid childId" });
+      }
+
+      try {
+        // Delete the child (storage.deleteChildForParent will verify ownership)
+        const result = await storage.deleteChildForParent(
+          requester.id,
+          childId
+        );
+
+        return res.json({
+          id: result.id,
+          deleted: true
+        });
+      } catch (err) {
+        if (err instanceof Error) {
+          if (err.message.includes("not found") || err.message.includes("does not belong")) {
+            return res.status(404).json({ message: err.message });
+          }
+        }
         const msg = err instanceof Error ? err.message : String(err);
         return res.status(400).json({ message: msg });
       }

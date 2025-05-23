@@ -29,6 +29,25 @@ export interface IStorage {
     parentId: number,
     childData: { name: string; profile_image_url?: string }
   ): Promise<User>;
+  /** Updates a child's profile (name/image) - verifies parent ownership. */
+  updateChildForParent(
+    parentId: number,
+    childId: number,
+    data: { name?: string; profile_image_url?: string | null }
+  ): Promise<User>;
+  /** Toggle a child's is_archived flag and return updated user (or null). */
+  updateChildArchive(childId: number, archived: boolean): Promise<User | null>;
+  /** Archive/unarchive a child - verifies parent ownership. */
+  archiveChildForParent(
+    parentId: number,
+    childId: number,
+    archived: boolean
+  ): Promise<User>;
+  /** Permanently delete a child - verifies parent ownership. */
+  deleteChildForParent(
+    parentId: number,
+    childId: number
+  ): Promise<{ id: number }>;
 
   // Chore operations
   getChore(id: number): Promise<Chore | undefined>;
@@ -674,6 +693,156 @@ export class DatabaseStorage implements IStorage {
       
       throw error;
     }
+  }
+
+  async updateChildForParent(
+    parentId: number,
+    childId: number,
+    data: { name?: string; profile_image_url?: string | null }
+  ): Promise<User> {
+    // First verify the child belongs to the parent
+    const child = await this.getUser(childId);
+    if (!child || child.role !== "child") {
+      throw new Error("Child not found");
+    }
+
+    // Check if child belongs to parent (using family_id or username pattern)
+    const parent = await this.getUser(parentId);
+    if (!parent) {
+      throw new Error("Parent not found");
+    }
+
+    // Check family relationship
+    const belongsToParent = 
+      (child.family_id && child.family_id === parentId) ||
+      (child.family_id && child.family_id === parent.family_id) ||
+      child.username.startsWith(`${parent.username}_child_`);
+    
+    if (!belongsToParent) {
+      throw new Error("Child does not belong to this parent");
+    }
+
+    // Update the child
+    const updateData: Partial<User> = {};
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.profile_image_url !== undefined) updateData.profile_image_url = data.profile_image_url;
+
+    const [updated] = await db
+      .update(users)
+      .set(updateData)
+      .where(eq(users.id, childId))
+      .returning();
+
+    if (!updated) {
+      throw new Error("Failed to update child");
+    }
+
+    return updated;
+  }
+
+  async updateChildArchive(
+    childId: number,
+    archived: boolean,
+  ): Promise<User | null> {
+    const [updated] = await db
+      .update(users)
+      .set({ is_archived: archived })
+      .where(and(eq(users.id, childId), eq(users.role, "child")))
+      .returning();
+    return updated ?? null;
+  }
+
+  async archiveChildForParent(
+    parentId: number,
+    childId: number,
+    archived: boolean
+  ): Promise<User> {
+    // First verify the child belongs to the parent
+    const child = await this.getUser(childId);
+    if (!child || child.role !== "child") {
+      throw new Error("Child not found");
+    }
+
+    // Check if child belongs to parent (using family_id or username pattern)
+    const parent = await this.getUser(parentId);
+    if (!parent) {
+      throw new Error("Parent not found");
+    }
+
+    // Check family relationship
+    const belongsToParent = 
+      (child.family_id && child.family_id === parentId) ||
+      (child.family_id && child.family_id === parent.family_id) ||
+      child.username.startsWith(`${parent.username}_child_`);
+    
+    if (!belongsToParent) {
+      throw new Error("Child does not belong to this parent");
+    }
+
+    // Update the archive status
+    const [updated] = await db
+      .update(users)
+      .set({ is_archived: archived })
+      .where(eq(users.id, childId))
+      .returning();
+
+    if (!updated) {
+      throw new Error("Failed to update archive status");
+    }
+
+    return updated;
+  }
+
+  async deleteChildForParent(
+    parentId: number,
+    childId: number
+  ): Promise<{ id: number }> {
+    // First verify the child belongs to the parent
+    const child = await this.getUser(childId);
+    if (!child || child.role !== "child") {
+      throw new Error("Child not found");
+    }
+
+    // Check if child belongs to parent (using family_id or username pattern)
+    const parent = await this.getUser(parentId);
+    if (!parent) {
+      throw new Error("Parent not found");
+    }
+
+    // Check family relationship
+    const belongsToParent = 
+      (child.family_id && child.family_id === parentId) ||
+      (child.family_id && child.family_id === parent.family_id) ||
+      child.username.startsWith(`${parent.username}_child_`);
+    
+    if (!belongsToParent) {
+      throw new Error("Child does not belong to this parent");
+    }
+
+    // Delete all related data first to avoid foreign key constraints
+    // 1. Delete transactions
+    await db.delete(transactions).where(eq(transactions.user_id, childId));
+    
+    // 2. Delete goals
+    await db.delete(goals).where(eq(goals.user_id, childId));
+    
+    // 3. Delete daily bonuses
+    await db.delete(dailyBonus).where(eq(dailyBonus.user_id, childId));
+    
+    // 4. Delete awarded items
+    await db.delete(awardedItems).where(eq(awardedItems.child_id, childId));
+    
+    // 5. Finally delete the child user
+    const [deleted] = await db
+      .delete(users)
+      .where(eq(users.id, childId))
+      .returning({ id: users.id });
+
+    if (!deleted) {
+      throw new Error("Failed to delete child");
+    }
+
+    return deleted;
   }
 
   // Chore operations
