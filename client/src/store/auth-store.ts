@@ -1,7 +1,7 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import jwtDecode from 'jwt-decode';
-import { apiRequest } from '@/lib/queryClient';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import jwtDecode from "jwt-decode";
+import { apiRequest } from "@/lib/queryClient";
 
 export interface UserInfo {
   id: number;
@@ -25,6 +25,7 @@ interface AuthState {
   logout: () => void;
   checkAuth: () => Promise<boolean>;
   refreshUser: () => Promise<void>; // Added to refresh user data
+  refreshFamilyUsers: () => Promise<void>;
   switchChildView: (childUser: UserInfo) => void;
   resetChildView: () => void;
   isViewingAsChild: () => boolean;
@@ -45,31 +46,46 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       autoLoginEnabled: true,
       familyUsers: [],
-      
+
       login: async (token: string, user: UserInfo) => {
-        set({ token, user, isAuthenticated: true, originalUser: null, viewingChildId: null });
-        if (user.role === 'parent') {
+        set({
+          token,
+          user,
+          isAuthenticated: true,
+          originalUser: null,
+          viewingChildId: null,
+        });
+        if (user.role === "parent") {
           try {
-            const users = await apiRequest('/api/users');
+            const users = await apiRequest("/api/users");
             if (users && Array.isArray(users)) {
-              console.log('AuthStore: Fetched family users on parent login:', users);
+              console.log(
+                "AuthStore: Fetched family users on parent login:",
+                users,
+              );
               set({ familyUsers: users });
-              console.log('AuthStore: Family users loaded on parent login.');
+              console.log("AuthStore: Family users loaded on parent login.");
             } else {
-              console.error('AuthStore: Failed to fetch or parse family users on parent login. Received:', users);
+              console.error(
+                "AuthStore: Failed to fetch or parse family users on parent login. Received:",
+                users,
+              );
             }
           } catch (e) {
-            console.error('AuthStore: Failed to fetch family users on login', e);
+            console.error(
+              "AuthStore: Failed to fetch family users on login",
+              e,
+            );
           }
         }
       },
-      
+
       loginAsUser: async (username: string) => {
         try {
-          const data = await apiRequest('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password: 'password' }),
+          const data = await apiRequest("/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password: "password" }),
           });
 
           set({
@@ -80,11 +96,11 @@ export const useAuthStore = create<AuthState>()(
 
           return true;
         } catch (error) {
-          console.error('Auto-login failed:', error);
+          console.error("Auto-login failed:", error);
           return false;
         }
       },
-      
+
       logout: () => {
         set({
           token: null,
@@ -92,13 +108,18 @@ export const useAuthStore = create<AuthState>()(
           originalUser: null,
           viewingChildId: null,
           isAuthenticated: false,
-          familyUsers: []
+          familyUsers: [],
         });
       },
-      
+
       checkAuth: async () => {
-        const { token, autoLoginEnabled, familyUsers: currentFamilyUsers, user: currentUserInStore } = get();
-        
+        const {
+          token,
+          autoLoginEnabled,
+          familyUsers: currentFamilyUsers,
+          user: currentUserInStore,
+        } = get();
+
         // If we have a token, validate it
         if (token) {
           try {
@@ -108,184 +129,237 @@ export const useAuthStore = create<AuthState>()(
             if (!decoded.exp || decoded.exp > currentTime) {
               if (currentUserInStore) {
                 set({ isAuthenticated: true });
-                if (currentUserInStore.role === 'parent' && currentFamilyUsers.length === 0) {
+                if (
+                  currentUserInStore.role === "parent" &&
+                  currentFamilyUsers.length === 0
+                ) {
                   try {
-                    const users = await apiRequest('/api/users');
+                    const users = await apiRequest("/api/users");
                     if (users && Array.isArray(users)) {
-                      console.log('AuthStore: Fetched family users on auth check:', users);
+                      console.log(
+                        "AuthStore: Fetched family users on auth check:",
+                        users,
+                      );
                       set({ familyUsers: users });
-                      console.log('AuthStore: Family users loaded on auth check for parent.');
+                      console.log(
+                        "AuthStore: Family users loaded on auth check for parent.",
+                      );
                     } else {
-                      console.error('AuthStore: Failed to fetch or parse family users on auth check. Received:', users);
+                      console.error(
+                        "AuthStore: Failed to fetch or parse family users on auth check. Received:",
+                        users,
+                      );
                     }
                   } catch (e) {
-                    console.error('AuthStore: Failed to fetch family users on auth check', e);
+                    console.error(
+                      "AuthStore: Failed to fetch family users on auth check",
+                      e,
+                    );
                   }
                 }
                 return true;
               }
             }
           } catch (error) {
-            console.warn('AuthStore: Token validation failed or expired.', error);
+            console.warn(
+              "AuthStore: Token validation failed or expired.",
+              error,
+            );
           }
         }
-        
+
         // If no valid token, but auto-login is enabled
         if (autoLoginEnabled) {
           let usersForAutoLogin = currentFamilyUsers;
           if (usersForAutoLogin.length === 0) {
             try {
-              usersForAutoLogin = await apiRequest('/api/users') || [];
-              if (Array.isArray(usersForAutoLogin)) set({ familyUsers: usersForAutoLogin });
-              console.log('AuthStore: Fetched family users for auto-login:', usersForAutoLogin);
+              usersForAutoLogin = (await apiRequest("/api/users")) || [];
+              if (Array.isArray(usersForAutoLogin))
+                set({ familyUsers: usersForAutoLogin });
+              console.log(
+                "AuthStore: Fetched family users for auto-login:",
+                usersForAutoLogin,
+              );
             } catch (e) {
-              console.error('AuthStore: Failed to fetch users for auto-login', e);
+              console.error(
+                "AuthStore: Failed to fetch users for auto-login",
+                e,
+              );
               usersForAutoLogin = [];
             }
           }
           if (usersForAutoLogin.length > 0) {
-            const parentUser = usersForAutoLogin.find(u => u.role === 'parent') || usersForAutoLogin[0];
+            const parentUser =
+              usersForAutoLogin.find((u) => u.role === "parent") ||
+              usersForAutoLogin[0];
             if (parentUser) {
               return await get().loginAsUser(parentUser.username);
             }
           }
         }
-        
+
         // No token and no auto-login
         get().logout();
         return false;
       },
-      
+
       // Switch to viewing as a child user
       switchChildView: (childUser: UserInfo) => {
         const { user } = get();
 
         // Only parents can switch to child view
-        if (user?.role !== 'parent') return;
+        if (user?.role !== "parent") return;
 
-        console.log('AuthStore: switchChildView called for:', childUser);
+        console.log("AuthStore: switchChildView called for:", childUser);
 
         // Store the original parent user
         set({
           originalUser: user,
           user: childUser,
-          viewingChildId: childUser.id
+          viewingChildId: childUser.id,
         });
       },
-      
+
       // Reset back to parent view
       resetChildView: () => {
         const { originalUser } = get();
 
-        console.log('AuthStore: resetChildView called. Original user:', originalUser);
+        console.log(
+          "AuthStore: resetChildView called. Original user:",
+          originalUser,
+        );
 
         // If there's an original user, switch back
         if (originalUser) {
           set({
             user: originalUser,
             originalUser: null,
-            viewingChildId: null
+            viewingChildId: null,
           });
         }
       },
-      
+
       // Helper to check if viewing as child
       isViewingAsChild: () => {
         const { originalUser, viewingChildId } = get();
         return !!originalUser && viewingChildId !== null;
       },
-      
+
       // Get all child users from family users
       getChildUsers: () => {
         const { familyUsers } = get();
         return familyUsers.filter(
-          user => user.role === 'child' && (user.name === 'Kiki' || user.name === 'Bryce')
+          (user) =>
+            user.role === "child" &&
+            (user.name === "Kiki" || user.name === "Bryce"),
         );
       },
-      
+
       // Get the ID of the active child (either current user if child, or viewingChildId if parent looking as child)
       getActiveChildId: () => {
         const { user, viewingChildId } = get();
         if (viewingChildId) return viewingChildId;
-        if (user?.role === 'child') return user.id;
+        if (user?.role === "child") return user.id;
         return null;
       },
-      
+
       // Update auto-login setting
       setAutoLoginEnabled: (enabled: boolean) => {
         set({ autoLoginEnabled: enabled });
       },
-      
+
       // Update the family users list
       setFamilyUsers: (users: UserInfo[]) => {
         set({ familyUsers: users });
       },
-      
+
       // Refresh the current user data
       refreshUser: async () => {
         const { user, token, viewingChildId } = get();
-        
+
         if (!user || !token) return;
-        
+
         try {
-          console.log('Refreshing user data for user ID:', user.id);
-          
+          console.log("Refreshing user data for user ID:", user.id);
+
           // Get fresh user data from the server
-          const users = await apiRequest('/api/users');
-          
+          const users = await apiRequest("/api/users");
+
           if (users && Array.isArray(users)) {
             // Set the family users list
             set({ familyUsers: users });
-            
+
             // Find and update the current user
             const currentUserId = viewingChildId || user.id;
-            const updatedUser = users.find(u => u.id === currentUserId);
-            
+            const updatedUser = users.find((u) => u.id === currentUserId);
+
             if (updatedUser) {
-              console.log('User data refreshed successfully:', updatedUser);
+              console.log("User data refreshed successfully:", updatedUser);
               set({ user: updatedUser });
             }
           }
         } catch (error) {
-          console.error('Failed to refresh user data:', error);
+          console.error("Failed to refresh user data:", error);
         }
       },
-      
+
+      // Refresh family users from the API
+      refreshFamilyUsers: async () => {
+        const { user } = get();
+        
+        // Only parents can fetch family users
+        if (!user || user.role !== "parent") return;
+        
+        try {
+          console.log("Refreshing family users...");
+          const children = await apiRequest("/api/family/children");
+          
+          if (children && Array.isArray(children)) {
+            // Convert children to UserInfo format and combine with parent
+            const familyUsersList: UserInfo[] = [user, ...children];
+            console.log("Family users refreshed:", familyUsersList);
+            set({ familyUsers: familyUsersList });
+          }
+        } catch (error) {
+          console.error("Failed to refresh family users:", error);
+        }
+      },
+
       // Update user's banner image
       updateUserBannerImage: (bannerImageUrl: string) => {
         const { user } = get();
         if (!user) return;
-        
-        console.log('Updating banner image URL to:', bannerImageUrl);
-        
+
+        console.log("Updating banner image URL to:", bannerImageUrl);
+
         // Create an updated user with the new banner image URL
         const updatedUser = {
           ...user,
-          banner_image_url: bannerImageUrl
+          banner_image_url: bannerImageUrl,
         };
-        
+
         // Update the user in state
         set({ user: updatedUser });
-        
+
         // Also update in family users array
         const { familyUsers } = get();
-        const updatedFamilyUsers = familyUsers.map(u => 
-          u.id === user.id ? { ...u, banner_image_url: bannerImageUrl } : u
+        const updatedFamilyUsers = familyUsers.map((u) =>
+          u.id === user.id ? { ...u, banner_image_url: bannerImageUrl } : u,
         );
-        
+
         set({ familyUsers: updatedFamilyUsers });
-      }
+      },
     }),
     {
-      name: 'ticket-tracker-auth',
-      partialize: (state) => ({ 
-        token: state.token, 
+      name: "ticket-tracker-auth",
+      partialize: (state) => ({
+        token: state.token,
         user: state.user,
         originalUser: state.originalUser,
         viewingChildId: state.viewingChildId,
         autoLoginEnabled: state.autoLoginEnabled,
-        familyUsers: state.familyUsers 
+        familyUsers: state.familyUsers,
       }),
-    }
-  )
+    },
+  ),
 );
