@@ -11,6 +11,7 @@ export interface UserInfo {
   profile_image_url?: string | null;
   banner_image_url?: string | null;
   banner_color_preference?: string | null;
+  is_archived?: boolean;
 }
 
 interface AuthState {
@@ -249,11 +250,7 @@ export const useAuthStore = create<AuthState>()(
       // Get all child users from family users
       getChildUsers: () => {
         const { familyUsers } = get();
-        return familyUsers.filter(
-          (user) =>
-            user.role === "child" &&
-            (user.name === "Kiki" || user.name === "Bryce"),
-        );
+        return familyUsers.filter((user) => user.role === "child" && !(user as any).is_archived);
       },
 
       // Get the ID of the active child (either current user if child, or viewingChildId if parent looking as child)

@@ -37,6 +37,11 @@ import {
   calculateTier,
   calculateProgressPercent,
   calculateBoostPercent,
+  getCurrentProductPrice,
+  calculateOverSavedTickets,
+  calculateGoalProgressFromBalance,
+  ticketsNeededFor,
+  spinTicketReward,
 } from "./lib/business-logic";
 import { WebSocketServer, WebSocket } from "ws";
 import { cleanupOrphanedProducts } from "./cleanup";
@@ -679,6 +684,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Chore routes
   app.get("/api/chores", auth, async (req: Request, res: Response) => {
     const activeOnly = req.query.activeOnly !== "false";
+    const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
+
+    // If a specific user ID is provided, include completion status
+    if (userId) {
+      // Parents can view any user's chore status, children can only view their own
+      if (req.user.role !== "parent" && userId !== req.user.id) {
+        return res.status(403).json({ message: "Not authorized to view these chores" });
+      }
+
+      const choresWithStatus = await storage.getChoreStatusForUser(userId);
+      return res.json(choresWithStatus);
+    }
+
+    // Default behavior - return chores without completion status
     const chores = await storage.getChores(activeOnly);
     return res.json(chores);
   });
@@ -773,9 +792,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
+  // Chore completion endpoint
+  app.post(
+    "/api/chores/:choreId/complete",
+    parentOnly,
+    async (req: Request, res: Response) => {
+      const choreId = parseInt(req.params.choreId);
+      if (isNaN(choreId)) {
+        return res.status(400).json({ message: "Invalid chore ID" });
+      }
+
+      try {
+        const { user_id } = req.body;
+        let targetUserId = user_id;
+
+        // If no user_id provided, this should be handled by parent-only middleware
+        if (!targetUserId) {
+          return res.status(400).json({ message: "user_id is required" });
+        }
+
+        // Verify the chore exists
+        const chore = await storage.getChore(choreId);
+        if (!chore) {
+          return res.status(404).json({ message: "Chore not found" });
+        }
+
+        // Verify the user exists
+        const user = await storage.getUser(targetUserId);
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+
+        // Log the chore completion
+        const completion = await storage.logChoreCompletion(choreId, targetUserId);
+
+        // Create a transaction for the chore completion
+        const transaction = await storage.createTransaction({
+          user_id: targetUserId,
+          chore_id: choreId,
+          delta: chore.base_tickets,
+          type: "earn",
+          note: `Completed: ${chore.name}`,
+          source: "chore",
+        });
+
+        // Get updated balance
+        const balance = await storage.getUserBalance(targetUserId);
+
+        // Broadcast the completion
+        broadcast("chore:completed", {
+          chore,
+          user,
+          completion,
+          transaction,
+          balance,
+        });
+
+        return res.status(201).json({
+          success: true,
+          completion,
+          transaction,
+          balance,
+        });
+      } catch (error) {
+        console.error("Error completing chore:", error);
+        const message = error instanceof Error ? error.message : String(error);
+        return res.status(500).json({ message });
+      }
+    },
+  );
+
   // Product routes
   // Get all available products
-  app.get("/api/products", auth, async (req: Request, res: Response) => {
+  app.get("/api/products", auth, async (_req: Request, res: Response) => {
     try {
       // Get all products in the system
       const productsList = await storage.getAllProducts(); // Renamed to avoid conflict with schema
@@ -813,7 +902,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   title: productData.title,
                   image_url: productData.image_url || existingProduct.image_url,
                   price_cents: productData.price_cents,
-                  price_locked_cents: productData.price_cents,
                 },
               );
 
@@ -891,7 +979,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             productData.image_url ||
             "https://placehold.co/400x400?text=No+Image",
           price_cents: productData.price_cents,
-          price_locked_cents: productData.price_cents,
         };
         console.log("Creating new product:", newProduct);
 
@@ -925,7 +1012,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const finalUpdate = {
         ...update,
         ...(update.price_cents !== undefined && {
-          price_locked_cents: update.price_cents,
         }),
       };
       const updated = await storage.updateProduct(id, finalUpdate);
@@ -1003,9 +1089,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ...goal,
           product,
           progress: product
-            ? calculateProgressPercent(
-                goal.tickets_saved,
-                product.price_locked_cents || 0,
+            ? calculateGoalProgressFromBalance(
+                await storage.getUserBalance(goal.user_id),
+                product.price_cents,
               )
             : 0,
         };
@@ -1037,14 +1123,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).json({ message: "No active goal found" });
     }
 
-    const progressPercent = calculateProgressPercent(
-      goal.tickets_saved,
-      goal.product.price_locked_cents || 0,
+    // Get user's current balance
+    const userBalance = await storage.getUserBalance(targetUserId);
+    
+    const currentPrice = getCurrentProductPrice(goal);
+    const progressPercent = calculateGoalProgressFromBalance(
+      userBalance,
+      currentPrice,
+    );
+    const overSavedTickets = calculateOverSavedTickets(
+      userBalance,
+      currentPrice,
     );
 
     return res.json({
       ...goal,
+      tickets_saved: userBalance, // For backward compatibility
       progress: progressPercent,
+      overSavedTickets,
+      // Include current product price for transparency
+      product: {
+        ...goal.product,
+        price_cents: currentPrice,
+      },
     });
   });
 
@@ -1117,22 +1218,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Make sure we have valid data before broadcasting
       if (updatedGoal && product) {
+        const userBalance = await storage.getUserBalance(updatedGoal.user_id);
+        const progress = calculateGoalProgressFromBalance(
+          userBalance,
+          product.price_cents,
+        );
+        
         broadcast("goal:update", {
           ...updatedGoal,
+          tickets_saved: userBalance, // For backward compatibility
           product,
-          progress: calculateProgressPercent(
-            updatedGoal.tickets_saved || 0,
-            product.price_locked_cents || 0,
-          ),
+          progress,
         });
 
         return res.json({
           ...updatedGoal,
+          tickets_saved: userBalance, // For backward compatibility
           product,
-          progress: calculateProgressPercent(
-            updatedGoal.tickets_saved || 0,
-            product.price_locked_cents || 0,
-          ),
+          progress,
         });
       } else {
         return res.status(500).json({ message: "Could not update goal" });
@@ -1213,6 +1316,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ── BONUS-02: daily bonus fetch/assign endpoint
+  app.get('/api/bonus/today', auth, async (req: Request, res: Response) => {
+    try {
+      const caller = req.user;
+      const targetId = caller.role === 'parent' && req.query.userId
+        ? Number(req.query.userId) : caller.id;
+
+      // Verify child-parent relationship when applicable
+      if (caller.role === 'parent' && req.query.userId) {
+        const targetUser = await storage.getUser(targetId);
+        if (!targetUser || targetUser.role !== 'child') {
+          return res.status(404).json({ message: 'Child not found' });
+        }
+        
+        // Verify parent-child relationship (same family)
+        if (targetUser.family_id !== caller.family_id) {
+          return res.status(403).json({ message: 'Not authorized to access this child' });
+        }
+      }
+
+      let bonus = await storage.getTodayDailyBonusSimple(targetId);
+      if (!bonus) {
+        const { assignDailyBonus } = await import('./lib/business-logic');
+        bonus = await assignDailyBonus(targetId);
+      }
+
+      return res.json(bonus);
+    } catch (err) {
+      console.error('[BONUS] GET /api/bonus/today', err);
+      return res.status(500).json({ message: 'Internal error' });
+    }
+  });
+
+  // ── BONUS-03: daily bonus spin endpoint
+  app.post("/api/bonus/spin", auth, async (req: Request, res: Response) => {
+    try {
+      const caller = req.user;
+      const targetId =
+        caller.role === "parent" && req.body.userId
+          ? Number(req.body.userId)
+          : caller.id;
+
+      // Verify parent-child relationship when applicable
+      if (caller.role === "parent" && req.body.userId) {
+        const targetUser = await storage.getUser(targetId);
+        if (!targetUser || targetUser.role !== "child") {
+          return res.status(404).json({ message: "Child not found" });
+        }
+        
+        // Verify parent-child relationship (same family)
+        if (targetUser.family_id !== caller.family_id) {
+          return res.status(403).json({ message: "Not authorized to access this child" });
+        }
+      }
+
+      const bonus = await storage.getTodayDailyBonusSimple(targetId);
+      if (!bonus) {
+        return res.status(404).json({ message: "No bonus assigned" });
+      }
+      if (bonus.revealed) {
+        return res.status(409).json({ message: "Already spun" });
+      }
+
+      const tickets = spinTicketReward();
+
+      // Create "earn" transaction
+      const transaction = await storage.createTransaction({
+        user_id: targetId,
+        delta: tickets,
+        type: "earn",
+        note: "Daily-spin",
+        metadata: JSON.stringify({ bonus_id: bonus.id }),
+      });
+
+      // Mark bonus revealed & persist final tickets actually awarded
+      const updatedBonus = await storage.markDailyBonusRevealed(bonus.id, tickets);
+
+      const balance = await storage.getUserBalance(targetId);
+
+      // WebSocket broadcast for live UI later
+      broadcast("bonus:spin", { user_id: targetId, tickets, balance });
+
+      return res.status(201).json({ 
+        tickets, 
+        balance, 
+        bonus: updatedBonus, 
+        transaction 
+      });
+    } catch (err) {
+      console.error("[BONUS] POST /api/bonus/spin", err);
+      return res.status(500).json({ message: "Internal error" });
+    }
+  });
+
   // Transaction routes
   /**
    * Complete a chore and award tickets.
@@ -1280,6 +1477,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(
           `[FIXED_API] Created transaction ${transaction.id} with ${base_tickets_earned} tickets`,
         );
+
+        // Log chore completion for tracking
+        await storage.logChoreCompletion(chore_id, user.id);
+        console.log(`[FIXED_API] Logged chore completion for chore ${chore_id} by user ${user.id}`);
 
         // Check for daily bonus eligibility
         const today = new Date().toISOString().split("T")[0];
@@ -1609,7 +1810,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .json({ message: "Not authorized to spend from this goal" });
         }
 
-        ticketsToSpend = targetGoal.tickets_saved;
+        // Cap tickets to spend at the current product price
+        const currentPrice = getCurrentProductPrice(targetGoal);
+        const maxTicketsNeeded = Math.ceil(currentPrice / TICKET_CENT_VALUE);
+        ticketsToSpend = Math.min(currentBalance, maxTicketsNeeded);
       } else {
         // Spend a specific number of tickets
         // Accept both 'tickets' and 'delta' fields for backward compatibility
@@ -1672,6 +1876,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(201).json(response);
     } catch (error: any) {
       return res.status(400).json({ message: error.message });
+    }
+  });
+
+  // ─────────────────────────  GOAL-04: Purchase active goal  ─────────────────────────
+  /**
+   * POST /api/goals/:id/purchase
+   * Preconditions:
+   *   – :id must be the caller's active goal
+   *   – caller's progress (derived from balance) must be ≥ 100 %
+   * Action:
+   *   – creates a single "spend" transaction for the tickets actually needed
+   *   – sets goals.purchased_at = now()
+   * Response shape (200):
+   *   { transaction, remainingBalance, purchasedAt }
+   * Response on precondition failure: 422 JSON { message }
+   */
+  app.post("/api/goals/:id/purchase", auth, async (req: Request, res: Response) => {
+    try {
+      const user = req.user;
+      const goalId = parseInt(req.params.id);
+
+      if (isNaN(goalId)) {
+        return res.status(400).json({ message: "Invalid goal ID" });
+      }
+
+      // Load the goal with product details
+      const goal = await storage.getGoalWithProduct(goalId);
+      if (!goal) {
+        return res.status(404).json({ message: "Goal not found" });
+      }
+
+      // Ensure this is the user's active goal
+      if (goal.user_id !== user.id) {
+        return res.status(403).json({ message: "Not authorized to purchase this goal" });
+      }
+
+      if (!goal.is_active) {
+        return res.status(422).json({ message: "Goal is not active" });
+      }
+
+      // Check if goal was already purchased
+      if (goal.purchased_at) {
+        return res.status(422).json({ message: "Goal already purchased" });
+      }
+
+      // Get user's current balance
+      const userBalance = await storage.getUserBalance(user.id);
+      const currentPrice = getCurrentProductPrice(goal);
+      const ticketsToSpend = ticketsNeededFor(currentPrice);
+      
+      // Check if user has enough balance (≥100% progress)
+      const progressPercent = calculateGoalProgressFromBalance(userBalance, currentPrice);
+      if (progressPercent < 100) {
+        return res.status(422).json({ 
+          message: "Insufficient balance to purchase goal",
+          required: ticketsToSpend,
+          current: userBalance
+        });
+      }
+
+      // Create the spend transaction
+      const transaction = await storage.createTransaction({
+        user_id: user.id,
+        delta: -ticketsToSpend,
+        type: "spend",
+        note: `Purchased: ${goal.product.title}`,
+        metadata: JSON.stringify({
+          goal_id: goalId,
+          product_id: goal.product_id,
+          price_cents: currentPrice
+        })
+      });
+
+      // Mark goal as purchased
+      const purchasedAt = new Date();
+      await storage.updateGoal(goalId, { purchased_at: purchasedAt });
+
+      // Get remaining balance
+      const remainingBalance = await storage.getUserBalance(user.id);
+
+      const response = {
+        transaction,
+        remainingBalance,
+        purchasedAt: purchasedAt.toISOString()
+      };
+
+      // Broadcast goal purchased event
+      broadcast("goal:purchased", {
+        data: {
+          goal_id: goalId,
+          user_id: user.id,
+          product_name: goal.product.title,
+          tickets_spent: ticketsToSpend,
+          remaining_balance: remainingBalance
+        }
+      });
+
+      return res.status(200).json(response);
+    } catch (error) {
+      console.error("[API ERROR] POST /api/goals/:id/purchase:", error);
+      return res.status(500).json({ message: "Internal error" });
     }
   });
 
@@ -2787,9 +3092,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else if (selectedSegment.value === "double") {
         // For "×2 Multiplier" - double the original tickets from the chore
         if (dailyBonusRecord.trigger_type === "chore_completion" && chore) {
-          // Double the base tickets up to a max of 10 tickets total
+          // Double the base tickets
           const baseTickets = chore.base_tickets;
-          bonusTickets = Math.min(baseTickets * 2, 10);
+          bonusTickets = baseTickets * 2;
           // Show the multiplier in the result for clarity
           segmentLabel = `×2 (${bonusTickets} tickets)`;
           console.log(
@@ -3185,21 +3490,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Calculate the max tickets for this goal
         const maxGoalTickets = Math.ceil(
-          (goal.product.price_locked_cents || 0) / TICKET_CENT_VALUE,
+          goal.product.price_cents / TICKET_CENT_VALUE,
         );
 
-        // Update the goal progress to match the current balance (up to the max tickets needed)
-        const newGoalProgress = Math.min(userBalance, maxGoalTickets);
-
+        // No longer need to update goal progress - it's calculated from balance
         console.log(
-          `[DELETE] Updating goal ${goal.id} progress from ${goal.tickets_saved} to ${newGoalProgress} (balance: ${userBalance}, max: ${maxGoalTickets})`,
+          `[DELETE] Goal ${goal.id} progress will be recalculated from new balance: ${userBalance}`,
         );
-
-        // Update the goal in the database
-        await storage.updateGoal(goal.id, { tickets_saved: newGoalProgress });
-
-        // Get updated goal with new progress
-        goal = await storage.getActiveGoalByUser(transaction.user_id);
       }
 
       // Broadcast the deletion
@@ -3367,40 +3664,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     let estimatedCompletion = null;
 
     if (activeGoal) {
-      // Make sure the goal's tickets_saved value is synced with the current balance
-      // This ensures the UI always shows consistent data even if somehow they got out of sync
-      if (balance !== activeGoal.tickets_saved) {
-        console.log(
-          `[STATS] Fixing goal progress for user ${targetUserId}: balance=${balance}, goal.tickets_saved=${activeGoal.tickets_saved}`,
-        );
-
-        // Calculate max tickets needed for this goal
-        const maxTickets = Math.ceil(
-          (activeGoal.product.price_locked_cents || 0) / TICKET_CENT_VALUE,
-        );
-
-        // Update the goal to match the balance (up to the max needed)
-        const newProgress = Math.min(balance, maxTickets);
-
-        if (newProgress !== activeGoal.tickets_saved) {
-          console.log(
-            `[STATS] Updating goal ${activeGoal.id} tickets_saved from ${activeGoal.tickets_saved} to ${newProgress}`,
-          );
-          await storage.updateGoal(activeGoal.id, {
-            tickets_saved: newProgress,
-          });
-
-          // Get the updated goal
-          activeGoal = await storage.getActiveGoalByUser(targetUserId);
-        }
-      }
-
-      if (activeGoal) {
-        progressPercent = calculateProgressPercent(
-          activeGoal.tickets_saved,
-          activeGoal.product.price_locked_cents || 0,
-        );
-      }
+      // Calculate progress based on balance, not tickets_saved
+      const currentPrice = getCurrentProductPrice(activeGoal);
+      progressPercent = calculateGoalProgressFromBalance(
+        balance,
+        currentPrice,
+      );
 
       // Calculate estimated completion
       const transactions = await storage.getUserTransactions(targetUserId, 10);
@@ -3414,10 +3683,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
         const avgPerDay = totalEarned / Math.max(1, earnTransactions.length);
 
-        // Tickets needed to complete goal
+        // Tickets needed to complete goal using current price
+        const currentPrice = getCurrentProductPrice(activeGoal!);
         const ticketsNeeded =
-          (activeGoal!.product.price_locked_cents || 0) / TICKET_CENT_VALUE -
-          activeGoal!.tickets_saved;
+          currentPrice / TICKET_CENT_VALUE -
+          balance;
 
         // Estimated days to completion
         const daysToCompletion = Math.ceil(ticketsNeeded / avgPerDay);
@@ -3475,7 +3745,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       boostPercent: activeGoal
         ? calculateBoostPercent(
             chore.base_tickets,
-            activeGoal.product.price_locked_cents || 0,
+            getCurrentProductPrice(activeGoal),
           )
         : 0,
       // Add bonus information if this chore is the assigned bonus chore for today
@@ -3504,8 +3774,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       activeGoal: activeGoal
         ? {
             ...activeGoal,
+            tickets_saved: balance, // For backward compatibility
             progress: progressPercent,
             estimatedCompletion,
+            overSavedTickets: calculateOverSavedTickets(
+              balance,
+              getCurrentProductPrice(activeGoal),
+            ),
+            // Include current product price for transparency
+            product: {
+              ...activeGoal.product,
+              price_cents: getCurrentProductPrice(activeGoal),
+            },
           }
         : null,
       chores: choresWithStatus,

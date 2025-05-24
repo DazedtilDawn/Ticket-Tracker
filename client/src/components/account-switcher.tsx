@@ -35,7 +35,8 @@ export function AccountSwitcher() {
     loginAsUser,
     switchChildView,
     resetChildView,
-    isViewingAsChild
+    isViewingAsChild,
+    getChildUsers
   } = useAuthStore();
 
   // Fetch all users
@@ -155,11 +156,9 @@ export function AccountSwitcher() {
           {currentUser.role === 'parent' && (
             <>
               <DropdownMenuLabel>Family accounts</DropdownMenuLabel>
-              {users
-                .filter(user =>
-                  user.role === 'child' && (user.name === 'Bryce' || user.name === 'Kiki')
-                )
-                .map(user => (
+              <div className="max-h-60 overflow-y-auto pr-1">
+                {getChildUsers()
+                  .map(user => (
                   <DropdownMenuItem
                     key={user.id}
                     onClick={() => handleSwitchUser(user)}
@@ -171,6 +170,7 @@ export function AccountSwitcher() {
                     <span>{user.name}</span>
                   </DropdownMenuItem>
                 ))}
+              </div>
             </>
           )}
 
@@ -178,12 +178,10 @@ export function AccountSwitcher() {
           {currentUser.role === 'child' && !isViewingAsChild() && (
             <>
               <DropdownMenuLabel>Switch account</DropdownMenuLabel>
-              {users
-                .filter(user =>
-                  user.id !== currentUser.id &&
-                  (user.role === 'parent' || user.name === 'Bryce' || user.name === 'Kiki')
-                )
-                .map(user => (
+              <div className="max-h-60 overflow-y-auto pr-1">
+                {users
+                  .filter(user => user.id !== currentUser.id)
+                  .map(user => (
                   <DropdownMenuItem
                     key={user.id}
                     onClick={() => handleSwitchUser(user)}
@@ -194,6 +192,7 @@ export function AccountSwitcher() {
                     <span>{user.name}</span>
                   </DropdownMenuItem>
                 ))}
+              </div>
             </>
           )}
         </DropdownMenuGroup>

@@ -1,3 +1,4 @@
+import { nanoid } from "nanoid";
 import {
   User,
   InsertUser,
@@ -11,9 +12,22 @@ import {
   InsertTransaction,
   DailyBonus,
   InsertDailyBonus,
+  DailyBonusSimple,
+  InsertDailyBonusSimple,
   AwardedItem,
   InsertAwardedItem,
+  ChoreCompletion,
+  InsertChoreCompletion,
 } from "@shared/schema";
+import { calculateBoostPercent } from "./lib/business-logic";
+
+// Allowed banner color gradients for children
+export const CHILD_BANNER_GRADIENTS = [
+  "from-pink-500/30 to-indigo-300/30",
+  "from-amber-400/30 to-rose-300/30",
+  "from-lime-400/30 to-teal-300/30",
+  "from-sky-400/30 to-fuchsia-300/30",
+];
 
 export interface IStorage {
   // User operations
@@ -58,6 +72,11 @@ export interface IStorage {
     chore: Partial<InsertChore>,
   ): Promise<Chore | undefined>;
   deleteChore(id: number): Promise<boolean>;
+
+  // Chore completion operations
+  logChoreCompletion(choreId: number, userId: number): Promise<ChoreCompletion>;
+  getChoreStatusForUser(userId: number): Promise<(Chore & { completed: boolean })[]>;
+  resetExpiredCompletions(): Promise<number>;
 
   // Product operations
   getProduct(id: number): Promise<Product | undefined>;
@@ -109,6 +128,10 @@ export interface IStorage {
   ): Promise<DailyBonus | undefined>;
   getDailyBonusById(id: number): Promise<DailyBonus | undefined>;
   createDailyBonus(bonus: InsertDailyBonus): Promise<DailyBonus>;
+  createDailyBonusSimple(bonus: InsertDailyBonusSimple): Promise<DailyBonusSimple>;
+  getTodayDailyBonusSimple(userId: number): Promise<DailyBonusSimple | undefined>;
+  markDailyBonusRevealed(id: number, tickets: number): Promise<DailyBonusSimple>;
+  resetRevealedDailyBonuses(): Promise<number>;
   deleteDailyBonus(userId: number, date?: string): Promise<boolean>;
   assignDailyBonusChore(
     childId: number,
@@ -139,7 +162,9 @@ import {
   goals,
   transactions,
   dailyBonus,
+  dailyBonusSimple,
   awardedItems,
+  choreCompletions,
 } from "@shared/schema";
 import { eq, and, desc, gte, sql, ilike, lt, ne } from "drizzle-orm";
 import { TICKET_CENT_VALUE } from "../config/business";
@@ -278,6 +303,63 @@ export class DatabaseStorage implements IStorage {
     );
 
     return newBonus;
+  }
+
+  async createDailyBonusSimple(bonus: InsertDailyBonusSimple): Promise<DailyBonusSimple> {
+    const [newBonus] = await db.insert(dailyBonusSimple).values(bonus).returning();
+    return newBonus;
+  }
+
+  async getTodayDailyBonusSimple(userId: number): Promise<DailyBonusSimple | undefined> {
+    const [bonus] = await db
+      .select()
+      .from(dailyBonusSimple)
+      .where(
+        and(
+          eq(dailyBonusSimple.user_id, userId),
+          sql`date_trunc('day', ${dailyBonusSimple.assigned_at}) = date_trunc('day', NOW())`
+        )
+      )
+      .limit(1);
+    
+    return bonus;
+  }
+
+  async markDailyBonusRevealed(id: number, tickets: number): Promise<DailyBonusSimple> {
+    const [updatedBonus] = await db
+      .update(dailyBonusSimple)
+      .set({
+        revealed: true,
+        bonus_tickets: tickets,
+      })
+      .where(eq(dailyBonusSimple.id, id))
+      .returning();
+    
+    return updatedBonus;
+  }
+
+  async resetRevealedDailyBonuses(): Promise<number> {
+    // First, get all revealed bonuses to count them
+    const revealedBonuses = await db
+      .select({ id: dailyBonusSimple.id })
+      .from(dailyBonusSimple)
+      .where(eq(dailyBonusSimple.revealed, true));
+    
+    const count = revealedBonuses.length;
+    
+    if (count > 0) {
+      // Reset all revealed bonuses
+      await db
+        .update(dailyBonusSimple)
+        .set({
+          revealed: false,
+          // Keep bonus_tickets as-is to maintain history
+        })
+        .where(eq(dailyBonusSimple.revealed, true));
+    }
+    
+    console.log(`[STORAGE] Reset ${count} revealed daily bonuses`);
+    return count;
   }
 
   async deleteDailyBonus(userId: number, date?: string): Promise<boolean> {
@@ -635,19 +717,30 @@ export class DatabaseStorage implements IStorage {
     const familyId = parent.family_id || parentId;
     console.log(`[CREATE_CHILD] Using family_id: ${familyId}`);
 
-    // generate unique username e.g. parent1_child_<rand>
-    const rand = Math.random().toString(36).slice(2, 8);
-    const username = `${parent.username}_child_${rand}`;
+    // Generate unique username with collision avoidance
+    let username: string = "";
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    while (attempts < maxAttempts) {
+      const uniqueId = nanoid(6);
+      username = `${parent.username}_child_${uniqueId}`;
+      
+      // Check if username already exists
+      const existing = await this.getUserByUsername(username);
+      if (!existing) break;
+      
+      attempts++;
+    }
+    
+    if (attempts === maxAttempts || !username) {
+      throw new Error("Failed to generate unique username after multiple attempts");
+    }
 
-    // random pastel gradient (simple hash from rand)
-    const gradients = [
-      "from-pink-500/30 to-indigo-300/30",
-      "from-amber-400/30 to-rose-300/30",
-      "from-lime-400/30 to-teal-300/30",
-      "from-sky-400/30 to-fuchsia-300/30",
+    // Pick random gradient from allowed list
+    const banner_color_preference = CHILD_BANNER_GRADIENTS[
+      Math.floor(Math.random() * CHILD_BANNER_GRADIENTS.length)
     ];
-    const banner_color_preference =
-      gradients[rand.charCodeAt(0) % gradients.length];
 
     try {
       const [child] = await db
@@ -693,6 +786,10 @@ export class DatabaseStorage implements IStorage {
       
       throw error;
     }
+  }
+
+  async insertChildForParent(parentId: number, name: string): Promise<User> {
+    return this.createChildForParent(parentId, { name });
   }
 
   async updateChildForParent(
@@ -887,6 +984,124 @@ export class DatabaseStorage implements IStorage {
     return !!result;
   }
 
+  // Chore completion operations
+  async logChoreCompletion(choreId: number, userId: number): Promise<ChoreCompletion> {
+    // Check if this chore was already completed today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const existing = await db
+      .select()
+      .from(choreCompletions)
+      .where(
+        and(
+          eq(choreCompletions.chore_id, choreId),
+          eq(choreCompletions.user_id, userId),
+          gte(choreCompletions.completion_datetime, today),
+          lt(choreCompletions.completion_datetime, tomorrow)
+        )
+      )
+      .limit(1);
+
+    // If already completed today, return the existing completion
+    if (existing.length > 0) {
+      console.log(`Chore ${choreId} already completed today by user ${userId}`);
+      return existing[0];
+    }
+
+    // Otherwise, create new completion
+    const [completion] = await db
+      .insert(choreCompletions)
+      .values({
+        chore_id: choreId,
+        user_id: userId,
+      })
+      .returning();
+    return completion;
+  }
+
+  async getChoreStatusForUser(userId: number): Promise<(Chore & { completed: boolean; boostPercent?: number })[]> {
+    // Get all active chores
+    const allChores = await this.getChores(true);
+    
+    // Get today's date for checking completions
+    const today = new Date();
+    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    // Get today's completions for this user
+    const todayCompletions = await db
+      .select({ chore_id: choreCompletions.chore_id })
+      .from(choreCompletions)
+      .where(
+        and(
+          eq(choreCompletions.user_id, userId),
+          gte(choreCompletions.completion_datetime, startOfToday)
+        )
+      );
+    
+    // Create a set of completed chore IDs for fast lookup
+    const completedChoreIds = new Set(todayCompletions.map(c => c.chore_id));
+    
+    // Get the user's active goal if they have one
+    const activeGoal = await this.getActiveGoalByUser(userId);
+    
+    // Return chores with completion status and boost percentage
+    return allChores.map(chore => ({
+      ...chore,
+      completed: completedChoreIds.has(chore.id),
+      boostPercent: activeGoal ? 
+        calculateBoostPercent(chore.base_tickets, activeGoal.product.price_cents) : 
+        undefined,
+    }));
+  }
+
+  async resetExpiredCompletions(): Promise<number> {
+    const now = new Date();
+    
+    // Calculate cutoff dates for different recurrence types
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const oneMonthAgo = new Date(now.getTime() - 31 * 24 * 60 * 60 * 1000);
+    
+    // Delete expired completions based on chore recurrence
+    // Daily chores: delete completions older than 1 day
+    const dailyResult = await db
+      .delete(choreCompletions)
+      .where(
+        and(
+          sql`${choreCompletions.chore_id} IN (SELECT id FROM chores WHERE recurrence = 'daily')`,
+          lt(choreCompletions.completion_datetime, oneDayAgo)
+        )
+      );
+    
+    // Weekly chores: delete completions older than 7 days
+    const weeklyResult = await db
+      .delete(choreCompletions)
+      .where(
+        and(
+          sql`${choreCompletions.chore_id} IN (SELECT id FROM chores WHERE recurrence = 'weekly')`,
+          lt(choreCompletions.completion_datetime, oneWeekAgo)
+        )
+      );
+    
+    // Monthly chores: delete completions older than 31 days
+    const monthlyResult = await db
+      .delete(choreCompletions)
+      .where(
+        and(
+          sql`${choreCompletions.chore_id} IN (SELECT id FROM chores WHERE recurrence = 'monthly')`,
+          lt(choreCompletions.completion_datetime, oneMonthAgo)
+        )
+      );
+    
+    // Return total number of deleted rows
+    const totalDeleted = (dailyResult.rowCount || 0) + (weeklyResult.rowCount || 0) + (monthlyResult.rowCount || 0);
+    console.log(`[CHORE_RESET] Deleted ${totalDeleted} expired chore completions`);
+    return totalDeleted;
+  }
+
   // Product operations
   async getProduct(id: number): Promise<Product | undefined> {
     const results = await db.select().from(products).where(eq(products.id, id));
@@ -928,11 +1143,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createProduct(insertProduct: InsertProduct): Promise<Product> {
-    // Ensure price_locked_cents is set if not provided
     const productData = {
       ...insertProduct,
-      price_locked_cents:
-        insertProduct.price_locked_cents || insertProduct.price_cents,
       last_checked: new Date(),
     };
 
@@ -945,14 +1157,6 @@ export class DatabaseStorage implements IStorage {
     update: Partial<InsertProduct>,
   ): Promise<Product | undefined> {
     const updateData = { ...update } as any;
-
-    // Keep locked price in sync when price changes unless explicitly provided
-    if (
-      update.price_cents !== undefined &&
-      update.price_locked_cents === undefined
-    ) {
-      updateData.price_locked_cents = update.price_cents;
-    }
 
     const [updatedProduct] = await db
       .update(products)
@@ -1007,8 +1211,8 @@ export class DatabaseStorage implements IStorage {
         id: goals.id,
         user_id: goals.user_id,
         product_id: goals.product_id,
-        tickets_saved: goals.tickets_saved,
         is_active: goals.is_active,
+        purchased_at: goals.purchased_at,
         product: products,
       })
       .from(goals)
@@ -1030,8 +1234,8 @@ export class DatabaseStorage implements IStorage {
         id: goals.id,
         user_id: goals.user_id,
         product_id: goals.product_id,
-        tickets_saved: goals.tickets_saved,
         is_active: goals.is_active,
+        purchased_at: goals.purchased_at,
         product: products,
       })
       .from(goals)
@@ -1052,7 +1256,6 @@ export class DatabaseStorage implements IStorage {
 
     const goalData = {
       ...insertGoal,
-      tickets_saved: 0,
       is_active: true,
     };
 
@@ -1094,15 +1297,8 @@ export class DatabaseStorage implements IStorage {
           activeGoal || "None",
         );
 
-        // Determine tickets to transfer
-        let ticketsToTransfer = 0;
+        // Deactivate previous active goal if different
         if (activeGoal && activeGoal.id !== id) {
-          ticketsToTransfer = activeGoal.tickets_saved ?? 0;
-          console.log(
-            `[GOAL_DEBUG] Will transfer ${ticketsToTransfer} tickets from goal ${activeGoal.id} to goal ${id}`,
-          );
-
-          // First, deactivate the previously active goal
           console.log(
             `[GOAL_DEBUG] Deactivating previous active goal ${activeGoal.id}`,
           );
@@ -1112,23 +1308,19 @@ export class DatabaseStorage implements IStorage {
             .where(eq(goals.id, activeGoal.id));
         }
 
-        // Now, update the current goal with the transferred tickets and activate it
-        console.log(
-          `[GOAL_DEBUG] Activating goal ${id} with ${ticketsToTransfer} tickets`,
-        );
+        // Activate the current goal
+        console.log(`[GOAL_DEBUG] Activating goal ${id}`);
         const [updatedGoal] = await db
           .update(goals)
           .set({
             is_active: true,
-            tickets_saved: ticketsToTransfer,
           })
           .where(eq(goals.id, id))
           .returning();
 
         if (updatedGoal) {
           console.log(
-            `[GOAL_DEBUG] Successfully activated goal ${id} with tickets:`,
-            updatedGoal.tickets_saved,
+            `[GOAL_DEBUG] Successfully activated goal ${id}`,
           );
         }
 
@@ -1220,82 +1412,7 @@ export class DatabaseStorage implements IStorage {
         return false;
       }
 
-      // If the transaction is of type 'earn' and has positive delta, we need to update goals
-      if (transaction.type === "earn" && transaction.delta > 0) {
-        // If this transaction directly affected a goal, update that goal
-        if (transaction.goal_id) {
-          // Get the goal
-          const goal = await this.getGoal(transaction.goal_id);
-          if (goal) {
-            // Subtract the tickets from the goal
-            const updatedTicketsSaved = Math.max(
-              0,
-              goal.tickets_saved - transaction.delta,
-            );
-            await this.updateGoal(goal.id, {
-              tickets_saved: updatedTicketsSaved,
-            });
-          }
-        }
-        // If the transaction doesn't have a goal_id but the user has an active goal, update that
-        else {
-          const activeGoal = await this.getActiveGoalByUser(
-            transaction.user_id,
-          );
-          if (activeGoal) {
-            // Instead of just subtracting, recalculate the total from all transactions
-            // Get all earn transactions for this user
-            const earnTransactions = await db
-              .select()
-              .from(transactions)
-              .where(
-                and(
-                  eq(transactions.user_id, transaction.user_id),
-                  eq(transactions.type, "earn"),
-                  ne(transactions.id, transaction.id), // Exclude the transaction being deleted
-                ),
-              );
-
-            // Calculate total tickets earned
-            const totalEarned = earnTransactions.reduce(
-              (sum, tx) => sum + tx.delta,
-              0,
-            );
-
-            // Calculate total spent on goals
-            const spendTransactions = await db
-              .select()
-              .from(transactions)
-              .where(
-                and(
-                  eq(transactions.user_id, transaction.user_id),
-                  eq(transactions.type, "spend"),
-                ),
-              );
-
-            const totalSpent = spendTransactions.reduce(
-              (sum, tx) => sum + Math.abs(tx.delta),
-              0,
-            );
-
-            // Calculate how many tickets should be in the goal (remaining balance)
-            const balance = await this.getUserBalance(transaction.user_id);
-            const ticketsForGoal = Math.max(
-              0,
-              totalEarned - totalSpent - balance,
-            );
-
-            console.log(
-              `Recalculated goal tickets: total earned ${totalEarned}, total spent ${totalSpent}, current balance ${balance}, tickets for goal ${ticketsForGoal}`,
-            );
-
-            // Update the goal with recalculated amount
-            await this.updateGoal(activeGoal.id, {
-              tickets_saved: ticketsForGoal,
-            });
-          }
-        }
-      }
+      // No longer need to update tickets_saved when deleting transactions
 
       // If this transaction is for completing a chore, we need to check if it was a daily bonus chore
       // and reset the revealed flag in the dailyBonus table
@@ -1450,61 +1567,7 @@ export class DatabaseStorage implements IStorage {
     const newBalance = await this.getUserBalance(user_id);
     console.log(`[TRANSACTION] New balance for user ${user_id}: ${newBalance}`);
 
-    // Always sync the active goal with the latest total
-    try {
-      // Get the active goal for the user
-      const activeGoal = await this.getActiveGoalByUser(transaction.user_id);
-
-      if (activeGoal) {
-        console.log(
-          `[TRANSACTION] User ${transaction.user_id} has active goal ${activeGoal.id} with tickets_saved: ${activeGoal.tickets_saved}`,
-        );
-
-        // If this is a spend transaction on a specific goal, set it to 0
-        if (
-          transaction.type === "spend" &&
-          transaction.goal_id &&
-          transaction.goal_id === activeGoal.id
-        ) {
-          console.log(
-            `[TRANSACTION] Setting active goal ${activeGoal.id} tickets_saved to 0 because it's being spent directly`,
-          );
-          await db
-            .update(goals)
-            .set({ tickets_saved: 0 })
-            .where(eq(goals.id, activeGoal.id));
-        } else {
-          // For all other cases, recalculate the goal progress using all earn/spend transactions
-          // This ensures goal progress is always in sync with user balance
-          console.log(
-            `[TRANSACTION] Recalculating goal progress for goal ${activeGoal.id}`,
-          );
-
-          // Ensure goal progress never goes below 0 or exceeds current balance
-          const newTicketsSaved = Math.min(
-            Math.max(0, newBalance),
-            Math.ceil(
-              (activeGoal.product.price_locked_cents || 0) / TICKET_CENT_VALUE,
-            ),
-          );
-
-          console.log(
-            `[TRANSACTION] Updating active goal ${activeGoal.id} tickets_saved from ${activeGoal.tickets_saved} to ${newTicketsSaved}`,
-          );
-
-          await db
-            .update(goals)
-            .set({ tickets_saved: newTicketsSaved })
-            .where(eq(goals.id, activeGoal.id));
-        }
-      } else {
-        console.log(
-          `[TRANSACTION] No active goal found for user ${transaction.user_id}`,
-        );
-      }
-    } catch (error) {
-      console.error(`[TRANSACTION] Error updating goal progress: ${error}`);
-    }
+    // No longer need to update tickets_saved - progress is calculated from balance
 
     return transaction;
   }

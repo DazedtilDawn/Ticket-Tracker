@@ -24,8 +24,6 @@ describe("DELETE /api/family/children/:childId", () => {
 
   let parentToken: string;
   let childId: number;
-  let childUsername: string;
-  let childPassword: string;
 
   beforeAll(async () => {
     // Create a test app instance
@@ -63,8 +61,6 @@ describe("DELETE /api/family/children/:childId", () => {
 
     // Store the child's info
     childId = childRes.body.id;
-    childUsername = childRes.body.username;
-    childPassword = childRes.body.password;
   });
 
   afterAll(() => {
@@ -151,7 +147,6 @@ describe("DELETE /api/family/children/:childId - permission tests", () => {
   let parent1Token: string;
   let parent2Token: string;
   let childId: number;
-  let childToken: string;
 
   beforeAll(async () => {
     // Create a test app instance
@@ -193,16 +188,7 @@ describe("DELETE /api/family/children/:childId - permission tests", () => {
 
     childId = childRes.body.id;
 
-    // Login as child
-    const childLoginRes = await request(app)
-      .post("/api/auth/login")
-      .send({
-        username: childRes.body.username,
-        password: childRes.body.password,
-      })
-      .expect(200);
-
-    childToken = childLoginRes.body.token;
+    // Children can no longer login directly, so we'll skip setting childToken
   });
 
   afterAll(() => {
@@ -218,12 +204,11 @@ describe("DELETE /api/family/children/:childId - permission tests", () => {
     expect(response.body.message).toContain("does not belong");
   });
 
-  test("returns 403 when child tries to delete self", async () => {
+  test("returns 401 when no auth token provided", async () => {
     const response = await request(app)
       .delete(`/api/family/children/${childId}`)
-      .set("Authorization", `Bearer ${childToken}`)
-      .expect(403);
+      .expect(401);
 
-    expect(response.body.message).toBe("Only parents may delete child profiles");
+    expect(response.body.message).toBe("Authentication required");
   });
 });

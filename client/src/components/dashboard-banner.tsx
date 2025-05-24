@@ -85,7 +85,10 @@ export default function DashboardBanner({
       formData.append("bannerImage", file);
 
       // Send the file to the banner image endpoint with user ID
-      const userId = user?.id || 5; // Default to Kiki (ID 5) if no user found
+      const userId = user?.id;
+      if (!userId) {
+        throw new Error("User ID not found");
+      }
       console.log(`Uploading banner for user ID: ${userId}`);
 
       const response = await fetch(`/api/users/banner-image?userId=${userId}`, {
@@ -120,11 +123,8 @@ export default function DashboardBanner({
             newBannerUrl,
           );
 
-          // Update banner URL in component state
-          document.querySelectorAll("[data-banner-container]").forEach((el) => {
-            (el as HTMLElement).style.backgroundImage =
-              `url('${newBannerUrl}')`;
-          });
+          // Refresh user data to get the updated banner URL
+          await authStore.refreshUser();
         }
       } catch (e) {
         console.warn("Response was not valid JSON:", responseData);
@@ -136,10 +136,7 @@ export default function DashboardBanner({
         description: "Your dashboard banner has been updated successfully",
       });
 
-      // Force reload the page to show the new banner after a short delay
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+      // User data has been refreshed, banner will update automatically
     } catch (error) {
       console.error("Error uploading banner image:", error);
       toast({
@@ -164,7 +161,7 @@ export default function DashboardBanner({
             ? ""
             : user?.banner_color_preference
             ? `bg-gradient-to-r ${user.banner_color_preference}`
-            : defaultBannerColor
+            : `bg-gradient-to-r ${defaultBannerColor || "from-blue-400 to-purple-600"}`
         } overflow-hidden`}
         style={{
           // Only use banner image if available, otherwise gradient is handled by className
