@@ -3,11 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Trophy, Gift, ChevronDown } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
@@ -35,36 +35,36 @@ export default function FamilyCatalogItem({ product }: FamilyCatalogItemProps) {
   const { user } = useAuthStore();
   const [selectedChild, setSelectedChild] = useState<User | null>(null);
   const [isAwardDialogOpen, setIsAwardDialogOpen] = useState(false);
-  
+
   const isParent = user?.role === "parent";
-  
+
   // Fetch children for award dropdown (only if parent)
   const { data: users = [] } = useQuery<User[]>({
     queryKey: ["/api/users"],
     enabled: isParent,
   });
-  
-  const children = users.filter(u => u.role === "child");
-  
+
+  const children = users.filter((u) => u.role === "child");
+
   const priceInDollars = product.price_cents / 100;
-  
+
   const handleAwardToChild = (child: User) => {
     setSelectedChild(child);
     setIsAwardDialogOpen(true);
   };
-  
+
   const handleCloseAwardDialog = () => {
     setIsAwardDialogOpen(false);
     setSelectedChild(null);
   };
-  
+
   return (
     <>
       <Card className="overflow-hidden hover:shadow-lg transition-shadow">
         <CardHeader className="pb-2">
           <div className="flex items-start gap-3">
             {product.image_url ? (
-              <img 
+              <img
                 src={product.image_url}
                 alt={product.title}
                 className="w-20 h-20 object-cover rounded-lg bg-gray-100"
@@ -84,13 +84,13 @@ export default function FamilyCatalogItem({ product }: FamilyCatalogItemProps) {
             </div>
           </div>
         </CardHeader>
-        
+
         <CardContent className="pt-0">
           {isParent && children.length > 0 ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="w-full bg-yellow-50 hover:bg-yellow-100 border-yellow-200"
                 >
                   <Trophy className="h-4 w-4 mr-2 text-yellow-600" />
@@ -100,7 +100,7 @@ export default function FamilyCatalogItem({ product }: FamilyCatalogItemProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56">
                 {children.map((child) => (
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     key={child.id}
                     onClick={() => handleAwardToChild(child)}
                     className="cursor-pointer"
@@ -116,17 +116,17 @@ export default function FamilyCatalogItem({ product }: FamilyCatalogItemProps) {
               {isParent ? "No children found" : "Available in catalog"}
             </div>
           )}
-          
+
           {product.amazon_url && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="w-full mt-2 text-xs"
               asChild
             >
-              <a 
-                href={product.amazon_url} 
-                target="_blank" 
+              <a
+                href={product.amazon_url}
+                target="_blank"
                 rel="noopener noreferrer"
               >
                 View on Amazon
@@ -135,7 +135,7 @@ export default function FamilyCatalogItem({ product }: FamilyCatalogItemProps) {
           )}
         </CardContent>
       </Card>
-      
+
       {/* Award Trophy Dialog */}
       {selectedChild && (
         <AwardTrophyDialog

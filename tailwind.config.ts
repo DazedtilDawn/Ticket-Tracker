@@ -79,27 +79,35 @@ export default {
             height: "0",
           },
         },
-        "bob": {
+        bob: {
           "0%, 100%": { transform: "translateY(-2px) translateX(-50%)" },
           "50%": { transform: "translateY(2px) translateX(-50%)" },
         },
         "confetti-fall": {
-          "0%": { transform: "translateY(-100px) rotate(0deg) scale(1)", opacity: "1" },
-          "100%": { transform: "translateY(100px) rotate(360deg) scale(0)", opacity: "0" },
+          "0%": {
+            transform: "translateY(-100px) rotate(0deg) scale(1)",
+            opacity: "1",
+          },
+          "100%": {
+            transform: "translateY(100px) rotate(360deg) scale(0)",
+            opacity: "0",
+          },
         },
         "confetti-pop": {
-          "0%": { 
+          "0%": {
             transform: "translate(-50%, -50%) scale(0) rotate(0deg)",
-            opacity: "0"
+            opacity: "0",
           },
-          "50%": { 
-            transform: "translate(calc(-50% + var(--tx, 0px)), calc(-50% + var(--ty, 0px))) scale(1.2) rotate(var(--r, 0deg))",
-            opacity: "1"
+          "50%": {
+            transform:
+              "translate(calc(-50% + var(--tx, 0px)), calc(-50% + var(--ty, 0px))) scale(1.2) rotate(var(--r, 0deg))",
+            opacity: "1",
           },
-          "100%": { 
-            transform: "translate(calc(-50% + var(--tx, 0px) * 2), calc(-50% + var(--ty, 0px) * 2)) scale(0) rotate(calc(var(--r, 0deg) + 180deg))",
-            opacity: "0"
-          }
+          "100%": {
+            transform:
+              "translate(calc(-50% + var(--tx, 0px) * 2), calc(-50% + var(--ty, 0px) * 2)) scale(0) rotate(calc(var(--r, 0deg) + 180deg))",
+            opacity: "0",
+          },
         },
         "wheel-result-appear": {
           "0%": { transform: "scale(0.5)", opacity: "0" },
@@ -114,7 +122,7 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "bob": "bob 1s ease-in-out infinite",
+        bob: "bob 1s ease-in-out infinite",
         "confetti-fall": "confetti-fall 2s ease-out forwards",
         "confetti-pop": "confetti-pop 1s ease-out forwards",
         "wheel-result-appear": "wheel-result-appear 0.5s ease-out forwards",

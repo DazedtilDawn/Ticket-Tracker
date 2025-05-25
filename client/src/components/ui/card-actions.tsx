@@ -1,12 +1,12 @@
-import React from 'react';
-import { MoreVertical } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { MoreVertical } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   Drawer,
   DrawerClose,
@@ -15,8 +15,8 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from '@/components/ui/drawer';
-import { useMobile } from '@/context/MobileContext';
+} from "@/components/ui/drawer";
+import { useMobile } from "@/context/MobileContext";
 
 interface ActionItem {
   label: string;
@@ -37,7 +37,12 @@ export function CardActions({ items, triggerIcon }: CardActionsProps) {
     return (
       <Drawer>
         <DrawerTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Open actions">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            aria-label="Open actions"
+          >
             {triggerIcon || <MoreVertical className="h-4 w-4" />}
           </Button>
         </DrawerTrigger>
@@ -50,7 +55,7 @@ export function CardActions({ items, triggerIcon }: CardActionsProps) {
               <DrawerClose key={index} asChild>
                 <Button
                   variant="outline"
-                  className={`w-full justify-start mb-2 ${item.className || ''}`}
+                  className={`w-full justify-start mb-2 ${item.className || ""}`}
                   onClick={item.onSelect}
                 >
                   {item.icon && <span className="mr-2">{item.icon}</span>}
@@ -72,7 +77,12 @@ export function CardActions({ items, triggerIcon }: CardActionsProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Open actions">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          aria-label="Open actions"
+        >
           {triggerIcon || <MoreVertical className="h-4 w-4" />}
         </Button>
       </DropdownMenuTrigger>
@@ -81,7 +91,7 @@ export function CardActions({ items, triggerIcon }: CardActionsProps) {
           <DropdownMenuItem
             key={index}
             onClick={item.onSelect}
-            className={`cursor-pointer ${item.className || ''}`}
+            className={`cursor-pointer ${item.className || ""}`}
           >
             {item.icon && <span className="mr-2">{item.icon}</span>}
             {item.label}

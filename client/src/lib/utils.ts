@@ -1,9 +1,9 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
-import { TICKET_DOLLAR_VALUE } from "../../../config/business"
- 
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+import { TICKET_DOLLAR_VALUE } from "../../../config/business";
+
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 /**
@@ -19,15 +19,15 @@ export function ticketsToUSD(tickets: number): string {
  */
 export function formatTierStyleClass(tier: string): string {
   switch (tier?.toLowerCase()) {
-    case 'easy':
-      return 'bg-green-500';
-    case 'medium':
-      return 'bg-orange-500';
-    case 'hard':
-      return 'bg-red-500';
-    case 'special':
-      return 'bg-purple-500';
+    case "easy":
+      return "bg-green-500";
+    case "medium":
+      return "bg-orange-500";
+    case "hard":
+      return "bg-red-500";
+    case "special":
+      return "bg-purple-500";
     default:
-      return 'bg-gray-500';
+      return "bg-gray-500";
   }
 }

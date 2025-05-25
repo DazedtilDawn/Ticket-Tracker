@@ -22,11 +22,13 @@ The simplest approach is to use the PWA features we've already implemented:
 4. Choose a name for the app icon and confirm
 
 **Advantages:**
+
 - No extra development needed
 - App updates automatically when you update the web version
 - Works on all Android devices with Chrome
 
 **Limitations:**
+
 - Less integrated with the Android system
 - Can't use advanced Android features
 
@@ -34,7 +36,7 @@ The simplest approach is to use the PWA features we've already implemented:
 
 For a more native experience, use the WebView wrapper we've created:
 
-1. Create a new Android Studio project 
+1. Create a new Android Studio project
 2. Copy files from the `/public/android` folder into your project
 3. Update the `baseUrl` in `MainActivity.java` to your deployed app URL
 4. Build and sign the app for distribution

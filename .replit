@@ -37,5 +37,44 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
+localPort = 5173
+externalPort = 5173
+
+[[ports]]
+localPort = 18704
+externalPort = 6000
+exposeLocalhost = true
+
+[[ports]]
+localPort = 24029
+externalPort = 6800
+exposeLocalhost = true
+
+[[ports]]
+localPort = 30249
+externalPort = 3001
+exposeLocalhost = true
+
+[[ports]]
+localPort = 34481
+externalPort = 4200
+exposeLocalhost = true
+
+[[ports]]
+localPort = 52527
+externalPort = 3003
+exposeLocalhost = true
+
+[[ports]]
 localPort = 55155
 externalPort = 3000
+
+[[ports]]
+localPort = 57257
+externalPort = 3002
+exposeLocalhost = true
+
+[[ports]]
+localPort = 60062
+externalPort = 5000
+exposeLocalhost = true

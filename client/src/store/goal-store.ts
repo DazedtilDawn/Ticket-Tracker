@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { apiRequest } from '@/lib/queryClient';
+import { create } from "zustand";
+import { apiRequest } from "@/lib/queryClient";
 
 interface Product {
   id: number;
@@ -15,7 +15,7 @@ interface Goal {
   id: number;
   user_id: number;
   product_id: number;
-  tickets_saved: number;
+  tickets_saved?: number; // Now calculated from balance
   is_active: boolean;
   product?: Product;
   progress?: number;
@@ -37,24 +37,24 @@ export const useGoalStore = create<GoalState>((set, get) => ({
   activeGoal: null,
   isLoading: false,
   error: null,
-  
+
   fetchGoals: async () => {
     set({ isLoading: true, error: null });
-    
+
     try {
-      const data = await apiRequest('/api/goals', { method: 'GET' });
+      const data = await apiRequest("/api/goals", { method: "GET" });
       set({ goals: data, isLoading: false });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       set({ error: message, isLoading: false });
     }
   },
-  
+
   fetchActiveGoal: async () => {
     set({ isLoading: true, error: null });
-    
+
     try {
-      const data = await apiRequest('/api/goals/active', { method: 'GET' });
+      const data = await apiRequest("/api/goals/active", { method: "GET" });
       set({ activeGoal: data, isLoading: false });
     } catch (error: any) {
       if (error?.status === 404) {
@@ -66,22 +66,22 @@ export const useGoalStore = create<GoalState>((set, get) => ({
       }
     }
   },
-  
+
   createGoal: async (goal) => {
     set({ isLoading: true, error: null });
-    
+
     try {
-      const newGoal = await apiRequest('/api/goals', {
-        method: 'POST',
+      const newGoal = await apiRequest("/api/goals", {
+        method: "POST",
         body: JSON.stringify(goal),
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       });
-      
-      set(state => ({ 
+
+      set((state) => ({
         goals: [...state.goals, newGoal],
-        isLoading: false 
+        isLoading: false,
       }));
-      
+
       // If this is an active goal, update activeGoal
       if (newGoal.is_active) {
         set({ activeGoal: newGoal });
@@ -91,19 +91,19 @@ export const useGoalStore = create<GoalState>((set, get) => ({
       set({ error: message, isLoading: false });
     }
   },
-  
+
   activateGoal: async (goalId) => {
     set({ isLoading: true, error: null });
-    
+
     try {
       const updatedGoal = await apiRequest(`/api/goals/${goalId}/activate`, {
-        method: 'PUT',
+        method: "PUT",
         body: JSON.stringify({}),
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       });
-      
-      set(state => ({ 
-        goals: state.goals.map(goal => {
+
+      set((state) => ({
+        goals: state.goals.map((goal) => {
           if (goal.id === goalId) {
             return { ...goal, is_active: true };
           } else if (goal.is_active) {
@@ -112,11 +112,11 @@ export const useGoalStore = create<GoalState>((set, get) => ({
           return goal;
         }),
         activeGoal: updatedGoal,
-        isLoading: false 
+        isLoading: false,
       }));
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       set({ error: message, isLoading: false });
     }
-  }
+  },
 }));

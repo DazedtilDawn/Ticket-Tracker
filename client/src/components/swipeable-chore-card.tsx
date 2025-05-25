@@ -22,7 +22,7 @@ export default function SwipeableChoreCard(props: ChoreCardProps) {
   const [isShowingUndo, setIsShowingUndo] = useState(false);
   const [isUndoing, setIsUndoing] = useState(false);
   const undoTimerRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Don't enable swipe for mouse/trackpad devices
   const disableSwipe = useMemo(() => {
     if (typeof window === "undefined") return false;
@@ -32,21 +32,21 @@ export default function SwipeableChoreCard(props: ChoreCardProps) {
   // Handle chore completion with undo notification
   const handleComplete = async () => {
     if (disableSwipe || props.chore.completed) return;
-    
+
     try {
       // Visual and haptic feedback
       navigator.vibrate?.(24);
       confetti({ particleCount: 60, spread: 60 });
-      
+
       // Actually complete the chore
       const result = await props.onComplete(props.chore.id);
-      
+
       // Extract the transaction ID from the API response
       let transactionId = null;
-      
+
       // Log the response structure to debug
       console.log("Chore completion response:", result);
-      
+
       // Handle different response formats
       if (result?.transaction?.id) {
         // Direct transaction object
@@ -58,40 +58,50 @@ export default function SwipeableChoreCard(props: ChoreCardProps) {
         // Direct ID (some API responses might have this format)
         transactionId = result.id;
       }
-      
+
       console.log("Extracted transaction ID:", transactionId);
-      
+
       // Store the completed chore for potential undo
       const completedChore: CompletedChore = {
         choreId: props.chore.id,
         timestamp: Date.now(),
-        transactionId: transactionId
+        transactionId: transactionId,
       };
-      
+
       // Remove any previous instances of this chore
-      const existingIndex = recentlyCompletedChores.findIndex(c => c.choreId === props.chore.id);
+      const existingIndex = recentlyCompletedChores.findIndex(
+        (c) => c.choreId === props.chore.id,
+      );
       if (existingIndex >= 0) {
         recentlyCompletedChores.splice(existingIndex, 1);
       }
-      
+
       // Add to recently completed chores
       recentlyCompletedChores.push(completedChore);
-      
+
       // Show the undo UI
       setIsShowingUndo(true);
-      
+
       // Set a timer to hide the undo UI after the undo window expires
       if (undoTimerRef.current) {
         clearTimeout(undoTimerRef.current);
       }
-      
+
       undoTimerRef.current = setTimeout(() => {
         setIsShowingUndo(false);
       }, MAX_UNDO_TIME_MS);
-      
+
       // Check for bonus trigger
-      if (result && result.bonus_triggered && props.onBonusComplete && result.daily_bonus_id) {
-        console.log("Bonus triggered from API response:", result.daily_bonus_id);
+      if (
+        result &&
+        result.bonus_triggered &&
+        props.onBonusComplete &&
+        result.daily_bonus_id
+      ) {
+        console.log(
+          "Bonus triggered from API response:",
+          result.daily_bonus_id,
+        );
         props.onBonusComplete(result.daily_bonus_id, props.chore.name);
       }
     } catch (error) {
@@ -99,85 +109,96 @@ export default function SwipeableChoreCard(props: ChoreCardProps) {
       toast({
         title: "Couldn't complete chore",
         description: "Please try again",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
-  
+
   // Handle the undo action
   const handleUndo = async () => {
     // Find the most recent completion of this chore
-    const choreToUndo = recentlyCompletedChores.find(c => c.choreId === props.chore.id);
-    
+    const choreToUndo = recentlyCompletedChores.find(
+      (c) => c.choreId === props.chore.id,
+    );
+
     if (!choreToUndo) {
       setIsShowingUndo(false);
       return;
     }
-    
+
     if (isUndoing) return;
-    
+
     setIsUndoing(true);
-    
+
     try {
       // If we don't have a transaction ID, we can't directly delete it
       if (!choreToUndo.transactionId) {
         console.error("No transaction ID available for undo operation");
         throw new Error("Couldn't find the transaction to undo");
       }
-      
+
       console.log("Attempting to undo transaction:", choreToUndo.transactionId);
-      
+
       // Use TanStack Query's mutation functionality for better error handling
-      const { queryClient, apiRequest } = await import('@/lib/queryClient');
-      
+      const { queryClient, apiRequest } = await import("@/lib/queryClient");
+
       // Make the API request to delete the transaction
-      const result = await apiRequest(`/api/transactions/${choreToUndo.transactionId}`, {
-        method: 'DELETE'
-      });
-      
-      console.log("Successfully deleted transaction:", choreToUndo.transactionId, result);
-      
+      const result = await apiRequest(
+        `/api/transactions/${choreToUndo.transactionId}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      console.log(
+        "Successfully deleted transaction:",
+        choreToUndo.transactionId,
+        result,
+      );
+
       // Remove from recently completed chores
-      const index = recentlyCompletedChores.findIndex(c => c.choreId === props.chore.id);
+      const index = recentlyCompletedChores.findIndex(
+        (c) => c.choreId === props.chore.id,
+      );
       if (index >= 0) {
         recentlyCompletedChores.splice(index, 1);
       }
-      
+
       toast({
         title: "Chore completion undone",
-        description: "The chore has been marked as incomplete again"
+        description: "The chore has been marked as incomplete again",
       });
-      
+
       // Hide the undo UI
       setIsShowingUndo(false);
-      
+
       // Refresh all the relevant data
-      queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/chores'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
-      
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/chores"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+
       // Force immediate refetches
       setTimeout(() => {
-        queryClient.refetchQueries({ queryKey: ['/api/stats'] });
-        queryClient.refetchQueries({ queryKey: ['/api/chores'] });
+        queryClient.refetchQueries({ queryKey: ["/api/stats"] });
+        queryClient.refetchQueries({ queryKey: ["/api/chores"] });
       }, 100);
     } catch (error) {
       console.error("Failed to undo chore completion:", error);
       toast({
         title: "Couldn't undo",
         description: "Please try again",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsUndoing(false);
     }
   };
-  
+
   // Dismiss the undo notification
   const dismissUndo = () => {
     setIsShowingUndo(false);
   };
-  
+
   // Clean up timer on unmount
   useEffect(() => {
     return () => {
@@ -189,14 +210,10 @@ export default function SwipeableChoreCard(props: ChoreCardProps) {
 
   return (
     <div className="relative">
-      <Swipeable 
-        onSwipeEnd={handleComplete}
-        threshold={80}
-        direction="right"
-      >
+      <Swipeable onSwipeEnd={handleComplete} threshold={80} direction="right">
         <ChoreCard {...props} />
       </Swipeable>
-      
+
       {/* Undo toast notification (appears at the bottom of the card) */}
       {isShowingUndo && (
         <div className="absolute bottom-0 left-0 right-0 bg-green-100 dark:bg-green-900 p-3 border-t border-green-200 dark:border-green-700 rounded-b-lg shadow-lg animate-slideUp flex items-center justify-between">
@@ -210,7 +227,7 @@ export default function SwipeableChoreCard(props: ChoreCardProps) {
             <RotateCcw className="w-4 h-4 mr-1" />
             {isUndoing ? "Undoing..." : "Undo"}
           </Button>
-          
+
           <Button
             size="sm"
             variant="ghost"

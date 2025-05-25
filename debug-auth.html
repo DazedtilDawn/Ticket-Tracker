@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auth Debug</title>
+</head>
+<body>
+    <div id="debug-output"></div>
+    <script>
+        async function testAuth() {
+            const output = document.getElementById('debug-output');
+            
+            try {
+                // Test API connectivity
+                output.innerHTML += '<p>Testing API connectivity...</p>';
+                const response = await fetch('/api/users');
+                const users = await response.json();
+                output.innerHTML += `<p>✅ API works: Found ${users.length} users</p>`;
+                
+                // Test auth check endpoint
+                output.innerHTML += '<p>Testing auth check...</p>';
+                const authResponse = await fetch('/api/me');
+                output.innerHTML += `<p>Auth check status: ${authResponse.status}</p>`;
+                
+                if (authResponse.status === 401) {
+                    output.innerHTML += '<p>✅ Auth properly requires authentication</p>';
+                } else {
+                    const authData = await authResponse.json();
+                    output.innerHTML += `<p>Auth data: ${JSON.stringify(authData)}</p>`;
+                }
+                
+                // Test login
+                output.innerHTML += '<p>Testing login...</p>';
+                const loginResponse = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'parent',
+                        password: 'password'
+                    })
+                });
+                
+                if (loginResponse.ok) {
+                    const loginData = await loginResponse.json();
+                    output.innerHTML += '<p>✅ Login successful</p>';
+                } else {
+                    output.innerHTML += `<p>❌ Login failed: ${loginResponse.status}</p>`;
+                }
+                
+            } catch (error) {
+                output.innerHTML += `<p>❌ Error: ${error.message}</p>`;
+            }
+        }
+        
+        testAuth();
+    </script>
+</body>
+</html>

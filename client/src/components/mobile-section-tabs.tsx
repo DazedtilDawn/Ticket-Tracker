@@ -20,7 +20,7 @@ export default function MobileSectionTabs() {
           }
         });
       },
-      { rootMargin: "-50% 0px -50% 0px" }
+      { rootMargin: "-50% 0px -50% 0px" },
     );
     SECTIONS.forEach(({ id }) => {
       const el = document.getElementById(id);
@@ -48,7 +48,7 @@ export default function MobileSectionTabs() {
             "pb-1 appearance-none bg-transparent border-0 cursor-pointer",
             active === id
               ? "font-semibold text-primary border-b-2 border-primary"
-              : "text-muted-foreground"
+              : "text-muted-foreground",
           )}
         >
           {label}

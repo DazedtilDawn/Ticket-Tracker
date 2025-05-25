@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,7 +31,7 @@ export default function AwardTrophyDialog({
   childName,
   itemId,
   itemTitle,
-  itemImage
+  itemImage,
 }: AwardTrophyDialogProps) {
   const [customNote, setCustomNote] = useState("");
   const { toast } = useToast();
@@ -38,21 +43,21 @@ export default function AwardTrophyDialog({
         method: "POST",
         body: JSON.stringify({
           item_id: itemId,
-          custom_note: customNote.trim() || undefined
-        })
+          custom_note: customNote.trim() || undefined,
+        }),
       });
     },
     onSuccess: (response) => {
       // Invalidate the child's trophy list to show the new award
       queryClient.invalidateQueries({ queryKey: ["trophies", childId] });
-      
+
       // Show success toast
       toast({
         title: "🏆 Trophy Awarded!",
         description: `Successfully awarded "${itemTitle}" to ${childName}!`,
         variant: "default",
       });
-      
+
       // Close dialog and reset form
       onClose();
       setCustomNote("");
@@ -61,10 +66,11 @@ export default function AwardTrophyDialog({
       console.error("Award failed:", error);
       toast({
         title: "Award Failed",
-        description: error.message || "Failed to award trophy. Please try again.",
+        description:
+          error.message || "Failed to award trophy. Please try again.",
         variant: "destructive",
       });
-    }
+    },
   });
 
   const handleAward = () => {
@@ -87,13 +93,13 @@ export default function AwardTrophyDialog({
             Award Trophy to {childName}
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           {/* Item Preview */}
           <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
             {itemImage ? (
-              <img 
-                src={itemImage} 
+              <img
+                src={itemImage}
                 alt={itemTitle}
                 className="w-12 h-12 object-cover rounded"
               />
@@ -126,15 +132,15 @@ export default function AwardTrophyDialog({
 
           {/* Action Buttons */}
           <div className="flex gap-2">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={handleClose}
               disabled={awardMutation.isPending}
               className="flex-1"
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleAward}
               disabled={awardMutation.isPending}
               className="flex-1 bg-yellow-500 hover:bg-yellow-600"

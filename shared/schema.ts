@@ -67,7 +67,6 @@ export const products = pgTable("products", {
   asin: text("asin").notNull().unique(),
   image_url: text("image_url"),
   price_cents: integer("price_cents").notNull(),
-  price_locked_cents: integer("price_locked_cents"),
   last_checked: timestamp("last_checked").defaultNow(),
   camel_last_checked: timestamp("camel_last_checked"),
 });
@@ -80,8 +79,8 @@ export const goals = pgTable("goals", {
   product_id: integer("product_id")
     .notNull()
     .references(() => products.id),
-  tickets_saved: integer("tickets_saved").notNull().default(0),
   is_active: boolean("is_active").default(true),
+  purchased_at: timestamp("purchased_at", { withTimezone: true }),
 });
 
 export const transactions = pgTable("transactions", {
@@ -147,6 +146,43 @@ export const awardedItems = pgTable("awarded_items", {
   awarded_at: timestamp("awarded_at", { withTimezone: true }).defaultNow(),
 });
 
+// Chore Completions - Dedicated table for tracking when chores are completed
+export const choreCompletions = pgTable(
+  "chore_completions",
+  {
+    id: serial("id").primaryKey(),
+    chore_id: integer("chore_id")
+      .notNull()
+      .references(() => chores.id, { onDelete: "cascade" }),
+    user_id: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    completion_datetime: timestamp("completion_datetime", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => {
+    return {
+      choreUserDateIdx: uniqueIndex("chore_user_date_idx").on(
+        table.chore_id,
+        table.user_id,
+        table.completion_datetime,
+      ),
+    };
+  },
+);
+
+// Daily Bonus Simple System (BONUS-01)
+export const dailyBonusSimple = pgTable("daily_bonus_simple", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  bonus_tickets: integer("bonus_tickets").notNull(),
+  revealed: boolean("revealed").notNull().default(false),
+  assigned_at: timestamp("assigned_at", { withTimezone: true }).defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -157,6 +193,22 @@ export const insertChildSchema = z.object({
   name: z.string().min(1, "Name is required"),
   profile_image_url: z.string().url("Must be a valid URL").optional(),
 });
+
+// 🔸 Schema used when a parent updates a child profile through PUT /api/family/children/:childId
+export const updateChildSchema = z.object({
+  name: z.string().min(1, "Name is required").optional(),
+  profile_image_url: z.string().nullable().optional(),
+});
+
+/**
+ * Body for PATCH /api/family/children/:childId/archive
+ * `{ archived: boolean }`
+ */
+export const archiveChildSchema = z.object({
+  archived: z.boolean(),
+});
+
+export type ArchiveChildBody = z.infer<typeof archiveChildSchema>;
 
 export const insertChoreSchema = createInsertSchema(chores).omit({
   id: true,
@@ -169,7 +221,6 @@ export const insertProductSchema = createInsertSchema(products).omit({
 
 export const insertGoalSchema = createInsertSchema(goals).omit({
   id: true,
-  tickets_saved: true,
   is_active: true,
 });
 
@@ -257,6 +308,11 @@ export const insertAwardedItemSchema = createInsertSchema(awardedItems).omit({
   awarded_at: true,
 });
 
+export const insertChoreCompletionSchema = createInsertSchema(choreCompletions).omit({
+  id: true,
+  completion_datetime: true,
+});
+
 // Trophy award schema for awarding items to children
 export const awardItemSchema = z.object({
   item_id: z.number().int().positive("Item ID must be a positive number"),
@@ -272,6 +328,7 @@ export const spinWheelSchema = z.object({
 // Bonus spin schema for the wheel spin endpoint
 export const bonusSpinSchema = z.object({
   daily_bonus_id: z.number().int().positive(),
+  userId: z.number().int().positive().optional(), // For parent viewing as child
 });
 
 // Types
@@ -287,8 +344,12 @@ export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type DailyBonus = typeof dailyBonus.$inferSelect;
 export type InsertDailyBonus = z.infer<typeof insertDailyBonusSchema>;
+export type DailyBonusSimple = typeof dailyBonusSimple.$inferSelect;
+export type InsertDailyBonusSimple = typeof dailyBonusSimple.$inferInsert;
 export type AwardedItem = typeof awardedItems.$inferSelect;
 export type InsertAwardedItem = z.infer<typeof insertAwardedItemSchema>;
+export type ChoreCompletion = typeof choreCompletions.$inferSelect;
+export type InsertChoreCompletion = z.infer<typeof insertChoreCompletionSchema>;
 export type Login = z.infer<typeof loginSchema>;
 export type AmazonSearch = z.infer<typeof amazonSearchSchema>;
 export type ManualProduct = z.infer<typeof manualProductSchema>;

@@ -1,6 +1,6 @@
 export function scrollToHash(id: string) {
   const element = document.getElementById(id);
   if (element) {
-    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    element.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 // Define a consistent breakpoint size that matches Tailwind's md breakpoint
 const MOBILE_BREAKPOINT = 768;
@@ -8,7 +8,7 @@ export function useIsMobile() {
 
   useEffect(() => {
     // Check if the window is available (not during SSR)
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       // Initial check
       setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
 
@@ -17,17 +17,17 @@ export function useIsMobile() {
         setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
       };
 
-      window.addEventListener('resize', handleResize);
+      window.addEventListener("resize", handleResize);
 
       // Clean up
       return () => {
-        window.removeEventListener('resize', handleResize);
+        window.removeEventListener("resize", handleResize);
       };
     }
   }, []);
 
   return { isMobile };
-};
+}
 
 // Provide an alias for backward compatibility
 export const useMobile = useIsMobile;

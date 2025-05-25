@@ -12,7 +12,9 @@ interface ChildDashboardHeaderProps {
   activeGoal?: { progress: number } | null;
 }
 
-export default function ChildDashboardHeader({ activeGoal }: ChildDashboardHeaderProps) {
+export default function ChildDashboardHeader({
+  activeGoal,
+}: ChildDashboardHeaderProps) {
   const { user, isViewingAsChild } = useAuthStore();
   const { balance } = useStatsStore();
   const viewingChild = isViewingAsChild();
@@ -22,12 +24,12 @@ export default function ChildDashboardHeader({ activeGoal }: ChildDashboardHeade
   const showPurchase = viewingChild || user.role === "child";
 
   const progress = activeGoal?.progress ?? 0;
-  
+
   // Calculate estimated time remaining for goal if available
-  const estimatedTimeText = activeGoal?.progress ? 
-    activeGoal.progress >= 100 ? 
-      "Goal complete!" : 
-      `${Math.ceil((100 - activeGoal.progress) / (activeGoal.progress * 0.1))} days left` 
+  const estimatedTimeText = activeGoal?.progress
+    ? activeGoal.progress >= 100
+      ? "Goal complete!"
+      : `${Math.ceil((100 - activeGoal.progress) / (activeGoal.progress * 0.1))} days left`
     : "";
 
   return (
@@ -40,10 +42,10 @@ export default function ChildDashboardHeader({ activeGoal }: ChildDashboardHeade
             {activeGoal ? (
               <div className="flex items-center gap-3">
                 <div className="flex-shrink-0">
-                  <ProgressRing 
-                    percent={progress} 
-                    radius={32} 
-                    stroke={5} 
+                  <ProgressRing
+                    percent={progress}
+                    radius={32}
+                    stroke={5}
                     className="drop-shadow-sm"
                   >
                     <span className="text-lg font-bold text-primary-700 dark:text-primary-400">
@@ -51,7 +53,7 @@ export default function ChildDashboardHeader({ activeGoal }: ChildDashboardHeade
                     </span>
                   </ProgressRing>
                 </div>
-                
+
                 <div>
                   <h3 className="text-md font-semibold text-gray-800 dark:text-gray-200">
                     Progress to Goal
@@ -67,35 +69,34 @@ export default function ChildDashboardHeader({ activeGoal }: ChildDashboardHeade
               </p>
             )}
           </div>
-          
+
           {/* Ticket display - prominently featured */}
           <div className="flex flex-col items-end">
-            <TicketDisplay 
-              balance={balance} 
-              size="lg" 
+            <TicketDisplay
+              balance={balance}
+              size="lg"
               className="shadow-md hover:shadow-lg transition-shadow duration-300"
             />
-            
+
             {/* Spend tickets button */}
             {showPurchase && (
-              <PurchaseDialog>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="mt-2 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
-                >
-                  <Ticket className="mr-1 h-4 w-4" /> Spend Tickets
-                </Button>
-              </PurchaseDialog>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-2 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
+                onClick={() => (window.location.href = "/catalog")}
+              >
+                <Ticket className="mr-1 h-4 w-4" /> Spend Tickets
+              </Button>
             )}
           </div>
         </div>
       </div>
-      
+
       {/* Progress bar at bottom */}
       {activeGoal && (
         <div className="h-2 bg-gray-200 dark:bg-gray-700">
-          <div 
+          <div
             className="h-full bg-primary-600 dark:bg-primary-500 transition-all duration-1000 ease-in-out"
             style={{ width: `${Math.min(100, progress)}%` }}
           />

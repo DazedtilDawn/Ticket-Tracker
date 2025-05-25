@@ -1,23 +1,42 @@
-import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
-import { useAuthStore } from '@/store/auth-store';
-import { ShoppingCart, User, Ticket } from 'lucide-react';
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { useAuthStore } from "@/store/auth-store";
+import { ShoppingCart, User, Ticket } from "lucide-react";
 
 interface PurchaseDialogProps {
   productId: number;
   productTitle: string;
   ticketCost: number;
+  productImageUrl?: string;
   children: React.ReactNode;
 }
 
-export function PurchaseDialog({ productId, productTitle, ticketCost, children }: PurchaseDialogProps) {
+export function PurchaseDialog({
+  productId,
+  productTitle,
+  ticketCost,
+  productImageUrl,
+  children,
+}: PurchaseDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
   const { user, getChildUsers } = useAuthStore();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -25,13 +44,14 @@ export function PurchaseDialog({ productId, productTitle, ticketCost, children }
 
   const purchaseMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest('/api/spend', {
-        method: 'POST',
+      return apiRequest("/api/spend", {
+        method: "POST",
         body: JSON.stringify({
           tickets: ticketCost,
           user_id: selectedUserId ? parseInt(selectedUserId) : undefined,
-          reason: `Purchase: ${productTitle}`
-        })
+          reason: `Purchase: ${productTitle}`,
+          metadata: { custom_image_url: productImageUrl },
+        }),
       });
     },
     onSuccess: () => {
@@ -39,13 +59,13 @@ export function PurchaseDialog({ productId, productTitle, ticketCost, children }
         title: "Purchase Successful!",
         description: `${productTitle} purchased for ${ticketCost} tickets.`,
       });
-      
+
       // Refresh balances and transactions
-      queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
-      
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+
       setIsOpen(false);
-      setSelectedUserId('');
+      setSelectedUserId("");
     },
     onError: (error: any) => {
       toast({
@@ -53,7 +73,7 @@ export function PurchaseDialog({ productId, productTitle, ticketCost, children }
         title: "Purchase Failed",
         description: error.message || "Failed to complete purchase",
       });
-    }
+    },
   });
 
   const handlePurchase = () => {
@@ -70,9 +90,7 @@ export function PurchaseDialog({ productId, productTitle, ticketCost, children }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -80,7 +98,7 @@ export function PurchaseDialog({ productId, productTitle, ticketCost, children }
             Purchase Item
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
             <div className="flex-1">
@@ -114,19 +132,21 @@ export function PurchaseDialog({ productId, productTitle, ticketCost, children }
           )}
 
           <div className="flex gap-2 pt-4">
-            <Button 
-              variant="outline" 
-              onClick={() => setIsOpen(false)} 
+            <Button
+              variant="outline"
+              onClick={() => setIsOpen(false)}
               className="flex-1"
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handlePurchase}
               disabled={purchaseMutation.isPending}
               className="flex-1"
             >
-              {purchaseMutation.isPending ? 'Processing...' : 'Confirm Purchase'}
+              {purchaseMutation.isPending
+                ? "Processing..."
+                : "Confirm Purchase"}
             </Button>
           </div>
         </div>

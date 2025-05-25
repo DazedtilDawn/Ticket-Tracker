@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test</title>
+</head>
+<body>
+    <h1>Testing if server works</h1>
+    <div id="root"></div>
+    <script type="module">
+        console.log("Test script running");
+        document.getElementById("root").innerHTML = "<h2>JavaScript is working!</h2>";
+        
+        // Test import
+        import('./src/main.tsx').then(() => {
+            console.log("Main.tsx loaded");
+        }).catch(err => {
+            console.error("Error loading main.tsx:", err);
+            document.getElementById("root").innerHTML += `<p style="color: red;">Error: ${err.message}</p>`;
+        });
+    </script>
+</body>
+</html>

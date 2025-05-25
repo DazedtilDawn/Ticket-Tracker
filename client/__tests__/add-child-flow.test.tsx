@@ -70,3 +70,28 @@ test("refreshFamilyUsers is defined for parent users", async () => {
   // The important thing is the method exists and can be called
   expect(true).toBe(true);
 });
+
+// Add child flow tests
+test.skip("should show Add Child dialog when clicking Add Child card", async () => {
+  // Test implementation would go here when we have proper testing setup
+  // This would test:
+  // 1. Render ManageChildren component
+  // 2. Click on "Add New Child" card
+  // 3. Verify AddChildDialog opens
+  // 4. Fill in child name
+  // 5. Submit form
+  // 6. Verify new child appears in the list
+  expect(true).toBe(true);
+});
+
+test.skip("should validate child name is required", async () => {
+  // Test implementation would go here
+  // This would test form validation
+  expect(true).toBe(true);
+});
+
+test.skip("should call refreshFamilyUsers after successful creation", async () => {
+  // Test implementation would go here
+  // This would verify store integration
+  expect(true).toBe(true);
+});

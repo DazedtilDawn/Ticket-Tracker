@@ -35,7 +35,7 @@ beforeEach(async () => {
     viewingChildId: null,
     isAuthenticated: false,
     autoLoginEnabled: true,
-    familyUsers: []
+    familyUsers: [],
   });
 });
 
@@ -44,16 +44,16 @@ test("logout clears familyUsers from storage", () => {
 
   store.setFamilyUsers([
     { id: 1, name: "Parent", username: "parent", role: "parent" },
-    { id: 2, name: "Child", username: "child", role: "child" }
+    { id: 2, name: "Child", username: "child", role: "child" },
   ] as any);
 
   // should have stored users
-  let saved = JSON.parse(localStorage.getItem('ticket-tracker-auth') || '{}');
+  let saved = JSON.parse(localStorage.getItem("ticket-tracker-auth") || "{}");
   expect(saved.state.familyUsers.length).toBe(2);
 
   store.logout();
 
-  saved = JSON.parse(localStorage.getItem('ticket-tracker-auth') || '{}');
+  saved = JSON.parse(localStorage.getItem("ticket-tracker-auth") || "{}");
   expect(Array.isArray(saved.state.familyUsers)).toBe(true);
   expect(saved.state.familyUsers.length).toBe(0);
 });

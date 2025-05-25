@@ -1,17 +1,44 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { 
-  Trophy, ShoppingBag, Star, HeartHandshake, Ticket as TicketIcon, 
-  Pencil, Trash2, AlertTriangle, Award, Gamepad2, Book, Shirt, 
-  Gift, Utensils, Smartphone, Gem, Sparkles, Crown, Layers, BadgeCheck
+import {
+  Trophy,
+  ShoppingBag,
+  Star,
+  HeartHandshake,
+  Ticket as TicketIcon,
+  Pencil,
+  Trash2,
+  AlertTriangle,
+  Award,
+  Gamepad2,
+  Book,
+  Shirt,
+  Gift,
+  Utensils,
+  Smartphone,
+  Gem,
+  Sparkles,
+  Crown,
+  Layers,
+  BadgeCheck,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { 
-  AlertDialog, AlertDialogAction, AlertDialogCancel, 
-  AlertDialogContent, AlertDialogDescription, AlertDialogFooter, 
-  AlertDialogHeader, AlertDialogTitle
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,62 +60,92 @@ interface AchievementItem {
   happiness?: number;
   note?: string;
   category: string;
-  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+  rarity: "common" | "uncommon" | "rare" | "epic" | "legendary";
 }
 
 export function AchievementShowcase({ userId }: { userId?: number }) {
   const { user } = useAuthStore();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedAchievement, setSelectedAchievement] = useState<AchievementItem | null>(null);
+  const [selectedAchievement, setSelectedAchievement] =
+    useState<AchievementItem | null>(null);
   const [isDetailViewOpen, setIsDetailViewOpen] = useState(false);
-  const [happinessRatings, setHappinessRatings] = useState<Record<number, number>>({});
+  const [happinessRatings, setHappinessRatings] = useState<
+    Record<number, number>
+  >({});
   const [notes, setNotes] = useState<Record<number, string>>({});
-  const [view, setView] = useState<'grid' | 'list'>('grid');
-  const [achievementToDelete, setAchievementToDelete] = useState<AchievementItem | null>(null);
+  const [view, setView] = useState<"grid" | "list">("grid");
+  const [achievementToDelete, setAchievementToDelete] =
+    useState<AchievementItem | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Use userId from props if provided, otherwise use the logged-in user
   const targetUserId = userId || user?.id;
-  
+
   // Helper function to determine rarity based on ticket cost
-  const getRarity = (ticketCost: number): 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' => {
-    if (ticketCost >= 100) return 'legendary';
-    if (ticketCost >= 50) return 'epic';
-    if (ticketCost >= 20) return 'rare';
-    if (ticketCost >= 10) return 'uncommon';
-    return 'common';
+  const getRarity = (
+    ticketCost: number,
+  ): "common" | "uncommon" | "rare" | "epic" | "legendary" => {
+    if (ticketCost >= 100) return "legendary";
+    if (ticketCost >= 50) return "epic";
+    if (ticketCost >= 20) return "rare";
+    if (ticketCost >= 10) return "uncommon";
+    return "common";
   };
-  
+
   // Helper function to guess category based on product title
   const guessCategory = (title: string): string => {
     const lowerTitle = title.toLowerCase();
-    if (lowerTitle.includes('minecraft') || lowerTitle.includes('game') || lowerTitle.includes('play')) 
-      return 'Games';
-    if (lowerTitle.includes('lego') || lowerTitle.includes('toy') || lowerTitle.includes('figure')) 
-      return 'Toys';
-    if (lowerTitle.includes('book') || lowerTitle.includes('comic') || lowerTitle.includes('read')) 
-      return 'Books';
-    if (lowerTitle.includes('phone') || lowerTitle.includes('tablet') || lowerTitle.includes('computer')) 
-      return 'Electronics';
-    if (lowerTitle.includes('shirt') || lowerTitle.includes('shoes') || lowerTitle.includes('wear')) 
-      return 'Clothing';
-    if (lowerTitle.includes('candy') || lowerTitle.includes('snack') || lowerTitle.includes('food')) 
-      return 'Treats';
-    return 'Miscellaneous';
+    if (
+      lowerTitle.includes("minecraft") ||
+      lowerTitle.includes("game") ||
+      lowerTitle.includes("play")
+    )
+      return "Games";
+    if (
+      lowerTitle.includes("lego") ||
+      lowerTitle.includes("toy") ||
+      lowerTitle.includes("figure")
+    )
+      return "Toys";
+    if (
+      lowerTitle.includes("book") ||
+      lowerTitle.includes("comic") ||
+      lowerTitle.includes("read")
+    )
+      return "Books";
+    if (
+      lowerTitle.includes("phone") ||
+      lowerTitle.includes("tablet") ||
+      lowerTitle.includes("computer")
+    )
+      return "Electronics";
+    if (
+      lowerTitle.includes("shirt") ||
+      lowerTitle.includes("shoes") ||
+      lowerTitle.includes("wear")
+    )
+      return "Clothing";
+    if (
+      lowerTitle.includes("candy") ||
+      lowerTitle.includes("snack") ||
+      lowerTitle.includes("food")
+    )
+      return "Treats";
+    return "Miscellaneous";
   };
 
   // Fetch purchase history
   const { data: purchasesData = [], isLoading } = useQuery({
-    queryKey: ['/api/transactions/purchases', targetUserId],
+    queryKey: ["/api/transactions/purchases", targetUserId],
     queryFn: async () => {
-      const url = targetUserId ? 
-        `/api/transactions/purchases?userId=${targetUserId}` : 
-        '/api/transactions/purchases';
+      const url = targetUserId
+        ? `/api/transactions/purchases?userId=${targetUserId}`
+        : "/api/transactions/purchases";
       const response = await fetch(url);
       return response.json();
     },
-    enabled: !!targetUserId
+    enabled: !!targetUserId,
   });
 
   // Transform purchases into achievement items with category and rarity
@@ -96,39 +153,46 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
   const achievementItems: AchievementItem[] = purchases.map((purchase: any) => {
     // Try to get custom image URL from metadata if it exists
     let customImageUrl = undefined;
-    let description = '';
-    
+    let description = "";
+
     // Handle both string and object metadata formats
     if (purchase.metadata) {
-      if (typeof purchase.metadata === 'string') {
+      if (typeof purchase.metadata === "string") {
         try {
           const metadata = JSON.parse(purchase.metadata);
           customImageUrl = metadata.custom_image_url;
-          description = metadata.description || '';
+          description = metadata.description || "";
         } catch (error) {
-          console.log(`Failed to parse string metadata for achievement ${purchase.id}:`, error);
+          console.log(
+            `Failed to parse string metadata for achievement ${purchase.id}:`,
+            error,
+          );
         }
-      } else if (typeof purchase.metadata === 'object') {
+      } else if (typeof purchase.metadata === "object") {
         // Already an object, no need to parse
         customImageUrl = purchase.metadata.custom_image_url;
-        description = purchase.metadata.description || '';
+        description = purchase.metadata.description || "";
       }
     }
-    
-    const displayTitle = purchase.note || purchase.product?.title || 'Mystery Item';
+
+    const displayTitle =
+      purchase.note || purchase.product?.title || "Mystery Item";
     const ticketCost = Math.abs(purchase.delta);
-    
+
     return {
       id: purchase.id,
       title: displayTitle,
-      imageUrl: customImageUrl || purchase.product?.image_url || '/placeholder-product.png',
+      imageUrl:
+        customImageUrl ||
+        purchase.product?.image_url ||
+        "/placeholder-product.png",
       purchaseDate: purchase.created_at,
       ticketCost: ticketCost,
       transactionId: purchase.id,
       happiness: happinessRatings[purchase.id] || 0,
-      note: notes[purchase.id] || description || '',
+      note: notes[purchase.id] || description || "",
       category: guessCategory(displayTitle),
-      rarity: getRarity(ticketCost)
+      rarity: getRarity(ticketCost),
     };
   });
 
@@ -143,44 +207,49 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
     setIsDetailViewOpen(false);
     setTimeout(() => setSelectedAchievement(null), 300);
   };
-  
+
   // Delete achievement mutation
   const deleteAchievementMutation = useMutation({
     mutationFn: async (transactionId: number) => {
       const response = await apiRequest(`/api/transactions/${transactionId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
       return response;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions/purchases'] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/transactions/purchases"],
+      });
       toast({
-        title: 'Achievement deleted',
-        description: 'The item has been removed from your collection',
-        variant: 'default',
+        title: "Achievement deleted",
+        description: "The item has been removed from your collection",
+        variant: "default",
       });
       setAchievementToDelete(null);
       setIsDeleteDialogOpen(false);
     },
     onError: (error) => {
-      console.error('Failed to delete achievement:', error);
+      console.error("Failed to delete achievement:", error);
       toast({
-        title: 'Error',
-        description: 'Failed to delete item. Please try again.',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to delete item. Please try again.",
+        variant: "destructive",
       });
-    }
+    },
   });
-  
+
   // Confirm achievement deletion
   const confirmDeleteAchievement = () => {
     if (achievementToDelete) {
       deleteAchievementMutation.mutate(achievementToDelete.transactionId);
     }
   };
-  
+
   // Open delete confirmation dialog
-  const handleDeleteAchievement = (achievement: AchievementItem, e: React.MouseEvent) => {
+  const handleDeleteAchievement = (
+    achievement: AchievementItem,
+    e: React.MouseEvent,
+  ) => {
     e.stopPropagation(); // Prevent card click
     setAchievementToDelete(achievement);
     setIsDeleteDialogOpen(true);
@@ -189,62 +258,96 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
   // Load saved happiness ratings and notes from localStorage
   useEffect(() => {
     try {
-      const savedRatings = JSON.parse(localStorage.getItem('achievementHappinessRatings') || '{}');
-      const savedNotes = JSON.parse(localStorage.getItem('achievementNotes') || '{}');
+      const savedRatings = JSON.parse(
+        localStorage.getItem("achievementHappinessRatings") || "{}",
+      );
+      const savedNotes = JSON.parse(
+        localStorage.getItem("achievementNotes") || "{}",
+      );
       setHappinessRatings(savedRatings);
       setNotes(savedNotes);
     } catch (error) {
-      console.error('Failed to load saved achievement data:', error);
+      console.error("Failed to load saved achievement data:", error);
     }
   }, []);
 
   // Generate achievement stats
   const totalItems = achievementItems.length;
-  const totalTicketsSpent = achievementItems.reduce((sum, item) => sum + item.ticketCost, 0);
-  const mostValuableAchievement = achievementItems.length > 0 
-    ? achievementItems.reduce((prev, current) => (prev.ticketCost > current.ticketCost) ? prev : current) 
-    : null;
+  const totalTicketsSpent = achievementItems.reduce(
+    (sum, item) => sum + item.ticketCost,
+    0,
+  );
+  const mostValuableAchievement =
+    achievementItems.length > 0
+      ? achievementItems.reduce((prev, current) =>
+          prev.ticketCost > current.ticketCost ? prev : current,
+        )
+      : null;
 
   // Group achievements by category
-  const achievementsByCategory = achievementItems.reduce((acc, achievement) => {
-    const category = achievement.category;
-    if (!acc[category]) acc[category] = [];
-    acc[category].push(achievement);
-    return acc;
-  }, {} as Record<string, AchievementItem[]>);
+  const achievementsByCategory = achievementItems.reduce(
+    (acc, achievement) => {
+      const category = achievement.category;
+      if (!acc[category]) acc[category] = [];
+      acc[category].push(achievement);
+      return acc;
+    },
+    {} as Record<string, AchievementItem[]>,
+  );
 
   // Get category icon
   const getCategoryIcon = (category: string) => {
-    switch(category) {
-      case 'Games': return <Gamepad2 className="h-5 w-5" />;
-      case 'Toys': return <Gift className="h-5 w-5" />;
-      case 'Books': return <Book className="h-5 w-5" />;
-      case 'Electronics': return <Smartphone className="h-5 w-5" />;
-      case 'Clothing': return <Shirt className="h-5 w-5" />;
-      case 'Treats': return <Utensils className="h-5 w-5" />;
-      default: return <Layers className="h-5 w-5" />;
+    switch (category) {
+      case "Games":
+        return <Gamepad2 className="h-5 w-5" />;
+      case "Toys":
+        return <Gift className="h-5 w-5" />;
+      case "Books":
+        return <Book className="h-5 w-5" />;
+      case "Electronics":
+        return <Smartphone className="h-5 w-5" />;
+      case "Clothing":
+        return <Shirt className="h-5 w-5" />;
+      case "Treats":
+        return <Utensils className="h-5 w-5" />;
+      default:
+        return <Layers className="h-5 w-5" />;
     }
   };
 
   // Get rarity icon
-  const getRarityIcon = (rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary') => {
-    switch(rarity) {
-      case 'legendary': return <Crown className="h-4 w-4 mr-1" />;
-      case 'epic': return <Gem className="h-4 w-4 mr-1" />;
-      case 'rare': return <Sparkles className="h-4 w-4 mr-1" />;
-      case 'uncommon': return <Star className="h-4 w-4 mr-1" />;
-      default: return <BadgeCheck className="h-4 w-4 mr-1" />;
+  const getRarityIcon = (
+    rarity: "common" | "uncommon" | "rare" | "epic" | "legendary",
+  ) => {
+    switch (rarity) {
+      case "legendary":
+        return <Crown className="h-4 w-4 mr-1" />;
+      case "epic":
+        return <Gem className="h-4 w-4 mr-1" />;
+      case "rare":
+        return <Sparkles className="h-4 w-4 mr-1" />;
+      case "uncommon":
+        return <Star className="h-4 w-4 mr-1" />;
+      default:
+        return <BadgeCheck className="h-4 w-4 mr-1" />;
     }
   };
 
   // Get rarity color class
-  const getRarityColorClass = (rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary') => {
-    switch(rarity) {
-      case 'legendary': return "border-amber-400 bg-gradient-to-b from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900";
-      case 'epic': return "border-purple-400 bg-gradient-to-b from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900";
-      case 'rare': return "border-blue-400 bg-gradient-to-b from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900";
-      case 'uncommon': return "border-green-400 bg-gradient-to-b from-green-50 to-green-100 dark:from-green-950 dark:to-green-900";
-      default: return "border-gray-300 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900";
+  const getRarityColorClass = (
+    rarity: "common" | "uncommon" | "rare" | "epic" | "legendary",
+  ) => {
+    switch (rarity) {
+      case "legendary":
+        return "border-amber-400 bg-gradient-to-b from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900";
+      case "epic":
+        return "border-purple-400 bg-gradient-to-b from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900";
+      case "rare":
+        return "border-blue-400 bg-gradient-to-b from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900";
+      case "uncommon":
+        return "border-green-400 bg-gradient-to-b from-green-50 to-green-100 dark:from-green-950 dark:to-green-900";
+      default:
+        return "border-gray-300 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900";
     }
   };
 
@@ -259,17 +362,31 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
               <Trophy className="h-6 w-6 text-amber-600 dark:text-amber-300" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white">Achievement Gallery</h2>
-              <p className="text-amber-200 text-sm">Your personal collection of rewards and accomplishments</p>
+              <h2 className="text-2xl font-bold text-white">
+                Achievement Gallery
+              </h2>
+              <p className="text-amber-200 text-sm">
+                Your personal collection of rewards and accomplishments
+              </p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Tabs defaultValue="grid" value={view} onValueChange={(val: string) => setView(val as 'grid' | 'list')}>
+            <Tabs
+              defaultValue="grid"
+              value={view}
+              onValueChange={(val: string) => setView(val as "grid" | "list")}
+            >
               <TabsList className="bg-amber-100/20 border border-amber-300/30">
-                <TabsTrigger value="grid" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">
+                <TabsTrigger
+                  value="grid"
+                  className="data-[state=active]:bg-amber-500 data-[state=active]:text-white"
+                >
                   Gallery View
                 </TabsTrigger>
-                <TabsTrigger value="list" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">
+                <TabsTrigger
+                  value="list"
+                  className="data-[state=active]:bg-amber-500 data-[state=active]:text-white"
+                >
                   List View
                 </TabsTrigger>
               </TabsList>
@@ -292,7 +409,7 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="overflow-hidden border-0 shadow-md relative bg-gradient-to-br from-blue-950 to-blue-900">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-300 via-blue-200 to-blue-300" />
           <CardContent className="flex items-center p-6">
@@ -301,11 +418,13 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
             </div>
             <div>
               <p className="text-sm text-blue-200/80">Tickets Invested</p>
-              <h4 className="text-2xl font-bold text-white">{totalTicketsSpent}</h4>
+              <h4 className="text-2xl font-bold text-white">
+                {totalTicketsSpent}
+              </h4>
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="overflow-hidden border-0 shadow-md relative bg-gradient-to-br from-purple-950 to-purple-900">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-300 via-fuchsia-200 to-purple-300" />
           <CardContent className="flex items-center p-6">
@@ -330,9 +449,12 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
         <Card className="bg-gray-50 dark:bg-gray-800/50 border border-dashed border-gray-300 dark:border-gray-700">
           <CardContent className="p-8 flex flex-col items-center justify-center text-center">
             <ShoppingBag className="h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">No Achievements Yet</h3>
+            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              No Achievements Yet
+            </h3>
             <p className="text-gray-500 dark:text-gray-400 max-w-md">
-              When you spend your tickets on rewards, they'll appear here as achievements in your collection!
+              When you spend your tickets on rewards, they'll appear here as
+              achievements in your collection!
             </p>
           </CardContent>
         </Card>
@@ -348,12 +470,14 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
                     {getCategoryIcon(category)}
                   </div>
                   <h3 className="text-lg font-semibold">{category}</h3>
-                  <div className="ml-2 text-sm text-gray-500 dark:text-gray-400">({items.length} {items.length === 1 ? 'item' : 'items'})</div>
+                  <div className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+                    ({items.length} {items.length === 1 ? "item" : "items"})
+                  </div>
                 </div>
               </div>
 
               {/* Achievements Grid/List for this Category */}
-              {view === 'grid' ? (
+              {view === "grid" ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pl-2">
                   {items.map((achievement) => (
                     <motion.div
@@ -364,40 +488,48 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
                       whileHover={{ y: -5, transition: { duration: 0.2 } }}
                       onClick={() => handleViewAchievement(achievement)}
                     >
-                      <Card 
+                      <Card
                         className={cn(
                           "overflow-hidden cursor-pointer transition-all duration-200 relative h-full border-2",
-                          getRarityColorClass(achievement.rarity)
+                          getRarityColorClass(achievement.rarity),
                         )}
                       >
                         {/* Rarity Badge */}
                         <div className="absolute top-2 right-2 z-20">
-                          <Badge className={cn(
-                            "text-xs px-2 py-1 capitalize",
-                            achievement.rarity === 'legendary' && "bg-amber-500 text-white",
-                            achievement.rarity === 'epic' && "bg-purple-500 text-white",
-                            achievement.rarity === 'rare' && "bg-blue-500 text-white",
-                            achievement.rarity === 'uncommon' && "bg-green-500 text-white",
-                            achievement.rarity === 'common' && "bg-gray-500 text-white" 
-                          )}>
+                          <Badge
+                            className={cn(
+                              "text-xs px-2 py-1 capitalize",
+                              achievement.rarity === "legendary" &&
+                                "bg-amber-500 text-white",
+                              achievement.rarity === "epic" &&
+                                "bg-purple-500 text-white",
+                              achievement.rarity === "rare" &&
+                                "bg-blue-500 text-white",
+                              achievement.rarity === "uncommon" &&
+                                "bg-green-500 text-white",
+                              achievement.rarity === "common" &&
+                                "bg-gray-500 text-white",
+                            )}
+                          >
                             {getRarityIcon(achievement.rarity)}
                             {achievement.rarity}
                           </Badge>
                         </div>
-                        
+
                         <div className="relative h-44 overflow-hidden">
-                          <img 
-                            src={achievement.imageUrl} 
+                          <img
+                            src={achievement.imageUrl}
                             alt={achievement.title}
                             className="w-full h-full object-contain object-center"
                             onError={(e) => {
-                              (e.target as HTMLImageElement).src = '/placeholder-product.png';
+                              (e.target as HTMLImageElement).src =
+                                "/placeholder-product.png";
                             }}
                           />
-                          
+
                           {/* Action Buttons */}
                           <div className="absolute bottom-2 right-2 flex flex-col space-y-1">
-                            <Badge 
+                            <Badge
                               className="bg-blue-500 hover:bg-blue-600 cursor-pointer"
                               onClick={(e: React.MouseEvent) => {
                                 e.stopPropagation();
@@ -408,26 +540,33 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
                               <Pencil className="h-3 w-3 mr-1" />
                               Edit
                             </Badge>
-                            <Badge 
+                            <Badge
                               className="bg-red-500 hover:bg-red-600 cursor-pointer"
-                              onClick={(e: React.MouseEvent) => handleDeleteAchievement(achievement, e)}
+                              onClick={(e: React.MouseEvent) =>
+                                handleDeleteAchievement(achievement, e)
+                              }
                             >
                               <Trash2 className="h-3 w-3 mr-1" />
                               Delete
                             </Badge>
                           </div>
                         </div>
-                        
+
                         <CardContent className="p-4">
                           <div className="flex justify-between items-center mb-1">
-                            <h3 className="font-bold truncate">{achievement.title}</h3>
+                            <h3 className="font-bold truncate">
+                              {achievement.title}
+                            </h3>
                             <Badge className="bg-amber-500">
                               <TicketIcon className="h-3 w-3 mr-1" />
                               {achievement.ticketCost}
                             </Badge>
                           </div>
                           <p className="text-sm text-gray-500 dark:text-gray-400">
-                            {format(new Date(achievement.purchaseDate), "MMMM d, yyyy")}
+                            {format(
+                              new Date(achievement.purchaseDate),
+                              "MMMM d, yyyy",
+                            )}
                           </p>
                         </CardContent>
                       </Card>
@@ -443,44 +582,62 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <Card 
+                      <Card
                         className={cn(
                           "overflow-hidden cursor-pointer transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-800 border-l-4",
-                          achievement.rarity === 'legendary' && "border-l-amber-500",
-                          achievement.rarity === 'epic' && "border-l-purple-500",
-                          achievement.rarity === 'rare' && "border-l-blue-500",
-                          achievement.rarity === 'uncommon' && "border-l-green-500",
-                          achievement.rarity === 'common' && "border-l-gray-500"
+                          achievement.rarity === "legendary" &&
+                            "border-l-amber-500",
+                          achievement.rarity === "epic" &&
+                            "border-l-purple-500",
+                          achievement.rarity === "rare" && "border-l-blue-500",
+                          achievement.rarity === "uncommon" &&
+                            "border-l-green-500",
+                          achievement.rarity === "common" &&
+                            "border-l-gray-500",
                         )}
                         onClick={() => handleViewAchievement(achievement)}
                       >
                         <CardContent className="p-4 flex items-center">
                           <div className="h-16 w-16 rounded-md overflow-hidden mr-4 flex-shrink-0">
-                            <img 
-                              src={achievement.imageUrl} 
+                            <img
+                              src={achievement.imageUrl}
                               alt={achievement.title}
                               className="h-full w-full object-cover"
                               onError={(e) => {
-                                (e.target as HTMLImageElement).src = '/placeholder-product.png';
+                                (e.target as HTMLImageElement).src =
+                                  "/placeholder-product.png";
                               }}
                             />
                           </div>
                           <div className="flex-grow min-w-0">
                             <div className="flex items-center">
-                              <h4 className="font-medium truncate mr-2">{achievement.title}</h4>
-                              <Badge className={cn(
-                                "text-xs mr-2",
-                                achievement.rarity === 'legendary' && "bg-amber-500",
-                                achievement.rarity === 'epic' && "bg-purple-500",
-                                achievement.rarity === 'rare' && "bg-blue-500",
-                                achievement.rarity === 'uncommon' && "bg-green-500",
-                                achievement.rarity === 'common' && "bg-gray-500"
-                              )}>
+                              <h4 className="font-medium truncate mr-2">
+                                {achievement.title}
+                              </h4>
+                              <Badge
+                                className={cn(
+                                  "text-xs mr-2",
+                                  achievement.rarity === "legendary" &&
+                                    "bg-amber-500",
+                                  achievement.rarity === "epic" &&
+                                    "bg-purple-500",
+                                  achievement.rarity === "rare" &&
+                                    "bg-blue-500",
+                                  achievement.rarity === "uncommon" &&
+                                    "bg-green-500",
+                                  achievement.rarity === "common" &&
+                                    "bg-gray-500",
+                                )}
+                              >
                                 {achievement.rarity}
                               </Badge>
                             </div>
                             <p className="text-sm text-gray-500 dark:text-gray-400">
-                              {format(new Date(achievement.purchaseDate), "MMMM d, yyyy")} • {achievement.ticketCost} tickets
+                              {format(
+                                new Date(achievement.purchaseDate),
+                                "MMMM d, yyyy",
+                              )}{" "}
+                              • {achievement.ticketCost} tickets
                             </p>
                           </div>
                           <div className="flex-shrink-0 ml-2 space-x-2">
@@ -530,9 +687,12 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
           userId={targetUserId}
         />
       )}
-      
+
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center text-red-600">
@@ -540,12 +700,20 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
               Delete Achievement
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this achievement? This action cannot be undone.
+              Are you sure you want to delete this achievement? This action
+              cannot be undone.
               {achievementToDelete && (
                 <div className="mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded-md">
                   <p className="font-medium">{achievementToDelete.title}</p>
-                  <p className="text-sm text-gray-500">{format(new Date(achievementToDelete.purchaseDate), "MMMM d, yyyy")}</p>
-                  <p className="text-sm text-amber-600">{achievementToDelete.ticketCost} tickets</p>
+                  <p className="text-sm text-gray-500">
+                    {format(
+                      new Date(achievementToDelete.purchaseDate),
+                      "MMMM d, yyyy",
+                    )}
+                  </p>
+                  <p className="text-sm text-amber-600">
+                    {achievementToDelete.ticketCost} tickets
+                  </p>
                 </div>
               )}
             </AlertDialogDescription>
@@ -557,7 +725,7 @@ export function AchievementShowcase({ userId }: { userId?: number }) {
             >
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={confirmDeleteAchievement}
               disabled={deleteAchievementMutation.isPending}
               className="bg-red-600 hover:bg-red-700 text-white"

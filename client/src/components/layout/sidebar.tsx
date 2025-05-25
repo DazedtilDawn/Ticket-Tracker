@@ -84,13 +84,9 @@ export function Sidebar() {
     // Update child users list whenever family users changes
     console.log("Sidebar: familyUsers in auth-store changed:", familyUsers);
     if (getChildUsers) {
-      // Filter to only include Bryce and Kiki, exclude "Child User"
-      const allChildUsersFromStore = getChildUsers(); // This already filters for Bryce and Kiki
+      // Get all child users from the store
+      const allChildUsersFromStore = getChildUsers();
       console.log("Sidebar: getChildUsers() returned:", allChildUsersFromStore);
-      // The filter for Bryce and Kiki is already inside getChildUsers, so no need to re-filter here
-      // const filteredChildren = getChildUsers().filter(
-      //   child => child.name === 'Bryce' || child.name === 'Kiki'
-      // );
       setChildUsers(allChildUsersFromStore);
       console.log("Sidebar: setChildUsers to:", allChildUsersFromStore);
     }

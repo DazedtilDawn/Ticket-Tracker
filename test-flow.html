@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Flow - Ticket Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .error {
+            color: red;
+            padding: 10px;
+            background: #ffebee;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            color: green;
+            padding: 10px;
+            background: #e8f5e9;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .info {
+            color: #1976d2;
+            padding: 10px;
+            background: #e3f2fd;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .user-info {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Ticket Tracker - Test Flow</h1>
+    
+    <div class="container">
+        <h2>1. Authentication Test</h2>
+        <div class="section">
+            <h3>Create Test Parent Account</h3>
+            <button onclick="createTestParent()">Create Test Parent</button>
+            <div id="parent-result"></div>
+        </div>
+        
+        <div class="section">
+            <h3>Login as Parent</h3>
+            <button onclick="loginAsParent()">Login as Parent</button>
+            <div id="login-result"></div>
+        </div>
+    </div>
+
+    <div class="container" id="parent-section" style="display:none;">
+        <h2>2. Parent Dashboard Functions</h2>
+        
+        <div class="grid">
+            <div class="section">
+                <h3>Add Child</h3>
+                <button onclick="addChild()">Add Test Child</button>
+                <div id="child-result"></div>
+            </div>
+            
+            <div class="section">
+                <h3>Create Chore</h3>
+                <button onclick="createChore()">Create Test Chore</button>
+                <div id="chore-result"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>View Children</h3>
+            <button onclick="viewChildren()">Get Children List</button>
+            <div id="children-list"></div>
+        </div>
+    </div>
+
+    <div class="container" id="child-section" style="display:none;">
+        <h2>3. Child Functions</h2>
+        
+        <div class="grid">
+            <div class="section">
+                <h3>Switch to Child View</h3>
+                <button onclick="switchToChild()">Switch to Child</button>
+                <div id="switch-result"></div>
+            </div>
+            
+            <div class="section">
+                <h3>Complete Chore</h3>
+                <button onclick="completeChore()">Complete Chore</button>
+                <div id="complete-result"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>Check Balance</h3>
+            <button onclick="checkBalance()">Get Current Balance</button>
+            <div id="balance-result"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>API Response Log</h2>
+        <pre id="log"></pre>
+    </div>
+
+    <script>
+        let authToken = '';
+        let parentUser = null;
+        let childUser = null;
+        let testChore = null;
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${timestamp}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        async function apiCall(endpoint, method = 'GET', body = null) {
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            };
+            
+            if (authToken) {
+                options.headers['Authorization'] = `Bearer ${authToken}`;
+            }
+            
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+
+            try {
+                const response = await fetch(`http://localhost:5000${endpoint}`, options);
+                const data = await response.json();
+                log(`${method} ${endpoint} - Status: ${response.status}`);
+                log(`Response: ${JSON.stringify(data, null, 2)}`);
+                
+                if (!response.ok) {
+                    throw new Error(data.message || data.error?.msg || 'Request failed');
+                }
+                
+                return { success: true, data };
+            } catch (error) {
+                log(`ERROR: ${error.message}`, 'error');
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function createTestParent() {
+            const username = `testparent_${Date.now()}`;
+            const result = await apiCall('/api/auth/register', 'POST', {
+                username,
+                password: 'password123',
+                name: 'Test Parent',
+                role: 'parent'
+            });
+            
+            if (result.success) {
+                document.getElementById('parent-result').innerHTML = 
+                    `<div class="success">Parent created: ${username}</div>`;
+                parentUser = { username, password: 'password123' };
+                authToken = result.data.token;
+                document.getElementById('parent-section').style.display = 'block';
+            } else {
+                document.getElementById('parent-result').innerHTML = 
+                    `<div class="error">Failed: ${result.error}</div>`;
+            }
+        }
+
+        async function loginAsParent() {
+            if (!parentUser) {
+                document.getElementById('login-result').innerHTML = 
+                    '<div class="error">Create a parent account first</div>';
+                return;
+            }
+            
+            const result = await apiCall('/api/auth/login', 'POST', {
+                username: parentUser.username,
+                password: parentUser.password
+            });
+            
+            if (result.success) {
+                document.getElementById('login-result').innerHTML = 
+                    `<div class="success">Logged in as ${parentUser.username}</div>`;
+                authToken = result.data.token;
+                document.getElementById('parent-section').style.display = 'block';
+            } else {
+                document.getElementById('login-result').innerHTML = 
+                    `<div class="error">Login failed: ${result.error}</div>`;
+            }
+        }
+
+        async function addChild() {
+            const result = await apiCall('/api/family/children', 'POST', {
+                name: 'Test Child ' + Date.now()
+            });
+            
+            if (result.success) {
+                childUser = result.data;
+                document.getElementById('child-result').innerHTML = 
+                    `<div class="success">Child created: ${childUser.name} (${childUser.username})</div>`;
+                document.getElementById('child-section').style.display = 'block';
+            } else {
+                document.getElementById('child-result').innerHTML = 
+                    `<div class="error">Failed: ${result.error}</div>`;
+            }
+        }
+
+        async function createChore() {
+            const result = await apiCall('/api/chores', 'POST', {
+                name: 'Test Chore',
+                description: 'Complete this test chore',
+                ticket_value: 5
+            });
+            
+            if (result.success) {
+                testChore = result.data;
+                document.getElementById('chore-result').innerHTML = 
+                    `<div class="success">Chore created: ${testChore.name} (${testChore.ticket_value} tickets)</div>`;
+            } else {
+                document.getElementById('chore-result').innerHTML = 
+                    `<div class="error">Failed: ${result.error}</div>`;
+            }
+        }
+
+        async function viewChildren() {
+            const result = await apiCall('/api/family/children');
+            
+            if (result.success) {
+                const childrenHtml = result.data.map(child => 
+                    `<div class="user-info">
+                        <strong>${child.name}</strong> (${child.username})
+                        <br>Balance: ${child.balance_cache || 0} tickets
+                        <br>Status: ${child.is_archived ? 'Archived' : 'Active'}
+                    </div>`
+                ).join('');
+                document.getElementById('children-list').innerHTML = childrenHtml || '<div class="info">No children found</div>';
+            } else {
+                document.getElementById('children-list').innerHTML = 
+                    `<div class="error">Failed: ${result.error}</div>`;
+            }
+        }
+
+        async function switchToChild() {
+            if (!childUser) {
+                document.getElementById('switch-result').innerHTML = 
+                    '<div class="error">Add a child first</div>';
+                return;
+            }
+            
+            // In real app, this would be done through UI
+            document.getElementById('switch-result').innerHTML = 
+                `<div class="info">In the real app, you would click on the child's profile to switch views</div>`;
+        }
+
+        async function completeChore() {
+            if (!testChore || !childUser) {
+                document.getElementById('complete-result').innerHTML = 
+                    '<div class="error">Create a chore and child first</div>';
+                return;
+            }
+            
+            const result = await apiCall('/api/chores/complete', 'POST', {
+                chore_id: testChore.id,
+                child_id: childUser.id
+            });
+            
+            if (result.success) {
+                document.getElementById('complete-result').innerHTML = 
+                    `<div class="success">Chore completed! Earned ${testChore.ticket_value} tickets</div>`;
+            } else {
+                document.getElementById('complete-result').innerHTML = 
+                    `<div class="error">Failed: ${result.error}</div>`;
+            }
+        }
+
+        async function checkBalance() {
+            if (!childUser) {
+                document.getElementById('balance-result').innerHTML = 
+                    '<div class="error">Add a child first</div>';
+                return;
+            }
+            
+            const result = await apiCall(`/api/stats/balance/${childUser.id}`);
+            
+            if (result.success) {
+                document.getElementById('balance-result').innerHTML = 
+                    `<div class="info">Current balance: ${result.data.balance} tickets ($${(result.data.balance * 0.25).toFixed(2)})</div>`;
+            } else {
+                document.getElementById('balance-result').innerHTML = 
+                    `<div class="error">Failed: ${result.error}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

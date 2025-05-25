@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
-import { subscribeToChannel, createWebSocketConnection } from "@/lib/websocketClient";
+import {
+  subscribeToChannel,
+  createWebSocketConnection,
+} from "@/lib/websocketClient";
 
 export default function WebsocketDebugMonitor() {
   const [events, setEvents] = useState<string[]>([]);

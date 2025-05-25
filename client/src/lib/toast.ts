@@ -8,7 +8,7 @@ export function showToast(
     variant?: "default" | "destructive";
     duration?: number;
   },
-  toastFn: ReturnType<typeof useToast>["toast"]
+  toastFn: ReturnType<typeof useToast>["toast"],
 ) {
   toastFn({
     title: options.title,
@@ -21,7 +21,7 @@ export function showToast(
 export function showSuccessToast(
   toastFn: ReturnType<typeof useToast>["toast"],
   title: string,
-  description?: string
+  description?: string,
 ) {
   showToast({ title, description }, toastFn);
 }
@@ -29,7 +29,7 @@ export function showSuccessToast(
 export function showErrorToast(
   toastFn: ReturnType<typeof useToast>["toast"],
   title: string,
-  description?: string
+  description?: string,
 ) {
   showToast({ title, description, variant: "destructive" }, toastFn);
 }

@@ -4,7 +4,10 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/store/auth-store";
-import { createWebSocketConnection, subscribeToChannel } from "@/lib/websocketClient";
+import {
+  createWebSocketConnection,
+  subscribeToChannel,
+} from "@/lib/websocketClient";
 
 // UI Components
 import { Button } from "@/components/ui/button";
@@ -46,7 +49,11 @@ export default function BonusManagement() {
   });
 
   // Fetch daily bonus assignments
-  const { data: dailyBonusesData, isLoading: bonusesLoading, refetch: refetchBonuses } = useQuery({
+  const {
+    data: dailyBonusesData,
+    isLoading: bonusesLoading,
+    refetch: refetchBonuses,
+  } = useQuery({
     queryKey: ["/api/daily-bonus/assignments"],
   });
 
@@ -61,17 +68,20 @@ export default function BonusManagement() {
   // Set up WebSocket for real-time updates
   useEffect(() => {
     console.log("Setting up WebSocket listeners for bonus events");
-    
+
     // Ensure we have an active WebSocket connection
     createWebSocketConnection();
-    
+
     // Subscribe to bonus events
-    const bonusAssignSubscription = subscribeToChannel("bonus:assign", (data) => {
-      console.log("Received bonus:assign event:", data);
-      // Refresh the assignments list
-      refetchBonuses();
-    });
-    
+    const bonusAssignSubscription = subscribeToChannel(
+      "bonus:assign",
+      (data) => {
+        console.log("Received bonus:assign event:", data);
+        // Refresh the assignments list
+        refetchBonuses();
+      },
+    );
+
     // Cleanup function to unsubscribe when component unmounts
     return () => {
       bonusAssignSubscription();
@@ -80,14 +90,20 @@ export default function BonusManagement() {
 
   // Assign a specific chore to a child's daily bonus
   const assignBonusMutation = useMutation({
-    mutationFn: async ({ userId, choreId }: { userId: number; choreId: number }) => {
+    mutationFn: async ({
+      userId,
+      choreId,
+    }: {
+      userId: number;
+      choreId: number;
+    }) => {
       console.log("Assigning chore ID", choreId, "to user ID", userId);
       return apiRequest("/api/daily-bonus/assign", {
         method: "PUT",
         body: JSON.stringify({ user_id: userId, chore_id: choreId }),
         headers: {
-          'Content-Type': 'application/json'
-        }
+          "Content-Type": "application/json",
+        },
       });
     },
     onSuccess: () => {
@@ -138,12 +154,13 @@ export default function BonusManagement() {
         method: "POST",
         body: JSON.stringify({ user_id: userId }),
         headers: {
-          'Content-Type': 'application/json'
-        }
+          "Content-Type": "application/json",
+        },
       });
     },
     onSuccess: (data, userId) => {
-      const childName = users?.find((u: any) => u.id === userId)?.name || 'Child';
+      const childName =
+        users?.find((u: any) => u.id === userId)?.name || "Child";
       toast({
         title: "Bonus Reset",
         description: `Daily bonus for ${childName} has been reset and reassigned.`,
@@ -188,7 +205,8 @@ export default function BonusManagement() {
   const handleResetBonuses = () => {
     toast({
       title: "Reset Function Updated",
-      description: "Please use the reset button next to each child to reset their daily bonus.",
+      description:
+        "Please use the reset button next to each child to reset their daily bonus.",
     });
   };
 
@@ -225,13 +243,19 @@ export default function BonusManagement() {
   const getBonusStatusBadge = (bonus: DailyBonus) => {
     if (bonus.is_spun) {
       return (
-        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+        <Badge
+          variant="outline"
+          className="bg-green-50 text-green-700 border-green-200"
+        >
           Completed & Spun
         </Badge>
       );
     } else {
       return (
-        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+        <Badge
+          variant="outline"
+          className="bg-blue-50 text-blue-700 border-blue-200"
+        >
           Assigned
         </Badge>
       );
@@ -267,11 +291,15 @@ export default function BonusManagement() {
 
   // Process daily bonus assignments data from API
   const dailyBonuses: any[] = [];
-  
-  if (dailyBonusesData && typeof dailyBonusesData === 'object' && !Array.isArray(dailyBonusesData)) {
+
+  if (
+    dailyBonusesData &&
+    typeof dailyBonusesData === "object" &&
+    !Array.isArray(dailyBonusesData)
+  ) {
     // Log the data structure for debugging
-    console.log('[BONUS_DEBUG] Raw data from API:', dailyBonusesData);
-    
+    console.log("[BONUS_DEBUG] Raw data from API:", dailyBonusesData);
+
     // Process each child's data from the response
     Object.values(dailyBonusesData).forEach((assignment: any) => {
       if (assignment.bonus) {
@@ -279,14 +307,14 @@ export default function BonusManagement() {
         dailyBonuses.push({
           ...assignment.bonus,
           user: assignment.user,
-          assigned_chore: assignment.assigned_chore
+          assigned_chore: assignment.assigned_chore,
         });
       }
     });
-    
-    console.log('[BONUS_DEBUG] Processed bonuses:', dailyBonuses);
+
+    console.log("[BONUS_DEBUG] Processed bonuses:", dailyBonuses);
   }
-  
+
   const isLoading = usersLoading || bonusesLoading || choresLoading;
 
   return (
@@ -294,15 +322,17 @@ export default function BonusManagement() {
       <div className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="px-4 py-5 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Daily Bonus Management</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              Daily Bonus Management
+            </h2>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               Manage daily bonus chore assignments for children
             </p>
           </div>
-          
+
           <div className="mt-4 sm:mt-0 space-x-2">
-            <Button 
-              onClick={handleAssignAllBonuses} 
+            <Button
+              onClick={handleAssignAllBonuses}
               disabled={assignAllBonusesMutation.isPending}
               className="bg-primary-600 hover:bg-primary-700"
             >
@@ -313,9 +343,9 @@ export default function BonusManagement() {
               )}
               Auto-Assign All
             </Button>
-            
-            <Button 
-              onClick={() => refetchBonuses()} 
+
+            <Button
+              onClick={() => refetchBonuses()}
               variant="outline"
               className="ml-2"
             >
@@ -354,7 +384,7 @@ export default function BonusManagement() {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Select Chore
@@ -364,19 +394,25 @@ export default function BonusManagement() {
                     <SelectValue placeholder="Select a chore" />
                   </SelectTrigger>
                   <SelectContent>
-                    {(chores || []).filter((c: Chore) => c.is_active).map((chore: Chore) => (
-                      <SelectItem key={chore.id} value={chore.id.toString()}>
-                        {chore.name} ({chore.base_tickets} tickets)
-                      </SelectItem>
-                    ))}
+                    {(chores || [])
+                      .filter((c: Chore) => c.is_active)
+                      .map((chore: Chore) => (
+                        <SelectItem key={chore.id} value={chore.id.toString()}>
+                          {chore.name} ({chore.base_tickets} tickets)
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="flex items-end">
-                <Button 
-                  onClick={handleAssignBonus} 
-                  disabled={assignBonusMutation.isPending || !selectedChild || !selectedChore}
+                <Button
+                  onClick={handleAssignBonus}
+                  disabled={
+                    assignBonusMutation.isPending ||
+                    !selectedChild ||
+                    !selectedChore
+                  }
                   className="w-full"
                 >
                   {assignBonusMutation.isPending ? (
@@ -399,17 +435,22 @@ export default function BonusManagement() {
                 Daily bonus chores assigned to children
               </CardDescription>
             </div>
-            <Button 
+            <Button
               onClick={() => {
-                if (confirm("Do you want to reset all daily bonus assignments? This will apply to all children.")) {
+                if (
+                  confirm(
+                    "Do you want to reset all daily bonus assignments? This will apply to all children.",
+                  )
+                ) {
                   // Let the user know we need to select which child to reset
                   toast({
                     title: "Individual Reset Required",
-                    description: "Please use the reset button next to each child to reset their daily bonus.",
+                    description:
+                      "Please use the reset button next to each child to reset their daily bonus.",
                   });
                 }
               }}
-              variant="destructive" 
+              variant="destructive"
               size="sm"
             >
               Reset All
@@ -436,30 +477,40 @@ export default function BonusManagement() {
                 <TableBody>
                   {dailyBonuses.map((bonus: any) => {
                     // Find the child user
-                    const child = users?.find((u: User) => u.id === bonus.user_id);
-                    
+                    const child = users?.find(
+                      (u: User) => u.id === bonus.user_id,
+                    );
+
                     return (
                       <TableRow key={bonus.id}>
-                        <TableCell className="font-medium">{child?.name || 'Unknown'}</TableCell>
+                        <TableCell className="font-medium">
+                          {child?.name || "Unknown"}
+                        </TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2">
-                            <span>{getAssignedChoreName(bonus.assigned_chore_id)}</span>
+                            <span>
+                              {getAssignedChoreName(bonus.assigned_chore_id)}
+                            </span>
                             <BonusBadge variant="small" />
                           </div>
                         </TableCell>
                         <TableCell>{formatDate(bonus.bonus_date)}</TableCell>
                         <TableCell>
-                          <Badge variant="outline" className={
-                            bonus.is_override 
-                              ? "bg-purple-50 text-purple-700 border-purple-200" 
-                              : "bg-blue-50 text-blue-700 border-blue-200"
-                          }>
+                          <Badge
+                            variant="outline"
+                            className={
+                              bonus.is_override
+                                ? "bg-purple-50 text-purple-700 border-purple-200"
+                                : "bg-blue-50 text-blue-700 border-blue-200"
+                            }
+                          >
                             {bonus.is_override ? "Manual" : "Automatic"}
                           </Badge>
                         </TableCell>
                         <TableCell>{getBonusStatusBadge(bonus)}</TableCell>
                         <TableCell>
-                          {bonus.is_spun && bonus.spin_result_tickets !== null ? (
+                          {bonus.is_spun &&
+                          bonus.spin_result_tickets !== null ? (
                             <span className="font-semibold text-primary-600">
                               +{bonus.spin_result_tickets} tickets
                             </span>
@@ -471,13 +522,17 @@ export default function BonusManagement() {
                           <div className="flex space-x-2">
                             {!bonus.is_spun && (
                               <>
-                                <Select 
+                                <Select
                                   onValueChange={(value) => {
                                     // Handle override of bonus chore
-                                    if (confirm(`Change ${child?.name}'s bonus chore?`)) {
+                                    if (
+                                      confirm(
+                                        `Change ${child?.name}'s bonus chore?`,
+                                      )
+                                    ) {
                                       assignBonusMutation.mutate({
                                         userId: bonus.user_id,
-                                        choreId: parseInt(value)
+                                        choreId: parseInt(value),
                                       });
                                     }
                                   }}
@@ -487,28 +542,50 @@ export default function BonusManagement() {
                                     <SelectValue placeholder="Change chore" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value={bonus.assigned_chore_id ? bonus.assigned_chore_id.toString() : "null"}>
-                                      Current: {getAssignedChoreName(bonus.assigned_chore_id)}
+                                    <SelectItem
+                                      value={
+                                        bonus.assigned_chore_id
+                                          ? bonus.assigned_chore_id.toString()
+                                          : "null"
+                                      }
+                                    >
+                                      Current:{" "}
+                                      {getAssignedChoreName(
+                                        bonus.assigned_chore_id,
+                                      )}
                                     </SelectItem>
-                                  <SelectItem value="divider" disabled>
-                                    ───────────────
-                                  </SelectItem> {/* Divider */}
-                                    {(chores || []).filter((c: Chore) => c.is_active && c.id !== bonus.assigned_chore_id).map((chore: Chore) => (
-                                      <SelectItem key={chore.id} value={chore.id.toString()}>
-                                        {chore.name} ({chore.base_tickets} tickets)
-                                      </SelectItem>
-                                    ))}
+                                    <SelectItem value="divider" disabled>
+                                      ───────────────
+                                    </SelectItem>{" "}
+                                    {/* Divider */}
+                                    {(chores || [])
+                                      .filter(
+                                        (c: Chore) =>
+                                          c.is_active &&
+                                          c.id !== bonus.assigned_chore_id,
+                                      )
+                                      .map((chore: Chore) => (
+                                        <SelectItem
+                                          key={chore.id}
+                                          value={chore.id.toString()}
+                                        >
+                                          {chore.name} ({chore.base_tickets}{" "}
+                                          tickets)
+                                        </SelectItem>
+                                      ))}
                                   </SelectContent>
                                 </Select>
                               </>
                             )}
-                            
-                            <Button 
-                              variant="outline" 
+
+                            <Button
+                              variant="outline"
                               size="sm"
                               onClick={() => {
-                                const childName = child?.name || 'this child';
-                                if (confirm(`Reset daily bonus for ${childName}?`)) {
+                                const childName = child?.name || "this child";
+                                if (
+                                  confirm(`Reset daily bonus for ${childName}?`)
+                                ) {
                                   resetBonusMutation.mutate(bonus.user_id);
                                 }
                               }}
@@ -516,7 +593,9 @@ export default function BonusManagement() {
                             >
                               {resetBonusMutation.isPending ? (
                                 <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                              ) : 'Reset'}
+                              ) : (
+                                "Reset"
+                              )}
                             </Button>
                           </div>
                         </TableCell>

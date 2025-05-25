@@ -1567,6 +1567,13 @@ export class DatabaseStorage implements IStorage {
     const newBalance = await this.getUserBalance(user_id);
     console.log(`[TRANSACTION] New balance for user ${user_id}: ${newBalance}`);
 
+    // Update the user's balance cache
+    await db
+      .update(users)
+      .set({ balance_cache: newBalance })
+      .where(eq(users.id, user_id));
+    console.log(`[TRANSACTION] Updated balance_cache for user ${user_id} to ${newBalance}`);
+
     // No longer need to update tickets_saved - progress is calculated from balance
 
     return transaction;

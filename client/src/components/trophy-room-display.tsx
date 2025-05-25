@@ -27,23 +27,30 @@ interface TrophyRoomDisplayProps {
   childName?: string;
 }
 
-export default function TrophyRoomDisplay({ childId, childName }: TrophyRoomDisplayProps) {
+export default function TrophyRoomDisplay({
+  childId,
+  childName,
+}: TrophyRoomDisplayProps) {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
   // Fetch trophies for the child
-  const { data: trophiesData, isLoading, error } = useQuery<{ trophies: TrophyItem[] }>({
+  const {
+    data: trophiesData,
+    isLoading,
+    error,
+  } = useQuery<{ trophies: TrophyItem[] }>({
     queryKey: ["trophies", childId],
     queryFn: () => apiRequest(`/api/child/${childId}/trophies`),
     staleTime: 0, // Always fetch fresh data when invalidated
     refetchOnWindowFocus: false,
     retry: (failureCount, error: any) => {
       // Don't retry auth errors
-      if (error?.message?.includes('Authentication required')) {
+      if (error?.message?.includes("Authentication required")) {
         return false;
       }
       return failureCount < 3;
-    }
+    },
   });
 
   const trophies = trophiesData?.trophies || [];
@@ -52,12 +59,12 @@ export default function TrophyRoomDisplay({ childId, childName }: TrophyRoomDisp
   useEffect(() => {
     const unsubscribe = subscribeToChannel("trophy:awarded", (data: any) => {
       console.log("Received trophy:awarded event:", data);
-      
+
       // Check if this trophy was awarded to the current child
       if (data.child_id === childId) {
         // Invalidate and refetch the trophies query
         queryClient.invalidateQueries({ queryKey: ["trophies", childId] });
-        
+
         // Show a celebration effect or notification if this is the child's own view
         if (user?.id === childId) {
           console.log("🏆 New trophy awarded to current child!");
@@ -89,20 +96,22 @@ export default function TrophyRoomDisplay({ childId, childName }: TrophyRoomDisp
     return (
       <div className="text-center p-8">
         <Trophy className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-gray-500 mb-2">No Trophies Yet</h3>
+        <h3 className="text-lg font-semibold text-gray-500 mb-2">
+          No Trophies Yet
+        </h3>
         <p className="text-gray-400">
-          {childName ? `${childName} hasn't` : "You haven't"} earned any trophies yet. 
-          Keep up the great work!
+          {childName ? `${childName} hasn't` : "You haven't"} earned any
+          trophies yet. Keep up the great work!
         </p>
       </div>
     );
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
@@ -114,17 +123,20 @@ export default function TrophyRoomDisplay({ childId, childName }: TrophyRoomDisp
           {childName ? `${childName}'s Trophy Room` : "Your Trophy Room"}
         </h2>
         <Badge variant="secondary" className="ml-auto">
-          {trophies.length} {trophies.length === 1 ? 'Trophy' : 'Trophies'}
+          {trophies.length} {trophies.length === 1 ? "Trophy" : "Trophies"}
         </Badge>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {trophies.map((trophy) => (
-          <Card key={trophy.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+          <Card
+            key={trophy.id}
+            className="overflow-hidden hover:shadow-lg transition-shadow"
+          >
             <CardHeader className="pb-3">
               <div className="flex items-start gap-3">
                 {trophy.product.image_url ? (
-                  <img 
+                  <img
                     src={trophy.product.image_url}
                     alt={trophy.product.title}
                     className="w-16 h-16 object-cover rounded-lg bg-gray-100"
@@ -145,7 +157,7 @@ export default function TrophyRoomDisplay({ childId, childName }: TrophyRoomDisp
                 </div>
               </div>
             </CardHeader>
-            
+
             {trophy.custom_note && (
               <CardContent className="pt-0">
                 <div className="bg-blue-50 rounded-lg p-3">

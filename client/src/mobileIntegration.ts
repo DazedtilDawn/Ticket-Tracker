@@ -1,6 +1,6 @@
 /**
  * Mobile Integration Module
- * 
+ *
  * This module handles integration between our web app and native Android features
  * when running inside a WebView. It detects the environment and provides
  * appropriate APIs for native functionality.
@@ -16,7 +16,7 @@ interface AndroidInterface {
 
 // Check if running inside Android WebView
 const isAndroidApp = (): boolean => {
-  return typeof (window as any).Android !== 'undefined';
+  return typeof (window as any).Android !== "undefined";
 };
 
 // Safe access to Android interface
@@ -30,23 +30,23 @@ const getAndroidInterface = (): AndroidInterface | null => {
 // Progressive enhancement - only use native features when available
 export const vibrate = (pattern: number | number[]): void => {
   const android = getAndroidInterface();
-  
+
   if (android) {
     // Use Android native vibration
     // Android interface only supports single duration
-    if (typeof pattern === 'number') {
+    if (typeof pattern === "number") {
       android.vibrate(pattern);
     } else if (pattern.length > 0) {
       // For patterns, just use the sum or first value
       android.vibrate(pattern[0]);
     }
-  } else if ('vibrate' in navigator) {
+  } else if ("vibrate" in navigator) {
     // Fall back to Web Vibration API
     try {
       // @ts-ignore - TypeScript doesn't know about navigator.vibrate
       navigator.vibrate(pattern);
     } catch (e) {
-      console.error('Vibration failed:', e);
+      console.error("Vibration failed:", e);
     }
   }
   // Silently fail if vibration is not supported
@@ -55,16 +55,16 @@ export const vibrate = (pattern: number | number[]): void => {
 // Show toast message (native on Android, falls back to web notification)
 export const showToast = (message: string): void => {
   const android = getAndroidInterface();
-  
+
   if (android) {
     android.showToast(message);
   } else {
     // Use web notification as fallback
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('Ticket Tracker', { body: message });
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification("Ticket Tracker", { body: message });
     } else {
       // Simple alert fallback if nothing else works
-      console.log('[Toast]', message);
+      console.log("[Toast]", message);
     }
   }
 };
@@ -73,18 +73,24 @@ export const showToast = (message: string): void => {
 export const scheduleNotification = (
   title: string,
   message: string,
-  delayMinutes = 0
+  delayMinutes = 0,
 ): void => {
   const android = getAndroidInterface();
-  
+
   if (android) {
     const timestamp = Date.now() + delayMinutes * 60 * 1000;
     android.setNotification(title, message, timestamp);
-  } else if ('Notification' in window && Notification.permission === 'granted') {
+  } else if (
+    "Notification" in window &&
+    Notification.permission === "granted"
+  ) {
     // Web Notification API as fallback
-    setTimeout(() => {
-      new Notification(title, { body: message });
-    }, delayMinutes * 60 * 1000);
+    setTimeout(
+      () => {
+        new Notification(title, { body: message });
+      },
+      delayMinutes * 60 * 1000,
+    );
   }
 };
 
@@ -98,7 +104,7 @@ export const hapticFeedback = {
   success: () => {
     try {
       // @ts-ignore - Handle browser vibration API
-      if (navigator.vibrate && typeof navigator.vibrate === 'function') {
+      if (navigator.vibrate && typeof navigator.vibrate === "function") {
         // @ts-ignore - Web browsers that support vibration patterns
         navigator.vibrate([40, 30, 80]);
       } else {
@@ -112,7 +118,7 @@ export const hapticFeedback = {
   error: () => {
     try {
       // @ts-ignore - Handle browser vibration API
-      if (navigator.vibrate && typeof navigator.vibrate === 'function') {
+      if (navigator.vibrate && typeof navigator.vibrate === "function") {
         // @ts-ignore - Web browsers that support vibration patterns
         navigator.vibrate([80, 50, 80, 50, 80]);
       } else {
@@ -125,7 +131,7 @@ export const hapticFeedback = {
   warning: () => {
     try {
       // @ts-ignore - Handle browser vibration API
-      if (navigator.vibrate && typeof navigator.vibrate === 'function') {
+      if (navigator.vibrate && typeof navigator.vibrate === "function") {
         // @ts-ignore - Web browsers that support vibration patterns
         navigator.vibrate([50, 30, 50]);
       } else {
@@ -134,7 +140,7 @@ export const hapticFeedback = {
     } catch (e) {
       vibrate(60);
     }
-  }
+  },
 };
 
 // Check if app is in online/offline mode
@@ -145,24 +151,24 @@ export const isOnline = (): boolean => {
 // Listen for online/offline events
 export const setupConnectivityListeners = (
   onOnline: () => void,
-  onOffline: () => void
-): () => void => {
-  window.addEventListener('online', onOnline);
-  window.addEventListener('offline', onOffline);
-  
+  onOffline: () => void,
+): (() => void) => {
+  window.addEventListener("online", onOnline);
+  window.addEventListener("offline", onOffline);
+
   // Return cleanup function
   return () => {
-    window.removeEventListener('online', onOnline);
-    window.removeEventListener('offline', onOffline);
+    window.removeEventListener("online", onOnline);
+    window.removeEventListener("offline", onOffline);
   };
 };
 
 // Request permission for notifications
 export const requestNotificationPermission = async (): Promise<boolean> => {
-  if ('Notification' in window) {
-    if (Notification.permission !== 'granted') {
+  if ("Notification" in window) {
+    if (Notification.permission !== "granted") {
       const permission = await Notification.requestPermission();
-      return permission === 'granted';
+      return permission === "granted";
     }
     return true;
   }
@@ -170,13 +176,17 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
 };
 
 // Get device type information
-export const getDeviceInfo = (): { isAndroid: boolean; isMobile: boolean; isApp: boolean } => {
+export const getDeviceInfo = (): {
+  isAndroid: boolean;
+  isMobile: boolean;
+  isApp: boolean;
+} => {
   const android = getAndroidInterface();
   const userAgent = navigator.userAgent.toLowerCase();
-  
+
   return {
     isAndroid: /android/.test(userAgent),
     isMobile: /android|iphone|ipad|ipod/.test(userAgent),
-    isApp: android !== null
+    isApp: android !== null,
   };
 };

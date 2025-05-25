@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test App</title>
+</head>
+<body>
+    <h1>Testing Frontend Connection</h1>
+    <div id="test-results"></div>
+    
+    <script>
+        const results = document.getElementById('test-results');
+        
+        // Test 1: Check if API is accessible
+        fetch('http://localhost:5000/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: 'parent', password: 'password' })
+        })
+        .then(res => res.json())
+        .then(data => {
+            results.innerHTML += '<p>✅ API Connection: Success</p>';
+            results.innerHTML += '<p>Token: ' + (data.token ? 'Received' : 'Missing') + '</p>';
+        })
+        .catch(err => {
+            results.innerHTML += '<p>❌ API Connection: Failed - ' + err + '</p>';
+        });
+        
+        // Test 2: Check WebSocket
+        try {
+            const ws = new WebSocket('ws://localhost:5000');
+            ws.onopen = () => {
+                results.innerHTML += '<p>✅ WebSocket: Connected</p>';
+                ws.close();
+            };
+            ws.onerror = (err) => {
+                results.innerHTML += '<p>❌ WebSocket: Error</p>';
+            };
+        } catch (err) {
+            results.innerHTML += '<p>❌ WebSocket: Failed - ' + err + '</p>';
+        }
+        
+        // Test 3: Check if Vite is serving files
+        fetch('http://localhost:5173/src/main.tsx')
+        .then(res => {
+            results.innerHTML += '<p>✅ Vite File Serving: ' + res.status + '</p>';
+        })
+        .catch(err => {
+            results.innerHTML += '<p>❌ Vite File Serving: Failed</p>';
+        });
+    </script>
+</body>
+</html>

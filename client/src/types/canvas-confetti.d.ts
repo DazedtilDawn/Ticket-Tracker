@@ -1,4 +1,4 @@
-declare module 'canvas-confetti' {
+declare module "canvas-confetti" {
   interface ConfettiOptions {
     particleCount?: number;
     angle?: number;
@@ -20,6 +20,6 @@ declare module 'canvas-confetti' {
   }
 
   function confetti(options?: ConfettiOptions): Promise<void>;
-  
+
   export default confetti;
 }

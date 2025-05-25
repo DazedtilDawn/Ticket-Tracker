@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
@@ -14,7 +21,12 @@ interface AssignToChildDialogProps {
   children?: React.ReactNode;
 }
 
-export function AssignToChildDialog({ productId, trigger, onAssigned, children }: AssignToChildDialogProps) {
+export function AssignToChildDialog({
+  productId,
+  trigger,
+  onAssigned,
+  children,
+}: AssignToChildDialogProps) {
   const { getChildUsers } = useAuthStore();
   const childUsers = getChildUsers();
   const { toast } = useToast();
@@ -23,7 +35,9 @@ export function AssignToChildDialog({ productId, trigger, onAssigned, children }
   const [isSaving, setIsSaving] = useState(false);
 
   const toggle = (id: number, checked: boolean) => {
-    setSelectedIds((prev) => (checked ? [...prev, id] : prev.filter((v) => v !== id)));
+    setSelectedIds((prev) =>
+      checked ? [...prev, id] : prev.filter((v) => v !== id),
+    );
   };
 
   const handleSave = async () => {
@@ -35,16 +49,23 @@ export function AssignToChildDialog({ productId, trigger, onAssigned, children }
           apiRequest("/api/goals", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ user_id: childId, product_id: productId })
-          })
-        )
+            body: JSON.stringify({ user_id: childId, product_id: productId }),
+          }),
+        ),
       );
-      toast({ title: "Added", description: "Product added to selected wishlists." });
+      toast({
+        title: "Added",
+        description: "Product added to selected wishlists.",
+      });
       onAssigned && onAssigned();
       setOpen(false);
       setSelectedIds([]);
     } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Failed to add", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add",
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -73,7 +94,10 @@ export function AssignToChildDialog({ productId, trigger, onAssigned, children }
           )}
         </div>
         <DialogFooter className="mt-4">
-          <Button onClick={handleSave} disabled={isSaving || selectedIds.length === 0}>
+          <Button
+            onClick={handleSave}
+            disabled={isSaving || selectedIds.length === 0}
+          >
             {isSaving ? (
               <span className="flex items-center justify-center">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

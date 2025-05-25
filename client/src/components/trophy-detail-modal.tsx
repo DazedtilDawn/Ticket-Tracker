@@ -27,17 +27,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { 
-  Card, 
-  CardContent 
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Camera, Upload, Pencil, TicketIcon } from "lucide-react";
 
 interface TrophyDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
-  trophy: TrophyItem; 
+  trophy: TrophyItem;
   userId: number | undefined;
 }
 
@@ -61,7 +58,12 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function TrophyDetailModal({ isOpen, onClose, trophy, userId }: TrophyDetailModalProps) {
+export function TrophyDetailModal({
+  isOpen,
+  onClose,
+  trophy,
+  userId,
+}: TrophyDetailModalProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [useCatalogImage, setUseCatalogImage] = useState(false);
@@ -88,9 +90,9 @@ export function TrophyDetailModal({ isOpen, onClose, trophy, userId }: TrophyDet
         userId: data.user_id,
         hasImage: !!data.image,
         imageType: data.image?.type,
-        imageSize: data.image?.size
+        imageSize: data.image?.size,
       });
-      
+
       const formData = new FormData();
       formData.append("transaction_id", data.transaction_id.toString());
       formData.append("name", data.name);
@@ -98,7 +100,7 @@ export function TrophyDetailModal({ isOpen, onClose, trophy, userId }: TrophyDet
       // But will merge it with name into the note field
       formData.append("description", data.description || "");
       formData.append("user_id", data.user_id.toString());
-      
+
       if (data.image) {
         formData.append("image", data.image);
       }
@@ -114,11 +116,13 @@ export function TrophyDetailModal({ isOpen, onClose, trophy, userId }: TrophyDet
         title: "Trophy updated!",
         description: "Your trophy has been customized successfully.",
       });
-      
+
       // Invalidate all relevant queries to ensure UI updates
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions/purchases"] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/transactions/purchases"],
+      });
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-      
+
       // Clear form and close modal
       onClose();
     },
@@ -126,7 +130,8 @@ export function TrophyDetailModal({ isOpen, onClose, trophy, userId }: TrophyDet
       console.error("Trophy update error:", error);
       toast({
         title: "Error updating trophy",
-        description: "There was a problem updating your trophy. Please try again.",
+        description:
+          "There was a problem updating your trophy. Please try again.",
         variant: "destructive",
       });
     },
@@ -144,7 +149,7 @@ export function TrophyDetailModal({ isOpen, onClose, trophy, userId }: TrophyDet
     if (file) {
       setSelectedFile(file);
       setUseCatalogImage(false);
-      
+
       // Create a preview URL
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -165,7 +170,10 @@ export function TrophyDetailModal({ isOpen, onClose, trophy, userId }: TrophyDet
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <FormField
@@ -212,7 +220,8 @@ export function TrophyDetailModal({ isOpen, onClose, trophy, userId }: TrophyDet
                       alt={trophy?.title}
                       className="w-full h-full object-contain object-center"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = "/placeholder-product.png";
+                        (e.target as HTMLImageElement).src =
+                          "/placeholder-product.png";
                       }}
                     />
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
@@ -225,7 +234,10 @@ export function TrophyDetailModal({ isOpen, onClose, trophy, userId }: TrophyDet
                 </Card>
 
                 <div className="space-y-3">
-                  <Label htmlFor="picture" className="block text-sm font-medium">
+                  <Label
+                    htmlFor="picture"
+                    className="block text-sm font-medium"
+                  >
                     Trophy Image
                   </Label>
                   <div className="grid grid-cols-1 gap-2">
@@ -233,7 +245,9 @@ export function TrophyDetailModal({ isOpen, onClose, trophy, userId }: TrophyDet
                       type="button"
                       variant="outline"
                       className="w-full flex items-center justify-center h-10 px-4 text-base"
-                      onClick={() => document.getElementById("image-upload")?.click()}
+                      onClick={() =>
+                        document.getElementById("image-upload")?.click()
+                      }
                     >
                       <Upload className="h-4 w-4 mr-2" />
                       Upload Image
@@ -254,10 +268,7 @@ export function TrophyDetailModal({ isOpen, onClose, trophy, userId }: TrophyDet
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={updateTrophyMutation.isPending}
-              >
+              <Button type="submit" disabled={updateTrophyMutation.isPending}>
                 {updateTrophyMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -46,7 +46,7 @@ export const useAuthStore = create<AuthState>()(
       originalUser: null,
       viewingChildId: null,
       isAuthenticated: false,
-      autoLoginEnabled: true,
+      autoLoginEnabled: false,
       familyUsers: [],
 
       login: async (token: string, user: UserInfo) => {

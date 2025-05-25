@@ -1,0 +1,2 @@
+ALTER TABLE goals
+  ADD COLUMN purchased_at TIMESTAMPTZ;

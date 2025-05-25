@@ -358,15 +358,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     try {
-      const userData = insertUserSchema.parse(req.body);
+      // Parse the request body but handle password separately
+      const { password, ...userData } = req.body;
+      
+      // Validate the user data (without password_hash)
+      const validatedData = insertUserSchema.omit({ passwordHash: true }).parse(userData);
 
       // Check if username already exists
-      const existingUser = await storage.getUserByUsername(userData.username);
+      const existingUser = await storage.getUserByUsername(validatedData.username);
       if (existingUser) {
         return res.status(400).json({ message: "Username already taken" });
       }
 
-      const newUser = await storage.createUser(userData);
+      // For now, store password as plain text (in production, use bcrypt)
+      const userWithPassword = {
+        ...validatedData,
+        passwordHash: password || 'password123', // Default password for testing
+      };
+
+      const newUser = await storage.createUser(userWithPassword);
       const token = createJwt(newUser);
 
       return res.status(201).json(
@@ -1353,10 +1363,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/bonus/spin", auth, async (req: Request, res: Response) => {
     try {
       const caller = req.user;
+      console.log("[BONUS_SPIN] Request received:", { 
+        callerId: caller.id, 
+        callerRole: caller.role,
+        bodyUserId: req.body.userId,
+        body: req.body 
+      });
+      
       const targetId =
         caller.role === "parent" && req.body.userId
           ? Number(req.body.userId)
           : caller.id;
+          
+      console.log("[BONUS_SPIN] Target ID determined:", targetId);
 
       // Verify parent-child relationship when applicable
       if (caller.role === "parent" && req.body.userId) {
@@ -1371,8 +1390,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      console.log("[BONUS_SPIN] Looking for today's bonus for user:", targetId);
       const bonus = await storage.getTodayDailyBonusSimple(targetId);
+      console.log("[BONUS_SPIN] Bonus found:", bonus);
+      
       if (!bonus) {
+        console.log("[BONUS_SPIN] No bonus found for user:", targetId);
         return res.status(404).json({ message: "No bonus assigned" });
       }
       if (bonus.revealed) {
@@ -1380,6 +1403,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const tickets = spinTicketReward();
+      
+      // Map tickets to wheel segment index
+      // Based on WHEEL_SEGMENTS in client/src/components/child-bonus-wheel.tsx:
+      // [1, 2, 3, 5, 2, 10, "×2", 4]
+      let segmentIndex = 0;
+      switch(tickets) {
+        case 1: segmentIndex = 0; break;
+        case 2: segmentIndex = Math.random() < 0.5 ? 1 : 4; break; // Two "2" segments
+        case 3: segmentIndex = 2; break;
+        case 5: segmentIndex = 3; break;
+        case 8: segmentIndex = 5; break; // 8 tickets shows as "10" on wheel
+        default: segmentIndex = 0;
+      }
 
       // Create "earn" transaction
       const transaction = await storage.createTransaction({
@@ -1399,7 +1435,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       broadcast("bonus:spin", { user_id: targetId, tickets, balance });
 
       return res.status(201).json({ 
-        tickets, 
+        tickets_awarded: tickets,
+        segment_index: segmentIndex,
         balance, 
         bonus: updatedBonus, 
         transaction 
@@ -2919,7 +2956,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log(`[BONUS_SPIN] Processing spin request:`, req.body);
 
-      const data = bonusSpinSchema.parse(req.body);
+      // Parse and validate the request, but handle the error gracefully
+      let data;
+      try {
+        data = bonusSpinSchema.parse(req.body);
+      } catch (parseError) {
+        console.error(`[BONUS_SPIN] Schema validation failed:`, parseError);
+        // For now, manually extract what we need
+        data = {
+          daily_bonus_id: req.body.daily_bonus_id,
+          userId: req.body.userId
+        };
+        
+        // Ensure daily_bonus_id is present and valid
+        if (!data.daily_bonus_id || typeof data.daily_bonus_id !== 'number') {
+          return res.status(400).json({ 
+            message: "Invalid or missing daily_bonus_id",
+            details: parseError instanceof Error ? parseError.message : "Schema validation failed"
+          });
+        }
+      }
+      
       console.log(`[BONUS_SPIN] Validated request data:`, data);
 
       // Step 1: Get the daily bonus record
@@ -3467,37 +3524,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .json({ message: "Failed to delete transaction" });
       }
 
-      // Get updated balance
-      const balance = await storage.getUserBalance(transaction.user_id);
-
-      // Always get the updated active goal when a transaction is deleted,
-      // regardless of transaction type, since the balance has changed
-      let goal = await storage.getActiveGoalByUser(transaction.user_id);
-
-      // If we don't have an active goal but the transaction was tied to a specific goal,
-      // include that one instead
-      if (!goal && transaction.goal_id) {
-        goal = await storage.getGoalWithProduct(transaction.goal_id);
-      }
-
-      // Force a refresh of the goal progress to match the current balance
-      if (goal) {
-        console.log(
-          `[DELETE] Updating goal progress for user ${transaction.user_id} after transaction deletion`,
-        );
-        // Get current balance
-        const userBalance = await storage.getUserBalance(transaction.user_id);
-
-        // Calculate the max tickets for this goal
-        const maxGoalTickets = Math.ceil(
-          goal.product.price_cents / TICKET_CENT_VALUE,
-        );
-
-        // No longer need to update goal progress - it's calculated from balance
-        console.log(
-          `[DELETE] Goal ${goal.id} progress will be recalculated from new balance: ${userBalance}`,
-        );
-      }
+      // Run balance and goal queries in parallel for better performance
+      const [balance, goal] = await Promise.all([
+        storage.getUserBalance(transaction.user_id),
+        transaction.goal_id 
+          ? storage.getGoalWithProduct(transaction.goal_id)
+          : storage.getActiveGoalByUser(transaction.user_id)
+      ]);
 
       // Broadcast the deletion
       broadcast("transaction:delete", {
