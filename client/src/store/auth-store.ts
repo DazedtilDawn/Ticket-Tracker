@@ -46,7 +46,7 @@ export const useAuthStore = create<AuthState>()(
       originalUser: null,
       viewingChildId: null,
       isAuthenticated: false,
-      autoLoginEnabled: false,
+      autoLoginEnabled: true,
       familyUsers: [],
 
       login: async (token: string, user: UserInfo) => {
@@ -84,19 +84,39 @@ export const useAuthStore = create<AuthState>()(
 
       loginAsUser: async (username: string) => {
         try {
-          const data = await apiRequest("/api/auth/login", {
+          const response = await fetch("/api/auth/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password: "password" }),
+            credentials: "include",
+            body: JSON.stringify({ username, password: "password123" }),
           });
 
-          set({
-            token: data.token,
-            user: data.user,
-            isAuthenticated: true,
-          });
+          if (!response.ok) {
+            throw new Error(`Login failed: ${response.status}`);
+          }
 
-          return true;
+          const data = await response.json();
+          
+          if (data?.success && data?.data) {
+            const { token, user } = data.data;
+            
+            set({
+              token,
+              user,
+              isAuthenticated: true,
+              viewingChildId: null,
+              originalUser: null,
+            });
+
+            // If parent, refresh family users
+            if (user.role === 'parent') {
+              await get().refreshFamilyUsers();
+            }
+
+            return true;
+          }
+          
+          throw new Error("Login failed - invalid response");
         } catch (error) {
           console.error("Auto-login failed:", error);
           return false;
@@ -170,35 +190,9 @@ export const useAuthStore = create<AuthState>()(
           }
         }
 
-        // If no valid token, but auto-login is enabled
-        if (autoLoginEnabled) {
-          let usersForAutoLogin = currentFamilyUsers;
-          if (usersForAutoLogin.length === 0) {
-            try {
-              usersForAutoLogin = (await apiRequest("/api/users")) || [];
-              if (Array.isArray(usersForAutoLogin))
-                set({ familyUsers: usersForAutoLogin });
-              console.log(
-                "AuthStore: Fetched family users for auto-login:",
-                usersForAutoLogin,
-              );
-            } catch (e) {
-              console.error(
-                "AuthStore: Failed to fetch users for auto-login",
-                e,
-              );
-              usersForAutoLogin = [];
-            }
-          }
-          if (usersForAutoLogin.length > 0) {
-            const parentUser =
-              usersForAutoLogin.find((u) => u.role === "parent") ||
-              usersForAutoLogin[0];
-            if (parentUser) {
-              return await get().loginAsUser(parentUser.username);
-            }
-          }
-        }
+        // Try auto-login with parent user (always enabled for this project)
+        console.log("AuthStore: Attempting auto-login as parent user");
+        return await get().loginAsUser("parent");
 
         // No token and no auto-login
         get().logout();
