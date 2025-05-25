@@ -346,7 +346,7 @@ export function ChildBonusWheel({
         payload 
       });
         
-      return apiRequest("/api/bonus-spin", {
+      return apiRequest("/api/bonus/spin", {
         method: "POST",
         body: JSON.stringify(payload),
       });
