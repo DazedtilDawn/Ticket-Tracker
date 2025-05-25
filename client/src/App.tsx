@@ -97,6 +97,9 @@ function Router() {
       <Route path="/bonus-management">
         <ProtectedRoute component={BonusManagement} />
       </Route>
+      <Route path="/parent-dashboard">
+        <ProtectedRoute component={ParentDashboard} />
+      </Route>
       <Route path="/settings/children">
         <ProtectedRoute component={ManageChildren} />
       </Route>

@@ -273,9 +273,15 @@ export function MobileNav() {
             </button>
           ) : (
             <button
-              onClick={handleResetToParent}
+              onClick={() => {
+                if (viewingAsChild) {
+                  handleResetToParent();
+                } else {
+                  setLocation("/parent-dashboard");
+                }
+              }}
               className={`flex flex-col items-center justify-center ${
-                location === "/" && !viewingAsChild
+                location === "/parent-dashboard"
                   ? "text-amber-600 dark:text-amber-400"
                   : "text-gray-500 dark:text-gray-400"
               }`}
