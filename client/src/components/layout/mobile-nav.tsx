@@ -272,17 +272,17 @@ export function MobileNav() {
               <span className="text-xs font-medium">Parent</span>
             </button>
           ) : (
-            <a
-              href="/parent-dashboard"
+            <button
+              onClick={handleResetToParent}
               className={`flex flex-col items-center justify-center ${
-                location === "/parent-dashboard"
+                location === "/" && !viewingAsChild
                   ? "text-amber-600 dark:text-amber-400"
                   : "text-gray-500 dark:text-gray-400"
               }`}
             >
               <i className="ri-user-settings-line text-xl"></i>
               <span className="text-xs mt-1">Parent</span>
-            </a>
+            </button>
           )}
         </div>
       </div>
