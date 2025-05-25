@@ -45,9 +45,11 @@ function ProtectedRoute({
   }
 
   // Special case for the Dashboard to show parent-specific dashboard
+  // Show ParentDashboard only if the original user is a parent and not viewing as child
+  const originalUser = useAuthStore((state) => state.originalUser);
   if (
     Component === Dashboard &&
-    user?.role === "parent" &&
+    originalUser?.role === "parent" &&
     !isViewingAsChild()
   ) {
     return <ParentDashboard {...rest} />;
