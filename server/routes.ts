@@ -1391,8 +1391,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log("[BONUS_SPIN] Looking for today's bonus for user:", targetId);
-      const bonus = await storage.getTodayDailyBonusSimple(targetId);
-      console.log("[BONUS_SPIN] Bonus found:", bonus);
+      
+      // If daily_bonus_id is provided, use it directly
+      let bonus;
+      if (req.body.daily_bonus_id) {
+        console.log("[BONUS_SPIN] Using provided daily_bonus_id:", req.body.daily_bonus_id);
+        const dailyBonusRecord = await storage.getDailyBonusById(req.body.daily_bonus_id);
+        if (dailyBonusRecord && dailyBonusRecord.user_id === targetId) {
+          bonus = {
+            id: dailyBonusRecord.id,
+            user_id: dailyBonusRecord.user_id,
+            revealed: dailyBonusRecord.is_spun,
+            bonus_tickets: dailyBonusRecord.spin_result_tickets || 0
+          };
+          console.log("[BONUS_SPIN] Found bonus by ID:", bonus);
+        } else {
+          console.log("[BONUS_SPIN] Bonus not found or user mismatch:", dailyBonusRecord);
+        }
+      } else {
+        // Fallback to the old method
+        bonus = await storage.getTodayDailyBonusSimple(targetId);
+        console.log("[BONUS_SPIN] Found bonus by date lookup:", bonus);
+      }
       
       if (!bonus) {
         console.log("[BONUS_SPIN] No bonus found for user:", targetId);
