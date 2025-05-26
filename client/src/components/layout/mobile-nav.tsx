@@ -81,6 +81,16 @@ export function MobileNav() {
   };
 
   const handleSwitchToChild = (childUser: UserInfo) => {
+    console.log("Mobile: handleSwitchToChild called with:", childUser);
+    
+    // Check if we're trying to switch to the same child we're already viewing
+    if (viewingAsChild && viewingChildId === childUser.id) {
+      console.log("Already viewing this child, no action needed");
+      return;
+    }
+    
+    // Switch directly to the new child (works from parent or child view)
+    console.log("Switching to child:", childUser.name);
     switchChildView(childUser);
     setLocation("/");
   };

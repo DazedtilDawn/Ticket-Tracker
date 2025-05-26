@@ -100,17 +100,22 @@ export function Sidebar() {
 
   const handleSwitchToChild = (childUser: UserInfo) => {
     console.log("Sidebar: handleSwitchToChild called with:", childUser);
+    
+    // Check if we're trying to switch to the same child we're already viewing
+    if (viewingAsChild && viewingChildId === childUser.id) {
+      console.log("Already viewing this child, no action needed");
+      return;
+    }
+    
     // If already viewing as a child and trying to switch to another child,
-    // we need to reset to parent view first, then switch to the new child
+    // we can switch directly without resetting to parent first
     if (viewingAsChild) {
-      resetChildView();
-      // Give it a small delay to ensure state updates correctly
-      setTimeout(() => {
-        switchChildView(childUser);
-        setLocation("/");
-      }, 50);
+      console.log("Switching from child to another child directly");
+      switchChildView(childUser);
+      setLocation("/");
     } else {
       // Normal case - just switch directly
+      console.log("Switching from parent to child");
       switchChildView(childUser);
       setLocation("/");
     }
