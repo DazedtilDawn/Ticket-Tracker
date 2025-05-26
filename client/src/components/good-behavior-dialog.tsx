@@ -119,6 +119,8 @@ export function GoodBehaviorDialog({
   const [dialogDescription, setDialogDescription] = useState(
     "Reward good behavior with bonus tickets. This will update the child's balance.",
   );
+  const [showWheelPreview, setShowWheelPreview] = useState(false);
+  const [spinResult, setSpinResult] = useState<number | null>(null);
 
   useEffect(() => {
     if (rewardType === "tickets") {
@@ -145,6 +147,25 @@ export function GoodBehaviorDialog({
     onSuccess: (response) => {
       console.log("[MUTATION] Success response:", response);
       const selectedRewardType = form.getValues("rewardType");
+      
+      if (selectedRewardType === "spin") {
+        // Show wheel preview for spin rewards
+        setShowWheelPreview(true);
+        setSpinResult(response.tickets || Math.floor(Math.random() * 5) + 1);
+        
+        // Hide wheel and close dialog after animation
+        setTimeout(() => {
+          setShowWheelPreview(false);
+          setSpinResult(null);
+          handleOpenChange(false);
+          if (onCompleted) onCompleted();
+        }, 3000);
+      } else {
+        // For ticket rewards, close immediately
+        handleOpenChange(false);
+        if (onCompleted) onCompleted();
+      }
+
       const actionText = selectedRewardType === "tickets" ? "added" : "awarded";
       const descriptionText =
         selectedRewardType === "tickets"
@@ -161,8 +182,7 @@ export function GoodBehaviorDialog({
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/daily-bonus/unspun"] });
 
-      // Close dialog and reset form
-      setOpen(false);
+      // Reset form
       form.reset({
         user_id: "",
         rewardType: "tickets",
@@ -335,12 +355,39 @@ export function GoodBehaviorDialog({
               )}
             />
 
+            {/* Show wheel preview when awarding spin */}
+            {showWheelPreview && (
+              <div className="mt-6 text-center">
+                <div className="mx-auto w-32 h-32 relative">
+                  <div 
+                    className="w-full h-full border-4 border-gray-300 rounded-full flex items-center justify-center text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 text-white animate-spin"
+                    style={{
+                      animation: "spin 2s ease-out",
+                      animationFillMode: "forwards"
+                    }}
+                  >
+                    🎉
+                  </div>
+                  {spinResult && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="bg-white rounded-full w-16 h-16 flex items-center justify-center text-xl font-bold text-purple-600 shadow-lg">
+                        +{spinResult}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <p className="mt-4 text-lg font-semibold text-green-600">
+                  🎯 Bonus Spin Awarded! +{spinResult} tickets!
+                </p>
+              </div>
+            )}
+
             <DialogFooter>
               <Button
                 type="submit"
                 variant="default"
                 className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
-                disabled={goodBehaviorMutation.isPending}
+                disabled={goodBehaviorMutation.isPending || showWheelPreview}
               >
                 {goodBehaviorMutation.isPending
                   ? "Processing..."
