@@ -98,14 +98,7 @@ export function MobileNav() {
     // Switch directly to the new child (works from parent or child view)
     console.log("Switching to child:", childUser.name);
     switchChildView(childUser);
-    
-    // Force navigation to home dashboard and full page reload on mobile
     setLocation("/");
-    
-    // Force a hard refresh on mobile to ensure proper state updates
-    setTimeout(() => {
-      window.location.href = "/";
-    }, 50);
   };
 
   const handleResetToParent = () => {

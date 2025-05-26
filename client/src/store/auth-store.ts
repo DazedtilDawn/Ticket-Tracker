@@ -201,14 +201,28 @@ export const useAuthStore = create<AuthState>()(
 
       // Switch to viewing as a child user
       switchChildView: (childUser: UserInfo) => {
-        const { user } = get();
-
-        // Only parents can switch to child view
-        if (user?.role !== "parent") return;
+        const { user, originalUser, viewingChildId } = get();
 
         console.log("AuthStore: switchChildView called for:", childUser);
 
-        // Store the original parent user
+        // If we're already viewing as a child, switch to the new child
+        if (originalUser && viewingChildId !== null) {
+          console.log("AuthStore: Switching from one child to another");
+          set({
+            user: childUser,
+            viewingChildId: childUser.id,
+            // Keep the same originalUser (parent)
+          });
+          return;
+        }
+
+        // Only parents can initiate child view switching
+        if (user?.role !== "parent") {
+          console.log("AuthStore: User is not parent, cannot switch to child view");
+          return;
+        }
+
+        // Store the original parent user and switch to child
         set({
           originalUser: user,
           user: childUser,
