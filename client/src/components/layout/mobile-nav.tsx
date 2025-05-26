@@ -104,15 +104,96 @@ export function MobileNav() {
             </h1>
           </div>
 
-          <div className="flex items-center space-x-3">
-            {viewingAsChild && (
-              <Badge
-                variant="outline"
-                className="bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800"
-              >
-                <UserIcon className="h-3 w-3 mr-1" />
-                <span className="text-xs">Viewing {user?.name}</span>
-              </Badge>
+          <div className="flex items-center space-x-2">
+            {/* Quick child dashboard switcher for mobile */}
+            {(user?.role === "parent" || viewingAsChild) && childUsers.length > 0 && (
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="bg-primary-50 border-primary-200 text-primary-700 hover:bg-primary-100 dark:bg-primary-900/30 dark:border-primary-700 dark:text-primary-300"
+                  >
+                    <Users className="h-4 w-4 mr-1" />
+                    <span className="text-xs font-medium">
+                      {viewingAsChild ? user?.name : "Kids"}
+                    </span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="h-[60vh]">
+                  <SheetHeader>
+                    <SheetTitle className="flex items-center">
+                      <Users className="h-4 w-4 mr-2" />
+                      Child Dashboards
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="py-4 space-y-3">
+                    {viewingAsChild && (
+                      <div className="mb-4">
+                        <SheetClose asChild>
+                          <button
+                            onClick={handleResetToParent}
+                            className="w-full flex items-center p-3 rounded-lg bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 text-amber-800 dark:text-amber-300"
+                          >
+                            <Crown className="h-5 w-5 mr-3" />
+                            <span className="font-medium">Return to Parent View</span>
+                          </button>
+                        </SheetClose>
+                      </div>
+                    )}
+                    {childUsers.map((childUser) => {
+                      const isActive = viewingAsChild && viewingChildId === childUser.id;
+                      return (
+                        <SheetClose key={childUser.id} asChild>
+                          <button
+                            onClick={() => handleSwitchToChild(childUser)}
+                            className={`w-full flex items-center p-3 rounded-lg text-left transition-all ${
+                              isActive
+                                ? "bg-primary-100 dark:bg-primary-800/50 border border-primary-200 dark:border-primary-600"
+                                : "bg-white dark:bg-gray-800 hover:bg-primary-50 dark:hover:bg-primary-900/20 border border-gray-200 dark:border-gray-700"
+                            }`}
+                          >
+                            <Avatar className="h-10 w-10 mr-3">
+                              {childUser.profile_image_url ? (
+                                <img
+                                  src={childUser.profile_image_url}
+                                  alt={childUser.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <AvatarFallback className={`text-sm font-semibold ${
+                                  isActive
+                                    ? "bg-primary-200 text-primary-800 dark:bg-primary-700 dark:text-primary-100"
+                                    : "bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300"
+                                }`}>
+                                  {childUser.name.substring(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              )}
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <span className={`text-base font-medium block ${
+                                isActive
+                                  ? "text-primary-800 dark:text-primary-100"
+                                  : "text-gray-700 dark:text-gray-200"
+                              }`}>
+                                {childUser.name}
+                              </span>
+                              {isActive && (
+                                <span className="text-sm text-primary-600 dark:text-primary-400 font-medium">
+                                  Currently viewing
+                                </span>
+                              )}
+                            </div>
+                            {isActive && (
+                              <div className="h-3 w-3 bg-primary-500 dark:bg-primary-400 rounded-full"></div>
+                            )}
+                          </button>
+                        </SheetClose>
+                      );
+                    })}
+                  </div>
+                </SheetContent>
+              </Sheet>
             )}
 
             <Sheet>
