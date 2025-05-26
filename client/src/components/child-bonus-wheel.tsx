@@ -436,7 +436,7 @@ export function ChildBonusWheel({
           navigator.vibrate([50, 60, 50]);
         }
 
-        if (data.tickets_awarded >= 10) {
+        if (data.tickets_awarded >= 8) { // Show confetti for 8+ tickets
           confetti({
             particleCount: 120,
             spread: 80,

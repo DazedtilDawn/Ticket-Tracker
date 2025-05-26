@@ -193,9 +193,10 @@ export default function Dashboard() {
           const storageKey = `bonus_shown_${activeChildId}_${response.daily_bonus_id}`;
           const lastShown = sessionStorage.getItem(storageKey);
           
-          // Only skip if the same bonus was shown within the last 2 minutes (reduced from 5)
-          // This allows recently awarded bonuses to appear when parents visit child profiles
-          if (!lastShown || (now - parseInt(lastShown)) > 120000) {
+          // Only skip if the same bonus was shown within the last 30 seconds for good behavior bonuses
+          // This ensures awarded bonuses appear immediately when parents visit child profiles
+          const skipTimeMs = response.trigger_type === "good_behavior_reward" ? 30000 : 120000;
+          if (!lastShown || (now - parseInt(lastShown)) > skipTimeMs) {
             // Don't mark as shown until AFTER the modal is opened successfully
             setDailyBonusId(response.daily_bonus_id);
             setCompletedChoreName(response.chore_name || "Daily Bonus");
