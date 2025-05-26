@@ -460,21 +460,13 @@ export class DatabaseStorage implements IStorage {
     oneDayAgo.setDate(oneDayAgo.getDate() - 1);
     const oneDayAgoStr = oneDayAgo.toISOString().split("T")[0];
 
-    // BUGFIX: Check if we need to bypass the cooldown for debugging
-    const bypassCooldown = process.env.NODE_ENV === "development";
-    console.log(
-      `[BONUS_ASSIGN] Debug environment detected: ${bypassCooldown ? "Bypassing cooldown checks" : "Using normal cooldown rules"}`,
-    );
-
     // Filter for DAILY chores that aren't on cooldown
     const eligibleChores = activeChores.filter((chore) => {
       // Only select daily chores for bonuses
       const isDaily = chore.recurrence === "daily";
 
       // Check cooldown: If last_bonus_assigned is null or before the cooldown period, it's eligible
-      // In development mode, bypass the cooldown check to allow testing
       const offCooldown =
-        bypassCooldown ||
         !chore.last_bonus_assigned ||
         chore.last_bonus_assigned < oneDayAgoStr;
 
