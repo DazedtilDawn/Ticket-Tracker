@@ -12,15 +12,22 @@ export default function FamilyCatalog() {
 
   const createGoalMutation = useMutation({
     mutationFn: async (productId: number) => {
-      return apiRequest(`/api/goals`, {
+      console.log("Creating goal for product:", productId, "user:", user?.id);
+      const response = await apiRequest(`/api/goals`, {
         method: "POST",
         body: JSON.stringify({
           product_id: productId,
           user_id: user?.id,
         }),
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
+      console.log("Goal creation response:", response);
+      return response;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Goal created successfully:", data);
       toast({
         title: "Added to wishlist! 🎯",
         description: "Your new goal has been set. Start earning tickets!",
@@ -31,6 +38,7 @@ export default function FamilyCatalog() {
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
     },
     onError: (error: any) => {
+      console.error("Goal creation failed:", error);
       toast({
         title: "Oops! Something went wrong",
         description: error.message || "Could not add item to wishlist",
