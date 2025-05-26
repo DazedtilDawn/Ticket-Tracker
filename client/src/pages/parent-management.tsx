@@ -40,7 +40,6 @@ function ParentManagement() {
   const [choreCounts, setChoreCounts] = useState({ total: 0, completed: 0 });
   const [selectedChild, setSelectedChild] = useState<any>(null);
   const [trophyDialogOpen, setTrophyDialogOpen] = useState(false);
-  const [goodBehaviorDialogOpen, setGoodBehaviorDialogOpen] = useState(false);
 
   // Load family data
   useEffect(() => {
@@ -96,11 +95,6 @@ function ParentManagement() {
   const handleAwardTrophy = (child: any) => {
     setSelectedChild(child);
     setTrophyDialogOpen(true);
-  };
-
-  const handleGoodBehaviorSpin = (child: any) => {
-    setSelectedChild(child);
-    setGoodBehaviorDialogOpen(true);
   };
 
   return (
@@ -297,17 +291,8 @@ function ParentManagement() {
                         </Button>
                         <Button
                           size="sm"
-                          onClick={() => handleGoodBehaviorSpin(childUser)}
-                          className="bg-green-500 hover:bg-green-600"
-                          title="Award Good Behavior Bonus"
-                        >
-                          <Star className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
                           onClick={() => handleAwardTrophy(childUser)}
                           className="bg-purple-500 hover:bg-purple-600"
-                          title="Award Trophy"
                         >
                           <GiftIcon className="h-4 w-4" />
                         </Button>
@@ -368,24 +353,8 @@ function ParentManagement() {
           }}
           childId={selectedChild.id}
           childName={selectedChild.name}
-          itemId={0}
-          itemTitle="Custom Trophy"
         />
       )}
-
-      {/* Good Behavior Dialog */}
-      <GoodBehaviorDialog
-        isOpen={goodBehaviorDialogOpen}
-        onClose={() => {
-          setGoodBehaviorDialogOpen(false);
-          setSelectedChild(null);
-        }}
-        initialChildId={selectedChild?.id}
-        onCompleted={() => {
-          setGoodBehaviorDialogOpen(false);
-          setSelectedChild(null);
-        }}
-      />
     </div>
   );
 }

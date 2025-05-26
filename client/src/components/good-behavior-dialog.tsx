@@ -6,7 +6,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/store/auth-store";
-import { DailyBonusWheel } from "@/components/daily-bonus-wheel";
 
 import {
   Dialog,
@@ -71,24 +70,17 @@ type FormDataType = {
 };
 
 interface GoodBehaviorDialogProps {
-  children?: React.ReactNode;
+  children: React.ReactNode;
   onCompleted?: () => void;
   initialChildId?: number;
-  isOpen?: boolean;
-  onClose?: () => void;
 }
 
 export function GoodBehaviorDialog({
   children,
   onCompleted,
   initialChildId,
-  isOpen: externalOpen,
-  onClose,
 }: GoodBehaviorDialogProps) {
   const [open, setOpen] = useState(false);
-  
-  // Use external open state if provided, otherwise use internal state
-  const dialogOpen = externalOpen !== undefined ? externalOpen : open;
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { getChildUsers } = useAuthStore();
@@ -119,8 +111,6 @@ export function GoodBehaviorDialog({
   const [dialogDescription, setDialogDescription] = useState(
     "Reward good behavior with bonus tickets. This will update the child's balance.",
   );
-  const [showWheelPreview, setShowWheelPreview] = useState(false);
-  const [spinResult, setSpinResult] = useState<number | null>(null);
 
   useEffect(() => {
     if (rewardType === "tickets") {
@@ -147,25 +137,6 @@ export function GoodBehaviorDialog({
     onSuccess: (response) => {
       console.log("[MUTATION] Success response:", response);
       const selectedRewardType = form.getValues("rewardType");
-      
-      if (selectedRewardType === "spin") {
-        // Show wheel preview for spin rewards
-        setShowWheelPreview(true);
-        setSpinResult(response.tickets || Math.floor(Math.random() * 5) + 1);
-        
-        // Hide wheel and close dialog after animation
-        setTimeout(() => {
-          setShowWheelPreview(false);
-          setSpinResult(null);
-          handleOpenChange(false);
-          if (onCompleted) onCompleted();
-        }, 3000);
-      } else {
-        // For ticket rewards, close immediately
-        handleOpenChange(false);
-        if (onCompleted) onCompleted();
-      }
-
       const actionText = selectedRewardType === "tickets" ? "added" : "awarded";
       const descriptionText =
         selectedRewardType === "tickets"
@@ -182,7 +153,8 @@ export function GoodBehaviorDialog({
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/daily-bonus/unspun"] });
 
-      // Reset form
+      // Close dialog and reset form
+      setOpen(false);
       form.reset({
         user_id: "",
         rewardType: "tickets",
@@ -226,21 +198,9 @@ export function GoodBehaviorDialog({
     goodBehaviorMutation.mutate(payload);
   };
 
-  const handleOpenChange = (newOpen: boolean) => {
-    if (externalOpen !== undefined) {
-      // If using external state, call onClose when closing
-      if (!newOpen && onClose) {
-        onClose();
-      }
-    } else {
-      // If using internal state, update it normally
-      setOpen(newOpen);
-    }
-  };
-
   return (
-    <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
-      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{dialogTitle}</DialogTitle>
@@ -355,39 +315,12 @@ export function GoodBehaviorDialog({
               )}
             />
 
-            {/* Show wheel preview when awarding spin */}
-            {showWheelPreview && (
-              <div className="mt-6 text-center">
-                <div className="mx-auto w-32 h-32 relative">
-                  <div 
-                    className="w-full h-full border-4 border-gray-300 rounded-full flex items-center justify-center text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 text-white animate-spin"
-                    style={{
-                      animation: "spin 2s ease-out",
-                      animationFillMode: "forwards"
-                    }}
-                  >
-                    🎉
-                  </div>
-                  {spinResult && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="bg-white rounded-full w-16 h-16 flex items-center justify-center text-xl font-bold text-purple-600 shadow-lg">
-                        +{spinResult}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <p className="mt-4 text-lg font-semibold text-green-600">
-                  🎯 Bonus Spin Awarded! +{spinResult} tickets!
-                </p>
-              </div>
-            )}
-
             <DialogFooter>
               <Button
                 type="submit"
                 variant="default"
                 className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
-                disabled={goodBehaviorMutation.isPending || showWheelPreview}
+                disabled={goodBehaviorMutation.isPending}
               >
                 {goodBehaviorMutation.isPending
                   ? "Processing..."
