@@ -165,7 +165,7 @@ function ParentManagement() {
                 </Button>
               </BadBehaviorDialog>
 
-              <AddProductDialog>
+              <AddProductDialog onProductAdded={() => queryClient.invalidateQueries({ queryKey: ["/api/products"] })}>
                 <Button className="h-24 flex flex-col items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white">
                   <GiftIcon className="h-8 w-8" />
                   <span className="text-sm font-medium">Add Product</span>
@@ -353,13 +353,6 @@ function ParentManagement() {
           }}
           childId={selectedChild.id}
           childName={selectedChild.name}
-          onTrophyAwarded={() => {
-            queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-            toast({
-              title: "Trophy Awarded!",
-              description: `Successfully awarded trophy to ${selectedChild.name}`,
-            });
-          }}
         />
       )}
     </div>
