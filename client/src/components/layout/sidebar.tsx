@@ -171,34 +171,76 @@ export function Sidebar() {
           </div>
         )}
 
-        {/* Child accounts quick switcher section - always shown for parents,
-            also shown when viewing as child but want to switch to a different child */}
+        {/* Enhanced child dashboard quick switcher - always prominent for parents */}
         {(user?.role === "parent" || viewingAsChild) &&
           childUsers.length > 0 && (
-            <div className="p-3 bg-primary-50 dark:bg-primary-900/30 rounded-lg border border-primary-100 dark:border-primary-800/50 mb-2">
-              <div className="flex items-center mb-2">
-                <Users className="h-4 w-4 mr-2 text-primary-600 dark:text-primary-400" />
-                <h3 className="text-sm font-semibold text-primary-700 dark:text-primary-300">
-                  Quick Access: Child Accounts
-                </h3>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {childUsers.map((childUser) => (
+            <div className="p-3 bg-gradient-to-r from-primary-50 to-blue-50 dark:from-primary-900/30 dark:to-blue-900/30 rounded-lg border border-primary-200 dark:border-primary-700 mb-2 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center">
+                  <Users className="h-4 w-4 mr-2 text-primary-600 dark:text-primary-400" />
+                  <h3 className="text-sm font-bold text-primary-700 dark:text-primary-300">
+                    Child Dashboards
+                  </h3>
+                </div>
+                {viewingAsChild && (
                   <button
-                    key={childUser.id}
-                    onClick={() => handleSwitchToChild(childUser)}
-                    className="flex flex-col items-center p-2 rounded-md text-center bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm border border-gray-200 dark:border-gray-700 transition-colors"
+                    onClick={handleResetToParent}
+                    className="text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium transition-colors"
                   >
-                    <Avatar className="h-8 w-8 mb-1">
-                      <AvatarFallback className="bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300 text-xs">
-                        {childUser.name.substring(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-xs font-medium truncate w-full">
-                      {childUser.name}
-                    </span>
+                    Parent View
                   </button>
-                ))}
+                )}
+              </div>
+              <div className="space-y-1">
+                {childUsers.map((childUser) => {
+                  const isActive = viewingAsChild && viewingChildId === childUser.id;
+                  return (
+                    <button
+                      key={childUser.id}
+                      onClick={() => handleSwitchToChild(childUser)}
+                      className={`w-full flex items-center p-2 rounded-md text-left transition-all duration-200 ${
+                        isActive
+                          ? "bg-primary-100 dark:bg-primary-800/50 border border-primary-200 dark:border-primary-600 shadow-sm"
+                          : "bg-white dark:bg-gray-800/50 hover:bg-primary-50 dark:hover:bg-primary-900/20 border border-gray-200 dark:border-gray-700"
+                      }`}
+                    >
+                      <Avatar className="h-9 w-9 mr-3">
+                        {childUser.profile_image_url ? (
+                          <img
+                            src={childUser.profile_image_url}
+                            alt={childUser.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <AvatarFallback className={`text-sm font-semibold ${
+                            isActive
+                              ? "bg-primary-200 text-primary-800 dark:bg-primary-700 dark:text-primary-100"
+                              : "bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300"
+                          }`}>
+                            {childUser.name.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <span className={`text-sm font-medium truncate block ${
+                          isActive
+                            ? "text-primary-800 dark:text-primary-100"
+                            : "text-gray-700 dark:text-gray-200"
+                        }`}>
+                          {childUser.name}
+                        </span>
+                        {isActive && (
+                          <span className="text-xs text-primary-600 dark:text-primary-400 font-medium">
+                            Currently viewing
+                          </span>
+                        )}
+                      </div>
+                      {isActive && (
+                        <div className="h-2 w-2 bg-primary-500 dark:bg-primary-400 rounded-full"></div>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
