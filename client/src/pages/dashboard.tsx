@@ -190,25 +190,6 @@ export default function Dashboard() {
             );
           }
         } else {
-          // Legacy handling for chore completion bonuses without trigger_type
-          if (response.trigger_type === "chore_completion" || !response.trigger_type) {
-            // For chore completion bonuses, use sessionStorage to avoid repeated checks
-            const today = new Date().toISOString().split("T")[0];
-            const storageKey = `chore_bonus_check_${activeChildId}_${today}`;
-            
-            if (sessionStorage.getItem(storageKey) !== "true") {
-              sessionStorage.setItem(storageKey, "true");
-              setDailyBonusId(response.daily_bonus_id);
-              setCompletedChoreName(response.chore_name || "Daily Bonus");
-              setBonusTriggerType(response.trigger_type || "chore_completion");
-              setIsSpinPromptOpen(true);
-            } else {
-              console.log(
-                `[Optimization] Skipping chore bonus prompt for child ${activeChildId} - already shown today`,
-              );
-            }
-          }
-        } else {
           console.log("No unspun bonus found for this user");
         }
       } catch (error: any) {
