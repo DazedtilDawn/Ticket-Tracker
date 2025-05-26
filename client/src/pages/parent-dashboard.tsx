@@ -332,9 +332,43 @@ export default function ParentDashboard() {
 
             {/* Overview Tab */}
             <TabsContent value="overview" className="mt-4">
-              {/* Child Cards Row - Moved to top for easy access */}
+              {/* Quick Management Actions */}
               <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-4">Child Profiles</h3>
+                <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <NewChoreDialog>
+                    <Button className="h-20 flex flex-col items-center gap-2 bg-blue-500 hover:bg-blue-600">
+                      <Plus className="h-6 w-6" />
+                      <span className="text-sm">Add Chore</span>
+                    </Button>
+                  </NewChoreDialog>
+                  
+                  <GoodBehaviorDialog>
+                    <Button className="h-20 flex flex-col items-center gap-2 bg-green-500 hover:bg-green-600">
+                      <Award className="h-6 w-6" />
+                      <span className="text-sm">Good Behavior</span>
+                    </Button>
+                  </GoodBehaviorDialog>
+                  
+                  <BadBehaviorDialog>
+                    <Button className="h-20 flex flex-col items-center gap-2 bg-red-500 hover:bg-red-600">
+                      <MinusCircle className="h-6 w-6" />
+                      <span className="text-sm">Bad Behavior</span>
+                    </Button>
+                  </BadBehaviorDialog>
+                  
+                  <AwardTrophyDialog>
+                    <Button className="h-20 flex flex-col items-center gap-2 bg-purple-500 hover:bg-purple-600">
+                      <Trophy className="h-6 w-6" />
+                      <span className="text-sm">Award Trophy</span>
+                    </Button>
+                  </AwardTrophyDialog>
+                </div>
+              </div>
+
+              {/* Child Management Cards */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-4">Child Management</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {childSummaries.length > 0 ? (
                     childSummaries.map((child) => {
