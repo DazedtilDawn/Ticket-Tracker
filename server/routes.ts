@@ -3091,23 +3091,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `[BONUS_SPIN] Starting random wheel spin process for bonus ${dailyBonusRecord.id}`,
       );
 
-      // Using the wheel segments from the frontend config
+      // Using the exact wheel segments from the frontend to ensure perfect mapping
+      // Must match client/src/components/child-bonus-wheel.tsx WHEEL_SEGMENTS
       const WHEEL_SEGMENTS = [
-        { value: 1, weight: 20, label: "1" }, // 20% chance
-        { value: 2, weight: 18, label: "2" }, // 18% chance
-        { value: 3, weight: 16, label: "3" }, // 16% chance
-        { value: 5, weight: 13, label: "5" }, // 13% chance
-        { value: 2, weight: 14, label: "2" }, // 14% chance (duplicate for UX)
-        { value: 10, weight: 7, label: "10" }, // 7% chance
+        { value: 1, weight: 15, label: "1" },     // Index 0
+        { value: 2, weight: 15, label: "2" },     // Index 1
+        { value: 3, weight: 12, label: "3" },     // Index 2
+        { value: 5, weight: 10, label: "5" },     // Index 3
+        { value: 2, weight: 15, label: "2" },     // Index 4 (duplicate for UX)
+        { value: 10, weight: 8, label: "10" },    // Index 5 - This must give 10 tickets!
         {
           type: "double",
           weight: 5,
           label: "×2",
           value: "double",
           multiplier: 2,
-        }, // 5% chance
-        { value: 4, weight: 7, label: "4" }, // 7% chance
-        { value: "respin", weight: 5, label: "Spin Again" }, // 5% chance
+        }, // Index 6
+        { value: 4, weight: 10, label: "4" },     // Index 7
       ];
 
       // Calculate total weight
