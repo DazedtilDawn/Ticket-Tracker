@@ -204,10 +204,10 @@ export async function assignDailyBonus(userId: number): Promise<DailyBonusSimple
 
 /**
  * Generate random ticket reward for bonus spin
- * Returns random choice from [1,2,3,5,8] with equal probability
- * TODO: Add weighted probabilities if desired later
+ * Returns random choice from [1,2,3,5,10] to match wheel display
+ * FIXED: Changed from 8 to 10 to match wheel segment display
  */
 export function spinTicketReward(): number {
-  const ticketOptions = [1, 2, 3, 5, 8];
+  const ticketOptions = [1, 2, 3, 5, 10];
   return ticketOptions[Math.floor(Math.random() * ticketOptions.length)];
 }

@@ -1424,7 +1424,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const tickets = spinTicketReward();
       
-      // Map tickets to wheel segment index
+      // Map tickets to wheel segment index - FIX: Award actual tickets, not different amounts
       // Based on WHEEL_SEGMENTS in client/src/components/child-bonus-wheel.tsx:
       // [1, 2, 3, 5, 2, 10, "×2", 4]
       let segmentIndex = 0;
@@ -1433,7 +1433,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         case 2: segmentIndex = Math.random() < 0.5 ? 1 : 4; break; // Two "2" segments
         case 3: segmentIndex = 2; break;
         case 5: segmentIndex = 3; break;
-        case 8: segmentIndex = 5; break; // 8 tickets shows as "10" on wheel
+        case 10: segmentIndex = 5; break; // FIXED: 10 tickets shows as "10" on wheel
         default: segmentIndex = 0;
       }
 
