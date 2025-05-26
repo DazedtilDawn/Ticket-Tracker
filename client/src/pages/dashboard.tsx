@@ -165,15 +165,16 @@ export default function Dashboard() {
           activeChildId,
         );
 
-        // Clear any old session storage entries for this child (over 10 minutes old)
+        // Clear any old session storage entries for this child (over 2 minutes old)
+        // This ensures recently awarded bonuses show up immediately
         const now = Date.now();
         const keys = Object.keys(sessionStorage);
         keys.forEach(key => {
           if (key.startsWith(`bonus_shown_${activeChildId}_`)) {
             const timestamp = sessionStorage.getItem(key);
-            if (timestamp && (now - parseInt(timestamp)) > 600000) { // 10 minutes
+            if (timestamp && (now - parseInt(timestamp)) > 120000) { // 2 minutes
               sessionStorage.removeItem(key);
-              console.log(`[Bonus] Cleared old session storage entry: ${key}`);
+              console.log(`[Bonus] Cleared session storage entry: ${key}`);
             }
           }
         });

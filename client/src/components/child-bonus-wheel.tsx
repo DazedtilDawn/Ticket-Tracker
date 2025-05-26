@@ -47,9 +47,9 @@ const WHEEL_SEGMENTS = [
 ] as const;
 
 const SEGMENT_ANGLE = 360 / WHEEL_SEGMENTS.length;
-const SPIN_DURATION_MS = 8000; // Back to 8 seconds for dramatic effect
-const WIND_UP_DURATION_MS = 300;
-const FULL_SPINS = 12; // Back to 12 full rotations for a longer spin
+const SPIN_DURATION_MS = 4000; // Reduced to 4 seconds for faster response
+const WIND_UP_DURATION_MS = 100; // Reduced wind-up for snappier feel
+const FULL_SPINS = 8; // Reduced spins for faster completion
 
 type SpinState =
   | "idle"
