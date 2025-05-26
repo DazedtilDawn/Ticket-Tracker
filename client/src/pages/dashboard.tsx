@@ -165,6 +165,19 @@ export default function Dashboard() {
           activeChildId,
         );
 
+        // Clear any old session storage entries for this child (over 10 minutes old)
+        const now = Date.now();
+        const keys = Object.keys(sessionStorage);
+        keys.forEach(key => {
+          if (key.startsWith(`bonus_shown_${activeChildId}_`)) {
+            const timestamp = sessionStorage.getItem(key);
+            if (timestamp && (now - parseInt(timestamp)) > 600000) { // 10 minutes
+              sessionStorage.removeItem(key);
+              console.log(`[Bonus] Cleared old session storage entry: ${key}`);
+            }
+          }
+        });
+
         const response = await apiRequest(
           `/api/daily-bonus/unspun?user_id=${activeChildId}`,
           { method: "GET" },
@@ -179,13 +192,17 @@ export default function Dashboard() {
           const storageKey = `bonus_shown_${activeChildId}_${response.daily_bonus_id}`;
           const lastShown = sessionStorage.getItem(storageKey);
           
-          // Only skip if the same bonus was shown within the last 5 minutes
-          if (!lastShown || (now - parseInt(lastShown)) > 300000) {
-            sessionStorage.setItem(storageKey, now.toString());
+          // Only skip if the same bonus was shown within the last 2 minutes (reduced from 5)
+          // This allows recently awarded bonuses to appear when parents visit child profiles
+          if (!lastShown || (now - parseInt(lastShown)) > 120000) {
+            // Don't mark as shown until AFTER the modal is opened successfully
             setDailyBonusId(response.daily_bonus_id);
             setCompletedChoreName(response.chore_name || "Daily Bonus");
             setBonusTriggerType(response.trigger_type || "good_behavior_reward");
             setIsSpinPromptOpen(true);
+            
+            // Only mark as shown after successfully opening the modal
+            sessionStorage.setItem(storageKey, now.toString());
           } else {
             console.log(
               `[Optimization] Skipping bonus prompt for child ${activeChildId} - shown recently for bonus ${response.daily_bonus_id}`,
