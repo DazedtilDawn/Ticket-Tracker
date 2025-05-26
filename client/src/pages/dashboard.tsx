@@ -1020,44 +1020,7 @@ export default function Dashboard() {
         triggerType={bonusTriggerType || undefined}
       />
 
-      {/* Debug Section - Remove this in production */}
-      {import.meta.env.DEV && (
-        <div className="fixed bottom-20 right-4 z-50 bg-gray-800 text-white p-4 rounded-lg text-xs max-w-sm">
-          <h4 className="font-bold mb-2">Debug Info</h4>
-          <p>User ID: {user?.id}</p>
-          <p>Spin Prompt Open: {isSpinPromptOpen ? 'Yes' : 'No'}</p>
-          <p>Daily Bonus ID: {dailyBonusId || 'None'}</p>
-          <button 
-            onClick={() => {
-              console.log('Manual test: Opening spin prompt');
-              // Use a real bonus ID based on current user
-              const testBonusId = user?.id === 612 ? 442 : user?.id === 611 ? 438 : 999;
-              setDailyBonusId(testBonusId);
-              setBonusTriggerType("good_behavior_reward");
-              setCompletedChoreName("Test Good Behavior");
-              setIsSpinPromptOpen(true);
-            }}
-            className="mt-2 bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded text-sm"
-          >
-            Test Spin Modal
-          </button>
-          <button 
-            onClick={() => {
-              // Clear the session storage check
-              const today = new Date().toISOString().split("T")[0];
-              const storageKey = `bonus_check_${user?.id}_${today}`;
-              sessionStorage.removeItem(storageKey);
-              console.log('Cleared bonus check flag');
-              window.location.reload();
-            }}
-            className="mt-2 ml-2 bg-green-500 hover:bg-green-600 px-3 py-1 rounded text-sm"
-          >
-            Reset Bonus Check
-          </button>
-        </div>
-      )}
-
-      {/* Modern Banner Header - replaces traditional header */}
+      {/* Main Dashboard Content */}
       {viewingChild ? (
         <DashboardBanner
           defaultBannerColor={
