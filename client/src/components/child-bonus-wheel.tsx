@@ -373,12 +373,9 @@ export function ChildBonusWheel({
         currentRotation: spinState.rotation
       });
       
-      // Small delay to ensure spinning state is set before rotation
-      // This prevents the CSS transition from being skipped
-      setTimeout(() => {
-        console.log("[WHEEL] Setting final rotation:", finalRotation);
-        dispatch({ type: "SET_ROTATION", payload: finalRotation });
-      }, 50);
+      // Immediately set the final rotation for faster response
+      console.log("[WHEEL] Setting final rotation:", finalRotation);
+      dispatch({ type: "SET_ROTATION", payload: finalRotation });
       
       // Immediately update the balance and show result (don't wait for animation)
       if (data.balance !== undefined) {
