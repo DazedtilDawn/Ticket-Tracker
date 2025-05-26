@@ -174,15 +174,24 @@ export default function Dashboard() {
         if (response && response.daily_bonus_id) {
           console.log("Found unspun bonus:", response);
           
-          // If it's a good behavior bonus, always show it
-          // If it's a chore completion bonus, check sessionStorage to avoid repeated checks
-          if (response.trigger_type === "good_behavior_reward") {
-            // Always show good behavior bonuses
+          // For all bonus types, use sessionStorage to avoid repeated checks within the same session
+          const today = new Date().toISOString().split("T")[0];
+          const storageKey = `bonus_check_${activeChildId}_${response.daily_bonus_id}_${today}`;
+          
+          if (sessionStorage.getItem(storageKey) !== "true") {
+            sessionStorage.setItem(storageKey, "true");
             setDailyBonusId(response.daily_bonus_id);
-            setCompletedChoreName(response.chore_name || "Good Behavior");
-            setBonusTriggerType(response.trigger_type);
+            setCompletedChoreName(response.chore_name || "Daily Bonus");
+            setBonusTriggerType(response.trigger_type || "good_behavior_reward");
             setIsSpinPromptOpen(true);
           } else {
+            console.log(
+              `[Optimization] Skipping bonus prompt for child ${activeChildId} - already shown today for bonus ${response.daily_bonus_id}`,
+            );
+          }
+        } else {
+          // Legacy handling for chore completion bonuses without trigger_type
+          if (response.trigger_type === "chore_completion" || !response.trigger_type) {
             // For chore completion bonuses, use sessionStorage to avoid repeated checks
             const today = new Date().toISOString().split("T")[0];
             const storageKey = `chore_bonus_check_${activeChildId}_${today}`;

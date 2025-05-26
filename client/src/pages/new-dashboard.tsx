@@ -165,10 +165,21 @@ export default function Dashboard() {
         // If we found an unspun daily bonus, open the spin prompt
         if (response && response.daily_bonus_id) {
           console.log("Found unspun bonus:", response);
-          // Set up the data for the spin prompt modal
-          setDailyBonusId(response.daily_bonus_id);
-          setCompletedChoreName(response.chore_name || "Daily Bonus");
-          setIsSpinPromptOpen(true);
+          
+          // Use sessionStorage to prevent the same bonus from appearing repeatedly
+          const today = new Date().toISOString().split("T")[0];
+          const storageKey = `bonus_check_${activeChildId}_${response.daily_bonus_id}_${today}`;
+          
+          if (sessionStorage.getItem(storageKey) !== "true") {
+            sessionStorage.setItem(storageKey, "true");
+            setDailyBonusId(response.daily_bonus_id);
+            setCompletedChoreName(response.chore_name || "Daily Bonus");
+            setIsSpinPromptOpen(true);
+          } else {
+            console.log(
+              `[Optimization] Skipping bonus prompt for child ${activeChildId} - already shown today for bonus ${response.daily_bonus_id}`,
+            );
+          }
         } else {
           console.log("No unspun bonus found for this user");
         }
