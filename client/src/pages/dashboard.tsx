@@ -232,10 +232,24 @@ export default function Dashboard() {
       }
     };
 
-    // Check on load and whenever activeChildId changes
-    checkForUnspunBonus();
+    // Add debounce to prevent excessive API calls
+    const timeoutId = setTimeout(() => {
+      // Only check once per minute per child to prevent performance issues
+      const lastCheckKey = `last_bonus_check_${activeChildId}`;
+      const lastCheck = sessionStorage.getItem(lastCheckKey);
+      const now = Date.now();
+      
+      if (lastCheck && (now - parseInt(lastCheck)) < 60000) {
+        console.log(`[Performance] Skipping bonus check - checked recently for child ${activeChildId}`);
+        return;
+      }
+      
+      // Mark this check time immediately to prevent race conditions
+      sessionStorage.setItem(lastCheckKey, now.toString());
+      checkForUnspunBonus();
+    }, 1000);
 
-    // We'll rely on WebSocket events for real-time updates instead of polling
+    return () => clearTimeout(timeoutId);
   }, [activeChildId]); // ← re-run when child changes or store hydrates
 
   // Fetch user stats, chores, and transactions
