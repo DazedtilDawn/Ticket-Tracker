@@ -99,14 +99,13 @@ export function MobileNav() {
     console.log("Switching to child:", childUser.name);
     switchChildView(childUser);
     
-    // Force navigation to home dashboard to ensure proper refresh
+    // Force navigation to home dashboard and full page reload on mobile
     setLocation("/");
     
-    // Force a small delay to ensure state updates properly on mobile
+    // Force a hard refresh on mobile to ensure proper state updates
     setTimeout(() => {
-      window.location.hash = "";
-      window.dispatchEvent(new HashChangeEvent("hashchange"));
-    }, 100);
+      window.location.href = "/";
+    }, 50);
   };
 
   const handleResetToParent = () => {
