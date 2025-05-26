@@ -608,9 +608,11 @@ export function ChildBonusWheel({
               ref={wheelRef}
               style={{
                 transform: `rotate(${spinState.rotation}deg)`,
-                transition: spinState.state === "spinning"
+                transition: spinState.state === "winding"
+                  ? `transform ${WIND_UP_DURATION_MS}ms ease-in-out`
+                  : spinState.state === "spinning"
                   ? `transform ${SPIN_DURATION_MS}ms cubic-bezier(.12,.98,.26,1)`
-                  : undefined,
+                  : "transform 200ms ease-out",
               }}
               className={cn(
                 "w-full h-full rounded-full shadow-xl relative",
