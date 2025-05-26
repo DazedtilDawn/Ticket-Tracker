@@ -11,7 +11,7 @@ import TransactionsTable from "@/components/transactions-table";
 import { NewChoreDialog } from "@/components/new-chore-dialog";
 import { BadBehaviorDialog } from "@/components/bad-behavior-dialog";
 import { GoodBehaviorDialog } from "@/components/good-behavior-dialog";
-import { DailyBonusWheel } from "@/components/daily-bonus-wheel";
+import AwardTrophyDialog from "@/components/award-trophy-dialog";
 import { AddProductDialog } from "@/components/add-product-dialog";
 import ChildProfileCard from "@/components/child-profile-card";
 import ProfileImageModal from "@/components/profile-image-modal";
@@ -48,6 +48,10 @@ import {
   Info,
   CheckCircle2,
   Clock,
+  Plus,
+  Award,
+  MinusCircle,
+  Trophy,
   AlertTriangle,
 } from "lucide-react";
 import {
@@ -336,30 +340,30 @@ export default function ParentDashboard() {
               <div className="mb-6">
                 <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  <NewChoreDialog>
+                  <NewChoreDialog onChoreCreated={() => queryClient.invalidateQueries({ queryKey: ["/api/chores"] })}>
                     <Button className="h-20 flex flex-col items-center gap-2 bg-blue-500 hover:bg-blue-600">
-                      <Plus className="h-6 w-6" />
+                      <PlusIcon className="h-6 w-6" />
                       <span className="text-sm">Add Chore</span>
                     </Button>
                   </NewChoreDialog>
                   
                   <GoodBehaviorDialog>
                     <Button className="h-20 flex flex-col items-center gap-2 bg-green-500 hover:bg-green-600">
-                      <Award className="h-6 w-6" />
+                      <Star className="h-6 w-6" />
                       <span className="text-sm">Good Behavior</span>
                     </Button>
                   </GoodBehaviorDialog>
                   
                   <BadBehaviorDialog>
                     <Button className="h-20 flex flex-col items-center gap-2 bg-red-500 hover:bg-red-600">
-                      <MinusCircle className="h-6 w-6" />
+                      <MinusCircleIcon className="h-6 w-6" />
                       <span className="text-sm">Bad Behavior</span>
                     </Button>
                   </BadBehaviorDialog>
                   
                   <AwardTrophyDialog>
                     <Button className="h-20 flex flex-col items-center gap-2 bg-purple-500 hover:bg-purple-600">
-                      <Trophy className="h-6 w-6" />
+                      <GiftIcon className="h-6 w-6" />
                       <span className="text-sm">Award Trophy</span>
                     </Button>
                   </AwardTrophyDialog>

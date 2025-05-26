@@ -10,7 +10,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { MobileProvider } from "./context/MobileContext";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
-import ParentDashboard from "@/pages/parent-dashboard";
+import ParentManagement from "@/pages/parent-management";
 import Login from "@/pages/login";
 import Chores from "@/pages/chores";
 import FamilyCatalog from "@/pages/family-catalog";
@@ -45,14 +45,14 @@ function ProtectedRoute({
   }
 
   // Special case for the Dashboard to show parent-specific dashboard
-  // Show ParentDashboard only if the original user is a parent and not viewing as child
+  // Show ParentManagement only if the original user is a parent and not viewing as child
   const originalUser = useAuthStore((state) => state.originalUser);
   if (
     Component === Dashboard &&
     originalUser?.role === "parent" &&
     !isViewingAsChild()
   ) {
-    return <ParentDashboard {...rest} />;
+    return <ParentManagement {...rest} />;
   }
 
   return <Component {...rest} />;
@@ -100,7 +100,7 @@ function Router() {
         <ProtectedRoute component={BonusManagement} />
       </Route>
       <Route path="/parent-dashboard">
-        <ProtectedRoute component={ParentDashboard} />
+        <ProtectedRoute component={ParentManagement} />
       </Route>
       <Route path="/settings/children">
         <ProtectedRoute component={ManageChildren} />
