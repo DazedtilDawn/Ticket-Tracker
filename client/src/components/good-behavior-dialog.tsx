@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/store/auth-store";
+import { DailyBonusWheel } from "@/components/daily-bonus-wheel";
 
 import {
   Dialog,
@@ -70,17 +71,24 @@ type FormDataType = {
 };
 
 interface GoodBehaviorDialogProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   onCompleted?: () => void;
   initialChildId?: number;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
 export function GoodBehaviorDialog({
   children,
   onCompleted,
   initialChildId,
+  isOpen: externalOpen,
+  onClose,
 }: GoodBehaviorDialogProps) {
   const [open, setOpen] = useState(false);
+  
+  // Use external open state if provided, otherwise use internal state
+  const dialogOpen = externalOpen !== undefined ? externalOpen : open;
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { getChildUsers } = useAuthStore();
@@ -198,9 +206,21 @@ export function GoodBehaviorDialog({
     goodBehaviorMutation.mutate(payload);
   };
 
+  const handleOpenChange = (newOpen: boolean) => {
+    if (externalOpen !== undefined) {
+      // If using external state, call onClose when closing
+      if (!newOpen && onClose) {
+        onClose();
+      }
+    } else {
+      // If using internal state, update it normally
+      setOpen(newOpen);
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+    <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
+      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{dialogTitle}</DialogTitle>

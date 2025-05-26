@@ -374,17 +374,18 @@ function ParentManagement() {
       )}
 
       {/* Good Behavior Dialog */}
-      {selectedChild && (
-        <GoodBehaviorDialog
-          isOpen={goodBehaviorDialogOpen}
-          onClose={() => {
-            setGoodBehaviorDialogOpen(false);
-            setSelectedChild(null);
-          }}
-          childId={selectedChild.id}
-          childName={selectedChild.name}
-        />
-      )}
+      <GoodBehaviorDialog
+        isOpen={goodBehaviorDialogOpen}
+        onClose={() => {
+          setGoodBehaviorDialogOpen(false);
+          setSelectedChild(null);
+        }}
+        initialChildId={selectedChild?.id}
+        onCompleted={() => {
+          setGoodBehaviorDialogOpen(false);
+          setSelectedChild(null);
+        }}
+      />
     </div>
   );
 }
