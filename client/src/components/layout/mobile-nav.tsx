@@ -65,6 +65,7 @@ export function MobileNav() {
   ];
 
   const [childUsers, setChildUsers] = useState<UserInfo[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     // Update child users list whenever family users changes
@@ -75,6 +76,11 @@ export function MobileNav() {
 
   const isDarkMode = theme === "dark";
   const viewingAsChild = isViewingAsChild();
+
+  // Force refresh when viewing child changes
+  useEffect(() => {
+    setRefreshKey(prev => prev + 1);
+  }, [viewingChildId, isViewingAsChild]);
 
   const handleThemeToggle = () => {
     setTheme(isDarkMode ? "light" : "dark");
@@ -92,7 +98,15 @@ export function MobileNav() {
     // Switch directly to the new child (works from parent or child view)
     console.log("Switching to child:", childUser.name);
     switchChildView(childUser);
+    
+    // Force navigation to home dashboard to ensure proper refresh
     setLocation("/");
+    
+    // Force a small delay to ensure state updates properly on mobile
+    setTimeout(() => {
+      window.location.hash = "";
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+    }, 100);
   };
 
   const handleResetToParent = () => {
@@ -335,7 +349,7 @@ export function MobileNav() {
       </div>
 
       {/* Mobile bottom navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg z-50">
+      <div key={refreshKey} className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg z-50">
         <div className="grid grid-cols-5 h-20 pt-1">
           {/* First 4 navigation items */}
           {navItems.slice(0, 4).map((item) => (
