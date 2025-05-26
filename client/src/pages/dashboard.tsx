@@ -174,19 +174,21 @@ export default function Dashboard() {
         if (response && response.daily_bonus_id) {
           console.log("Found unspun bonus:", response);
           
-          // For all bonus types, use sessionStorage to avoid repeated checks within the same session
-          const today = new Date().toISOString().split("T")[0];
-          const storageKey = `bonus_check_${activeChildId}_${response.daily_bonus_id}_${today}`;
+          // Only prevent repeated prompts for the same bonus within a short timeframe
+          const now = Date.now();
+          const storageKey = `bonus_shown_${activeChildId}_${response.daily_bonus_id}`;
+          const lastShown = sessionStorage.getItem(storageKey);
           
-          if (sessionStorage.getItem(storageKey) !== "true") {
-            sessionStorage.setItem(storageKey, "true");
+          // Only skip if the same bonus was shown within the last 5 minutes
+          if (!lastShown || (now - parseInt(lastShown)) > 300000) {
+            sessionStorage.setItem(storageKey, now.toString());
             setDailyBonusId(response.daily_bonus_id);
             setCompletedChoreName(response.chore_name || "Daily Bonus");
             setBonusTriggerType(response.trigger_type || "good_behavior_reward");
             setIsSpinPromptOpen(true);
           } else {
             console.log(
-              `[Optimization] Skipping bonus prompt for child ${activeChildId} - already shown today for bonus ${response.daily_bonus_id}`,
+              `[Optimization] Skipping bonus prompt for child ${activeChildId} - shown recently for bonus ${response.daily_bonus_id}`,
             );
           }
         } else {
