@@ -362,12 +362,18 @@ export default function ParentDashboard() {
                     </Button>
                   </BadBehaviorDialog>
                   
-                  <AwardTrophyDialog>
-                    <Button className="h-20 flex flex-col items-center gap-2 bg-purple-500 hover:bg-purple-600">
-                      <GiftIcon className="h-6 w-6" />
-                      <span className="text-sm">Award Trophy</span>
-                    </Button>
-                  </AwardTrophyDialog>
+                  <Button 
+                    className="h-20 flex flex-col items-center gap-2 bg-purple-500 hover:bg-purple-600"
+                    onClick={() => {
+                      toast({
+                        title: "Feature Coming Soon",
+                        description: "Trophy awards will be available in the next update.",
+                      });
+                    }}
+                  >
+                    <GiftIcon className="h-6 w-6" />
+                    <span className="text-sm">Award Trophy</span>
+                  </Button>
                 </div>
               </div>
 

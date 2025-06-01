@@ -122,9 +122,8 @@ export default function Chores() {
           });
         }
 
-        // Always invalidate queries to refresh data regardless of chore_id
-        // This ensures the balance updates even for general transactions
-        queryClient.invalidateQueries({ queryKey: ["/api/chores"] });
+        // Use centralized data manager instead of invalidating queries
+        refetch(); // This uses the centralized chore data manager
         queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       },
     );
@@ -251,7 +250,7 @@ export default function Chores() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/chores"] });
+      refetch(); // Use centralized data manager instead
       toast({
         title: "Chore updated",
         description: "The chore status has been updated successfully.",
@@ -272,7 +271,7 @@ export default function Chores() {
       return apiRequest(`/api/chores/${id}`, { method: "DELETE" });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/chores"] });
+      refetch(); // Use centralized data manager instead
       toast({
         title: "Chore deleted",
         description: "The chore has been deleted successfully.",
