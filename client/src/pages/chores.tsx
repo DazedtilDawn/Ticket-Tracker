@@ -62,6 +62,11 @@ export default function Chores() {
     refetch,
   } = useQuery<Chore[]>({
     queryKey: ["/api/chores"],
+    staleTime: 300000, // 5 minute stale time
+    refetchInterval: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    enabled: false, // Disable automatic fetching temporarily
   });
 
   // Also fetch stats to get balance
@@ -77,37 +82,15 @@ export default function Chores() {
     }
   }, [stats, updateBalance]);
 
-  // Set up WebSocket connection for real-time updates
+  // Set up WebSocket connection for real-time updates - TEMPORARILY DISABLED TO PREVENT API LOOP
   useEffect(() => {
-    console.log("Setting up WebSocket listeners for chore events");
+    console.log("WebSocket listeners temporarily disabled to prevent API call loop");
 
     // Ensure we have an active WebSocket connection
     createWebSocketConnection();
 
-    // Subscribe to chore events (new, update, delete)
-    const choreNewSubscription = subscribeToChannel("chore:new", (data) => {
-      console.log("Received chore:new event:", data);
-      // Invalidate the chores query to refresh the data
-      queryClient.invalidateQueries({ queryKey: ["/api/chores"] });
-    });
-
-    const choreUpdateSubscription = subscribeToChannel(
-      "chore:update",
-      (data) => {
-        console.log("Received chore:update event:", data);
-        // Invalidate the chores query to refresh the data
-        queryClient.invalidateQueries({ queryKey: ["/api/chores"] });
-      },
-    );
-
-    const choreDeleteSubscription = subscribeToChannel(
-      "chore:delete",
-      (data) => {
-        console.log("Received chore:delete event:", data);
-        // Invalidate the chores query to refresh the data
-        queryClient.invalidateQueries({ queryKey: ["/api/chores"] });
-      },
-    );
+    // TEMPORARILY DISABLED: Subscribe to chore events to prevent infinite API calls
+    // This will be re-enabled once the performance issue is resolved
 
     // Subscribe to transaction events that might be related to chore completion
     const earningSubscription = subscribeToChannel(
