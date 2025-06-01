@@ -138,12 +138,9 @@ export default function Chores() {
       },
     );
 
-    // Cleanup function to unsubscribe when component unmounts
+    // Cleanup function - temporarily disabled
     return () => {
-      choreNewSubscription();
-      choreUpdateSubscription();
-      choreDeleteSubscription();
-      earningSubscription();
+      // Cleanup temporarily disabled to prevent API loop
     };
   }, [queryClient, user]);
 

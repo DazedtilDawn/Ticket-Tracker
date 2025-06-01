@@ -136,7 +136,7 @@ export function DailyBonusWheel() {
   const childUsers = getChildUsers();
   const { data: chores = [] } = useQuery({
     queryKey: ["/api/chores"],
-    enabled: !isViewingAsChild(),
+    enabled: false, // Temporarily disabled to prevent API loopild(),
   });
 
   // Mutation to assign bonus tickets
