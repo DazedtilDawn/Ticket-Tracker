@@ -248,9 +248,18 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }), // Keep using the original query function by default
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: 30000, // Default 30 second stale time
-      gcTime: 5 * 60 * 1000, // Keep data in cache for 5 minutes
+      staleTime: 300000, // 5 minute stale time to prevent excessive requests
+      gcTime: 10 * 60 * 1000, // Keep data in cache for 10 minutes
       retry: false,
+      // Emergency fix: Disable chores queries temporarily
+      enabled: (query) => {
+        const queryKey = Array.isArray(query.queryKey) ? query.queryKey[0] : query.queryKey;
+        if (typeof queryKey === 'string' && queryKey.includes('/api/chores')) {
+          console.log('[EMERGENCY] Blocking chores query to prevent infinite loop');
+          return false;
+        }
+        return true;
+      },
     },
     mutations: {
       retry: false,
