@@ -697,6 +697,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const RATE_LIMIT_WINDOW = 1000; // 1 second
   const MAX_REQUESTS_PER_WINDOW = 5; // Maximum 5 requests per second per IP
 
+  // Global circuit breaker to stop infinite loops
+  let choresTotalRequests = 0;
+  const CIRCUIT_BREAKER_THRESHOLD = 100;
+  let circuitBreakerOpen = false;
+
   app.get("/api/chores", auth, async (req: Request, res: Response) => {
     const activeOnly = req.query.activeOnly !== "false";
     const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;

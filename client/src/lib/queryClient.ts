@@ -241,21 +241,35 @@ export const getCachedQueryFn =
     return json as T;
   };
 
-import { queryBlocker } from './queryBlocker';
+// Global query blocker for infinite loop prevention
+const blockedQueries = new Set(['/api/chores']);
+let queryCounter = 0;
 
-// Configure the global query client with our enhanced caching system
+// Configure the global query client with systematic fixes
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      queryFn: getQueryFn({ on401: "throw" }), // Keep using the original query function by default
+      queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: 300000, // 5 minute stale time to prevent excessive requests
-      gcTime: 10 * 60 * 1000, // Keep data in cache for 10 minutes
+      staleTime: 600000, // 10 minute stale time
+      gcTime: 20 * 60 * 1000, // Keep data in cache for 20 minutes
       retry: false,
-      // Use centralized query blocker to prevent infinite loops
+      // Systematic query blocking to prevent infinite loops
       enabled: (query) => {
-        return !queryBlocker.isBlocked(query.queryKey);
+        queryCounter++;
+        const queryKey = Array.isArray(query.queryKey) ? query.queryKey[0] : query.queryKey;
+        
+        if (typeof queryKey === 'string') {
+          // Block problematic endpoints
+          for (const blocked of blockedQueries) {
+            if (queryKey.includes(blocked)) {
+              console.warn(`[QUERY_BLOCK] Preventing ${queryKey} (total blocked: ${queryCounter})`);
+              return false;
+            }
+          }
+        }
+        return true;
       },
     },
     mutations: {

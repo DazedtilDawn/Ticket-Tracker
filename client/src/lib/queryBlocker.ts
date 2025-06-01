@@ -65,11 +65,13 @@ class QueryBlocker {
     const now = Date.now();
     const cutoff = now - (this.RATE_LIMIT_WINDOW * 10);
     
-    for (const [key, value] of this.requestCounts.entries()) {
+    const keysToDelete: string[] = [];
+    this.requestCounts.forEach((value, key) => {
       if (value.timestamp < cutoff) {
-        this.requestCounts.delete(key);
+        keysToDelete.push(key);
       }
-    }
+    });
+    keysToDelete.forEach(key => this.requestCounts.delete(key));
   }
 }
 
