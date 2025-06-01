@@ -241,6 +241,8 @@ export const getCachedQueryFn =
     return json as T;
   };
 
+import { queryBlocker } from './queryBlocker';
+
 // Configure the global query client with our enhanced caching system
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -251,14 +253,9 @@ export const queryClient = new QueryClient({
       staleTime: 300000, // 5 minute stale time to prevent excessive requests
       gcTime: 10 * 60 * 1000, // Keep data in cache for 10 minutes
       retry: false,
-      // Emergency fix: Disable chores queries globally
+      // Use centralized query blocker to prevent infinite loops
       enabled: (query) => {
-        const queryKey = Array.isArray(query.queryKey) ? query.queryKey[0] : query.queryKey;
-        if (typeof queryKey === 'string' && queryKey.includes('/api/chores')) {
-          console.log('[EMERGENCY] Blocking chores query globally to prevent infinite loop');
-          return false;
-        }
-        return true;
+        return !queryBlocker.isBlocked(query.queryKey);
       },
     },
     mutations: {

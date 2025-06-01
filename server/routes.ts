@@ -698,37 +698,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const MAX_REQUESTS_PER_WINDOW = 5; // Maximum 5 requests per second per IP
 
   app.get("/api/chores", auth, async (req: Request, res: Response) => {
-    const clientId = req.ip || 'unknown';
-    const now = Date.now();
-    
-    // Check rate limit
-    const current = choreRequestCounts.get(clientId);
-    if (current) {
-      if (now - current.timestamp < RATE_LIMIT_WINDOW) {
-        if (current.count >= MAX_REQUESTS_PER_WINDOW) {
-          console.log(`[RATE_LIMIT] Blocking excessive chores requests from ${clientId}`);
-          return res.status(429).json({ message: "Too many requests" });
-        }
-        current.count++;
-      } else {
-        // Reset window
-        current.count = 1;
-        current.timestamp = now;
-      }
-    } else {
-      choreRequestCounts.set(clientId, { count: 1, timestamp: now });
-    }
-    
-    // Clean up old entries periodically
-    if (Math.random() < 0.01) {
-      const entriesToDelete: string[] = [];
-      choreRequestCounts.forEach((value, key) => {
-        if (now - value.timestamp > RATE_LIMIT_WINDOW * 10) {
-          entriesToDelete.push(key);
-        }
-      });
-      entriesToDelete.forEach(key => choreRequestCounts.delete(key));
-    }
     const activeOnly = req.query.activeOnly !== "false";
     const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
 
