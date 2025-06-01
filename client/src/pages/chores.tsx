@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
+import { useChoresData } from "@/hooks/useChoresData";
 import { useAuthStore } from "@/store/auth-store";
 import { useStatsStore } from "@/store/stats-store";
 import {
@@ -56,18 +57,8 @@ export default function Chores() {
     emoji?: string | null;
   }
 
-  const {
-    data: chores = [],
-    isLoading,
-    refetch,
-  } = useQuery<Chore[]>({
-    queryKey: ["/api/chores"],
-    staleTime: 300000, // 5 minute stale time
-    refetchInterval: false,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    enabled: false, // Disable automatic fetching temporarily
-  });
+  // Use centralized chore data manager to prevent infinite loops
+  const { chores, isLoading, error, refetch } = useChoresData();
 
   // Also fetch stats to get balance
   const { data: stats } = useQuery<{ balance: number }>({

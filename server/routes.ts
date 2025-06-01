@@ -703,29 +703,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   let circuitBreakerOpen = false;
 
   app.get("/api/chores", auth, async (req: Request, res: Response) => {
-    // EMERGENCY: Temporarily return static data to stop infinite loop
-    console.log(`[EMERGENCY_MODE] Serving static chore data to prevent infinite loop`);
-    return res.status(200).json([
-      {
-        "id": 35,
-        "name": "Take Out Trash", 
-        "description": "Take the trash bins to the curb for pickup",
-        "base_tickets": 3,
-        "tier": "easy",
-        "is_active": true,
-        "emoji": "🗑️"
-      },
-      {
-        "id": 36,
-        "name": "Clean Room",
-        "description": "Tidy up bedroom and make bed",
-        "base_tickets": 5,
-        "tier": "medium",
-        "is_active": true,
-        "emoji": "🛏️"
-      }
-    ]);
-
     const activeOnly = req.query.activeOnly !== "false";
     const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
 

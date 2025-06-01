@@ -1138,7 +1138,10 @@ export default function ParentDashboard() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <DailyBonusWheel />
+                    {/* DailyBonusWheel component temporarily disabled */}
+                    <div className="text-center p-4">
+                      <p className="text-muted-foreground">Bonus wheel feature coming soon</p>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
