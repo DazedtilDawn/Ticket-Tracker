@@ -721,11 +721,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     // Clean up old entries periodically
     if (Math.random() < 0.01) {
-      for (const [key, value] of choreRequestCounts.entries()) {
+      const entriesToDelete: string[] = [];
+      choreRequestCounts.forEach((value, key) => {
         if (now - value.timestamp > RATE_LIMIT_WINDOW * 10) {
-          choreRequestCounts.delete(key);
+          entriesToDelete.push(key);
         }
-      }
+      });
+      entriesToDelete.forEach(key => choreRequestCounts.delete(key));
     }
     const activeOnly = req.query.activeOnly !== "false";
     const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;

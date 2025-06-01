@@ -251,11 +251,11 @@ export const queryClient = new QueryClient({
       staleTime: 300000, // 5 minute stale time to prevent excessive requests
       gcTime: 10 * 60 * 1000, // Keep data in cache for 10 minutes
       retry: false,
-      // Emergency fix: Disable chores queries temporarily
+      // Emergency fix: Disable chores queries globally
       enabled: (query) => {
         const queryKey = Array.isArray(query.queryKey) ? query.queryKey[0] : query.queryKey;
         if (typeof queryKey === 'string' && queryKey.includes('/api/chores')) {
-          console.log('[EMERGENCY] Blocking chores query to prevent infinite loop');
+          console.log('[EMERGENCY] Blocking chores query globally to prevent infinite loop');
           return false;
         }
         return true;

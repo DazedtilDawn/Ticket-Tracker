@@ -239,8 +239,9 @@ export default function ParentDashboard() {
   const { data: chores = [], isLoading: isChoresLoading } = useQuery<any[]>({
     queryKey: ["/api/chores"],
     staleTime: 120000, // Consider fresh for 2 minutes - chores change less frequently
-    refetchInterval: 300000, // Refresh every 5 minutes
+    refetchInterval: false, // Disabled to prevent infinite loop
     gcTime: 600000, // Keep in cache for 10 minutes
+    enabled: false, // Temporarily disabled to prevent API loop
   });
 
   const { isLoading: isStatsLoading, refetch } = useQuery({
