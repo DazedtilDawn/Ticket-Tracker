@@ -1,5 +1,7 @@
 # Ticket Tracker
 
+[![CI](https://github.com/andykoski/IntelliTicket/actions/workflows/ci.yml/badge.svg)](https://github.com/andykoski/IntelliTicket/actions/workflows/ci.yml)
+
 A web application for tracking tickets. This project uses Node.js, Express, React and Vite.
 
 ## Prerequisites
@@ -7,6 +9,7 @@ A web application for tracking tickets. This project uses Node.js, Express, Reac
 - **Node.js 20 or higher**
 - **npm** (comes with Node.js)
 - **Bun** (optional, used for running tests)
+- **Docker** (required for running test suite with database)
 
 Set the following environment variables before starting the server:
 
@@ -45,13 +48,57 @@ npm start
 
 ## Running Tests
 
-Tests are written with Bun. Run them with:
+Tests are written with Bun. There are two ways to run the test suite:
+
+### Unit Tests (without database)
+
+Run unit tests with the database stub:
 
 ```bash
+npm test
+# or
 bun test
 ```
 
-(You can also run `npm test` if Bun is installed globally.)
+### Full Test Suite (with real PostgreSQL)
+
+Run the complete test suite with a disposable PostgreSQL database:
+
+```bash
+npm run test:db
+```
+
+This command will:
+1. Start a PostgreSQL 16 container on port 5433
+2. Wait for the database to be ready
+3. Run all database migrations
+4. Execute the full test suite with real database operations
+5. Stop and remove the test database container
+
+**Requirements for database tests:**
+- Docker must be installed and running
+- Port 5433 must be available
+- The test database uses: `postgresql://postgres:postgres@localhost:5433/intelliticket_test`
+
+**Alternative: Using an existing PostgreSQL database:**
+
+If you have PostgreSQL installed locally or access to a test database, you can run tests with:
+
+```bash
+DATABASE_URL="your-test-database-url" NODE_ENV=test bun test --timeout 30000
+```
+
+Make sure to use a separate test database as the tests may modify data.
+
+To manually manage the test database:
+
+```bash
+# Start the test database
+npm run test-db-up
+
+# Stop and remove the test database
+npm run test-db-down
+```
 
 ## Docker
 
