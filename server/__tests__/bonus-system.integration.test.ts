@@ -90,7 +90,8 @@ describe("Bonus System Integration Tests", () => {
   });
 
   beforeEach(async () => {
-    // Clear bonuses between tests to prevent interference, but keep transactions for verification
+    // Clear bonuses between tests to prevent interference
+    // Note: We don't clear transactions here as some tests verify transaction creation
     await db.delete(dailyBonusSimple);
   });
 
@@ -196,7 +197,13 @@ describe("Bonus System Integration Tests", () => {
       });
 
       // Verify balance increased by the awarded tickets
-      expect(spinResponse.body.balance).toBe(initialBalance + spinResponse.body.tickets_awarded);
+      // Extract actual numbers from the response
+      const ticketsAwarded = spinResponse.body.tickets_awarded;
+      const newBalance = spinResponse.body.balance;
+      
+      expect(typeof ticketsAwarded).toBe('number');
+      expect(typeof newBalance).toBe('number');
+      expect(newBalance).toBe(initialBalance + ticketsAwarded);
 
       // Verify tickets are within valid range
       expect([1, 2, 3, 5, 10]).toContain(spinResponse.body.tickets_awarded);
@@ -224,6 +231,9 @@ describe("Bonus System Integration Tests", () => {
       const spinResponse = await spinBonus(bonus.id, childId, parentToken);
       expect(spinResponse.status).toBe(201);
 
+      // Wait a moment for transaction to be created
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       // Check the transaction was created with correct metadata
       const transactionsList = await db
         .select()
@@ -231,12 +241,19 @@ describe("Bonus System Integration Tests", () => {
         .where(eq(transactions.user_id, childId))
         .orderBy(transactions.created_at);
       
+      if (transactionsList.length === 0) {
+        console.log(`No transactions found for user ${childId}`);
+      }
+      
       expect(transactionsList.length).toBeGreaterThan(0);
       const transaction = transactionsList[transactionsList.length - 1]; // Get the latest transaction
 
       expect(transaction).toBeDefined();
       expect(transaction.delta).toBe(spinResponse.body.tickets_awarded);
-      expect(JSON.parse(transaction.metadata as string)).toMatchObject({
+      
+      // Handle metadata parsing more carefully
+      const metadata = transaction.metadata ? JSON.parse(transaction.metadata as string) : {};
+      expect(metadata).toMatchObject({
         bonus_id: bonus.id,
       });
     });
