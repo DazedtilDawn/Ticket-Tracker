@@ -175,7 +175,7 @@ export async function apiRequest(
 type UnauthorizedBehavior = "returnNull" | "throw";
 export const getQueryFn =
   <T>({
-    on401: unauthorizedBehavior,
+    on401,
   }: {
     on401: UnauthorizedBehavior;
   }): QueryFunction<T | null> =>
@@ -216,7 +216,7 @@ export const getQueryFn =
 
     // Handle 401 with token refresh
     if (res.status === 401) {
-      if (unauthorizedBehavior === "returnNull") {
+      if (on401 === "returnNull") {
         return null;
       }
       
@@ -248,7 +248,7 @@ export const getQueryFn =
         }
         return json as T;
       } catch (error) {
-        if (unauthorizedBehavior === "returnNull") {
+        if (on401 === "returnNull") {
           return null;
         }
         throw error;
@@ -276,7 +276,7 @@ const requestCache: Record<string, { timestamp: number; data: any }> = {};
 // Fix Type issues by ensuring we don't return null for StatsResponse
 export const getCachedQueryFn =
   <T>({
-    on401: unauthorizedBehavior,
+    on401,
     cacheDuration = 0,
   }: {
     on401: UnauthorizedBehavior;
