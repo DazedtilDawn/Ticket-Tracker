@@ -10,6 +10,38 @@ async function applyAllMigrations() {
   try {
     console.log("Applying all migrations...");
     
+    // First, try to apply critical migrations that create base tables
+    const criticalMigrations = [
+      '0016_sync_schema_to_db.sql', // Creates families table and profile_image_url
+    ];
+    
+    for (const file of criticalMigrations) {
+      const filePath = path.join(process.cwd(), "migrations", file);
+      if (fs.existsSync(filePath)) {
+        console.log(`Applying critical migration: ${file}`);
+        const sql = fs.readFileSync(filePath, 'utf8');
+        try {
+          // Split by semicolon and execute each statement separately
+          const statements = sql.split(';').filter(s => s.trim());
+          for (const statement of statements) {
+            if (statement.trim()) {
+              try {
+                await pool.query(statement);
+              } catch (e: any) {
+                // Ignore already exists errors
+                if (e.code !== '42P07' && e.code !== '42701' && e.code !== '42710') {
+                  console.error(`Statement failed: ${e.message}`);
+                }
+              }
+            }
+          }
+          console.log(`✓ Applied ${file}`);
+        } catch (error: any) {
+          console.error(`✗ Failed critical migration ${file}:`, error.message);
+        }
+      }
+    }
+    
     // Get all migration files in order
     const migrationsDir = path.join(process.cwd(), "migrations");
     const migrationFiles = fs.readdirSync(migrationsDir)
