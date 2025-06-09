@@ -44,6 +44,7 @@ import {
 } from "lucide-react";
 import { AchievementShowcase } from "@/components/achievement-showcase-new";
 import { ParentControlPanel } from "@/components/ParentControlPanel";
+import { QuickActionBar } from "@/components/QuickActionBar";
 import { format } from "date-fns";
 
 export default function Dashboard() {
@@ -1306,6 +1307,9 @@ export default function Dashboard() {
 
       {/* Parent Control Panel - shows when parent is viewing as child */}
       <ParentControlPanel />
+
+      {/* Quick Action Bar - floating buttons for common parent tasks */}
+      <QuickActionBar />
     </>
   );
 }
