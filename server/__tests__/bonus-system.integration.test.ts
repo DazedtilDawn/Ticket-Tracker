@@ -6,6 +6,7 @@ import { db } from "../db";
 import { users, dailyBonusSimple, transactions, goals } from "../../shared/schema";
 import { storage } from "../storage";
 import { eq, and } from "drizzle-orm";
+import { extractToken } from "./helpers/auth";
 
 describe("Bonus System Integration Tests", () => {
   let app: express.Express;
@@ -60,11 +61,7 @@ describe("Bonus System Integration Tests", () => {
       .post("/api/auth/login")
       .send({ username: parentData.username, password: parentData.password });
     
-    if (!loginRes.body.token) {
-      throw new Error(`Failed to login parent: ${JSON.stringify(loginRes.body)}`);
-    }
-    
-    parentToken = loginRes.body.token;
+    parentToken = extractToken(loginRes.body);
     
     // Get parent user data
     const parentUser = await storage.getUserByUsername(parentData.username);
