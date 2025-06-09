@@ -96,10 +96,10 @@ describe("POST /api/bonus/spin", () => {
     expect(transaction.type).toBe("earn");
     expect(transaction.note).toBe("Daily-spin");
     
-    // Verify metadata is correctly stored (as object, not string)
+    // Verify metadata is correctly stored (as JSON string)
     expect(transaction.metadata).toBeDefined();
-    expect(typeof transaction.metadata).toBe("object");
-    const metadata = transaction.metadata as any;
+    expect(typeof transaction.metadata).toBe("string");
+    const metadata = JSON.parse(transaction.metadata as string);
     expect(metadata.bonus_id).toBe(bonus!.id);
   });
 
@@ -280,10 +280,10 @@ describe("POST /api/bonus/spin", () => {
       metadata: JSON.stringify({ bonus_id: bonus.id }),
     });
 
-    // Verify metadata is correctly stored (as object, not string)
+    // Verify metadata is correctly stored (as JSON string)
     expect(transaction.metadata).toBeDefined();
-    expect(typeof transaction.metadata).toBe("object");
-    const metadata = transaction.metadata as any;
+    expect(typeof transaction.metadata).toBe("string");
+    const metadata = JSON.parse(transaction.metadata as string);
     expect(metadata.bonus_id).toBe(bonus.id);
     expect(typeof metadata.bonus_id).toBe("number");
   });
