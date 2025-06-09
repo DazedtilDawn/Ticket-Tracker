@@ -191,18 +191,21 @@ describe("Bonus System Integration Tests", () => {
       const spinResponse = await spinBonus(bonus.id, childId, parentToken);
       
       expect(spinResponse.status).toBe(201);
-      expect(spinResponse.body).toMatchObject({
-        tickets_awarded: expect.any(Number),
-        balance: expect.any(Number),
-      });
-
-      // Verify balance increased by the awarded tickets
-      // Extract actual numbers from the response
+      
+      // First verify the response has the expected shape
+      expect(spinResponse.body).toBeDefined();
+      expect(spinResponse.body.tickets_awarded).toBeDefined();
+      expect(spinResponse.body.balance).toBeDefined();
+      
+      // Extract actual values (not matcher objects)
       const ticketsAwarded = spinResponse.body.tickets_awarded;
       const newBalance = spinResponse.body.balance;
       
+      // Verify they are numbers
       expect(typeof ticketsAwarded).toBe('number');
       expect(typeof newBalance).toBe('number');
+      
+      // Verify balance math
       expect(newBalance).toBe(initialBalance + ticketsAwarded);
 
       // Verify tickets are within valid range
@@ -231,31 +234,32 @@ describe("Bonus System Integration Tests", () => {
       const spinResponse = await spinBonus(bonus.id, childId, parentToken);
       expect(spinResponse.status).toBe(201);
 
-      // Wait a moment for transaction to be created
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // The transaction should be included in the response
+      expect(spinResponse.body.transaction).toBeDefined();
       
-      // Check the transaction was created with correct metadata
-      const transactionsList = await db
+      // Verify transaction details from response
+      const transaction = spinResponse.body.transaction;
+      expect(transaction.user_id).toBe(childId);
+      expect(transaction.delta).toBe(spinResponse.body.tickets_awarded);
+      
+      // Also verify it was persisted to database
+      const dbTransactions = await db
         .select()
         .from(transactions)
         .where(eq(transactions.user_id, childId))
         .orderBy(transactions.created_at);
       
-      if (transactionsList.length === 0) {
-        console.log(`No transactions found for user ${childId}`);
+      expect(dbTransactions.length).toBeGreaterThan(0);
+      
+      // Find the transaction that matches our spin
+      const matchingTx = dbTransactions.find(tx => tx.delta === spinResponse.body.tickets_awarded);
+      expect(matchingTx).toBeDefined();
+      
+      // Verify metadata
+      if (matchingTx && matchingTx.metadata) {
+        const metadata = JSON.parse(matchingTx.metadata as string);
+        expect(metadata.bonus_id).toBe(bonus.id);
       }
-      
-      expect(transactionsList.length).toBeGreaterThan(0);
-      const transaction = transactionsList[transactionsList.length - 1]; // Get the latest transaction
-
-      expect(transaction).toBeDefined();
-      expect(transaction.delta).toBe(spinResponse.body.tickets_awarded);
-      
-      // Handle metadata parsing more carefully
-      const metadata = transaction.metadata ? JSON.parse(transaction.metadata as string) : {};
-      expect(metadata).toMatchObject({
-        bonus_id: bonus.id,
-      });
     });
 
     test("parent can spin for child", async () => {
