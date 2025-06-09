@@ -42,6 +42,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { AchievementShowcase } from "@/components/achievement-showcase-new";
+import { ParentControlPanel } from "@/components/ParentControlPanel";
 import { format } from "date-fns";
 
 export default function Dashboard() {
@@ -1281,6 +1282,9 @@ export default function Dashboard() {
           </>
         )}
       </div>
+
+      {/* Parent Control Panel - shows when parent is viewing as child */}
+      <ParentControlPanel />
     </>
   );
 }
