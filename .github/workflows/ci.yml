@@ -55,6 +55,13 @@ jobs:
       - name: Check TypeScript
         run: npm run check
 
+      - name: Apply database migrations
+        run: bunx tsx tests/setupTestDb.ts
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5433/intelliticket_test
+          NODE_ENV: test
+          USE_REAL_DB: 'true'
+
       - name: Run tests with database
         run: |
           export DATABASE_URL="postgresql://postgres:postgres@localhost:5433/intelliticket_test"
