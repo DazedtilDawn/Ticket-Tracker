@@ -67,7 +67,10 @@
       "Bash(DATABASE_URL=postgresql://postgres:postgres@localhost:5433/intelliticket_test npx tsx -e \"\nimport pg from 'pg';\nimport fs from 'fs';\nconst client = new pg.Client(process.env.DATABASE_URL);\nawait client.connect();\nconst sql = fs.readFileSync('migrations/0020_rename_delta_tickets.sql', 'utf8');\nawait client.query(sql);\nawait client.end();\nconsole.log('✓ Applied column rename migration');\n\")",
       "Bash(USE_REAL_DB=true DATABASE_URL=postgresql://postgres:postgres@localhost:5433/intelliticket_test ~/.bun/bin/bun test server/__tests__/multi-parent.test.ts --timeout 30000)",
       "Bash(USE_REAL_DB=true DATABASE_URL=postgresql://postgres:postgres@localhost:5433/intelliticket_test ~/.bun/bin/bun test server/__tests__/auth-login.test.ts --timeout 30000)",
-      "Bash(gh pr create:*)"
+      "Bash(gh pr create:*)",
+      "Bash(gh run watch:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)"
     ],
     "deny": []
   }

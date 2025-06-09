@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 import request from "supertest";
 import { createServer } from "../server/index";
 import { storage } from "../server/storage";
+import { extractToken } from "../server/__tests__/helpers/auth";
 
 // Test the specific changes we made
 describe("Integration tests for recent changes", () => {
@@ -35,7 +36,7 @@ describe("Integration tests for recent changes", () => {
         password: "password123",
       });
 
-    parentToken = loginRes.body.token;
+    parentToken = extractToken(loginRes.body);
   });
 
   afterAll(() => {

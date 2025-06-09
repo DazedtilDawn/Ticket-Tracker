@@ -2,6 +2,7 @@ import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import request from "supertest";
 import express from "express";
 import { registerRoutes } from "../routes";
+import { extractToken } from "./helpers/auth";
 
 describe("Archive child profiles", () => {
   let app: express.Express;
@@ -25,11 +26,7 @@ describe("Archive child profiles", () => {
       .post("/api/auth/register")
       .send({ username: uniqueUsername, email: `${uniqueUsername}@example.com`, passwordHash: "pass", name: "Archiver", role: "parent" });
     
-    if (!parentRes.body?.data?.token) {
-      throw new Error(`Failed to register parent: ${JSON.stringify(parentRes.body)}`);
-    }
-    
-    parentToken = parentRes.body.data.token;
+    parentToken = extractToken(parentRes.body);
 
     // Register another parent for permission testing
     const otherParentRes = await request(app)
@@ -42,11 +39,7 @@ describe("Archive child profiles", () => {
         role: "parent",
       });
 
-    if (!otherParentRes.body?.data?.token) {
-      throw new Error(`Failed to register other parent: ${JSON.stringify(otherParentRes.body)}`);
-    }
-
-    otherParentToken = otherParentRes.body.data.token;
+    otherParentToken = extractToken(otherParentRes.body);
 
     // create a child
     const childRes = await request(app)
