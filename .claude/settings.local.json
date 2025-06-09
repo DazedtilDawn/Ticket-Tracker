@@ -70,7 +70,8 @@
       "Bash(gh pr create:*)",
       "Bash(gh run watch:*)",
       "Bash(gh run list:*)",
-      "Bash(gh run view:*)"
+      "Bash(gh run view:*)",
+      "Bash(USE_REAL_DB=true DATABASE_URL=postgresql://postgres:postgres@localhost:5433/intelliticket_test bun test server/__tests__/bonus-spin.test.ts --preload ./tests/setupTestDb.ts --timeout 30000)"
     ],
     "deny": []
   }

@@ -304,7 +304,7 @@ describe("POST /api/bonus/spin", () => {
     const initialTicketAmount = initialBonus.bonus_tickets;
 
     // Spin with a specific different amount to ensure it changes
-    const finalTicketAmount = initialTicketAmount === 8 ? 1 : 8; // Ensure it's different
+    const finalTicketAmount = initialTicketAmount === 10 ? 1 : 10; // Ensure it's different
     const updatedBonus = await storage.markDailyBonusRevealed(initialBonus.id, finalTicketAmount);
 
     // Verify the bonus was updated with the final spun amount

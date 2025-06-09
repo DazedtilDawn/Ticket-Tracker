@@ -31,10 +31,13 @@ npm run test:db      # Alternative: runs tests with real database
 npm run test-db-up   # Start PostgreSQL test container (port 5433)
 npm run test-db-down # Stop and remove test database
 
-# Playwright E2E tests
-npx playwright test             # Run E2E tests
+# Playwright E2E tests (separate from Bun tests)
+npx playwright test             # Run E2E tests from e2e/ directory
 npx playwright test --ui        # Interactive UI mode
 npx playwright test --debug     # Debug mode with inspector
+
+# Running tests with real database
+USE_REAL_DB=true DATABASE_URL=postgresql://postgres:postgres@localhost:5433/intelliticket_test bun test tests/ server/__tests__/
 ```
 
 ### Database Operations
@@ -114,10 +117,11 @@ npm start            # Run production server
 
 ### Testing Strategy
 
-1. **Unit Tests**: Fast, use database stub
+1. **Unit Tests**: Fast, use database stub (tests/ and server/__tests__/)
 2. **Integration Tests**: Use real test database with `USE_REAL_DB=true`
-3. **E2E Tests**: Playwright with automatic server startup
+3. **E2E Tests**: Playwright with automatic server startup (e2e/ directory)
 4. **Test Database**: PostgreSQL 16 in Docker on port 5433
+5. **Test Separation**: Bun tests in tests/ and server/__tests__/, Playwright tests in e2e/
 
 ### Critical Implementation Details
 
@@ -230,3 +234,13 @@ Testing:
 2. **Cookie-parser missing**: Run `npm install cookie-parser @types/cookie-parser`
 
 3. **Type narrowing error**: Use type assertion `(on401 as UnauthorizedBehavior)`
+
+4. **Test Authentication**: Use `extractToken()` helper from `server/__tests__/helpers/auth.ts` 
+   ```typescript
+   import { extractToken } from "./helpers/auth";
+   const token = extractToken(response.body); // Handles both token formats
+   ```
+
+5. **Spin Ticket Values**: Current wheel returns `[1, 2, 3, 5, 10]` not `[1, 2, 3, 5, 8]`
+
+6. **Transaction Metadata**: Stored as JSON string, parse with `JSON.parse(transaction.metadata)`

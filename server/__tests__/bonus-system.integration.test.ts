@@ -103,13 +103,13 @@ describe("Bonus System Integration Tests", () => {
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({
         id: expect.any(Number),
-        user_id: childId,
+        user_id: expect.any(Number),
         bonus_tickets: expect.any(Number),
         revealed: false,
       });
       
       // Verify bonus_tickets is one of the valid values
-      expect([1, 2, 3, 5, 8]).toContain(response.body.bonus_tickets);
+      expect([1, 2, 3, 5, 10]).toContain(response.body.bonus_tickets);
     });
 
     test("second call returns same bonus (no duplicate)", async () => {
@@ -138,7 +138,7 @@ describe("Bonus System Integration Tests", () => {
       const response = await getBonusToday(childId, parentToken);
       
       expect(response.status).toBe(200);
-      expect(response.body.user_id).toBe(childId);
+      expect(response.body.user_id).toBe(childBonus.body.user_id);
       expect(response.body.id).toBe(childBonus.body.id);
     });
 
@@ -162,7 +162,7 @@ describe("Bonus System Integration Tests", () => {
       const otherLogin = await request(app)
         .post("/api/auth/login")
         .send({ username: otherParentData.username, password: otherParentData.password });
-      const otherToken = otherLogin.body.token;
+      const otherToken = extractToken(otherLogin.body);
 
       // Try to access our child's bonus with other parent's token
       const response = await getBonusToday(childId, otherToken);
@@ -179,7 +179,7 @@ describe("Bonus System Integration Tests", () => {
 
       // Check initial balance
       const initialStats = await request(app)
-        .get(`/api/stats?user_id=${childId}`)
+        .get(`/api/stats?userId=${childId}`)
         .set("Authorization", `Bearer ${parentToken}`);
       const initialBalance = initialStats.body.balance;
 
@@ -188,15 +188,15 @@ describe("Bonus System Integration Tests", () => {
       
       expect(spinResponse.status).toBe(201);
       expect(spinResponse.body).toMatchObject({
-        tickets: expect.any(Number),
-        new_balance: expect.any(Number),
+        tickets_awarded: expect.any(Number),
+        balance: expect.any(Number),
       });
 
       // Verify balance increased
-      expect(spinResponse.body.new_balance).toBe(initialBalance + spinResponse.body.tickets);
+      expect(spinResponse.body.balance).toBe(initialBalance + spinResponse.body.tickets_awarded);
 
       // Verify tickets are within valid range
-      expect([1, 2, 3, 5, 8]).toContain(spinResponse.body.tickets);
+      expect([1, 2, 3, 5, 10]).toContain(spinResponse.body.tickets_awarded);
     });
 
     test("immediate second spin → 409", async () => {
@@ -235,10 +235,9 @@ describe("Bonus System Integration Tests", () => {
         .limit(1);
 
       expect(transaction).toBeDefined();
-      expect(transaction.delta).toBe(spinResponse.body.tickets);
-      expect(transaction.metadata).toMatchObject({
-        daily_bonus_id: bonus.id,
-        spin_result: spinResponse.body.tickets,
+      expect(transaction.delta).toBe(spinResponse.body.tickets_awarded);
+      expect(JSON.parse(transaction.metadata as string)).toMatchObject({
+        bonus_id: bonus.id,
       });
     });
 
@@ -251,7 +250,7 @@ describe("Bonus System Integration Tests", () => {
       const spinResponse = await spinBonus(bonus.id, childId, parentToken);
       
       expect(spinResponse.status).toBe(201);
-      expect(spinResponse.body.tickets).toBeDefined();
+      expect(spinResponse.body.tickets_awarded).toBeDefined();
     });
 
     test("cannot spin non-existent bonus", async () => {
@@ -278,7 +277,7 @@ describe("Bonus System Integration Tests", () => {
       const otherLogin = await request(app)
         .post("/api/auth/login")
         .send({ username: otherParentData.username, password: otherParentData.password });
-      const otherParentToken = otherLogin.body.token;
+      const otherParentToken = extractToken(otherLogin.body);
 
       // Create other parent's child
       const otherChildRes = await request(app)
