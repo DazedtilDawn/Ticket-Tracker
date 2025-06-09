@@ -11,6 +11,7 @@ describe("DELETE /api/family/children/:childId", () => {
   const parentData = {
     name: "Delete Test Parent",
     username: `deleteparent_${timestamp}`,
+    email: `deleteparent_${timestamp}@example.com`,
     password: "password123",
     passwordHash: "password123", // For registration endpoint
     role: "parent" as const,
@@ -131,6 +132,7 @@ describe("DELETE /api/family/children/:childId - permission tests", () => {
   const parent1Data = {
     name: "Parent One",
     username: `parent1delete_${timestamp}`,
+    email: `parent1delete_${timestamp}@example.com`,
     password: "password123",
     passwordHash: "password123",
     role: "parent" as const,
@@ -139,6 +141,7 @@ describe("DELETE /api/family/children/:childId - permission tests", () => {
   const parent2Data = {
     name: "Parent Two",
     username: `parent2delete_${timestamp}`,
+    email: `parent2delete_${timestamp}@example.com`,
     password: "password123",
     passwordHash: "password123",
     role: "parent" as const,

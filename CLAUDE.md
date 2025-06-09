@@ -7,89 +7,172 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Development
 
 ```bash
-npm run dev          # Start development server with hot reload (client + server)
+npm run dev          # Start full stack development (client + server on port 5001)
+npm run dev:api      # Start API server only with test database (port 5001)
+npm run dev:ui       # Start Vite UI server only (port 5173)
+npm run dev:all      # Start both API and UI servers concurrently
 npm run check        # TypeScript type checking
 npm run db:push      # Apply database schema changes with Drizzle
-```
-
-### Build & Production
-
-```bash
-npm run build        # Build production bundle (Vite for client, esbuild for server)
-npm start            # Run production server
 ```
 
 ### Testing
 
 ```bash
-npm test             # Run tests with Bun (or `bun test` directly)
+# Quick unit tests (stub database)
+npm run test:unit    # Fast tests without real database
+bun test <pattern>   # Run specific test files matching pattern
+bun test server/__tests__/auth-login.test.ts  # Run single test file
+
+# Full test suite (requires Docker)
+npm run test:all     # Starts test DB, runs all Bun tests + Playwright E2E
+npm run test:db      # Alternative: runs tests with real database
+
+# Test database management
+npm run test-db-up   # Start PostgreSQL test container (port 5433)
+npm run test-db-down # Stop and remove test database
+
+# Playwright E2E tests
+npx playwright test             # Run E2E tests
+npx playwright test --ui        # Interactive UI mode
+npx playwright test --debug     # Debug mode with inspector
+```
+
+### Database Operations
+
+```bash
+npm run db:push                 # Apply schema changes to database
+npx drizzle-kit generate        # Generate new migration files
+npx drizzle-kit studio          # Open Drizzle Studio for database inspection
+
+# Apply migrations to test database
+DATABASE_URL=postgresql://postgres:postgres@localhost:5433/intelliticket_test npx tsx -e "
+  import pg from 'pg';
+  import fs from 'fs';
+  const client = new pg.Client(process.env.DATABASE_URL);
+  await client.connect();
+  const sql = fs.readFileSync('migrations/XXX.sql', 'utf8');
+  await client.query(sql);
+  await client.end();
+"
+```
+
+### Build & Production
+
+```bash
+npm run build        # Build production bundle (Vite + esbuild)
+npm start            # Run production server
 ```
 
 ## Architecture Overview
 
-### Full-Stack Monorepo Structure
+### Core Patterns
 
-- **Client**: React SPA in `/client` using Vite, TypeScript, Tailwind CSS
-- **Server**: Express API in `/server` using TypeScript, Drizzle ORM
-- **Shared**: Database schema and types in `/shared/schema.ts`
+1. **Multi-Family Data Isolation**
+   - Every user belongs to a family via `family_id`
+   - Parents automatically get a family on registration
+   - Children inherit parent's family
+   - All queries filter by family for data isolation
+   - Multi-parent support via `family_parents` join table
 
-### Key Architectural Patterns
+2. **Database Architecture** (`server/db.ts`)
+   - Factory pattern: `createDb()` returns appropriate database instance
+   - Test mode: Returns stub by default unless `USE_REAL_DB=true`
+   - Production: Requires `DATABASE_URL` environment variable
+   - Stub database: Chainable proxy that throws on actual operations
 
-1. **Database-First Design**
+3. **Schema & Validation** (`shared/schema.ts`)
+   - Single source of truth for database schema
+   - Drizzle ORM for type-safe queries
+   - Zod schemas for API validation
+   - Email: Required for parents, optional for children (partial unique index)
+   - All foreign keys use CASCADE delete
+   - `performed_by_id` tracks who performed transactions
 
-   - PostgreSQL with Drizzle ORM
-   - Shared schema between client/server in `shared/schema.ts`
-   - Zod validation schemas derived from database schema
-   - Transaction-based ticket system with audit trail
+4. **Authentication Flow**
+   - Parents register with email/password at `/api/auth/register`
+   - Registration creates both user and family records
+   - Children are created by parents via `/api/family/children`
+   - Children cannot login directly (no passwords)
+   - Access tokens (15m) + Refresh tokens (14-28d) in HttpOnly cookies
+   - Automatic token refresh on 401 errors
 
-2. **State Management**
+5. **Server Architecture** (`server/index.ts`)
+   - ES modules with `createServer()` for testing
+   - WebSocket support on `/ws` path
+   - Port 5001 (changed from 5000 to avoid macOS conflicts)
+   - Scheduled jobs for daily resets
+   - Cookie parser for refresh token handling
 
-   - Zustand stores for client state (`client/src/store/`)
-   - React Query for server state and caching
-   - WebSocket for real-time updates
+### Business Rules
 
-3. **Authentication & Authorization**
+- **Tickets**: 1 ticket = $0.25
+- **Chores**: Daily/weekly/monthly recurrence with completion tracking
+- **Daily Bonus**: Spin wheel system, resets at midnight
+- **Goals**: Progress calculated from user's balance (not stored separately)
+- **Transactions**: Full audit trail with undo support via `ref_id`
+- **Multi-Parent**: Multiple parents can manage same family
 
-   - JWT-based authentication
-   - Role-based access (parent/child roles)
-   - Family-based data isolation via `family_id`
+### Testing Strategy
 
-4. **File Upload System**
+1. **Unit Tests**: Fast, use database stub
+2. **Integration Tests**: Use real test database with `USE_REAL_DB=true`
+3. **E2E Tests**: Playwright with automatic server startup
+4. **Test Database**: PostgreSQL 16 in Docker on port 5433
 
-   - Profile images: `/public/uploads/profiles/`
-   - Banner images: `/public/uploads/banners/`
-   - Trophy images: `/public/uploads/trophies/`
-   - Handled by multer with local filesystem storage
+### Critical Implementation Details
 
-5. **Progressive Web App**
-   - Service worker for offline support
-   - Android WebView wrapper in `/public/android/`
-   - PWA manifest and icons
+1. **Email Handling**
+   - Parents: Email required for authentication
+   - Children: Email optional (NULL allowed)
+   - Unique constraint: Partial index `WHERE email IS NOT NULL`
 
-### Business Logic
+2. **Family Creation**
+   - Automatic on parent registration
+   - Named "{Parent's Name}'s Family"
+   - Required for all user operations
+   - Parents added to `family_parents` table on registration
 
-The app is a family ticket tracking system where:
+3. **Migration Order**
+   - Must apply in sequence (0000 through 0019)
+   - Key migrations: 0016 (families table), 0018 (email nullable), 0019 (multi-parent)
+   - Test database needs all migrations for tests to pass
 
-- Children earn tickets by completing chores
-- Parents manage chores and can award/deduct tickets
-- Children can set savings goals for products
-- Daily bonus system with spin wheel
-- Trophy/achievement system for rewarding children
-- Shared family catalog for purchased items
+4. **Port Configuration**
+   - API server: 5001 (not 5000 - conflicts with macOS)
+   - UI dev server: 5173
+   - Test database: 5433
 
-Ticket value: 1 ticket = $0.25 (defined in `config/business.ts`)
+5. **Token Refresh Architecture**
+   - Frontend: `apiRequest()` and query functions handle 401 automatically
+   - Refresh queue prevents duplicate refresh attempts
+   - Failed refresh redirects to login
+   - Cookies: HttpOnly, Secure (in production), SameSite=strict
 
 ### Environment Variables
 
-Required:
-
+Production:
 - `DATABASE_URL` - PostgreSQL connection string
-- `JWT_SECRET` - Secret for JWT token signing
+- `JWT_SECRET` - Secret for JWT tokens
+- `REFRESH_SECRET` - Secret for refresh tokens (defaults to JWT_SECRET + "_refresh")
 
-### Database Migrations
+Testing:
+- `NODE_ENV=test` - Enables test mode
+- `USE_REAL_DB=true` - Use real database in tests
+- `DATABASE_URL` - Test database connection
 
-Database schema changes are managed through Drizzle Kit:
+### Recent Changes
 
-- Schema defined in `shared/schema.ts`
-- Migrations in `/migrations/`
-- Apply changes with `npm run db:push`
+1. **Multi-Parent Support**: `family_parents` join table, invite endpoints
+2. **Refresh Tokens**: Short-lived access tokens with automatic refresh
+3. **Transaction Tracking**: `performed_by_id` shows who performed actions
+4. **Email Field**: Nullable with partial unique index
+5. **Family System**: All users must belong to a family
+6. **Port Changes**: API moved from 5000 to 5001
+7. **Test Infrastructure**: Comprehensive test:all script with concurrently
+
+### API Endpoints Added
+
+- `POST /api/auth/refresh` - Refresh access token
+- `POST /api/auth/logout` - Clear refresh token cookie
+- `POST /api/families/:id/invite-parent` - Invite parent to family
+- `GET /api/families/:id/parents` - List all parents in family

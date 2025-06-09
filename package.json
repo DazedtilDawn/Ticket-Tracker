@@ -4,12 +4,21 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "dev": "NODE_ENV=development tsx server/index.ts",
+    "dev": "NODE_ENV=development npx tsx server/index.ts",
+    "dev:api": "NODE_ENV=test USE_REAL_DB=true DATABASE_URL=postgresql://postgres:postgres@localhost:5433/intelliticket_test npx tsx server/index.ts",
+    "dev:ui": "vite --host 127.0.0.1 --port 5173",
+    "dev:all": "concurrently -k -s first \"npm:dev:api\" \"npm:dev:ui\"",
+    "start:api": "NODE_ENV=test USE_REAL_DB=true npx tsx server/index.ts",
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "NODE_ENV=production node dist/index.js",
     "check": "tsc",
     "db:push": "drizzle-kit push",
-    "test": "bun test"
+    "test": "bun test",
+    "test:unit": "NODE_ENV=test PATH=\"$HOME/.bun/bin:$PATH\" bun test ./**/*.test.ts --timeout 10000",
+    "test:all": "./scripts/test-db-up.sh && USE_REAL_DB=true DATABASE_URL=postgresql://postgres:postgres@localhost:5433/intelliticket_test concurrently -k -s first \"npm:dev:api\" \"npm:dev:ui\" & echo $! > .devpid && wait-on tcp:5001 tcp:5173 && echo '✅  Both servers ready' && PATH=\"$HOME/.bun/bin:$PATH\" bun test --timeout 30000 && npx playwright test --reporter=line; EXIT=$?; kill $(cat .devpid) 2>/dev/null; rm -f .devpid; ./scripts/test-db-down.sh; exit $EXIT",
+    "test:db": "npm run test-db-up && NODE_ENV=test bun test --preload ./tests/setupTestDb.ts --timeout 30000 && npm run test-db-down",
+    "test-db-up": "bash scripts/test-db-up.sh",
+    "test-db-down": "bash scripts/test-db-down.sh"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -42,6 +51,7 @@
     "@radix-ui/react-toggle-group": "^1.1.3",
     "@radix-ui/react-tooltip": "^1.2.0",
     "@tanstack/react-query": "^5.60.5",
+    "@types/cookie-parser": "^1.4.9",
     "@types/cors": "^2.8.18",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/multer": "^1.4.12",
@@ -53,6 +63,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "connect-pg-simple": "^10.0.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "date-fns": "^3.6.0",
     "dotenv": "^16.5.0",
@@ -104,7 +115,7 @@
     "@types/connect-pg-simple": "^7.0.3",
     "@types/express": "4.17.21",
     "@types/express-session": "^1.18.0",
-    "@types/node": "20.16.11",
+    "@types/node": "^20.16.11",
     "@types/node-cron": "^3.0.11",
     "@types/passport": "^1.0.16",
     "@types/passport-local": "^1.0.38",
@@ -116,6 +127,7 @@
     "@typescript-eslint/parser": "^8.32.1",
     "@vitejs/plugin-react": "^4.3.2",
     "autoprefixer": "^10.4.20",
+    "concurrently": "^9.1.2",
     "drizzle-kit": "^0.30.4",
     "esbuild": "^0.25.0",
     "eslint-plugin-react": "^7.37.5",
@@ -124,8 +136,9 @@
     "supertest": "^7.1.1",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.19.1",
-    "typescript": "5.6.3",
-    "vite": "^5.4.14"
+    "typescript": "^5.6.3",
+    "vite": "^5.4.14",
+    "wait-on": "^7.2.0"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"

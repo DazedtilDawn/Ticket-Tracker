@@ -1,0 +1,39 @@
+2025-05-24 00:35:03.492 [info] Can't use the Electron fetcher in this environment.
+2025-05-24 00:35:03.492 [info] Using the Node fetch fetcher.
+2025-05-24 00:35:03.492 [info] Initializing Git extension service.
+2025-05-24 00:35:03.492 [info] Successfully activated the vscode.git extension.
+2025-05-24 00:35:03.492 [info] Enablement state of the vscode.git extension: true.
+2025-05-24 00:35:03.492 [info] Successfully registered Git commit message provider.
+2025-05-24 00:35:03.965 [info] Logged in as DazedtilDawn
+2025-05-24 00:35:04.261 [info] TypeScript server plugin activated.
+2025-05-24 00:35:04.262 [info] Registered TypeScript context provider with Copilot inline completions.
+2025-05-24 00:35:04.921 [info] Got Copilot token for DazedtilDawn
+2025-05-24 00:35:05.360 [info] Fetched model metadata in 427ms daf6d7a2-f894-4587-8d37-8ea783a4d3c0
+2025-05-24 00:35:05.385 [info] activationBlocker from 'languageModelAccess' took for 2873ms
+2025-05-24 00:35:05.530 [info] copilot token chat_enabled: true, sku: monthly_subscriber
+2025-05-24 00:35:05.547 [info] Registering default platform agent...
+2025-05-24 00:35:05.743 [info] Successfully activated the GitHub.vscode-pull-request-github extension.
+2025-05-24 00:35:05.743 [info] [githubTitleAndDescriptionProvider] Initializing GitHub PR title and description provider provider.
+2025-05-24 00:35:05.743 [info] Successfully registered GitHub PR title and description provider.
+2025-05-24 00:35:05.743 [info] Successfully registered GitHub PR reviewer comments provider.
+2025-05-24 00:35:05.817 [info] BYOK: Copilot Chat known models list fetched successfully.
+2025-05-24 01:05:06.826 [info] Logged in as DazedtilDawn
+2025-05-24 01:05:07.505 [info] Got Copilot token for DazedtilDawn
+2025-05-24 01:05:07.800 [info] copilot token chat_enabled: true, sku: monthly_subscriber
+2025-05-24 01:05:07.924 [info] BYOK: Copilot Chat known models list fetched successfully.
+2025-05-24 01:35:08.570 [info] Logged in as DazedtilDawn
+2025-05-24 01:35:09.282 [info] Got Copilot token for DazedtilDawn
+2025-05-24 01:35:09.694 [info] copilot token chat_enabled: true, sku: monthly_subscriber
+2025-05-24 01:35:09.830 [info] BYOK: Copilot Chat known models list fetched successfully.
+2025-05-24 02:05:10.361 [info] Logged in as DazedtilDawn
+2025-05-24 02:05:11.128 [info] Got Copilot token for DazedtilDawn
+2025-05-24 02:05:11.414 [info] copilot token chat_enabled: true, sku: monthly_subscriber
+2025-05-24 02:05:11.531 [info] BYOK: Copilot Chat known models list fetched successfully.
+2025-05-24 02:35:12.057 [info] Logged in as DazedtilDawn
+2025-05-24 02:35:12.918 [info] Got Copilot token for DazedtilDawn
+2025-05-24 02:35:13.220 [info] copilot token chat_enabled: true, sku: monthly_subscriber
+2025-05-24 02:35:13.339 [info] BYOK: Copilot Chat known models list fetched successfully.
+2025-05-24 03:05:13.914 [info] Logged in as DazedtilDawn
+2025-05-24 03:05:14.713 [info] Got Copilot token for DazedtilDawn
+2025-05-24 03:05:14.999 [info] copilot token chat_enabled: true, sku: monthly_subscriber
+2025-05-24 03:05:15.145 [info] BYOK: Copilot Chat known models list fetched successfully.

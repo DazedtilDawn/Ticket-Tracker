@@ -11,9 +11,64 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+// Track if we're refreshing the token
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value: any) => void;
+  reject: (error: any) => void;
+}> = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  
+  failedQueue = [];
+};
+
+async function refreshAccessToken(): Promise<string> {
+  try {
+    const res = await fetch('/api/auth/refresh', {
+      method: 'POST',
+      credentials: 'include',
+    });
+    
+    if (!res.ok) {
+      throw new Error('Failed to refresh token');
+    }
+    
+    const json = await res.json();
+    const newToken = json.data?.access_token || json.data?.token;
+    
+    if (!newToken) {
+      throw new Error('No token in refresh response');
+    }
+    
+    // Update auth store with new token
+    const authStore = JSON.parse(
+      localStorage.getItem("ticket-tracker-auth") || "{}",
+    );
+    if (authStore.state) {
+      authStore.state.token = newToken;
+      localStorage.setItem("ticket-tracker-auth", JSON.stringify(authStore));
+    }
+    
+    return newToken;
+  } catch (error) {
+    // Clear auth state on refresh failure
+    localStorage.removeItem("ticket-tracker-auth");
+    throw error;
+  }
+}
+
 export async function apiRequest(
   url: string,
   options: RequestInit = {},
+  isRetry = false,
 ): Promise<any> {
   // Get auth token from store
   const authStore = JSON.parse(
@@ -57,6 +112,34 @@ export async function apiRequest(
     body,
     credentials: "include",
   });
+
+  // Handle 401 and token refresh
+  if (res.status === 401 && !isRetry) {
+    if (isRefreshing) {
+      // Wait for the ongoing refresh
+      return new Promise((resolve, reject) => {
+        failedQueue.push({ resolve, reject });
+      }).then(() => {
+        // Retry with new token
+        return apiRequest(url, options, true);
+      });
+    }
+    
+    isRefreshing = true;
+    
+    try {
+      const newToken = await refreshAccessToken();
+      processQueue(null, newToken);
+      
+      // Retry original request with new token
+      return apiRequest(url, options, true);
+    } catch (error) {
+      processQueue(error, null);
+      throw error;
+    } finally {
+      isRefreshing = false;
+    }
+  }
 
   await throwIfResNotOk(res);
 
@@ -131,8 +214,45 @@ export const getQueryFn =
       credentials: "include",
     });
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
+    // Handle 401 with token refresh
+    if (res.status === 401) {
+      if (unauthorizedBehavior === "returnNull") {
+        return null;
+      }
+      
+      // Try to refresh token
+      try {
+        const newToken = await refreshAccessToken();
+        
+        // Retry with new token
+        headers["Authorization"] = `Bearer ${newToken}`;
+        const retryRes = await fetch(url, {
+          headers,
+          credentials: "include",
+        });
+        
+        if (retryRes.status === 401) {
+          throw new Error("Unauthorized after refresh");
+        }
+        
+        await throwIfResNotOk(retryRes);
+        const jsonRes = retryRes.clone();
+        const json = await jsonRes.json();
+        if (json && typeof json.success === "boolean") {
+          if (json.success) {
+            return json.data as T;
+          }
+          const err: any = new Error(json.error?.msg || "Request failed");
+          err.code = json.error?.code;
+          throw err;
+        }
+        return json as T;
+      } catch (error) {
+        if (unauthorizedBehavior === "returnNull") {
+          return null;
+        }
+        throw error;
+      }
     }
 
     await throwIfResNotOk(res);
@@ -213,8 +333,46 @@ export const getCachedQueryFn =
     });
 
     if (res.status === 401) {
-      // For 401 errors we throw regardless of configuration to maintain the correct return type
-      throw new Error("Unauthorized");
+      // Try to refresh token
+      try {
+        const newToken = await refreshAccessToken();
+        
+        // Retry with new token
+        headers["Authorization"] = `Bearer ${newToken}`;
+        const retryRes = await fetch(url, {
+          headers,
+          credentials: "include",
+        });
+        
+        if (retryRes.status === 401) {
+          throw new Error("Unauthorized after refresh");
+        }
+        
+        await throwIfResNotOk(retryRes);
+        const jsonRes = retryRes.clone();
+        const json = await jsonRes.json();
+
+        if (json && typeof json.success === "boolean") {
+          if (json.success) {
+            // Store in cache if caching is enabled
+            if (cacheDuration > 0) {
+              requestCache[cacheKey] = { timestamp: Date.now(), data: json.data };
+            }
+            return json.data as T;
+          }
+          const err: any = new Error(json.error?.msg || "Request failed");
+          err.code = json.error?.code;
+          throw err;
+        }
+
+        // Store in cache if caching is enabled
+        if (cacheDuration > 0) {
+          requestCache[cacheKey] = { timestamp: Date.now(), data: json };
+        }
+        return json as T;
+      } catch (error) {
+        throw error;
+      }
     }
 
     await throwIfResNotOk(res);

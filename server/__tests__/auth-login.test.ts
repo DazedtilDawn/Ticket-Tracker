@@ -11,6 +11,7 @@ describe("POST /api/auth/login", () => {
   const parentData = {
     name: "Test Parent",
     username: `testparent_${timestamp}`,
+    email: `testparent_${timestamp}@example.com`,
     password: "password123",
     passwordHash: "password123", // For registration endpoint
     role: "parent" as const,

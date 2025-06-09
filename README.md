@@ -100,6 +100,11 @@ npm run test-db-up
 npm run test-db-down
 ```
 
+### Quick Test Commands
+
+- Run **`npm run test:unit`** for the fast stub-DB suite.
+- Run **`npm run test:all`** (requires Docker) for the full integration + Playwright run.
+
 ## Docker
 
 A `Dockerfile` is provided to build and run the application in a container.

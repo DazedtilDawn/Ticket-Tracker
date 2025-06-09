@@ -1,0 +1,31 @@
+2025-05-25 01:10:13.974 [warning] /home/runner/.ssh/config: ENOENT: no such file or directory, open '/home/runner/.ssh/config'
+2025-05-25 01:10:13.974 [info] [Activation] Extension version: 0.111.2025052204
+2025-05-25 01:10:14.238 [info] [Authentication] Creating hub for .com
+2025-05-25 01:10:14.665 [info] [Activation] Looking for git repository
+2025-05-25 01:10:14.665 [info] [Activation] Found 0 repositories during activation
+2025-05-25 01:10:14.665 [info] [Activation] Git repository found, initializing review manager and pr tree view.
+2025-05-25 01:10:14.673 [info] [GitAPI] Registering git provider
+2025-05-25 01:10:14.673 [info] [Review+0] Validate state in progress
+2025-05-25 01:10:14.673 [info] [Review+0] Validating state...
+2025-05-25 01:10:14.848 [info] [FolderRepositoryManager+0] Found GitHub remote for folder /home/runner/workspace
+2025-05-25 01:10:15.147 [info] [FolderRepositoryManager+0] Trying to use globalState for assignableUsers.
+2025-05-25 01:10:15.343 [info] [Review+0] No matching pull request metadata found locally for current branch feat/auth-lockdown
+2025-05-25 01:10:15.461 [info] [FolderRepositoryManager+0] Using globalState assignableUsers for 1.
+2025-05-25 01:10:15.699 [info] [Review+0] No matching pull request metadata found on GitHub for current branch feat/auth-lockdown
+2025-05-25 01:13:16.020 [warning] /home/runner/.ssh/config: ENOENT: no such file or directory, open '/home/runner/.ssh/config'
+2025-05-25 01:13:16.021 [info] [Activation] Extension version: 0.111.2025052204
+2025-05-25 01:13:26.136 [info] [Authentication] Creating hub for .com
+2025-05-25 01:13:27.248 [info] [Activation] Looking for git repository
+2025-05-25 01:13:27.248 [info] [Activation] Found 0 repositories during activation
+2025-05-25 01:13:27.248 [info] [Activation] Git repository found, initializing review manager and pr tree view.
+2025-05-25 01:13:27.252 [info] [GitAPI] Registering git provider
+2025-05-25 01:13:28.707 [info] [Activation] Git initialization state changed: state=initialized
+2025-05-25 01:13:28.707 [info] [Review+0] Validate state in progress
+2025-05-25 01:13:28.707 [info] [Review+0] Validating state...
+2025-05-25 01:13:28.993 [info] [FolderRepositoryManager+0] Found GitHub remote for folder /home/runner/workspace
+2025-05-25 01:13:29.528 [info] [Activation] Repo state for file:///home/runner/workspace changed.
+2025-05-25 01:13:29.528 [info] [Activation] Repo file:///home/runner/workspace has already been setup.
+2025-05-25 01:13:29.789 [info] [FolderRepositoryManager+0] Trying to use globalState for assignableUsers.
+2025-05-25 01:13:30.626 [info] [Review+0] No matching pull request metadata found locally for current branch feat/auth-lockdown
+2025-05-25 01:13:30.953 [info] [FolderRepositoryManager+0] Using globalState assignableUsers for 1.
+2025-05-25 01:13:31.695 [info] [Review+0] No matching pull request metadata found on GitHub for current branch feat/auth-lockdown

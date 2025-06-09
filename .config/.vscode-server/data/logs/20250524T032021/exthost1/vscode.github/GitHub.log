@@ -1,0 +1,8 @@
+2025-05-24 03:20:34.507 [info] Log level: Info
+2025-05-24 04:23:51.731 [warning] [GitHubSourceControlHistoryItemDetailsProvider][_getCommitAuthor] Failed to get commit author for DazedtilDawn/Ticket-Tracker/b92fb3b11192750c89a46c8df888cbf81730f402: TypeError: Cannot read properties of null (reading 'author')
+2025-05-24 04:23:51.760 [warning] [GitHubSourceControlHistoryItemDetailsProvider][_getCommitAuthor] Failed to get commit author for DazedtilDawn/Ticket-Tracker/fbe501dccb6c5b7583082be6aaa1746633da3b25: TypeError: Cannot read properties of null (reading 'author')
+2025-05-24 07:46:28.000 [info] Log level: Info
+2025-05-24 14:27:50.886 [info] Log level: Info
+2025-05-24 14:31:29.594 [info] Log level: Info
+2025-05-24 14:34:03.795 [info] Log level: Info
+2025-05-24 14:35:03.500 [info] Log level: Info

@@ -1,0 +1,67 @@
+2025-05-24 00:17:15.425 [info] [main] Log level: Info
+2025-05-24 00:17:15.425 [info] [main] Validating found git in: "git"
+2025-05-24 00:17:15.425 [info] [main] Using git "2.47.2" from "git"
+2025-05-24 00:17:15.425 [info] [Model][doInitialScan] Initial repository scan started
+2025-05-24 00:17:15.425 [info] > git rev-parse --show-toplevel [4770ms]
+2025-05-24 00:17:15.425 [info] > git rev-parse --git-dir --git-common-dir [547ms]
+2025-05-24 00:17:15.425 [info] [Model][openRepository] Opened repository (path): /home/runner/workspace
+2025-05-24 00:17:15.425 [info] [Model][openRepository] Opened repository (real path): /home/runner/workspace
+2025-05-24 00:17:15.425 [info] > git config --get commit.template [825ms]
+2025-05-24 00:17:15.425 [info] > git rev-parse --show-toplevel [1370ms]
+2025-05-24 00:17:15.727 [info] > git for-each-ref --format=%(refname)%00%(upstream:short)%00%(objectname)%00%(upstream:track)%00%(upstream:remotename)%00%(upstream:remoteref) refs/heads/feat/auth-lockdown refs/remotes/feat/auth-lockdown [303ms]
+2025-05-24 00:17:15.923 [info] > git status -z -uall [190ms]
+2025-05-24 00:17:15.924 [info] > git check-ignore -v -z --stdin [8ms]
+2025-05-24 00:17:15.927 [info] > git for-each-ref --sort -committerdate --format %(refname)%00%(objectname)%00%(*objectname) [188ms]
+2025-05-24 00:17:17.914 [info] > git for-each-ref --format=%(refname)%00%(upstream:short)%00%(objectname)%00%(upstream:track)%00%(upstream:remotename)%00%(upstream:remoteref) refs/heads/feat/auth-lockdown refs/remotes/feat/auth-lockdown [1900ms]
+2025-05-24 00:17:18.755 [info] > git config --get --local branch.feat/auth-lockdown.vscode-merge-base [836ms]
+2025-05-24 00:17:18.809 [info] > git config --get commit.template [1399ms]
+2025-05-24 00:17:18.935 [info] > git for-each-ref --format=%(refname)%00%(upstream:short)%00%(objectname)%00%(upstream:track)%00%(upstream:remotename)%00%(upstream:remoteref) refs/heads/origin/chore/sync-lockfile refs/remotes/origin/chore/sync-lockfile [176ms]
+2025-05-24 00:17:19.020 [info] > git for-each-ref --format=%(refname)%00%(upstream:short)%00%(objectname)%00%(upstream:track)%00%(upstream:remotename)%00%(upstream:remoteref) refs/heads/feat/auth-lockdown refs/remotes/feat/auth-lockdown [7ms]
+2025-05-24 00:17:19.231 [info] > git status -z -uall [206ms]
+2025-05-24 00:17:19.231 [info] > git for-each-ref --sort -committerdate --format %(refname)%00%(objectname)%00%(*objectname) [202ms]
+2025-05-24 00:17:19.309 [info] > git rev-parse --show-toplevel [290ms]
+2025-05-24 00:17:19.817 [info] > git rev-parse --show-toplevel [484ms]
+2025-05-24 00:17:20.314 [info] > git rev-parse --show-toplevel [477ms]
+2025-05-24 00:17:20.411 [info] > git rev-parse --show-toplevel [87ms]
+2025-05-24 00:17:20.429 [info] > git rev-parse --show-toplevel [12ms]
+2025-05-24 00:17:20.435 [info] > git rev-parse --show-toplevel [2ms]
+2025-05-24 00:17:20.441 [info] > git rev-parse --show-toplevel [1ms]
+2025-05-24 00:17:26.024 [info] > git rev-parse --show-toplevel [5297ms]
+2025-05-24 00:17:26.116 [info] > git rev-parse --show-toplevel [84ms]
+2025-05-24 00:17:26.128 [info] > git rev-parse --show-toplevel [6ms]
+2025-05-24 00:17:26.216 [info] > git rev-parse --show-toplevel [5ms]
+2025-05-24 00:17:26.221 [info] > git rev-parse --show-toplevel [1ms]
+2025-05-24 00:17:26.225 [info] > git rev-parse --show-toplevel [1ms]
+2025-05-24 00:17:26.231 [info] > git rev-parse --show-toplevel [1ms]
+2025-05-24 00:17:26.312 [info] > git rev-parse --show-toplevel [2ms]
+2025-05-24 00:17:26.320 [info] > git rev-parse --show-toplevel [1ms]
+2025-05-24 00:17:26.323 [info] [Model][doInitialScan] Initial repository scan completed - repositories (1), closed repositories (0), parent repositories (0), unsafe repositories (0)
+2025-05-24 00:17:26.508 [info] > git show --textconv :server/__tests__/boost-percent.test.ts [177ms]
+2025-05-24 00:17:26.509 [info] > git ls-files --stage -- server/__tests__/boost-percent.test.ts [94ms]
+2025-05-24 00:17:26.523 [info] > git hash-object -t tree /dev/null [9ms]
+2025-05-24 00:17:26.523 [warning] [GitFileSystemProvider][stat] File not found - git:/home/runner/workspace/server/__tests__/boost-percent.test.ts.git?%7B%22path%22%3A%22%2Fhome%2Frunner%2Fworkspace%2Fserver%2F__tests__%2Fboost-percent.test.ts%22%2C%22ref%22%3A%22%22%7D
+2025-05-24 00:17:26.530 [info] > git config --get commit.template [99ms]
+2025-05-24 00:17:26.737 [info] > git hash-object -t tree /dev/null [219ms]
+2025-05-24 00:17:26.738 [warning] [GitFileSystemProvider][readFile] File not found - git:/home/runner/workspace/server/__tests__/boost-percent.test.ts.git?%7B%22path%22%3A%22%2Fhome%2Frunner%2Fworkspace%2Fserver%2F__tests__%2Fboost-percent.test.ts%22%2C%22ref%22%3A%22%22%7D
+2025-05-24 00:17:27.130 [info] > git for-each-ref --format=%(refname)%00%(upstream:short)%00%(objectname)%00%(upstream:track)%00%(upstream:remotename)%00%(upstream:remoteref) refs/heads/feat/auth-lockdown refs/remotes/feat/auth-lockdown [301ms]
+2025-05-24 00:17:27.311 [info] > git status -z -uall [99ms]
+2025-05-24 00:17:27.313 [info] > git for-each-ref --sort -committerdate --format %(refname)%00%(objectname)%00%(*objectname) [91ms]
+2025-05-24 00:17:28.710 [info] > git config --get --local branch.feat/auth-lockdown.github-pr-owner-number [899ms]
+2025-05-24 00:17:28.710 [warning] [Git][config] git config failed: Failed to execute git
+2025-05-24 00:17:28.723 [info] > git config --get --local branch.feat/auth-lockdown.remote [7ms]
+2025-05-24 00:17:28.723 [warning] [Git][config] git config failed: Failed to execute git
+2025-05-24 00:17:28.729 [info] > git config --get --local branch.feat/auth-lockdown.merge [2ms]
+2025-05-24 00:17:28.729 [warning] [Git][config] git config failed: Failed to execute git
+2025-05-24 00:31:37.389 [info] > git config --get commit.template [9ms]
+2025-05-24 00:31:37.391 [info] > git for-each-ref --format=%(refname)%00%(upstream:short)%00%(objectname)%00%(upstream:track)%00%(upstream:remotename)%00%(upstream:remoteref) refs/heads/feat/auth-lockdown refs/remotes/feat/auth-lockdown [5ms]
+2025-05-24 00:31:37.404 [info] > git status -z -uall [7ms]
+2025-05-24 00:31:37.406 [info] > git for-each-ref --sort -committerdate --format %(refname)%00%(objectname)%00%(*objectname) [3ms]
+2025-05-24 00:31:37.610 [info] > git fetch [240ms]
+2025-05-24 00:31:37.625 [info] > git config --get commit.template [8ms]
+2025-05-24 00:31:37.626 [info] > git for-each-ref --format=%(refname)%00%(upstream:short)%00%(objectname)%00%(upstream:track)%00%(upstream:remotename)%00%(upstream:remoteref) refs/heads/feat/auth-lockdown refs/remotes/feat/auth-lockdown [2ms]
+2025-05-24 00:31:37.638 [info] > git status -z -uall [6ms]
+2025-05-24 00:31:37.639 [info] > git for-each-ref --sort -committerdate --format %(refname)%00%(objectname)%00%(*objectname) [3ms]
+2025-05-24 00:31:42.428 [info] > git config --get commit.template [1ms]
+2025-05-24 00:31:42.443 [info] > git for-each-ref --format=%(refname)%00%(upstream:short)%00%(objectname)%00%(upstream:track)%00%(upstream:remotename)%00%(upstream:remoteref) refs/heads/feat/auth-lockdown refs/remotes/feat/auth-lockdown [3ms]
+2025-05-24 00:31:42.465 [info] > git status -z -uall [14ms]
+2025-05-24 00:31:42.466 [info] > git for-each-ref --sort -committerdate --format %(refname)%00%(objectname)%00%(*objectname) [5ms]

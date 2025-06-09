@@ -1,0 +1,74 @@
+2025-05-24 22:06:16.820 [info] Claude code extension is now active!
+2025-05-24 22:06:16.821 [info] MCP Server running on port 54104 (localhost only)
+2025-05-24 22:06:20.997 [info] New WS connection from: /
+2025-05-24 22:06:20.998 [info] MCP server connected to transport
+2025-05-24 22:06:20.998 [info] [DiagnosticStreamManager] Started streaming diagnostics
+2025-05-24 22:06:20.998 [info] [DiagnosticStreamManager] Registered client client_0. Total clients: 1
+2025-05-24 22:06:20.998 [info] Registered diagnostic client: client_0
+2025-05-24 22:06:24.602 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:06:29.300 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:06:32.090 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:06:45.008 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 2 files
+2025-05-24 22:06:55.431 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 16 files
+2025-05-24 22:06:59.648 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 7 files
+2025-05-24 22:07:02.974 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 6 files
+2025-05-24 22:07:06.596 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 9 files
+2025-05-24 22:09:19.699 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:09:24.310 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:09:29.068 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:09:31.802 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:09:44.474 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:09:44.695 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:09:53.408 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:09:53.530 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:09:53.648 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:09:53.726 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 2 files
+2025-05-24 22:09:53.844 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:09:53.968 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:09:54.046 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:09:54.244 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:09:54.366 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:09:54.475 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:09:54.587 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:09:54.689 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:09:54.818 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:09:54.933 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:09:55.024 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:09:55.139 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:09:58.747 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:09:58.840 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:09:58.958 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:09:59.058 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:09:59.163 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:09:59.242 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 2 files
+2025-05-24 22:09:59.355 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:10:02.113 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:10:02.198 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:10:02.326 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:10:02.440 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:10:02.556 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:10:02.680 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:10:05.349 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:10:05.469 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:10:05.590 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:10:05.683 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:10:05.817 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:10:05.986 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:10:06.070 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:10:06.183 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:10:06.307 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:11:34.217 [info] diff from /home/runner/workspace/test-flow.html to /home/runner/workspace/test-flow.html as ✻ [Claude Code] test-flow.html (977cc2) ⧉
+2025-05-24 22:11:34.317 [info] leftTempFileProvider.createFile /home/runner/workspace/test-flow.html
+2025-05-24 22:11:34.969 [info] diff result undefined ✻ [Claude Code] test-flow.html (977cc2) ⧉ {"$mid":1,"path":"/home/runner/workspace/test-flow.html","scheme":"_claude_fs_left"} {"$mid":1,"external":"_claude_fs_right:/home/runner/workspace/test-flow.html","path":"/home/runner/workspace/test-flow.html","scheme":"_claude_fs_right"} {"preview":false}
+2025-05-24 22:11:35.017 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:11:35.251 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:11:36.029 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:11:38.980 [info] tab_closed ✻ [Claude Code] test-flow.html (977cc2) ⧉
+2025-05-24 22:11:39.009 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:11:39.365 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:13:02.989 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:13:03.089 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:14:55.343 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 3 files
+2025-05-24 22:38:47.335 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files
+2025-05-24 22:38:49.920 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 2 files
+2025-05-24 22:38:52.904 [info] [DiagnosticStreamManager] Notifying 1 clients about diagnostics change for 1 files

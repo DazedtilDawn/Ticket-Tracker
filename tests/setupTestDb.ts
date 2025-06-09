@@ -60,6 +60,6 @@ export async function setupTestDatabase() {
 }
 
 // Run setup if this file is executed directly
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   setupTestDatabase();
 }

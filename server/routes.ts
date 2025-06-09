@@ -29,8 +29,18 @@ import {
   insertChildSchema,
   updateChildSchema,
   archiveChildSchema,
+  type User,
 } from "@shared/schema";
-import { createJwt, verifyJwt, AuthMiddleware } from "./lib/auth";
+import { 
+  createJwt, 
+  verifyJwt, 
+  AuthMiddleware, 
+  createAccessToken,
+  createRefreshToken,
+  verifyRefreshToken,
+  setRefreshTokenCookie,
+  clearRefreshTokenCookie
+} from "./lib/auth";
 import { DailyBonusAssignmentMiddleware } from "./lib/daily-bonus-middleware";
 
 import {
@@ -271,8 +281,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .json({ message: "Only parent accounts may sign in" });
       }
 
-      // Generate JWT token for the authenticated user
-      const token = createJwt(user);
+      // Generate tokens for the authenticated user
+      const rememberMe = req.body.rememberMe === true;
+      const accessToken = createAccessToken(user);
+      const refreshToken = createRefreshToken(user, rememberMe);
+      
+      // Set refresh token as HttpOnly cookie
+      setRefreshTokenCookie(res, refreshToken, rememberMe);
+      
+      // Keep backward compatibility with "token" field
+      const token = accessToken;
 
       // Handle daily bonus assignment for parent users on login
       let dailyBonusAssignments = null;
@@ -340,7 +358,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       return res.json(
         success({
-          token,
+          token, // Keep for backward compatibility
+          access_token: accessToken,
           user: {
             id: user.id,
             name: user.name,
@@ -370,18 +389,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Username already taken" });
       }
 
+      // If registering a parent, create a family first
+      let family_id: number | undefined;
+      if (validatedData.role === 'parent') {
+        const familyName = `${validatedData.name}'s Family`;
+        const family = await storage.createFamily(familyName);
+        family_id = family.id;
+      }
+
       // For now, store password as plain text (in production, use bcrypt)
       const userWithPassword = {
         ...validatedData,
         passwordHash: password || 'password123', // Default password for testing
+        family_id, // Add family_id if created
       };
 
       const newUser = await storage.createUser(userWithPassword);
-      const token = createJwt(newUser);
+      
+      // If parent, add to family_parents table
+      if (newUser.role === 'parent' && family_id) {
+        await storage.addParentToFamily(family_id, newUser.id, 'parent');
+      }
+      
+      // Generate tokens
+      const rememberMe = req.body.rememberMe === true;
+      const accessToken = createAccessToken(newUser);
+      const refreshToken = createRefreshToken(newUser, rememberMe);
+      
+      // Set refresh token as HttpOnly cookie
+      setRefreshTokenCookie(res, refreshToken, rememberMe);
+      
+      // Keep backward compatibility
+      const token = accessToken;
 
       return res.status(201).json(
         success({
-          token,
+          token, // Keep for backward compatibility
+          access_token: accessToken,
           user: {
             id: newUser.id,
             name: newUser.name,
@@ -394,6 +438,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const message = error instanceof Error ? error.message : String(error);
       return res.status(400).json(failure("BadRequest", message));
     }
+  });
+
+  // Refresh token endpoint
+  app.post("/api/auth/refresh", async (req: Request, res: Response) => {
+    try {
+      // Get refresh token from cookie
+      const refreshToken = req.cookies?.refreshToken;
+      
+      if (!refreshToken) {
+        return res.status(401).json({ message: "Refresh token not found" });
+      }
+      
+      // Verify refresh token
+      const payload = verifyRefreshToken(refreshToken);
+      if (!payload) {
+        return res.status(401).json({ message: "Invalid refresh token" });
+      }
+      
+      // Get user from database
+      const user = await storage.getUser(payload.id);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+      
+      // Generate new access token
+      const accessToken = createAccessToken(user);
+      
+      return res.json(
+        success({
+          access_token: accessToken,
+          token: accessToken, // Backward compatibility
+        })
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return res.status(401).json(failure("Unauthorized", message));
+    }
+  });
+
+  // Logout endpoint to clear refresh token
+  app.post("/api/auth/logout", async (req: Request, res: Response) => {
+    clearRefreshTokenCookie(res);
+    return res.json(success({ message: "Logged out successfully" }));
   });
 
   // Protected routes middleware
@@ -496,7 +583,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(and(...conditions));
 
       // Sanitize: never leak passwordHash etc.
-      const sanitized = children.map((c) => ({
+      const sanitized = children.map((c: User) => ({
         id: c.id,
         name: c.name,
         username: c.username,
@@ -691,6 +778,125 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
+  /**
+   * POST /api/families/:id/invite-parent
+   * Invite another parent to the family
+   */
+  app.post(
+    "/api/families/:id/invite-parent",
+    parentOnly,
+    async (req: Request, res: Response) => {
+      try {
+        const familyId = parseInt(req.params.id);
+        const { email } = req.body;
+        
+        if (!email) {
+          return res.status(400).json({ message: "Email is required" });
+        }
+        
+        // Verify the requesting parent belongs to this family
+        const isInFamily = req.user.family_id === familyId || 
+          await storage.isParentInFamily(familyId, req.user.id);
+          
+        if (!isInFamily) {
+          return res.status(403).json({ message: "You do not belong to this family" });
+        }
+        
+        // Check if user with email exists
+        const invitedUser = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, email))
+          .limit(1);
+          
+        if (invitedUser.length === 0) {
+          // TODO: In production, send invite email here
+          return res.json(success({
+            message: "Invitation sent to " + email,
+            status: "pending"
+          }));
+        }
+        
+        const existingParent = invitedUser[0];
+        
+        // Check if they're already a parent
+        if (existingParent.role !== 'parent') {
+          return res.status(400).json({ 
+            message: "User is not a parent account" 
+          });
+        }
+        
+        // Check if already in family
+        const alreadyInFamily = await storage.isParentInFamily(familyId, existingParent.id);
+        if (alreadyInFamily) {
+          return res.status(400).json({ 
+            message: "Parent is already in this family" 
+          });
+        }
+        
+        // Add parent to family
+        await storage.addParentToFamily(familyId, existingParent.id, 'parent');
+        
+        // Update their family_id if they don't have one
+        if (!existingParent.family_id) {
+          await db
+            .update(users)
+            .set({ family_id: familyId })
+            .where(eq(users.id, existingParent.id));
+        }
+        
+        return res.json(success({
+          message: "Parent added to family",
+          parent: {
+            id: existingParent.id,
+            name: existingParent.name,
+            email: existingParent.email,
+          }
+        }));
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return res.status(500).json(failure("InternalError", message));
+      }
+    }
+  );
+
+  /**
+   * GET /api/families/:id/parents
+   * Get all parents in a family
+   */
+  app.get(
+    "/api/families/:id/parents",
+    auth,
+    async (req: Request, res: Response) => {
+      try {
+        const familyId = parseInt(req.params.id);
+        
+        // Verify the requesting user belongs to this family
+        const belongsToFamily = req.user.family_id === familyId || 
+          (req.user.role === 'parent' && await storage.isParentInFamily(familyId, req.user.id));
+          
+        if (!belongsToFamily) {
+          return res.status(403).json({ message: "You do not belong to this family" });
+        }
+        
+        const parents = await storage.getFamilyParents(familyId);
+        
+        return res.json(success({
+          parents: parents.map(p => ({
+            id: p.parent.id,
+            name: p.parent.name,
+            email: p.parent.email,
+            role: p.role,
+            added_at: p.added_at,
+          }))
+        }));
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return res.status(500).json(failure("InternalError", message));
+      }
+    }
+  );
+
   // Chore routes
   // Rate limiting for chores endpoint to prevent infinite loops
   const choreRequestCounts = new Map<string, { count: number; timestamp: number }>();
@@ -854,6 +1060,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           type: "earn",
           note: `Completed: ${chore.name}`,
           source: "chore",
+          performed_by_id: req.user.id, // Track who performed the action
         });
 
         // Get updated balance
@@ -1453,6 +1660,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         type: "earn",
         note: "Daily-spin",
         metadata: JSON.stringify({ bonus_id: bonus.id }),
+        performed_by_id: req.user.id, // Track who performed the action
       });
 
       // Mark bonus revealed & persist final tickets actually awarded
@@ -1911,6 +2119,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         type: "spend",
         note: reason ? `Purchase: ${reason}` : "Purchase",
         metadata: metadata ? JSON.stringify(metadata) : null,
+        performed_by_id: req.user.id, // Track who performed the action
       });
 
       // Refresh the targetGoal with updated tickets_saved
@@ -2012,7 +2221,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           goal_id: goalId,
           product_id: goal.product_id,
           price_cents: currentPrice
-        })
+        }),
+        performed_by_id: req.user.id, // Track who performed the action
       });
 
       // Mark goal as purchased
@@ -2082,6 +2292,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ? `Deduction: ${data.reason}`
             : "Ticket deduction for bad behavior",
           source: "manual_deduct",
+          performed_by_id: req.user.id, // Track who performed the action
         });
 
         // Return the transaction and updated balance
@@ -2226,6 +2437,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               source: "bonus_spin",
               ref_id: dailyBonusRecord.id, // Reference the bonus record
               reason: data.reason || "Good behavior",
+              performed_by_id: req.user.id, // Track who performed the action
             });
 
             console.log(`[GOOD_BEHAVIOR] Created placeholder transaction:`, {
@@ -2267,6 +2479,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             note: `Good Behavior: ${data.reason || "No reason provided"}`,
             source: "manual_add",
             ref_id: null, // No daily bonus reference for direct rewards
+            performed_by_id: req.user.id, // Track who performed the action
           });
 
           // Get updated balance after adding tickets
@@ -3262,6 +3475,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           note: `Bonus Wheel: ${segmentLabel}`,
           source: "bonus_spin",
           ref_id: dailyBonusRecord.id,
+          performed_by_id: req.user.id, // Track who performed the action
         });
 
         // Step 9: Get updated user balance
@@ -3686,6 +3900,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     },
   );
+
+  // Get current user info
+  app.get("/api/me", auth, async (req: Request, res: Response) => {
+    const user = req.user;
+    return res.json({
+      id: user.id,
+      name: user.name,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      family_id: user.family_id,
+    });
+  });
 
   app.get("/api/stats", auth, async (req: Request, res: Response) => {
     const { userId } = req.query;

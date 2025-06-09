@@ -32,6 +32,7 @@ describe("Chore Reset System", () => {
       .send({
         name: "Chore Reset Test Parent",
         username: `choreresetparent_${timestamp}`,
+        email: `choreresetparent_${timestamp}@example.com`,
         password: "password123",
         passwordHash: "password123",
         role: "parent",

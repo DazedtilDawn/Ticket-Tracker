@@ -343,8 +343,8 @@ function ParentManagement() {
         </Tabs>
       </div>
 
-      {/* Trophy Dialog */}
-      {selectedChild && (
+      {/* Trophy Dialog - Disabled: needs itemId and itemTitle */}
+      {/* {selectedChild && (
         <AwardTrophyDialog
           isOpen={trophyDialogOpen}
           onClose={() => {
@@ -353,8 +353,10 @@ function ParentManagement() {
           }}
           childId={selectedChild.id}
           childName={selectedChild.name}
+          itemId={0} // TODO: needs actual item
+          itemTitle="" // TODO: needs actual item
         />
-      )}
+      )} */}
     </div>
   );
 }

@@ -25,6 +25,7 @@ describe("Edit child profile", () => {
       .post("/api/auth/register")
       .send({
         username: uniqueUsername,
+        email: `${uniqueUsername}@example.com`,
         passwordHash: "testpass123",
         name: "Edit Test Parent",
         role: "parent",
@@ -53,6 +54,7 @@ describe("Edit child profile", () => {
       .post("/api/auth/register")
       .send({
         username: `otherparent_${Date.now()}`,
+        email: `otherparent_${Date.now()}@example.com`,
         passwordHash: "otherpass123",
         name: "Other Parent",
         role: "parent",

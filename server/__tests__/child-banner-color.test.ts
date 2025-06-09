@@ -30,6 +30,7 @@ describe("Child banner color assignment", () => {
       .post("/api/auth/register")
       .send({
         username: uniqueUsername,
+        email: `${uniqueUsername}@example.com`,
         passwordHash: "testpass123",
         name: "Banner Test Parent",
         role: "parent",

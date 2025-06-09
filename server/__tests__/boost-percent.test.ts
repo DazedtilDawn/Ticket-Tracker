@@ -29,6 +29,7 @@ describe("boostPercent functionality", () => {
       .send({
         name: "Boost Test Parent",
         username: `boostparent_${timestamp}`,
+        email: `boostparent_${timestamp}@example.com`,
         password: "password123",
         passwordHash: "password123",
         role: "parent",

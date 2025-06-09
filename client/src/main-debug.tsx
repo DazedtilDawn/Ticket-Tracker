@@ -1,5 +1,7 @@
 console.log("[DEBUG] Starting main-debug.tsx");
 
+export {}; // Make this file a module
+
 try {
   console.log("[DEBUG] Importing React DOM");
   const { createRoot } = await import("react-dom/client");
@@ -30,5 +32,5 @@ try {
   }
 } catch (error) {
   console.error("[DEBUG] Error in main-debug:", error);
-  document.body.innerHTML = `<h1>Error: ${error.message}</h1>`;
+  document.body.innerHTML = `<h1>Error: ${(error as Error).message}</h1>`;
 }

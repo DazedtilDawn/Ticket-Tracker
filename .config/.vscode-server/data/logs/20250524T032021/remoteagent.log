@@ -1,0 +1,106 @@
+2025-05-24 03:20:21.164 [info] 
+
+
+
+
+2025-05-24 03:20:21.189 [info] Extension host agent started.
+2025-05-24 03:20:21.309 [info] [<unknown>][cb5015a2][ExtensionHostConnection] New connection established.
+2025-05-24 03:20:21.337 [info] [<unknown>][556c7022][ManagementConnection] New connection established.
+2025-05-24 03:20:21.512 [info] [<unknown>][cb5015a2][ExtensionHostConnection] <246> Launched Extension Host Process.
+2025-05-24 03:20:21.623 [info] ComputeTargetPlatform: linux-x64
+2025-05-24 03:20:25.038 [info] ComputeTargetPlatform: linux-x64
+2025-05-24 03:21:19.988 [info] Installing extension: anthropic.claude-code {"isMachineScoped":true,"installGivenVersion":true,"isApplicationScoped":false,"profileLocation":{"$mid":1,"fsPath":"/home/runner/.vscode-server/extensions/extensions.json","external":"file:///home/runner/.vscode-server/extensions/extensions.json","path":"/home/runner/.vscode-server/extensions/extensions.json","scheme":"file"},"productVersion":{"version":"1.100.2","date":"2025-05-14T21:47:40.416Z"}}
+2025-05-24 03:21:20.201 [info] Deleted existing extension from disk anthropic.claude-code /home/runner/.vscode-server/extensions/anthropic.claude-code-1.0.3
+2025-05-24 03:21:20.297 [info] Extracted extension to file:///home/runner/.vscode-server/extensions/anthropic.claude-code-1.0.3: anthropic.claude-code
+2025-05-24 03:21:20.392 [info] Renamed to /home/runner/.vscode-server/extensions/anthropic.claude-code-1.0.3
+2025-05-24 03:21:20.443 [info] Extension installed successfully: anthropic.claude-code file:///home/runner/.vscode-server/extensions/extensions.json
+2025-05-24 03:25:21.192 [info] New EH opened, aborting shutdown
+2025-05-24 04:18:23.722 [info] [<unknown>][556c7022][ManagementConnection] The client has disconnected, will wait for reconnection 3h before disposing...
+2025-05-24 04:21:20.436 [info] [<unknown>][556c7022][ManagementConnection] Another client has connected, will shorten the wait for reconnection 5m before disposing...
+2025-05-24 04:21:20.437 [info] [<unknown>][556c7022][ManagementConnection] The client has reconnected.
+2025-05-24 04:21:21.480 [error] CodeExpectedError: Could not find pty 4 on pty host
+    at I.W (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:16623:21)
+    at I.updateIcon (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:16404:12)
+    at s.<computed> (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:16144:19)
+    at Object.call (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:6160:21)
+    at ul.s (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:5759:15)
+    at ul.q (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:5725:18)
+    at ps.value (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:5676:48)
+    at C.B (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:4074:11)
+    at C.fire (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:4090:40)
+    at process.x (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:3756:28)
+    at process.emit (node:events:524:28)
+    at emit (node:internal/child_process:950:14)
+    at process.processTicksAndRejections (node:internal/process/task_queues:83:21)
+2025-05-24 04:21:21.482 [error] CodeExpectedError: Could not find pty 4 on pty host
+    at I.W (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:16623:21)
+    at I.updateTitle (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:16401:12)
+    at s.<computed> (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:16144:19)
+    at Object.call (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:6160:21)
+    at ul.s (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:5759:15)
+    at ul.q (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:5725:18)
+    at ps.value (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:5676:48)
+    at C.B (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:4074:11)
+    at C.fire (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:4090:40)
+    at process.x (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:3756:28)
+    at process.emit (node:events:524:28)
+    at emit (node:internal/child_process:950:14)
+    at process.processTicksAndRejections (node:internal/process/task_queues:83:21)
+2025-05-24 04:21:23.864 [info] [<unknown>][cb5015a2][ExtensionHostConnection] The client has reconnected.
+2025-05-24 04:46:03.189 [warning] [File Watcher (node.js)] Watcher shutdown because watched path got deleted
+2025-05-24 04:46:03.208 [error] Error: Unexpected SIGPIPE
+    at process.<anonymous> (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/server-main.js:61243:24)
+    at process.emit (node:events:536:35)
+2025-05-24 04:50:17.115 [warning] [File Watcher (node.js)] Watcher shutdown because watched path got deleted
+2025-05-24 07:45:52.931 [info] [<unknown>][cb5015a2][ExtensionHostConnection] <246> Extension Host Process exited with code: null, signal: SIGKILL.
+2025-05-24 07:45:52.941 [info] Last EH closed, waiting before shutting down
+2025-05-24 07:46:12.723 [error] [<unknown>][cb5015a2][ExtensionHostConnection] Unknown reconnection token (seen before).
+2025-05-24 07:46:13.689 [info] [<unknown>][e2ac804c][ExtensionHostConnection] New connection established.
+2025-05-24 07:46:13.707 [info] [<unknown>][e2ac804c][ExtensionHostConnection] <31446> Launched Extension Host Process.
+2025-05-24 07:49:17.885 [warning] No ptyHost heartbeat after 6 seconds
+2025-05-24 07:49:22.622 [info] [<unknown>][e2ac804c][ExtensionHostConnection] The client has reconnected.
+2025-05-24 07:50:52.942 [info] New EH opened, aborting shutdown
+2025-05-24 13:36:29.846 [info] Installing extension: anthropic.claude-code {"isMachineScoped":true,"installGivenVersion":true,"isApplicationScoped":false,"profileLocation":{"$mid":1,"fsPath":"/home/runner/.vscode-server/extensions/extensions.json","external":"file:///home/runner/.vscode-server/extensions/extensions.json","path":"/home/runner/.vscode-server/extensions/extensions.json","scheme":"file"},"productVersion":{"version":"1.100.2","date":"2025-05-14T21:47:40.416Z"}}
+2025-05-24 13:36:30.089 [info] Deleted existing extension from disk anthropic.claude-code /home/runner/.vscode-server/extensions/anthropic.claude-code-1.0.3
+2025-05-24 13:36:30.108 [info] Extracted extension to file:///home/runner/.vscode-server/extensions/anthropic.claude-code-1.0.3: anthropic.claude-code
+2025-05-24 13:36:30.192 [info] Renamed to /home/runner/.vscode-server/extensions/anthropic.claude-code-1.0.3
+2025-05-24 13:36:30.216 [info] Extension installed successfully: anthropic.claude-code file:///home/runner/.vscode-server/extensions/extensions.json
+2025-05-24 13:36:56.188 [info] Installing extension: anthropic.claude-code {"isMachineScoped":true,"installGivenVersion":true,"isApplicationScoped":false,"profileLocation":{"$mid":1,"fsPath":"/home/runner/.vscode-server/extensions/extensions.json","external":"file:///home/runner/.vscode-server/extensions/extensions.json","path":"/home/runner/.vscode-server/extensions/extensions.json","scheme":"file"},"productVersion":{"version":"1.100.2","date":"2025-05-14T21:47:40.416Z"}}
+2025-05-24 13:36:56.317 [info] Deleted existing extension from disk anthropic.claude-code /home/runner/.vscode-server/extensions/anthropic.claude-code-1.0.3
+2025-05-24 13:36:56.490 [info] Extracted extension to file:///home/runner/.vscode-server/extensions/anthropic.claude-code-1.0.3: anthropic.claude-code
+2025-05-24 13:36:56.583 [info] Renamed to /home/runner/.vscode-server/extensions/anthropic.claude-code-1.0.3
+2025-05-24 13:36:56.609 [info] Extension installed successfully: anthropic.claude-code file:///home/runner/.vscode-server/extensions/extensions.json
+2025-05-24 14:27:17.824 [info] [<unknown>][e2ac804c][ExtensionHostConnection] <31446> Extension Host Process exited with code: null, signal: SIGKILL.
+2025-05-24 14:27:17.882 [info] Last EH closed, waiting before shutting down
+2025-05-24 14:27:37.939 [error] [<unknown>][e2ac804c][ExtensionHostConnection] Unknown reconnection token (seen before).
+2025-05-24 14:27:38.207 [info] [<unknown>][edaeb1e3][ExtensionHostConnection] New connection established.
+2025-05-24 14:27:38.220 [info] [<unknown>][edaeb1e3][ExtensionHostConnection] <8524> Launched Extension Host Process.
+2025-05-24 14:29:08.285 [info] [<unknown>][edaeb1e3][ExtensionHostConnection] <8524> Extension Host Process exited with code: null, signal: SIGKILL.
+2025-05-24 14:29:08.291 [info] Cancelling previous shutdown timeout
+2025-05-24 14:29:08.292 [info] Last EH closed, waiting before shutting down
+2025-05-24 14:29:23.583 [error] [<unknown>][edaeb1e3][ExtensionHostConnection] Unknown reconnection token (seen before).
+2025-05-24 14:29:24.684 [info] [<unknown>][a531739e][ExtensionHostConnection] New connection established.
+2025-05-24 14:29:24.697 [info] [<unknown>][a531739e][ExtensionHostConnection] <9770> Launched Extension Host Process.
+2025-05-24 14:32:20.492 [warning] No ptyHost heartbeat after 6 seconds
+2025-05-24 14:32:23.994 [info] [<unknown>][a531739e][ExtensionHostConnection] <9770> Extension Host Process exited with code: null, signal: SIGKILL.
+2025-05-24 14:32:23.997 [info] Cancelling previous shutdown timeout
+2025-05-24 14:32:23.997 [info] Last EH closed, waiting before shutting down
+2025-05-24 14:33:51.883 [error] [<unknown>][a531739e][ExtensionHostConnection] Unknown reconnection token (seen before).
+2025-05-24 14:33:52.150 [info] [<unknown>][c48c129b][ExtensionHostConnection] New connection established.
+2025-05-24 14:33:52.159 [info] [<unknown>][c48c129b][ExtensionHostConnection] <10589> Launched Extension Host Process.
+2025-05-24 14:34:52.585 [warning] No ptyHost heartbeat after 6 seconds
+2025-05-24 14:34:52.805 [info] [<unknown>][c48c129b][ExtensionHostConnection] <10589> Extension Host Process exited with code: null, signal: SIGKILL.
+2025-05-24 14:34:52.806 [info] Cancelling previous shutdown timeout
+2025-05-24 14:34:52.806 [info] Last EH closed, waiting before shutting down
+2025-05-24 14:34:53.082 [error] [<unknown>][c48c129b][ExtensionHostConnection] Unknown reconnection token (seen before).
+2025-05-24 14:34:53.438 [info] [<unknown>][d4c77391][ExtensionHostConnection] New connection established.
+2025-05-24 14:34:53.448 [info] [<unknown>][d4c77391][ExtensionHostConnection] <10867> Launched Extension Host Process.
+2025-05-24 14:35:50.336 [warning] No ptyHost heartbeat after 6 seconds
+2025-05-24 14:39:52.807 [info] New EH opened, aborting shutdown
+2025-05-24 15:20:28.120 [info] Getting Manifest... robertpiosik.gemini-coder
+2025-05-24 15:20:28.297 [info] Installing extension: robertpiosik.gemini-coder {"productVersion":{"version":"1.100.2","date":"2025-05-14T21:47:40.416Z"},"pinned":false,"operation":3,"isApplicationScoped":false,"donotVerifySignature":false,"context":{"clientTargetPlatform":"win32-x64"},"profileLocation":{"$mid":1,"fsPath":"/home/runner/.vscode-server/extensions/extensions.json","external":"file:///home/runner/.vscode-server/extensions/extensions.json","path":"/home/runner/.vscode-server/extensions/extensions.json","scheme":"file"}}
+2025-05-24 15:20:30.305 [info] Extension signature verification result for robertpiosik.gemini-coder: Success. Internal Code: 0. Executed: true. Duration: 1414ms.
+2025-05-24 15:20:30.349 [info] Extracted extension to file:///home/runner/.vscode-server/extensions/robertpiosik.gemini-coder-1.9.2: robertpiosik.gemini-coder
+2025-05-24 15:20:30.360 [info] Renamed to /home/runner/.vscode-server/extensions/robertpiosik.gemini-coder-1.9.2
+2025-05-24 15:20:30.380 [info] Marked extension as removed robertpiosik.gemini-coder-1.9.1
+2025-05-24 15:20:30.389 [info] Extension installed successfully: robertpiosik.gemini-coder file:///home/runner/.vscode-server/extensions/extensions.json

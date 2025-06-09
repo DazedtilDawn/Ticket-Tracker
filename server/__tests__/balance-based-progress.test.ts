@@ -139,12 +139,12 @@ describe("Balance-based goal progress", () => {
     expect(calculateOverSavedTickets(balance, zeroPriceProduct)).toBe(50);
   });
 
-  test("negative balance should be handled safely", () => {
+  test("negative balance can occur and should be returned as-is", () => {
     const negativeBalance = -10;
     const productPriceCents = 1000;
     
-    // Should treat negative as 0
-    expect(calculateGoalProgressFromBalance(negativeBalance, productPriceCents)).toBe(0);
+    // Negative balance should be returned as-is
+    expect(calculateGoalProgressFromBalance(negativeBalance, productPriceCents)).toBe(-25);
     expect(calculateOverSavedTickets(negativeBalance, productPriceCents)).toBe(0);
   });
 });

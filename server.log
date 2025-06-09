@@ -1,0 +1,49 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+[SETUP] Registering profile image routes...
+[PROFILE] Setting up profile image handler (DEFINITIVE IMPLEMENTATION)
+[PROFILE] Using directories: {
+  uploadDir: '/home/runner/workspace/public/uploads',
+  profilesDir: '/home/runner/workspace/public/uploads/profiles'
+}
+[PROFILE] Using existing directory: /home/runner/workspace/public/uploads
+[PROFILE] Using existing directory: /home/runner/workspace/public/uploads/profiles
+[PROFILE] Test file created successfully at /home/runner/workspace/public/uploads/profiles/permission_test_1748130085518.txt
+[PROFILE] ✓ Directory write permission test passed
+[PROFILE] Profile image routes registered and ready
+[SETUP] Profile image routes registered successfully
+[SETUP] Registering banner image routes...
+[BANNER] Setting up banner image handler
+[BANNER] Using directories: {
+  uploadDir: '/home/runner/workspace/public/uploads',
+  bannersDir: '/home/runner/workspace/public/uploads/banners'
+}
+[BANNER] Using existing directory: /home/runner/workspace/public/uploads
+[BANNER] Using existing directory: /home/runner/workspace/public/uploads/banners
+[BANNER] Test file created successfully at /home/runner/workspace/public/uploads/banners/permission_test_1748130085521.txt
+[BANNER] ✓ Directory write permission test passed
+[BANNER] Banner image routes registered and ready
+[SETUP] Banner image routes registered successfully
+node:events:496
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use 0.0.0.0:5000
+    at Server.setupListenHandle [as _listen2] (node:net:1908:16)
+    at listenInCluster (node:net:1965:12)
+    at doListen (node:net:2139:7)
+    at process.processTicksAndRejections (node:internal/process/task_queues:83:21)
+Emitted 'error' event on WebSocketServer instance at:
+    at Server.emit (node:events:518:28)
+    at emitErrorNT (node:net:1944:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+  code: 'EADDRINUSE',
+  errno: -98,
+  syscall: 'listen',
+  address: '0.0.0.0',
+  port: 5000
+}
+
+Node.js v20.18.1

@@ -1,25 +1,19 @@
-import { test, expect } from "bun:test";
+import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 import request from "supertest";
-import express from "express";
-import { createApp } from "../server/index";
+import { createServer } from "../server/index";
 import { storage } from "../server/storage";
 
 // Test the specific changes we made
-test.describe("Integration tests for recent changes", () => {
-  let app: express.Express;
+describe("Integration tests for recent changes", () => {
+  let app: any;
   let server: any;
   let parentToken: string;
 
-  test.beforeAll(async () => {
-    // Create app instance
-    app = express();
-    app.use(express.json());
-    
-    // Set up routes
-    const { router } = await createApp();
-    app.use(router);
-    
-    server = app.listen(0);
+  beforeAll(async () => {
+    // Create app instance with routes
+    const result = await createServer();
+    app = result.app;
+    server = result.server;
 
     // Create a test parent user
     const timestamp = Date.now();
@@ -44,11 +38,11 @@ test.describe("Integration tests for recent changes", () => {
     parentToken = loginRes.body.token;
   });
 
-  test.afterAll(() => {
+  afterAll(() => {
     server?.close?.();
   });
 
-  test("getChildUsers filters out archived children", async () => {
+  it("getChildUsers filters out archived children", async () => {
     // This test would need to be in the frontend
     // But we can test the API behavior
     
@@ -90,7 +84,7 @@ test.describe("Integration tests for recent changes", () => {
     expect(allRes.body.find((c: any) => c.id === child2Id).is_archived).toBe(true);
   });
 
-  test("child gets banner_color_preference on creation", async () => {
+  it("child gets banner_color_preference on creation", async () => {
     const childRes = await request(app)
       .post("/api/family/children")
       .set("Authorization", `Bearer ${parentToken}`)
@@ -101,7 +95,7 @@ test.describe("Integration tests for recent changes", () => {
     expect(childRes.body.banner_color_preference).toMatch(/from-.*to-.*/);
   });
 
-  test("chore completion prevents duplicates", async () => {
+  it("chore completion prevents duplicates", async () => {
     // Get a chore
     const choresRes = await request(app)
       .get("/api/chores")
@@ -137,7 +131,7 @@ test.describe("Integration tests for recent changes", () => {
     expect(secondCompletion.id).toBe(firstCompletion.id);
   });
 
-  test("bonus wheel x2 has no cap", async () => {
+  it("bonus wheel x2 has no cap", async () => {
     // This is tested in the route handler
     // The change was removing Math.min(baseTickets * 2, 10)
     // Now it's just baseTickets * 2

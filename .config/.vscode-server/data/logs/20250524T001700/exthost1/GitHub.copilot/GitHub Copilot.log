@@ -1,0 +1,17 @@
+2025-05-24 00:17:18.135 [info] [certificates] Removed 11 expired certificates
+2025-05-24 00:17:19.929 [info] [fetcher] Using Helix fetcher, Electron fetcher is not available.
+2025-05-24 00:17:19.929 [info] [code-referencing] Public code references are enabled.
+2025-05-24 00:17:25.621 [error] [default] Error sending telemetry FetchError: The operation was aborted
+    at fetch (/home/runner/workspace/.config/.vscode-server/extensions/github.copilot-1.323.1582/node_modules/@adobe/helix-fetch/src/fetch/index.js:99:11)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at runNextTicks (node:internal/process/task_queues:64:3)
+    at processTimers (node:internal/timers:516:9)
+    at cachingFetch (/home/runner/workspace/.config/.vscode-server/extensions/github.copilot-1.323.1582/node_modules/@adobe/helix-fetch/src/fetch/index.js:288:16)
+    at GB.fetch (/home/runner/workspace/.config/.vscode-server/extensions/github.copilot-1.323.1582/lib/src/network/helix.ts:94:22) {
+  type: 'system',
+  _name: 'FetchError',
+  code: 'ABORT_ERR',
+  errno: undefined,
+  erroredSysCall: undefined
+}
+2025-05-24 00:17:26.023 [info] [fetcher] Using Helix fetcher, Electron fetcher is not available.

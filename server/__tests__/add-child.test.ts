@@ -13,6 +13,7 @@ describe("POST /api/family/children", () => {
   const parentData = {
     name: "Add Child Test Parent",
     username: `addchildparent_${timestamp}`,
+    email: `addchildparent_${timestamp}@example.com`,
     password: "password123",
     passwordHash: "password123", // For registration endpoint
     role: "parent" as const,

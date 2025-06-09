@@ -1,0 +1,11 @@
+2025-05-24 16:13:29.818 [info] 
+
+
+
+
+2025-05-24 16:13:29.836 [info] Extension host agent started.
+2025-05-24 16:13:30.086 [error] [<unknown>][d4c77391][ExtensionHostConnection] Unknown reconnection token (never seen).
+2025-05-24 16:13:30.087 [error] [<unknown>][556c7022][ManagementConnection] Unknown reconnection token (never seen).
+2025-05-24 16:13:30.186 [info] Marked extension as removed robertpiosik.gemini-coder-1.9.1
+2025-05-24 16:13:30.203 [info] Deleted marked for removal extension from disk robertpiosik.gemini-coder /home/runner/.vscode-server/extensions/robertpiosik.gemini-coder-1.9.1
+2025-05-24 16:18:29.837 [info] Last EH closed, shutting down

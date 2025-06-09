@@ -18,6 +18,8 @@ import {
   InsertAwardedItem,
   ChoreCompletion,
   InsertChoreCompletion,
+  families,
+  familyParents,
 } from "@shared/schema";
 import { calculateBoostPercent } from "./lib/business-logic";
 
@@ -30,6 +32,13 @@ export const CHILD_BANNER_GRADIENTS = [
 ];
 
 export interface IStorage {
+  // Family operations
+  createFamily(name: string): Promise<{ id: number; name: string }>;
+  addParentToFamily(familyId: number, parentId: number, role?: string): Promise<void>;
+  removeParentFromFamily(familyId: number, parentId: number): Promise<boolean>;
+  getFamilyParents(familyId: number): Promise<{ parent: User; role: string; added_at: Date }[]>;
+  isParentInFamily(familyId: number, parentId: number): Promise<boolean>;
+  
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -197,10 +206,10 @@ export class DatabaseStorage implements IStorage {
         console.log(
           `[GET_BONUS] Found daily bonus for user ${userId} on ${today}:`,
           {
-            id: bonus.id,
-            assigned_chore_id: bonus.assigned_chore_id,
-            is_spun: bonus.is_spun, // Critical field we're debugging
-            trigger_type: bonus.trigger_type,
+            id: bonus!.id,
+            assigned_chore_id: bonus!.assigned_chore_id,
+            is_spun: bonus!.is_spun, // Critical field we're debugging
+            trigger_type: bonus!.trigger_type,
           },
         );
       } else {
@@ -220,10 +229,10 @@ export class DatabaseStorage implements IStorage {
         console.log(
           `[GET_BONUS] Found daily bonus for date ${today} (no user specified):`,
           {
-            id: bonus.id,
-            user_id: bonus.user_id,
-            is_spun: bonus.is_spun, // Critical field we're debugging
-            trigger_type: bonus.trigger_type,
+            id: bonus!.id,
+            user_id: bonus!.user_id,
+            is_spun: bonus!.is_spun, // Critical field we're debugging
+            trigger_type: bonus!.trigger_type,
           },
         );
       } else {
@@ -640,6 +649,60 @@ export class DatabaseStorage implements IStorage {
       bonus_tickets: Number(result.bonus_tickets ?? 0),
     };
   }
+  
+  // Family operations
+  async createFamily(name: string): Promise<{ id: number; name: string }> {
+    const [family] = await db.insert(families).values({ name }).returning();
+    return family;
+  }
+  
+  async addParentToFamily(familyId: number, parentId: number, role: string = "parent"): Promise<void> {
+    await db.insert(familyParents).values({
+      family_id: familyId,
+      parent_id: parentId,
+      role,
+    }).onConflictDoNothing(); // Ignore if already exists
+  }
+  
+  async removeParentFromFamily(familyId: number, parentId: number): Promise<boolean> {
+    const result = await db
+      .delete(familyParents)
+      .where(
+        and(
+          eq(familyParents.family_id, familyId),
+          eq(familyParents.parent_id, parentId)
+        )
+      );
+    return (result.rowCount || 0) > 0;
+  }
+  
+  async getFamilyParents(familyId: number): Promise<{ parent: User; role: string; added_at: Date }[]> {
+    const results = await db
+      .select({
+        parent: users,
+        role: familyParents.role,
+        added_at: familyParents.added_at,
+      })
+      .from(familyParents)
+      .innerJoin(users, eq(familyParents.parent_id, users.id))
+      .where(eq(familyParents.family_id, familyId));
+    
+    return results;
+  }
+  
+  async isParentInFamily(familyId: number, parentId: number): Promise<boolean> {
+    const [result] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(familyParents)
+      .where(
+        and(
+          eq(familyParents.family_id, familyId),
+          eq(familyParents.parent_id, parentId)
+        )
+      );
+    return result.count > 0;
+  }
+  
   // User operations
   async getUser(id: number): Promise<User | undefined> {
     const results = await db.select().from(users).where(eq(users.id, id));
@@ -674,7 +737,21 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
 
-    // Due to family_id constraint issues, we'll use username pattern matching
+    // If parent has a family_id, use that for more accurate results
+    if (parent.family_id) {
+      return db
+        .select()
+        .from(users)
+        .where(
+          and(
+            eq(users.family_id, parent.family_id),
+            eq(users.role, "child"),
+            eq(users.is_archived, false)
+          )
+        );
+    }
+
+    // Fallback: use username pattern matching
     // Children created by a parent have usernames like "parentusername_child_*"
     const usernamePattern = `${parent.username}_child_%`;
 
@@ -704,9 +781,18 @@ export class DatabaseStorage implements IStorage {
       family_id: parent.family_id 
     });
 
-    // For family_id, use parent's family_id if it exists, otherwise use parent's id
-    // This handles the foreign key constraint properly
-    const familyId = parent.family_id || parentId;
+    // Ensure parent has a family_id
+    let familyId = parent.family_id;
+    if (!familyId) {
+      // If parent doesn't have a family, create one
+      console.log(`[CREATE_CHILD] Parent has no family, creating one...`);
+      const family = await this.createFamily(`${parent.name}'s Family`);
+      familyId = family.id;
+      
+      // Update parent with the new family_id
+      await db.update(users).set({ family_id: familyId }).where(eq(users.id, parentId));
+      console.log(`[CREATE_CHILD] Created family ${familyId} and updated parent`);
+    }
     console.log(`[CREATE_CHILD] Using family_id: ${familyId}`);
 
     // Generate unique username with collision avoidance
@@ -1034,7 +1120,7 @@ export class DatabaseStorage implements IStorage {
       );
     
     // Create a set of completed chore IDs for fast lookup
-    const completedChoreIds = new Set(todayCompletions.map(c => c.chore_id));
+    const completedChoreIds = new Set(todayCompletions.map((c: any) => c.chore_id));
     
     // Get the user's active goal if they have one
     const activeGoal = await this.getActiveGoalByUser(userId);
@@ -1515,6 +1601,7 @@ export class DatabaseStorage implements IStorage {
       reason,
       metadata,
       to_shared_goal_id,
+      performed_by_id,
     } = insertTransaction;
     console.log(
       `[TRANSACTION] Creating transaction for user ${user_id}, delta: ${delta}, type: ${type}`,
@@ -1550,6 +1637,7 @@ export class DatabaseStorage implements IStorage {
         reason: transactionData.reason,
         metadata: transactionData.metadata,
         to_shared_goal_id: transactionData.to_shared_goal_id,
+        performed_by_id: transactionData.performed_by_id,
       })
       .returning();
     console.log(
@@ -1629,7 +1717,7 @@ export class DatabaseStorage implements IStorage {
         .where(eq(transactions.user_id, userId));
 
       // Calculate sum manually for better type safety
-      return txList.reduce((sum, tx) => sum + tx.delta, 0);
+      return txList.reduce((sum: number, tx: any) => sum + tx.delta, 0);
     } catch (error) {
       console.error("Error getting user balance:", error);
       return 0;
@@ -1702,7 +1790,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(awardedItems.child_id, childId))
       .orderBy(desc(awardedItems.awarded_at));
 
-    return result.map((row) => ({
+    return result.map((row: any) => ({
       ...row,
       product: row.product,
     }));

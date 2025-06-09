@@ -23,7 +23,7 @@ describe("Archive child profiles", () => {
     const uniqueUsername = `archivetest_parent_${Date.now()}`;
     const parentRes = await request(app)
       .post("/api/auth/register")
-      .send({ username: uniqueUsername, passwordHash: "pass", name: "Archiver", role: "parent" });
+      .send({ username: uniqueUsername, email: `${uniqueUsername}@example.com`, passwordHash: "pass", name: "Archiver", role: "parent" });
     
     if (!parentRes.body?.data?.token) {
       throw new Error(`Failed to register parent: ${JSON.stringify(parentRes.body)}`);
@@ -36,6 +36,7 @@ describe("Archive child profiles", () => {
       .post("/api/auth/register")
       .send({
         username: `other_archivetest_parent_${Date.now()}`,
+        email: `other_archivetest_parent_${Date.now()}@example.com`,
         passwordHash: "otherpass",
         name: "Other Parent",
         role: "parent",

@@ -40,6 +40,7 @@ describe("Bonus System Integration Tests", () => {
     const parentData = {
       name: "Test Parent Bonus",
       username: `testparent_bonus_${timestamp}`,
+      email: `testparent_bonus_${timestamp}@example.com`,
       password: "password123",
       passwordHash: "password123", // For registration endpoint
       role: "parent" as const,
@@ -150,6 +151,7 @@ describe("Bonus System Integration Tests", () => {
       const otherParentData = {
         name: "Other Parent Bonus",
         username: `otherparent_bonus_${timestamp}`,
+        email: `otherparent_bonus_${timestamp}@example.com`,
         password: "password123",
         passwordHash: "password123",
         role: "parent" as const,
@@ -266,6 +268,7 @@ describe("Bonus System Integration Tests", () => {
       const otherParentData = {
         name: "Other Parent Spin",
         username: `otherparent_spin_${timestamp}`,
+        email: `otherparent_spin_${timestamp}@example.com`,
         password: "password123",
         passwordHash: "password123",
         role: "parent" as const,

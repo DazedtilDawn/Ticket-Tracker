@@ -16,9 +16,9 @@ async function cleanupOrphanedProducts() {
       .from(goals);
 
     // Extract unique product IDs
-    const uniqueProductIds = goalProductIds.map((g) => g.product_id);
+    const uniqueProductIds = goalProductIds.map((g: { product_id: number }) => g.product_id);
     const usedProductIds = uniqueProductIds.filter(
-      (v, i, a) => a.indexOf(v) === i,
+      (v: number, i: number, a: number[]) => a.indexOf(v) === i,
     );
 
     console.log(`Found ${usedProductIds.length} products in use by goals`);
