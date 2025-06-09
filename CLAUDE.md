@@ -133,8 +133,8 @@ npm start            # Run production server
    - Parents added to `family_parents` table on registration
 
 3. **Migration Order**
-   - Must apply in sequence (0000 through 0019)
-   - Key migrations: 0016 (families table), 0018 (email nullable), 0019 (multi-parent)
+   - Must apply in sequence (0000 through 0020)
+   - Key migrations: 0016 (families table), 0018 (email nullable), 0019 (multi-parent), 0020 (column renames)
    - Test database needs all migrations for tests to pass
 
 4. **Port Configuration**
@@ -176,3 +176,57 @@ Testing:
 - `POST /api/auth/logout` - Clear refresh token cookie
 - `POST /api/families/:id/invite-parent` - Invite parent to family
 - `GET /api/families/:id/parents` - List all parents in family
+- `GET /api/me` - Get current user info (requires auth)
+
+### Known Issues
+
+1. **Vite Proxy**: Still configured to proxy `/api` to port 5000 instead of 5001 (vite.config.ts:26)
+2. **TypeScript**: Type narrowing issues with literal string comparisons in queryClient.ts
+
+### Common Patterns
+
+1. **API Response Format**
+   ```typescript
+   // Success
+   { success: true, data: <result> }
+   
+   // Error
+   { success: false, error: { msg: string, code?: string } }
+   ```
+
+2. **Query Functions**
+   ```typescript
+   // Standard queries
+   queryFn: getQueryFn()
+   
+   // Cached queries (for high-frequency endpoints)
+   queryFn: getCachedQueryFn({ 
+     on401: "throw", 
+     cacheDuration: 30000 
+   })
+   ```
+
+3. **Transaction Tracking**
+   ```typescript
+   // All transaction endpoints now include
+   performed_by_id: req.user.id
+   ```
+
+4. **Multi-Parent Queries**
+   ```sql
+   -- Check if user is parent of family
+   SELECT 1 FROM family_parents 
+   WHERE family_id = ? AND parent_id = ?
+   ```
+
+### Quick Fixes
+
+1. **Migration 0020 issue**: If you see `delta_tickets` column errors, apply:
+   ```sql
+   ALTER TABLE "transactions" RENAME COLUMN "delta_tickets" TO "delta";
+   ALTER TABLE "transactions" RENAME COLUMN "date" TO "created_at";
+   ```
+
+2. **Cookie-parser missing**: Run `npm install cookie-parser @types/cookie-parser`
+
+3. **Type narrowing error**: Use type assertion `(on401 as UnauthorizedBehavior)`

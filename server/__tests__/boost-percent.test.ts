@@ -4,6 +4,7 @@ import express from "express";
 import { registerRoutes } from "../routes";
 import { storage } from "../storage";
 import { calculateBoostPercent } from "../lib/business-logic";
+import { extractToken } from "./helpers/auth";
 
 describe("boostPercent functionality", () => {
   let app: express.Express;
@@ -35,11 +36,7 @@ describe("boostPercent functionality", () => {
         role: "parent",
       });
 
-    if (!parentRes.body?.data?.token) {
-      throw new Error(`Failed to register parent: ${JSON.stringify(parentRes.body)}`);
-    }
-
-    parentToken = parentRes.body.data.token;
+    parentToken = extractToken(parentRes.body);
 
     // Create a child
     const childRes = await request(app)

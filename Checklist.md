@@ -1,5 +1,19 @@
 # TicketTracker Dashboard Streamlining Checklist <!-- Plan Approved -->
 
+## Recently Completed Features (Archived)
+
+### Multi-Parent Support & Refresh Token Authentication ✅
+- [x] **Database Schema**: Created family_parents join table with composite primary key
+- [x] **Transaction Tracking**: Added performed_by_id to all transactions
+- [x] **Refresh Tokens**: Implemented 15m access tokens + 14-28d refresh tokens
+- [x] **API Endpoints**: Added /api/auth/refresh, /api/auth/logout, family invite endpoints
+- [x] **Frontend Integration**: Automatic token refresh with queue mechanism
+- [x] **Test Suite**: Comprehensive tests for all new features
+- [x] **Documentation**: Updated CLAUDE.md with patterns and troubleshooting
+- [x] **Migrations**: Applied 0019_multi_parent_auth.sql and 0020_rename_delta_tickets.sql
+
+*See archive.md for full details of this implementation*
+
 ## Phase 1: Analysis & Context Building
 
 - [ ] **Step 1: Review Current Dashboard Structure**
