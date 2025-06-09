@@ -79,7 +79,7 @@ jobs:
           USE_REAL_DB: 'true'
         run: |
           npm run dev:all & echo $! > .devpid
-          npx wait-on tcp:5173 --timeout 60000
+          npx wait-on tcp:5001 tcp:5173 --timeout 60000
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
