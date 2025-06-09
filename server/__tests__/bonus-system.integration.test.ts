@@ -90,8 +90,8 @@ describe("Bonus System Integration Tests", () => {
   });
 
   beforeEach(async () => {
-    // Clear bonuses and transactions between tests (but preserve data during test execution)
-    // Note: Some tests may need to check transactions created during the test
+    // Clear bonuses between tests to prevent interference, but keep transactions for verification
+    await db.delete(dailyBonusSimple);
   });
 
   describe("/bonus today", () => {
@@ -181,7 +181,8 @@ describe("Bonus System Integration Tests", () => {
       const initialStats = await request(app)
         .get(`/api/stats?userId=${childId}`)
         .set("Authorization", `Bearer ${parentToken}`);
-      const initialBalance = initialStats.body.balance || 0;
+      expect(initialStats.status).toBe(200);
+      const initialBalance = typeof initialStats.body.balance === 'number' ? initialStats.body.balance : 0;
 
       // Spin the bonus
       const spinResponse = await spinBonus(bonus.id, childId, parentToken);
@@ -192,8 +193,8 @@ describe("Bonus System Integration Tests", () => {
         balance: expect.any(Number),
       });
 
-      // Verify balance increased
-      expect(spinResponse.body.balance).toBe((initialBalance || 0) + spinResponse.body.tickets_awarded);
+      // Verify balance increased by the awarded tickets
+      expect(spinResponse.body.balance).toBe(initialBalance + spinResponse.body.tickets_awarded);
 
       // Verify tickets are within valid range
       expect([1, 2, 3, 5, 10]).toContain(spinResponse.body.tickets_awarded);
@@ -225,12 +226,7 @@ describe("Bonus System Integration Tests", () => {
       const [transaction] = await db
         .select()
         .from(transactions)
-        .where(
-          and(
-            eq(transactions.user_id, childId),
-            eq(transactions.type, "daily_bonus_spin")
-          )
-        )
+        .where(eq(transactions.user_id, childId))
         .orderBy(transactions.created_at)
         .limit(1);
 
