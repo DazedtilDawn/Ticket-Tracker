@@ -63,15 +63,13 @@ jobs:
           USE_REAL_DB: 'true'
 
       - name: Run tests with database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5433/intelliticket_test
+          USE_REAL_DB: 'true'
+          NODE_ENV: test
         run: |
-          export DATABASE_URL="postgresql://postgres:postgres@localhost:5433/intelliticket_test"
-          export NODE_ENV="test"
           export PATH="$HOME/.bun/bin:$PATH"
           bun test --preload ./tests/setupTestDb.ts --timeout 30000
-        env:
-          NODE_ENV: test
-          USE_REAL_DB: 'true'
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5433/intelliticket_test
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
