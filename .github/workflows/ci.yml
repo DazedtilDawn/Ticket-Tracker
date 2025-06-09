@@ -71,14 +71,29 @@ jobs:
           export PATH="$HOME/.bun/bin:$PATH"
           bun test --preload ./tests/setupTestDb.ts --timeout 30000 tests/ server/__tests__/
 
-      # TODO: Re-enable E2E tests once server startup issues are resolved
-      # E2E tests expect servers on ports 5001 (API) and 5173 (UI) but they're not running in CI
-      # - name: Install Playwright browsers
-      #   run: npx playwright install --with-deps
+      # Start servers for E2E tests
+      - name: Start servers (API + UI) in background
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5433/intelliticket_test
+          NODE_ENV: test
+          USE_REAL_DB: 'true'
+        run: |
+          npm run dev:all & echo $! > .devpid
+          npx wait-on tcp:5173 --timeout 60000
 
-      # - name: Run Playwright E2E tests
-      #   env:
-      #     DATABASE_URL: postgresql://postgres:postgres@localhost:5433/intelliticket_test
-      #     NODE_ENV: test
-      #     USE_REAL_DB: 'true'
-      #   run: npx playwright test --reporter=line
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright E2E tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5433/intelliticket_test
+          NODE_ENV: test
+          USE_REAL_DB: 'true'
+        run: npx playwright test --reporter=line
+
+      - name: Stop background servers
+        if: always()
+        run: |
+          if [ -f .devpid ]; then
+            kill $(cat .devpid) || true
+          fi
