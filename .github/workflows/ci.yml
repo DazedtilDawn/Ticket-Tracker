@@ -69,7 +69,7 @@ jobs:
           NODE_ENV: test
         run: |
           export PATH="$HOME/.bun/bin:$PATH"
-          bun test --preload ./tests/setupTestDb.ts --timeout 30000
+          bun test --preload ./tests/setupTestDb.ts --timeout 30000 tests/ server/__tests__/
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
