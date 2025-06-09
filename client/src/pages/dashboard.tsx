@@ -30,6 +30,7 @@ import { ChildBonusWheel } from "@/components/child-bonus-wheel";
 import { PurchaseDialog } from "@/components/purchase-dialog";
 import DashboardBanner from "@/components/dashboard-banner";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   PlusIcon,
@@ -1036,9 +1037,29 @@ export default function Dashboard() {
         <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg mb-6">
           <div className="px-4 py-5 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Dashboard
-              </h2>
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Dashboard
+                </h2>
+                {/* Child Context Chip - shows when parent is viewing as child */}
+                {originalUser && viewingChild && (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700">
+                      <UserIcon className="w-3 h-3 mr-1" />
+                      Viewing as {user?.name}
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={resetChildView}
+                      className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                      aria-label="Exit child view"
+                    >
+                      Exit child view
+                    </Button>
+                  </div>
+                )}
+              </div>
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 {format(new Date(), "EEEE, MMMM d, yyyy")}
               </p>
