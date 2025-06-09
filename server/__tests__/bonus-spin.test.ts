@@ -70,7 +70,7 @@ describe("POST /api/bonus/spin", () => {
     expect(bonus!.revealed).toBe(false);
 
     const tickets = spinTicketReward();
-    expect([1, 2, 3, 5, 8]).toContain(tickets);
+    expect([1, 2, 3, 5, 10]).toContain(tickets);
 
     // Create transaction
     const transaction = await storage.createTransaction({
@@ -191,9 +191,9 @@ describe("POST /api/bonus/spin", () => {
     expect(transaction.user_id).toBe(familyChild.id);
   });
 
-  test("tickets are always in valid range [1,2,3,5,8]", async () => {
+  test("tickets are always in valid range [1,2,3,5,10]", async () => {
     // Test spin reward function multiple times
-    const validTickets = [1, 2, 3, 5, 8];
+    const validTickets = [1, 2, 3, 5, 10];
     
     for (let i = 0; i < 50; i++) {
       const tickets = spinTicketReward();
