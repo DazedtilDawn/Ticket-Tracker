@@ -173,12 +173,13 @@ export async function apiRequest(
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
+const DEFAULT_UNAUTHORIZED_BEHAVIOR: UnauthorizedBehavior = "throw";
 export const getQueryFn =
   <T>({
-    on401,
+    on401 = DEFAULT_UNAUTHORIZED_BEHAVIOR,
   }: {
-    on401: UnauthorizedBehavior;
-  }): QueryFunction<T | null> =>
+    on401?: UnauthorizedBehavior;
+  } = {}): QueryFunction<T | null> =>
   async ({ queryKey }) => {
     // Check if we're viewing as a child
     const authStore = JSON.parse(
@@ -216,7 +217,7 @@ export const getQueryFn =
 
     // Handle 401 with token refresh
     if (res.status === 401) {
-      if (on401 === "returnNull") {
+      if ((on401 as UnauthorizedBehavior) === "returnNull") {
         return null;
       }
       
@@ -248,7 +249,7 @@ export const getQueryFn =
         }
         return json as T;
       } catch (error) {
-        if (on401 === "returnNull") {
+        if ((on401 as UnauthorizedBehavior) === "returnNull") {
           return null;
         }
         throw error;
@@ -403,7 +404,7 @@ export const getCachedQueryFn =
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      queryFn: getQueryFn({ on401: "throw" }),
+      queryFn: getQueryFn(),
       refetchInterval: false,
       refetchOnWindowFocus: false,
       staleTime: 600000, // 10 minute stale time
@@ -420,21 +421,21 @@ export const queryClient = new QueryClient({
 export const apiCacheConfigs = {
   // Static data that rarely changes
   lowFrequency: {
-    queryFn: getCachedQueryFn({ on401: "throw", cacheDuration: 120000 }), // 2 minute cache
+    queryFn: getCachedQueryFn({ on401: DEFAULT_UNAUTHORIZED_BEHAVIOR, cacheDuration: 120000 }), // 2 minute cache
     staleTime: 120000,
     refetchInterval: 300000, // 5 minute refresh
   },
 
   // Data that changes occasionally
   mediumFrequency: {
-    queryFn: getCachedQueryFn({ on401: "throw", cacheDuration: 30000 }), // 30 second cache
+    queryFn: getCachedQueryFn({ on401: DEFAULT_UNAUTHORIZED_BEHAVIOR, cacheDuration: 30000 }), // 30 second cache
     staleTime: 60000, // 1 minute stale time
     refetchInterval: 120000, // 2 minute refresh
   },
 
   // Data that changes frequently
   highFrequency: {
-    queryFn: getCachedQueryFn({ on401: "throw", cacheDuration: 5000 }), // 5 second cache
+    queryFn: getCachedQueryFn({ on401: DEFAULT_UNAUTHORIZED_BEHAVIOR, cacheDuration: 5000 }), // 5 second cache
     staleTime: 10000, // 10 second stale time
     refetchInterval: 60000, // 1 minute refresh
   },
