@@ -7,8 +7,43 @@ on:
     branches: [ main ]
 
 jobs:
-  test:
+  # Unit tests - fast, no database needed
+  unit-tests:
     runs-on: ubuntu-latest
+    name: Unit Tests
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Check TypeScript
+        run: npm run check
+
+      - name: Run unit tests
+        run: npm run test
+
+  # Integration tests - requires database
+  integration-tests:
+    runs-on: ubuntu-latest
+    name: Integration Tests
 
     services:
       postgres:
@@ -52,9 +87,6 @@ jobs:
       - name: Install dependencies
         run: npm ci || npm install
 
-      - name: Check TypeScript
-        run: npm run check
-
       - name: Apply database migrations
         run: bunx drizzle-kit push
         env:
@@ -62,7 +94,7 @@ jobs:
           NODE_ENV: test
           USE_REAL_DB: 'true'
 
-      - name: Run tests with database
+      - name: Run integration tests with database
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5433/intelliticket_test
           USE_REAL_DB: 'true'
@@ -70,6 +102,60 @@ jobs:
         run: |
           export PATH="$HOME/.bun/bin:$PATH"
           bun test --preload ./tests/setupTestDb.ts --timeout 30000 tests/ server/__tests__/
+
+  # E2E tests - requires running servers
+  e2e-tests:
+    runs-on: ubuntu-latest
+    name: E2E Tests
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: intelliticket_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: '1.2'
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/package-lock.json', '**/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Apply database migrations
+        run: bunx drizzle-kit push
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5433/intelliticket_test
+          NODE_ENV: test
+          USE_REAL_DB: 'true'
 
       # Start servers for E2E tests
       - name: Start servers (API + UI) in background
