@@ -4100,5 +4100,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  /* Wishlist routes */
+  router.post('/api/wishlist', async (req, res) => {
+    try {
+      const { createWishlistItem } = await import('./storage/wishlist');
+      const item = await createWishlistItem();
+      res.status(201).json({ success: true, data: item });
+    } catch (err) {
+      res.status(500).json({ success: false, message: 'NYI' });
+    }
+  });
+
   return httpServer;
 }

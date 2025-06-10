@@ -1,0 +1,6 @@
+-- TODO: create table wishlist_items (
+--   id serial primary key,
+--   user_id integer references users(id) on delete cascade,
+--   product_id integer not null,
+--   progress integer default 0
+-- );
