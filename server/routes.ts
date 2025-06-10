@@ -4127,5 +4127,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/wishlist', async (req, res) => {
+    try {
+      const { listWishlistItems } = await import('./storage/wishlist');
+      const userId = Number(req.query.userId);
+      
+      if (!userId) {
+        return res.status(400).json({ 
+          success: false, 
+          error: { msg: 'userId query parameter is required' } 
+        });
+      }
+      
+      const items = await listWishlistItems(userId);
+      res.json({ success: true, data: items });
+    } catch (err) {
+      console.error('Error listing wishlist items:', err);
+      res.status(500).json({ success: false, error: { msg: 'Failed to list wishlist items' } });
+    }
+  });
+
+  app.patch('/api/wishlist/:id', async (req, res) => {
+    try {
+      const { updateWishlistProgress } = await import('./storage/wishlist');
+      const { z } = await import('zod');
+      
+      const id = Number(req.params.id);
+      const bodySchema = z.object({ 
+        progress: z.number().int().min(0).max(100) 
+      });
+      
+      const parse = bodySchema.safeParse(req.body);
+      if (!parse.success) {
+        return res.status(400).json({ 
+          success: false, 
+          error: parse.error.format() 
+        });
+      }
+      
+      const item = await updateWishlistProgress(id, parse.data.progress);
+      res.json({ success: true, data: item });
+    } catch (err) {
+      console.error('Error updating wishlist progress:', err);
+      res.status(500).json({ success: false, error: { msg: 'Failed to update wishlist progress' } });
+    }
+  });
+
   return httpServer;
 }

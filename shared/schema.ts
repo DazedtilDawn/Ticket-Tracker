@@ -430,5 +430,6 @@ export const wishlistItems = pgTable('wishlist_items', {
   userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }),
   productId: integer('product_id').notNull(),
   progress: integer('progress').default(0),
+  is_purchased: boolean('is_purchased').default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
