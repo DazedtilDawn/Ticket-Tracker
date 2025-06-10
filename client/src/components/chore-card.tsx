@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatTierStyleClass } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
-import { CheckCircle, Award } from "lucide-react";
+import { CheckCircle, Award, Plus, Minus, Check } from "lucide-react";
 import { BonusBadge } from "@/components/bonus-badge";
 import { useMobile } from "@/context/MobileContext";
 
@@ -232,6 +232,21 @@ export default function ChoreCard({
             </Button>
           )}
         </div>
+
+        {/* Parent Quick Actions - only show when parent is viewing as child */}
+        {isViewingAsChild() && (
+          <div className="flex gap-2 pt-2" aria-label="Parent Chore Actions">
+            <button aria-label="Mark complete" className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+              <Check size={14} />
+            </button>
+            <button aria-label="Add tickets" className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+              <Plus size={14} />
+            </button>
+            <button aria-label="Remove tickets" className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+              <Minus size={14} />
+            </button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
