@@ -4101,7 +4101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   /* Wishlist routes */
-  router.post('/api/wishlist', async (req, res) => {
+  app.post('/api/wishlist', async (req, res) => {
     try {
       const { createWishlistItem } = await import('./storage/wishlist');
       const item = await createWishlistItem();

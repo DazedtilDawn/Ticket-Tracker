@@ -164,15 +164,15 @@ Testing:
 - `USE_REAL_DB=true` - Use real database in tests
 - `DATABASE_URL` - Test database connection
 
-### Recent Changes
+### Recent Changes (Major Updates)
 
-1. **Multi-Parent Support**: `family_parents` join table, invite endpoints
-2. **Refresh Tokens**: Short-lived access tokens with automatic refresh
-3. **Transaction Tracking**: `performed_by_id` shows who performed actions
-4. **Email Field**: Nullable with partial unique index
-5. **Family System**: All users must belong to a family
-6. **Port Changes**: API moved from 5000 to 5001
-7. **Test Infrastructure**: Comprehensive test:all script with concurrently
+1. **Multi-Parent Support**: Complete `family_parents` join table implementation with invite endpoints
+2. **Dual Token Authentication**: Access tokens (15m) + refresh tokens (14-28d) with HttpOnly cookies
+3. **Transaction Audit Trail**: `performed_by_id` tracking for all family financial operations
+4. **Test Infrastructure Overhaul**: Separated Bun/Playwright tests, robust CI with server management
+5. **Family-Based Data Isolation**: All operations now scoped to family for proper multi-parent security
+6. **Port Standardization**: API consistently on 5001, UI on 5173, test DB on 5433
+7. **Advanced Token Management**: Frontend queue-based refresh with 401 handling
 
 ### API Endpoints Added
 

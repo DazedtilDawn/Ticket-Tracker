@@ -2,51 +2,105 @@
 
 ## Recently Completed Features (Archived)
 
-### Multi-Parent Support & Refresh Token Authentication ✅
+### Multi-Parent Support & Refresh Token Authentication ✅ 
+**Completed: June 9, 2025** - *Archived to archive.md*
 - [x] **Database Schema**: Created family_parents join table with composite primary key
-- [x] **Transaction Tracking**: Added performed_by_id to all transactions
+- [x] **Transaction Tracking**: Added performed_by_id to all transactions  
 - [x] **Refresh Tokens**: Implemented 15m access tokens + 14-28d refresh tokens
 - [x] **API Endpoints**: Added /api/auth/refresh, /api/auth/logout, family invite endpoints
 - [x] **Frontend Integration**: Automatic token refresh with queue mechanism
 - [x] **Test Suite**: Comprehensive tests for all new features
 - [x] **Documentation**: Updated CLAUDE.md with patterns and troubleshooting
 - [x] **Migrations**: Applied 0019_multi_parent_auth.sql and 0020_rename_delta_tickets.sql
+- [x] **CI/CD**: Fixed failing bonus system integration tests and E2E server startup
+- [x] **Archive**: Documented complete implementation in archive.md
 
-*See archive.md for full details of this implementation*
+*Full technical details and implementation notes in archive.md*
 
 ## Phase 1: Analysis & Context Building
 
-- [ ] **Step 1: Review Current Dashboard Structure**
-  - (Files: `client/src/pages/dashboard.tsx`, `client/src/pages/parent-dashboard.tsx`, Goal: Understand current separation and identify improvement opportunities)
-- [ ] **Step 2: Analyze Child View Management System**
+- [x] **Step 1: Review Current Dashboard Structure** ✅
+  - **Analysis Complete**: `dashboard.tsx` serves as unified child/parent view, `parent-dashboard.tsx` is parent-only command center
+  - **Key Finding**: Current system requires parents to switch between two dashboards - unified view for child interaction, parent dashboard for management
+  - **Opportunity**: Parent commands could be integrated into child views for streamlined workflow
 
-  - (Files: `client/src/store/auth-store.ts`, `client/src/components/layout/child-view-banner.tsx`, Goal: Understand current child view switching mechanism and identify areas for enhancement)
+- [x] **Step 2: Analyze Child View Management System** ✅  
+  - **Analysis Complete**: `auth-store.ts` handles parent/child view switching via `switchChildView()` and `resetChildView()`
+  - **Current State**: Strong foundation with `originalUser`, `viewingChildId`, and child view detection
+  - **Enhancement Potential**: Context-aware UI components can leverage `isViewingAsChild()` to show parent controls
 
-- [ ] **Step 3: Document Current Parent Command Locations**
-  - (Files: `client/src/components/`, Goal: Catalog all parent-specific commands and dialogs currently available only in parent dashboard)
+- [x] **Step 3: Document Current Parent Command Locations** ✅
+  - **Parent-Only Commands in Parent Dashboard**: 
+    - Chore Management: `NewChoreDialog`, chore assignment controls
+    - Behavior Management: `BadBehaviorDialog`, `GoodBehaviorDialog` 
+    - Product/Catalog: `AddProductDialog`, family catalog management
+    - Transactions: Balance refresh, transaction oversight
+    - Profile Management: Child profile image updates, banner customization
+  - **Unified Dashboard Parent Features**: Some parent commands available in child view (behavior dialogs in chores section)
+  - **Streamlining Opportunity**: Consolidate parent commands into context-aware components accessible from child views
 
 ## Phase 2: Enhanced Child Dashboard Header with Parent Controls
 
-- [ ] **Step 4: Create Floating Parent Control Panel Component**
+- [x] **Step 4: Create Floating Parent Control Panel Component** ✅
 
-  - (Files: `client/src/components/parent-control-panel.tsx` (new), Goal: Build collapsible/expandable panel for parent commands when viewing child profiles)
+  - **Implementation Complete**: `client/src/components/ParentControlPanel.tsx` with collapsible design
+  - **Features Added**: Context-aware visibility, good/bad behavior dialogs, new chore creation, return to parent view
+  - **Integration**: Added to main dashboard with conditional rendering based on `isViewingAsChild()`
+  - **Test Coverage**: Comprehensive tests for visibility, expansion, and user interactions
 
-- [ ] **Step 5: Enhance Child Dashboard Header with Context-Aware Parent Controls**
+- [x] **Step 5: Enhance Child Dashboard Header with Context-Aware Parent Controls** ✅
 
-  - (Files: `client/src/components/child-dashboard-header.tsx`, Goal: Add intelligent parent controls section that shows when parent is viewing child profile)
+  - **Implementation Complete**: Enhanced dashboard header to show child context when parent is viewing as child
+  - **Features Added**: 
+    - Child context chip displaying "Viewing as {childName}" with user icon
+    - Quick "Exit child view" button in header for immediate return to parent view
+    - Context only shows when `originalUser` exists and `viewingChild` is true
+  - **Test Coverage**: Comprehensive tests covering both child context display and absence in parent mode
+  - **UX Improvement**: Parents immediately see which child profile they're viewing without hunting for controls
 
-- [ ] **Step 6: Create Quick Action Bar for Common Parent Tasks**
-  - (Files: `client/src/components/quick-action-bar.tsx` (new), Goal: Build floating action bar with most-used parent commands like add/remove tickets, mark chores complete)
+- [x] **Step 6: Create Quick Action Bar for Common Parent Tasks** ✅
+  - **Implementation Complete**: `client/src/components/QuickActionBar.tsx` with floating action buttons
+  - **Features Added**:
+    - Add/Remove tickets with dialog forms requiring amount and reason input
+    - Mark chore complete button (placeholder for future enhancement)
+    - Fixed bottom-left positioning to complement bottom-right parent control panel
+    - Context-aware visibility only when parent is viewing as child
+  - **Integration**: Added to dashboard with proper z-index and positioning
+  - **API Integration**: Uses existing `/api/transactions` endpoint for ticket operations
+  - **Test Coverage**: Comprehensive tests for visibility, accessibility, and user interactions
+
+**Phase 2 Complete** - Enhanced Child Dashboard Header with Parent Controls ✅
 
 ## Phase 3: Smart Context-Aware UI Components
 
-- [ ] **Step 7: Enhance Chore Cards with Parent Quick Actions**
+- [x] **Step 7: Enhance Chore Cards with Parent Quick Actions** ✅
 
-  - (Files: `client/src/components/swipeable-chore-card.tsx`, Goal: Add parent-only buttons for marking complete, editing when parent is viewing child profile)
+  - **Implementation Complete**: Added context-aware parent action buttons to `client/src/components/chore-card.tsx`
+  - **Features Added**:
+    - Mark chore complete button (green) - reuses existing completion logic
+    - Add tickets button (blue) - awards 1 bonus ticket with contextual reason
+    - Remove tickets button (red) - deducts 1 ticket with contextual reason  
+    - Context-aware visibility only when parent is viewing as child
+    - Proper disabled state for completed chores
+  - **API Integration**: Uses existing `/api/transactions` endpoint with appropriate transaction types
+  - **User Experience**: Toast notifications for success/error feedback, colored buttons for visual distinction
+  - **Test Coverage**: Comprehensive tests including API call verification and button interaction
+  - **Accessibility**: Proper aria-labels and semantic button elements
 
-- [ ] **Step 8: Create Context-Aware Transaction Management**
+- [x] **Step 8: Create Context-Aware Transaction Management** ✅
 
-  - (Files: `client/src/components/transactions-mobile.tsx`, `client/src/components/transactions-table-desktop.tsx`, Goal: Add parent controls for adding/removing transactions directly from child transaction view)
+  - **Implementation Complete**: Created `TransactionRow` and `TransactionCard` components with parent controls
+  - **Features Added**:
+    - "Performed by" chip showing which parent created the transaction when viewing as child
+    - Context-aware undo button - only shows when logged-in parent matches `performed_by_id`
+    - Separate components for desktop (TransactionRow) and mobile (TransactionCard) layouts
+    - Integration with existing transaction deletion/undo logic
+  - **Files Modified**: 
+    - `client/src/components/TransactionRow.tsx` (new desktop component)
+    - `client/src/components/TransactionCard.tsx` (new mobile component)
+    - `client/src/components/transactions-table.tsx` (integrated new components)
+  - **User Experience**: Parents can now see who performed transactions and undo their own actions from child views
+  - **Test Coverage**: Test created but React testing environment needs fixing (separate todo item)
 
 - [ ] **Step 9: Implement Intelligent Wishlist Management**
   - (Files: `client/src/components/progress-card.tsx`, Goal: Add parent controls to approve/modify wishlist items and goals when viewing child profile)

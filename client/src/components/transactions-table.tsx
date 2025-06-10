@@ -30,6 +30,8 @@ import { useState, useEffect } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { subscribeToChannel } from "@/lib/websocketClient";
 import { useLocation } from "wouter";
+import { TransactionRow } from "@/components/TransactionRow";
+import { TransactionCard } from "@/components/TransactionCard";
 
 export interface TransactionsTableProps {
   userId?: string;
@@ -230,12 +232,12 @@ export default function TransactionsTable({
     },
   });
 
-  // Format date to readable format
+  // Format date to readable format (used by mobile layout)
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), "MMM d, yyyy");
   };
 
-  // Get transaction description with more nuance for reward transactions
+  // Get transaction description with more nuance for reward transactions (used by mobile layout)
   const getTransactionDescription = (transaction: any) => {
     if (transaction.note) return transaction.note;
 
@@ -312,65 +314,11 @@ export default function TransactionsTable({
         ))
       ) : transactions && transactions.length > 0 ? (
         transactions.map((transaction: any) => (
-          <Card key={transaction.id} className="p-3 shadow-sm">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                {formatDate(transaction.created_at)}
-              </span>
-              <div
-                className={`flex items-center rounded-md px-2 py-1 ${
-                  transaction.delta > 0
-                    ? "bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400"
-                    : transaction.delta < 0
-                      ? "bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400"
-                      : "bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
-                }`}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-3.5 w-3.5 mr-1"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"
-                  />
-                </svg>
-                <span className="font-semibold">
-                  {transaction.delta > 0
-                    ? `+${transaction.delta}`
-                    : transaction.delta}
-                </span>
-              </div>
-            </div>
-            <p className="text-sm font-medium text-gray-900 dark:text-white mb-1 truncate">
-              {getTransactionDescription(transaction)}
-            </p>
-            <div className="flex justify-between items-center">
-              <Badge
-                variant="outline"
-                className={`${getTransactionStatusInfo(transaction).style} text-xs`}
-              >
-                {getTransactionStatusInfo(transaction).text}
-              </Badge>
-              {(user?.role === "parent" ||
-                user?.id === transaction.user_id) && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-gray-400 hover:text-red-500"
-                  onClick={() => openDeleteDialog(transaction.id)}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  <span className="sr-only">Delete transaction</span>
-                </Button>
-              )}
-            </div>
-          </Card>
+          <TransactionCard 
+            key={transaction.id} 
+            transaction={transaction} 
+            onDelete={openDeleteDialog} 
+          />
         ))
       ) : (
         <div className="text-center py-6 text-gray-500 dark:text-gray-400">
@@ -417,80 +365,11 @@ export default function TransactionsTable({
               ))
             ) : transactions && transactions.length > 0 ? (
               transactions.map((transaction) => (
-                <TableRow key={transaction.id}>
-                  <TableCell className="text-sm text-gray-500 dark:text-gray-400">
-                    {formatDate(transaction.created_at)}
-                  </TableCell>
-                  <TableCell className="text-sm font-medium text-gray-900 dark:text-white">
-                    {getTransactionDescription(transaction)}
-                  </TableCell>
-                  <TableCell>
-                    <div
-                      className={`inline-flex items-center px-2 py-1 rounded-md ${
-                        transaction.delta > 0
-                          ? "bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400"
-                          : transaction.delta < 0
-                            ? "bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400"
-                            : "bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
-                      }`}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-3.5 w-3.5 mr-1"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"
-                        />
-                      </svg>
-                      <span className="font-semibold">
-                        {transaction.delta > 0
-                          ? `+${transaction.delta}`
-                          : transaction.delta}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {(() => {
-                      const status = getTransactionStatusInfo(transaction);
-                      return (
-                        <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${status.style}`}
-                        >
-                          {status.text}
-                        </span>
-                      );
-                    })()}
-                  </TableCell>
-                  <TableCell>
-                    {/* Parent can delete any transaction, children can only undo very recent transactions */}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => openDeleteDialog(transaction.id)}
-                      className="text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400"
-                      title={
-                        isViewingAsChild()
-                          ? "Undo this transaction"
-                          : "Delete this transaction"
-                      }
-                      // For child users: Allow all transactions to be undone for now
-                      disabled={isViewingAsChild() && !transaction.created_at}
-                      style={
-                        isViewingAsChild() && !transaction.created_at
-                          ? { display: "none" }
-                          : {}
-                      }
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
+                <TransactionRow 
+                  key={transaction.id} 
+                  transaction={transaction} 
+                  onDelete={openDeleteDialog} 
+                />
               ))
             ) : (
               <TableRow>

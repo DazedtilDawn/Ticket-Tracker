@@ -36,7 +36,7 @@ describe("ParentControlPanel", () => {
     });
 
     render(<ParentControlPanel />);
-    expect(screen.getByRole("region", { name: /parent controls/i })).toBeVisible();
+    expect(screen.getByRole("complementary", { name: /parent controls/i })).toBeVisible();
     expect(screen.getByText("Viewing as Kiki")).toBeInTheDocument();
   });
 
@@ -84,8 +84,15 @@ describe("ParentControlPanel", () => {
 
     render(<ParentControlPanel />);
     
-    const closeButton = screen.getByRole("button", { name: "" }); // X button has no accessible name
-    fireEvent.click(closeButton);
+    // Find the X button by looking for the button with the X icon's SVG path
+    const closeButtons = screen.getAllByRole("button");
+    // The close button is the one with the X icon (has specific SVG paths)
+    const closeButton = closeButtons.find(button => 
+      button.querySelector('svg.lucide-x') !== null
+    );
+    
+    expect(closeButton).toBeDefined();
+    fireEvent.click(closeButton!);
     
     expect(mockResetChildView).toHaveBeenCalledTimes(1);
   });
