@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatTierStyleClass } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { CheckCircle, Award, Plus, Minus, Check } from "lucide-react";
 import { BonusBadge } from "@/components/bonus-badge";
 import { useMobile } from "@/context/MobileContext";
@@ -41,6 +43,7 @@ export default function ChoreCard({
   const { isViewingAsChild, user } = useAuthStore();
   const viewingAsChild = isViewingAsChild();
   const { isMobile } = useMobile();
+  const { toast } = useToast();
 
   // Handle chore completion with error handling
   const handleComplete = async () => {
@@ -73,6 +76,81 @@ export default function ChoreCard({
       console.error("Failed to complete chore:", error);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Parent action handlers for quick actions
+  const handleParentMarkComplete = async () => {
+    if (chore.completed || isSubmitting) return;
+    
+    try {
+      await handleComplete(); // Reuse existing completion logic
+      toast({
+        title: "Chore Marked Complete",
+        description: `Marked "${chore.name}" as complete for ${user?.name}`,
+      });
+    } catch (error) {
+      console.error("Failed to mark chore complete:", error);
+    }
+  };
+
+  const handleParentAddTickets = async () => {
+    // For now, add a fixed amount (could be made configurable)
+    const ticketAmount = 1;
+    const reason = `Bonus for ${chore.name}`;
+
+    try {
+      await apiRequest("/api/transactions", {
+        method: "POST", 
+        body: JSON.stringify({
+          user_id: user?.id,
+          type: "earn",
+          delta: ticketAmount,
+          source: "parent_bonus",
+          note: reason,
+        }),
+      });
+
+      toast({
+        title: "Tickets Added",
+        description: `Added ${ticketAmount} bonus ticket to ${user?.name}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add tickets",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleParentRemoveTickets = async () => {
+    // For now, remove a fixed amount (could be made configurable)
+    const ticketAmount = 1;
+    const reason = `Deduction for ${chore.name}`;
+
+    try {
+      await apiRequest("/api/transactions", {
+        method: "POST",
+        body: JSON.stringify({
+          user_id: user?.id,
+          type: "deduct", 
+          delta: -ticketAmount,
+          source: "parent_deduction",
+          note: reason,
+        }),
+      });
+
+      toast({
+        title: "Tickets Removed",
+        description: `Removed ${ticketAmount} ticket from ${user?.name}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to remove tickets",
+        variant: "destructive",
+      });
     }
   };
 
@@ -236,13 +314,26 @@ export default function ChoreCard({
         {/* Parent Quick Actions - only show when parent is viewing as child */}
         {isViewingAsChild() && (
           <div className="flex gap-2 pt-2" aria-label="Parent Chore Actions">
-            <button aria-label="Mark complete" className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+            <button 
+              aria-label="Mark complete" 
+              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-green-600 hover:text-green-700"
+              onClick={handleParentMarkComplete}
+              disabled={chore.completed}
+            >
               <Check size={14} />
             </button>
-            <button aria-label="Add tickets" className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+            <button 
+              aria-label="Add tickets" 
+              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-blue-600 hover:text-blue-700"
+              onClick={handleParentAddTickets}
+            >
               <Plus size={14} />
             </button>
-            <button aria-label="Remove tickets" className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+            <button 
+              aria-label="Remove tickets" 
+              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-red-600 hover:text-red-700"
+              onClick={handleParentRemoveTickets}
+            >
               <Minus size={14} />
             </button>
           </div>
