@@ -45,13 +45,13 @@ export function QuickActionBar() {
     try {
       await apiRequest("/api/transactions", {
         method: "POST",
-        body: {
+        body: JSON.stringify({
           user_id: user?.id,
           type: "earn",
           delta: parseInt(ticketAmount),
           source: "parent_bonus",
           note: reason,
-        },
+        }),
       });
 
       toast({
@@ -87,13 +87,13 @@ export function QuickActionBar() {
     try {
       await apiRequest("/api/transactions", {
         method: "POST",
-        body: {
+        body: JSON.stringify({
           user_id: user?.id,
           type: "deduct",
           delta: -parseInt(ticketAmount),
           source: "parent_deduction",
           note: reason,
-        },
+        }),
       });
 
       toast({
