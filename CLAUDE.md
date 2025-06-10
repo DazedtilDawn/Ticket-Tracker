@@ -18,25 +18,32 @@ npm run db:push      # Apply database schema changes with Drizzle
 ### Testing
 
 ```bash
-# Quick unit tests (stub database)
-npm run test:unit    # Fast tests without real database
-bun test <pattern>   # Run specific test files matching pattern
-bun test server/__tests__/auth-login.test.ts  # Run single test file
+# Quick unit tests (React components, no database)
+npm run test         # Run Vitest unit tests for React components
+npm run test:unit    # Same as npm run test
+npm run test:vitest  # Explicit Vitest run
+
+# Integration tests (requires real database)
+npm run test:integration  # Run Bun integration tests with PostgreSQL
+npm run test:db          # Alternative: runs tests with real database
 
 # Full test suite (requires Docker)
-npm run test:all     # Starts test DB, runs all Bun tests + Playwright E2E
-npm run test:db      # Alternative: runs tests with real database
+npm run test:all     # Starts test DB, runs all tests (unit + integration + E2E)
 
 # Test database management
 npm run test-db-up   # Start PostgreSQL test container (port 5433)
 npm run test-db-down # Stop and remove test database
 
-# Playwright E2E tests (separate from Bun tests)
-npx playwright test             # Run E2E tests from e2e/ directory
+# Specific test patterns
+bun test <pattern>   # Run specific Bun test files matching pattern
+bun test server/__tests__/auth-login.test.ts  # Run single test file
+
+# Playwright E2E tests (separate from unit/integration)
+npx playwright test             # Run E2E tests
 npx playwright test --ui        # Interactive UI mode
 npx playwright test --debug     # Debug mode with inspector
 
-# Running tests with real database
+# Running tests with real database manually
 USE_REAL_DB=true DATABASE_URL=postgresql://postgres:postgres@localhost:5433/intelliticket_test bun test tests/ server/__tests__/
 ```
 
@@ -46,6 +53,7 @@ USE_REAL_DB=true DATABASE_URL=postgresql://postgres:postgres@localhost:5433/inte
 npm run db:push                 # Apply schema changes to database
 npx drizzle-kit generate        # Generate new migration files
 npx drizzle-kit studio          # Open Drizzle Studio for database inspection
+npx drizzle-kit push --force    # Apply migrations without interactive prompts (CI)
 
 # Apply migrations to test database
 DATABASE_URL=postgresql://postgres:postgres@localhost:5433/intelliticket_test npx tsx -e "
@@ -117,11 +125,12 @@ npm start            # Run production server
 
 ### Testing Strategy
 
-1. **Unit Tests**: Fast, use database stub (tests/ and server/__tests__/)
-2. **Integration Tests**: Use real test database with `USE_REAL_DB=true`
-3. **E2E Tests**: Playwright with automatic server startup (e2e/ directory)
+1. **Unit Tests**: Vitest for React components (`client/__tests__/`), use jsdom environment
+2. **Integration Tests**: Bun for server API tests (`server/__tests__/`), use real PostgreSQL database
+3. **E2E Tests**: Playwright with automatic server startup (`tests/` directory)
 4. **Test Database**: PostgreSQL 16 in Docker on port 5433
-5. **Test Separation**: Bun tests in tests/ and server/__tests__/, Playwright tests in e2e/
+5. **Hybrid Approach**: Vitest (React) + Bun (server) + Playwright (E2E)
+6. **CI Pipeline**: Parallel execution - unit/integration/E2E run simultaneously
 
 ### Critical Implementation Details
 
@@ -169,10 +178,11 @@ Testing:
 1. **Multi-Parent Support**: Complete `family_parents` join table implementation with invite endpoints
 2. **Dual Token Authentication**: Access tokens (15m) + refresh tokens (14-28d) with HttpOnly cookies
 3. **Transaction Audit Trail**: `performed_by_id` tracking for all family financial operations
-4. **Test Infrastructure Overhaul**: Separated Bun/Playwright tests, robust CI with server management
+4. **Test Infrastructure Overhaul**: Hybrid testing (Vitest + Bun + Playwright), parallel CI pipeline
 5. **Family-Based Data Isolation**: All operations now scoped to family for proper multi-parent security
 6. **Port Standardization**: API consistently on 5001, UI on 5173, test DB on 5433
 7. **Advanced Token Management**: Frontend queue-based refresh with 401 handling
+8. **Wishlist System**: Basic wishlist implementation with database table and POST endpoint
 
 ### API Endpoints Added
 
@@ -181,6 +191,7 @@ Testing:
 - `POST /api/families/:id/invite-parent` - Invite parent to family
 - `GET /api/families/:id/parents` - List all parents in family
 - `GET /api/me` - Get current user info (requires auth)
+- `POST /api/wishlist` - Create wishlist item (basic implementation)
 
 ### Known Issues
 
@@ -244,3 +255,119 @@ Testing:
 5. **Spin Ticket Values**: Current wheel returns `[1, 2, 3, 5, 10]` not `[1, 2, 3, 5, 8]`
 
 6. **Transaction Metadata**: Stored as JSON string, parse with `JSON.parse(transaction.metadata)`
+
+7. **Vitest Mock Patterns**: Use these standard mocks for React component tests:
+   ```typescript
+   // React Query mock
+   vi.mock("@tanstack/react-query", () => ({
+     QueryClient: vi.fn(),
+     QueryClientProvider: ({ children }: any) => children,
+     useQuery: vi.fn(() => ({ data: mockData, isLoading: false })),
+     useMutation: vi.fn(() => ({ mutate: vi.fn(), isLoading: false })),
+     useQueryClient: vi.fn(() => ({ invalidateQueries: vi.fn() })),
+   }));
+   
+   // API request mock
+   vi.mock("../lib/apiRequest", () => ({
+     apiRequest: vi.fn(() => Promise.resolve([])),
+   }));
+   ```
+
+8. **Test Environment Setup**: React tests require jsdom environment and these polyfills:
+   ```typescript
+   // vitest.setup.ts
+   global.ResizeObserver = class ResizeObserver {
+     observe() {}
+     unobserve() {}
+     disconnect() {}
+   };
+   
+   global.IntersectionObserver = class IntersectionObserver {
+     observe() {}
+     unobserve() {}
+     disconnect() {}
+   };
+   ```
+
+9. **Wishlist Integration**: Current implementation includes:
+   - Database table: `wishlist_items` with userId, productId, progress
+   - Storage function: `createWishlistItem()` in `server/storage/wishlist.ts`
+   - API endpoint: `POST /api/wishlist` with Zod validation
+   - Integration test: `server/__tests__/wishlist-item.test.ts`
+
+### Project Structure & Key Files
+
+```
+server/
+├── __tests__/          # Bun integration tests (real database)
+├── cron/              # Scheduled job handlers (daily resets)
+├── jobs/              # Background job implementations
+├── lib/               # Utilities (auth, file uploads, business logic)
+├── storage/           # Database operations (organized by feature)
+├── db.ts              # Database factory (stub vs real)
+├── index.ts           # Server creation and startup
+└── routes.ts          # All API route definitions (4000+ lines)
+
+client/
+├── __tests__/         # Vitest React component tests
+├── src/
+│   ├── components/    # Reusable UI components
+│   ├── context/       # React context providers
+│   ├── hooks/         # Custom React hooks
+│   ├── lib/           # Client utilities and API functions
+│   ├── pages/         # Page-level components
+│   ├── store/         # Zustand state management
+│   └── utils/         # Utility functions
+
+tests/                 # Playwright E2E tests
+shared/
+├── schema.ts          # Single source of truth: DB schema + Zod validation
+
+config/
+└── vitest.unit.config.ts  # Vitest configuration for React tests
+```
+
+### Development Workflow Recommendations
+
+1. **Making Database Changes**:
+   ```bash
+   # 1. Update shared/schema.ts with new table/column
+   # 2. Generate migration
+   npx drizzle-kit generate
+   # 3. Apply to development database  
+   npm run db:push
+   # 4. Create storage functions in server/storage/
+   # 5. Add API routes in server/routes.ts
+   # 6. Write integration tests in server/__tests__/
+   # 7. Run tests to verify
+   npm run test:integration
+   ```
+
+2. **Adding React Components**:
+   ```bash
+   # 1. Create component in client/src/components/
+   # 2. Write Vitest test in client/__tests__/
+   # 3. Run unit tests
+   npm run test:unit
+   # 4. Add to pages if needed
+   ```
+
+3. **CI/CD Considerations**:
+   - All three test types run in parallel
+   - Database migrations auto-apply with --force flag
+   - E2E tests start servers automatically
+   - Tests fail fast on any infrastructure issues
+
+### Authentication & Authorization Patterns
+
+- **Parent-only endpoints**: Use `parentOnly` middleware
+- **Family isolation**: All database queries automatically filter by `family_id`
+- **Token handling**: Frontend `apiRequest()` handles 401s with automatic refresh
+- **Multi-parent**: Check `family_parents` table for authorization
+
+### Performance & Reliability
+
+- **Rate limiting**: Chore endpoints have circuit breaker (100 req/window)
+- **Caching**: High-frequency endpoints use `getCachedQueryFn()`
+- **Error handling**: Standardized error response format
+- **Logging**: API requests logged with duration and response size limits
