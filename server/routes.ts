@@ -4104,10 +4104,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/wishlist', async (req, res) => {
     try {
       const { createWishlistItem } = await import('./storage/wishlist');
-      const item = await createWishlistItem();
+      const { z } = await import('zod');
+      
+      const bodySchema = z.object({ 
+        userId: z.number().int(), 
+        productId: z.number().int() 
+      });
+      
+      const parse = bodySchema.safeParse(req.body);
+      if (!parse.success) {
+        return res.status(400).json({ 
+          success: false, 
+          error: parse.error.format() 
+        });
+      }
+      
+      const item = await createWishlistItem(parse.data);
       res.status(201).json({ success: true, data: item });
     } catch (err) {
-      res.status(500).json({ success: false, message: 'NYI' });
+      console.error('Error creating wishlist item:', err);
+      res.status(500).json({ success: false, error: { msg: 'Failed to create wishlist item' } });
     }
   });
 

@@ -1,6 +1,7 @@
--- TODO: create table wishlist_items (
---   id serial primary key,
---   user_id integer references users(id) on delete cascade,
---   product_id integer not null,
---   progress integer default 0
--- );
+CREATE TABLE IF NOT EXISTS wishlist_items (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  product_id INTEGER NOT NULL,
+  progress INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT now()
+);

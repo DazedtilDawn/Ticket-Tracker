@@ -423,3 +423,12 @@ export type DeleteTransaction = z.infer<typeof deleteTransactionSchema>;
 export type SpinWheel = z.infer<typeof spinWheelSchema>;
 export type BonusSpin = z.infer<typeof bonusSpinSchema>;
 export type AwardItem = z.infer<typeof awardItemSchema>;
+
+// --- Wishlist table ---
+export const wishlistItems = pgTable('wishlist_items', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  productId: integer('product_id').notNull(),
+  progress: integer('progress').default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
