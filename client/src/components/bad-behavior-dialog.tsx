@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -38,9 +38,12 @@ import { Textarea } from "@/components/ui/textarea";
 
 const formSchema = z.object({
   user_id: z.string().min(1, "Please select a child"),
-  tickets: z.string().transform((val) => parseInt(val, 10)).refine((val) => val > 0, {
-    message: "Must deduct at least 1 ticket",
-  }),
+  tickets: z
+    .string()
+    .transform((val) => parseInt(val, 10))
+    .refine((val) => val > 0, {
+      message: "Must deduct at least 1 ticket",
+    }),
   reason: z.string().optional(), // Make reason optional
 });
 
@@ -50,9 +53,14 @@ type FormDataType = { user_id: number; tickets: number; reason?: string };
 interface BadBehaviorDialogProps {
   children: React.ReactNode;
   onCompleted?: () => void;
+  initialChildId?: number;
 }
 
-export function BadBehaviorDialog({ children, onCompleted }: BadBehaviorDialogProps) {
+export function BadBehaviorDialog({
+  children,
+  onCompleted,
+  initialChildId,
+}: BadBehaviorDialogProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -62,11 +70,18 @@ export function BadBehaviorDialog({ children, onCompleted }: BadBehaviorDialogPr
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      user_id: "",
+      user_id: initialChildId ? initialChildId.toString() : "",
       tickets: 1,
       reason: "",
     },
   });
+
+  // Update form value when initialChildId changes or dialog opens
+  useEffect(() => {
+    if (initialChildId && open) {
+      form.setValue("user_id", initialChildId.toString());
+    }
+  }, [initialChildId, form, open]);
 
   const badBehaviorMutation = useMutation({
     mutationFn: async (data: FormDataType) => {
@@ -80,15 +95,15 @@ export function BadBehaviorDialog({ children, onCompleted }: BadBehaviorDialogPr
         title: "Tickets deducted",
         description: "Tickets have been deducted for bad behavior",
       });
-      
+
       // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
-      
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+
       // Close dialog and reset form
       setOpen(false);
       form.reset();
-      
+
       if (onCompleted) {
         onCompleted();
       }
@@ -117,7 +132,8 @@ export function BadBehaviorDialog({ children, onCompleted }: BadBehaviorDialogPr
         <DialogHeader>
           <DialogTitle>Deduct Tickets</DialogTitle>
           <DialogDescription>
-            Remove tickets for bad behavior. This will update the child's balance.
+            Remove tickets for bad behavior. This will update the child's
+            balance.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -194,7 +210,9 @@ export function BadBehaviorDialog({ children, onCompleted }: BadBehaviorDialogPr
                 variant="destructive"
                 disabled={badBehaviorMutation.isPending}
               >
-                {badBehaviorMutation.isPending ? "Deducting..." : "Deduct Tickets"}
+                {badBehaviorMutation.isPending
+                  ? "Deducting..."
+                  : "Deduct Tickets"}
               </Button>
             </DialogFooter>
           </form>

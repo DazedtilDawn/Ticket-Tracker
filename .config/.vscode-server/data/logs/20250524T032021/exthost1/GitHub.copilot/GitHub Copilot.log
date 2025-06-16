@@ -1,0 +1,36 @@
+2025-05-24 03:20:41.020 [info] [certificates] Removed 11 expired certificates
+2025-05-24 03:20:51.120 [info] [fetcher] Using Helix fetcher, Electron fetcher is not available.
+2025-05-24 03:20:51.120 [info] [code-referencing] Public code references are enabled.
+2025-05-24 03:20:52.705 [info] [fetcher] Using Helix fetcher, Electron fetcher is not available.
+2025-05-24 07:46:30.290 [info] [certificates] Removed 11 expired certificates
+2025-05-24 07:46:33.421 [info] [fetcher] Using Helix fetcher, Electron fetcher is not available.
+2025-05-24 07:46:33.421 [info] [code-referencing] Public code references are enabled.
+2025-05-24 07:46:39.387 [info] [fetcher] Using Helix fetcher, Electron fetcher is not available.
+2025-05-24 14:24:11.313 [info] [fetcher] Using Helix fetcher, Electron fetcher is not available.
+2025-05-24 14:24:11.313 [info] [code-referencing] Public code references are enabled.
+2025-05-24 14:24:11.766 [info] [fetcher] Using Helix fetcher, Electron fetcher is not available.
+2025-05-24 14:27:55.991 [info] [certificates] Removed 11 expired certificates
+2025-05-24 14:28:07.894 [info] [fetcher] Using Helix fetcher, Electron fetcher is not available.
+2025-05-24 14:28:07.894 [info] [code-referencing] Public code references are enabled.
+2025-05-24 14:28:10.422 [info] [fetcher] Using Helix fetcher, Electron fetcher is not available.
+2025-05-24 14:34:06.726 [info] [certificates] Removed 11 expired certificates
+2025-05-24 14:34:09.892 [info] [fetcher] Using Helix fetcher, Electron fetcher is not available.
+2025-05-24 14:34:09.892 [info] [code-referencing] Public code references are enabled.
+2025-05-24 14:34:14.898 [error] [default] Error sending telemetry FetchError: The operation was aborted
+    at fetch (/home/runner/workspace/.config/.vscode-server/extensions/github.copilot-1.323.1582/node_modules/@adobe/helix-fetch/src/fetch/index.js:99:11)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at runNextTicks (node:internal/process/task_queues:64:3)
+    at processTimers (node:internal/timers:516:9)
+    at cachingFetch (/home/runner/workspace/.config/.vscode-server/extensions/github.copilot-1.323.1582/node_modules/@adobe/helix-fetch/src/fetch/index.js:288:16)
+    at GB.fetch (/home/runner/workspace/.config/.vscode-server/extensions/github.copilot-1.323.1582/lib/src/network/helix.ts:94:22) {
+  type: 'system',
+  _name: 'FetchError',
+  code: 'ABORT_ERR',
+  errno: undefined,
+  erroredSysCall: undefined
+}
+2025-05-24 14:34:15.114 [info] [fetcher] Using Helix fetcher, Electron fetcher is not available.
+2025-05-24 14:35:10.607 [info] [certificates] Removed 11 expired certificates
+2025-05-24 14:35:18.991 [info] [fetcher] Using Helix fetcher, Electron fetcher is not available.
+2025-05-24 14:35:18.991 [info] [code-referencing] Public code references are enabled.
+2025-05-24 14:35:20.402 [info] [fetcher] Using Helix fetcher, Electron fetcher is not available.

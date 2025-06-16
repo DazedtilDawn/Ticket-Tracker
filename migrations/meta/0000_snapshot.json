@@ -171,12 +171,8 @@
           "name": "daily_bonus_user_id_users_id_fk",
           "tableFrom": "daily_bonus",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -184,12 +180,8 @@
           "name": "daily_bonus_assigned_chore_id_chores_id_fk",
           "tableFrom": "daily_bonus",
           "tableTo": "chores",
-          "columnsFrom": [
-            "assigned_chore_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["assigned_chore_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -243,12 +235,8 @@
           "name": "goals_user_id_users_id_fk",
           "tableFrom": "goals",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -256,12 +244,8 @@
           "name": "goals_product_id_products_id_fk",
           "tableFrom": "goals",
           "tableTo": "products",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["product_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -333,9 +317,7 @@
         "products_asin_unique": {
           "name": "products_asin_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "asin"
-          ]
+          "columns": ["asin"]
         }
       },
       "policies": {},
@@ -451,12 +433,8 @@
           "name": "transactions_user_id_users_id_fk",
           "tableFrom": "transactions",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -464,12 +442,8 @@
           "name": "transactions_chore_id_chores_id_fk",
           "tableFrom": "transactions",
           "tableTo": "chores",
-          "columnsFrom": [
-            "chore_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["chore_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -477,12 +451,8 @@
           "name": "transactions_goal_id_goals_id_fk",
           "tableFrom": "transactions",
           "tableTo": "goals",
-          "columnsFrom": [
-            "goal_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["goal_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -536,9 +506,7 @@
         "users_username_unique": {
           "name": "users_username_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "username"
-          ]
+          "columns": ["username"]
         }
       },
       "policies": {},
@@ -550,10 +518,7 @@
     "public.bonus_trigger": {
       "name": "bonus_trigger",
       "schema": "public",
-      "values": [
-        "chore_completion",
-        "good_behavior_reward"
-      ]
+      "values": ["chore_completion", "good_behavior_reward"]
     },
     "public.txn_source": {
       "name": "txn_source",

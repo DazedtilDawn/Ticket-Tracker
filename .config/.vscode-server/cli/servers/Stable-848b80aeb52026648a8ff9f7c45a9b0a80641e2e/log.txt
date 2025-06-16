@@ -1,0 +1,132 @@
+*
+* Visual Studio Code Server
+*
+* By using the software, you agree to
+* the Visual Studio Code Server License Terms (https://aka.ms/vscode-server-license) and
+* the Microsoft Privacy Statement (https://privacy.microsoft.com/en-US/privacystatement).
+*
+Server bound to /tmp/code-5e802b64-34b2-4e0d-8713-a64257f34606
+Extension host agent listening on /tmp/code-5e802b64-34b2-4e0d-8713-a64257f34606
+
+[23:48:43] 
+
+
+
+
+[23:48:43] Extension host agent started.
+[23:48:43] [<unknown>][6bf1945b][ExtensionHostConnection] New connection established.
+[23:48:43] [<unknown>][a7e4dad4][ManagementConnection] New connection established.
+[23:48:43] [<unknown>][6bf1945b][ExtensionHostConnection] <20965> Launched Extension Host Process.
+[23:48:43] ComputeTargetPlatform: linux-x64
+[23:48:46] ComputeTargetPlatform: linux-x64
+[23:48:53] [File Watcher] Unexpected error: inotify_add_watch on '/home/runner/workspace/.config/.vscode-server/data/logs/20250523T050845' failed: No such file or directory (EUNKNOWN) (path: /home/runner/workspace)
+[23:48:53] [File Watcher (universal)] inotify_add_watch on '/home/runner/workspace/.config/.vscode-server/data/logs/20250523T050845' failed: No such file or directory
+[23:48:56] Getting Manifest... robertpiosik.gemini-coder
+[23:48:56] Installing extension: robertpiosik.gemini-coder {
+  productVersion: { version: '1.100.2', date: '2025-05-14T21:47:40.416Z' },
+  pinned: false,
+  operation: 3,
+  isApplicationScoped: false,
+  donotVerifySignature: false,
+  context: { clientTargetPlatform: 'win32-x64' },
+  profileLocation: _r {
+    scheme: 'file',
+    authority: '',
+    path: '/home/runner/.vscode-server/extensions/extensions.json',
+    query: '',
+    fragment: '',
+    _formatted: 'file:///home/runner/.vscode-server/extensions/extensions.json',
+    _fsPath: '/home/runner/.vscode-server/extensions/extensions.json'
+  }
+}
+[23:48:59] Extension signature verification result for robertpiosik.gemini-coder: Success. Internal Code: 0. Executed: true. Duration: 2162ms.
+[23:48:59] Extracted extension to file:///home/runner/.vscode-server/extensions/robertpiosik.gemini-coder-1.11.0: robertpiosik.gemini-coder
+[23:48:59] Renamed to /home/runner/.vscode-server/extensions/robertpiosik.gemini-coder-1.11.0
+[23:48:59] Marked extension as removed robertpiosik.gemini-coder-1.9.2
+[23:48:59] Extension installed successfully: robertpiosik.gemini-coder file:///home/runner/.vscode-server/extensions/extensions.json
+rejected promise not handled within 1 second: Error: connect ECONNREFUSED 127.0.0.1:5000
+stack trace: Error: connect ECONNREFUSED 127.0.0.1:5000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[23:49:08] Error: connect ECONNREFUSED 127.0.0.1:5000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16) {
+  errno: -111,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 5000
+}
+[23:49:13] Installing extension: anthropic.claude-code {
+  isMachineScoped: true,
+  installGivenVersion: true,
+  isApplicationScoped: false,
+  profileLocation: _r {
+    scheme: 'file',
+    authority: '',
+    path: '/home/runner/.vscode-server/extensions/extensions.json',
+    query: '',
+    fragment: '',
+    _formatted: 'file:///home/runner/.vscode-server/extensions/extensions.json',
+    _fsPath: '/home/runner/.vscode-server/extensions/extensions.json'
+  },
+  productVersion: { version: '1.100.2', date: '2025-05-14T21:47:40.416Z' }
+}
+[23:49:13] Deleted existing extension from disk anthropic.claude-code /home/runner/.vscode-server/extensions/anthropic.claude-code-1.0.3
+[23:49:13] Extracted extension to file:///home/runner/.vscode-server/extensions/anthropic.claude-code-1.0.3: anthropic.claude-code
+[23:49:13] Renamed to /home/runner/.vscode-server/extensions/anthropic.claude-code-1.0.3
+[23:49:13] Extension installed successfully: anthropic.claude-code file:///home/runner/.vscode-server/extensions/extensions.json
+rejected promise not handled within 1 second: Error: connect ECONNREFUSED 127.0.0.1:5000
+stack trace: Error: connect ECONNREFUSED 127.0.0.1:5000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[23:53:08] Error: connect ECONNREFUSED 127.0.0.1:5000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16) {
+  errno: -111,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 5000
+}
+rejected promise not handled within 1 second: Error: connect ECONNREFUSED 127.0.0.1:5000
+stack trace: Error: connect ECONNREFUSED 127.0.0.1:5000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[23:53:39] Error: connect ECONNREFUSED 127.0.0.1:5000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16) {
+  errno: -111,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 5000
+}
+New EH opened, aborting shutdown
+[23:53:43] New EH opened, aborting shutdown
+rejected promise not handled within 1 second: Error: connect ECONNREFUSED 127.0.0.1:5000
+stack trace: Error: connect ECONNREFUSED 127.0.0.1:5000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[23:57:39] Error: connect ECONNREFUSED 127.0.0.1:5000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16) {
+  errno: -111,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 5000
+}
+rejected promise not handled within 1 second: Error: connect ECONNREFUSED 127.0.0.1:5000
+stack trace: Error: connect ECONNREFUSED 127.0.0.1:5000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[23:58:10] Error: connect ECONNREFUSED 127.0.0.1:5000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16) {
+  errno: -111,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 5000
+}
+[01:10:05] [<unknown>][88e157e2][ManagementConnection] New connection established.
+[01:10:05] [<unknown>][6a77f759][ExtensionHostConnection] New connection established.
+[01:10:05] [<unknown>][6a77f759][ExtensionHostConnection] <26926> Launched Extension Host Process.
+[01:10:25] [<unknown>][a7e4dad4][ManagementConnection] The client has disconnected, will wait for reconnection 3h before disposing...
+[01:10:53] [<unknown>][a7e4dad4][ManagementConnection] Another client has connected, will shorten the wait for reconnection 5m before disposing...
+[01:12:42] [<unknown>][6a77f759][ExtensionHostConnection] <26926> Extension Host Process exited with code: null, signal: SIGKILL.
+[01:13:03] [<unknown>][6a77f759][ExtensionHostConnection] Unknown reconnection token (seen before).
+[01:13:04] [<unknown>][4468376b][ExtensionHostConnection] New connection established.
+[01:13:04] [<unknown>][4468376b][ExtensionHostConnection] <27651> Launched Extension Host Process.
+[01:13:21] [<unknown>][6bf1945b][ExtensionHostConnection] <20965> Extension Host Process exited with code: null, signal: SIGKILL.

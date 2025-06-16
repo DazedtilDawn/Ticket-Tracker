@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 
 const MOBILE_BREAKPOINT = 768; // Consistent with Tailwind's 'md' breakpoint
 
@@ -17,9 +23,9 @@ export const MobileProvider = ({ children }: { children: ReactNode }) => {
     };
 
     checkScreenSize(); // Initial check
-    window.addEventListener('resize', checkScreenSize);
+    window.addEventListener("resize", checkScreenSize);
 
-    return () => window.removeEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
   return (
@@ -32,7 +38,7 @@ export const MobileProvider = ({ children }: { children: ReactNode }) => {
 export const useMobile = (): MobileContextProps => {
   const context = useContext(MobileContext);
   if (context === undefined) {
-    throw new Error('useMobile must be used within a MobileProvider');
+    throw new Error("useMobile must be used within a MobileProvider");
   }
   return context;
 };

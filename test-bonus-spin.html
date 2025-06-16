@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Bonus Spin</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    button { padding: 10px 20px; margin: 10px; font-size: 16px; }
+    .result { margin-top: 20px; padding: 10px; background: #f0f0f0; }
+    .error { color: red; }
+    .success { color: green; }
+  </style>
+</head>
+<body>
+  <h1>Test Bonus Spin Flow</h1>
+  
+  <div>
+    <h2>Step 1: Login as Parent</h2>
+    <button onclick="loginAsParent()">Login as Parent</button>
+    <div id="loginResult"></div>
+  </div>
+
+  <div>
+    <h2>Step 2: Assign Good Behavior Bonus to Kiki</h2>
+    <button onclick="assignBonus()">Assign Bonus to Kiki</button>
+    <div id="assignResult"></div>
+  </div>
+
+  <div>
+    <h2>Step 3: Switch to Kiki View</h2>
+    <button onclick="switchToKiki()">Switch to Kiki</button>
+    <div id="switchResult"></div>
+  </div>
+
+  <div>
+    <h2>Step 4: Check for Unspun Bonus</h2>
+    <button onclick="checkUnspun()">Check Unspun Bonus</button>
+    <div id="unspunResult"></div>
+  </div>
+
+  <div>
+    <h2>Step 5: Spin the Wheel</h2>
+    <button onclick="spinWheel()">Spin Wheel</button>
+    <div id="spinResult"></div>
+  </div>
+
+  <script>
+    let token = null;
+    
+    async function loginAsParent() {
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: 'parent', password: 'password' })
+        });
+        const data = await response.json();
+        
+        if (response.ok) {
+          token = data.token;
+          localStorage.setItem('ticket-tracker-auth', JSON.stringify({
+            state: { token: data.token, user: data.user }
+          }));
+          document.getElementById('loginResult').innerHTML = 
+            '<div class="success">✓ Logged in as Parent</div>';
+        } else {
+          throw new Error(data.message || 'Login failed');
+        }
+      } catch (error) {
+        document.getElementById('loginResult').innerHTML = 
+          `<div class="error">✗ ${error.message}</div>`;
+      }
+    }
+    
+    async function assignBonus() {
+      try {
+        const response = await fetch('/api/good-behavior', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            user_id: 612, // Kiki
+            amount: 10,
+            note: 'Test good behavior bonus'
+          })
+        });
+        const data = await response.json();
+        
+        if (response.ok) {
+          document.getElementById('assignResult').innerHTML = 
+            `<div class="success">✓ Bonus assigned! Transaction ID: ${data.transaction?.id}</div>`;
+        } else {
+          throw new Error(data.message || 'Assignment failed');
+        }
+      } catch (error) {
+        document.getElementById('assignResult').innerHTML = 
+          `<div class="error">✗ ${error.message}</div>`;
+      }
+    }
+    
+    async function switchToKiki() {
+      // Update local storage to simulate viewing as Kiki
+      const authData = JSON.parse(localStorage.getItem('ticket-tracker-auth') || '{}');
+      authData.state.viewingChildId = 612;
+      authData.state.isViewingAsChild = true;
+      localStorage.setItem('ticket-tracker-auth', JSON.stringify(authData));
+      
+      document.getElementById('switchResult').innerHTML = 
+        '<div class="success">✓ Now viewing as Kiki</div>';
+    }
+    
+    async function checkUnspun() {
+      try {
+        const response = await fetch('/api/daily-bonus/unspun?user_id=612', {
+          headers: { 
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const data = await response.json();
+        
+        if (response.ok) {
+          document.getElementById('unspunResult').innerHTML = 
+            `<div class="success">✓ Found unspun bonus: ${JSON.stringify(data, null, 2)}</div>`;
+        } else {
+          throw new Error(data.message || 'Check failed');
+        }
+      } catch (error) {
+        document.getElementById('unspunResult').innerHTML = 
+          `<div class="error">✗ ${error.message}</div>`;
+      }
+    }
+    
+    async function spinWheel() {
+      try {
+        const response = await fetch('/api/bonus/spin', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({})
+        });
+        const data = await response.json();
+        
+        if (response.ok) {
+          document.getElementById('spinResult').innerHTML = 
+            `<div class="success">✓ Spin successful! Tickets awarded: ${data.tickets_awarded}, New balance: ${data.balance}</div>`;
+        } else {
+          throw new Error(data.message || 'Spin failed');
+        }
+      } catch (error) {
+        document.getElementById('spinResult').innerHTML = 
+          `<div class="error">✗ ${error.message}</div>`;
+      }
+    }
+  </script>
+</body>
+</html>

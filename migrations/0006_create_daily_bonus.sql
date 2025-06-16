@@ -1,0 +1,7 @@
+CREATE TABLE daily_bonus_simple (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  bonus_tickets INTEGER NOT NULL,
+  revealed BOOLEAN DEFAULT FALSE,
+  assigned_at TIMESTAMPTZ DEFAULT NOW()
+);

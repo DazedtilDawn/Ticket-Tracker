@@ -1,0 +1,24 @@
+2025-05-23 20:49:51.098 [info] Can't use the Electron fetcher in this environment.
+2025-05-23 20:49:51.098 [info] Using the Node fetch fetcher.
+2025-05-23 20:49:51.098 [info] Initializing Git extension service.
+2025-05-23 20:49:51.098 [info] Successfully activated the vscode.git extension.
+2025-05-23 20:49:51.098 [info] Enablement state of the vscode.git extension: true.
+2025-05-23 20:49:51.098 [info] Successfully registered Git commit message provider.
+2025-05-23 20:49:52.895 [info] Logged in as DazedtilDawn
+2025-05-23 20:49:54.000 [info] Got Copilot token for DazedtilDawn
+2025-05-23 20:49:57.170 [info] Fetched model metadata in 3161ms 0f937675-abcf-4612-aa70-4c917ae8ebbe
+2025-05-23 20:49:57.207 [info] activationBlocker from 'languageModelAccess' took for 6954ms
+2025-05-23 20:49:57.542 [info] copilot token chat_enabled: true, sku: monthly_subscriber
+2025-05-23 20:49:57.561 [info] Registering default platform agent...
+2025-05-23 20:49:58.432 [info] Successfully activated the GitHub.vscode-pull-request-github extension.
+2025-05-23 20:49:58.432 [info] [githubTitleAndDescriptionProvider] Initializing GitHub PR title and description provider provider.
+2025-05-23 20:49:58.432 [info] Successfully registered GitHub PR title and description provider.
+2025-05-23 20:49:58.432 [info] Successfully registered GitHub PR reviewer comments provider.
+2025-05-23 20:49:58.564 [info] BYOK: Copilot Chat known models list fetched successfully.
+2025-05-23 20:54:46.961 [info] TypeScript server plugin activated.
+2025-05-23 20:54:46.963 [info] Registered TypeScript context provider with Copilot inline completions.
+2025-05-23 21:20:01.353 [info] Logged in as DazedtilDawn
+2025-05-23 21:20:02.125 [info] Got Copilot token for DazedtilDawn
+2025-05-23 21:20:02.549 [info] copilot token chat_enabled: true, sku: monthly_subscriber
+2025-05-23 21:20:02.596 [info] Fetched model metadata in 462ms 1248ffc7-2f38-4c21-853d-4675cbf20a62
+2025-05-23 21:20:02.710 [info] BYOK: Copilot Chat known models list fetched successfully.

@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import clsx from "clsx";
+import { scrollToHash } from "@/lib/scrollToHash";
 
 const SECTIONS = [
   { id: "chores", label: "Chores" },
   { id: "activity", label: "Activity" },
+  { id: "trophies", label: "Trophies" },
 ];
 
 export default function MobileSectionTabs() {
@@ -18,7 +20,7 @@ export default function MobileSectionTabs() {
           }
         });
       },
-      { rootMargin: "-50% 0px -50% 0px" }
+      { rootMargin: "-50% 0px -50% 0px" },
     );
     SECTIONS.forEach(({ id }) => {
       const el = document.getElementById(id);
@@ -27,21 +29,30 @@ export default function MobileSectionTabs() {
     return () => observer.disconnect();
   }, []);
 
+  const handleTabClick = (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    scrollToHash(id);
+    // Optional: provide haptic feedback on mobile devices
+    if (navigator.vibrate) {
+      navigator.vibrate(10);
+    }
+  };
+
   return (
     <nav className="child-tabs sticky top-14 z-20 bg-background/80 backdrop-blur flex gap-6 justify-center text-sm py-2 border-b">
       {SECTIONS.map(({ id, label }) => (
-        <a
+        <button
           key={id}
-          href={`#${id}`}
+          onClick={(e) => handleTabClick(id, e)}
           className={clsx(
-            "pb-1",
+            "pb-1 appearance-none bg-transparent border-0 cursor-pointer",
             active === id
               ? "font-semibold text-primary border-b-2 border-primary"
-              : "text-muted-foreground"
+              : "text-muted-foreground",
           )}
         >
           {label}
-        </a>
+        </button>
       ))}
     </nav>
   );

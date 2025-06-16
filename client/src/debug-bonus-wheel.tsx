@@ -3,7 +3,13 @@ import { Button } from "@/components/ui/button";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { toast } from "@/hooks/use-toast";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { ChildBonusWheel } from "@/components/child-bonus-wheel";
 
@@ -24,19 +30,19 @@ export function BonusWheelDebugger() {
     username: string;
     role: string;
   }
-  
+
   // Get all users to populate the dropdown
   const { data: users, isLoading: loadingUsers } = useQuery<User[]>({
-    queryKey: ['/api/users'],
-    refetchOnWindowFocus: false
+    queryKey: ["/api/users"],
+    refetchOnWindowFocus: false,
   });
 
   // Mutation to reset a daily bonus
   const resetBonusMutation = useMutation({
-    mutationFn: (userId: number) => 
-      apiRequest("/api/reset-daily-bonus", { 
-        method: "POST", 
-        body: JSON.stringify({ user_id: userId }) 
+    mutationFn: (userId: number) =>
+      apiRequest("/api/reset-daily-bonus", {
+        method: "POST",
+        body: JSON.stringify({ user_id: userId }),
       }),
     onSuccess: (data) => {
       console.log("[DEBUG] Reset bonus success:", data);
@@ -44,7 +50,7 @@ export function BonusWheelDebugger() {
         title: "Bonus Reset",
         description: `Daily bonus has been reset for ${childName}`,
       });
-      
+
       if (data.assignment) {
         setBonusId(data.assignment.id);
         toast({
@@ -58,21 +64,21 @@ export function BonusWheelDebugger() {
       toast({
         title: "Reset Failed",
         description: error.message || "Failed to reset bonus",
-        variant: "destructive"
+        variant: "destructive",
       });
-    }
+    },
   });
 
   // Mutation to assign a new bonus
   const assignBonusMutation = useMutation({
-    mutationFn: (userId: number) => 
-      apiRequest("/api/assign-daily-bonus", { 
-        method: "POST", 
-        body: JSON.stringify({ user_id: userId }) 
+    mutationFn: (userId: number) =>
+      apiRequest("/api/assign-daily-bonus", {
+        method: "POST",
+        body: JSON.stringify({ user_id: userId }),
       }),
     onSuccess: (data) => {
       console.log("[DEBUG] Assign bonus success:", data);
-      
+
       if (data.daily_bonus) {
         setBonusId(data.daily_bonus.id);
         toast({
@@ -86,9 +92,9 @@ export function BonusWheelDebugger() {
       toast({
         title: "Assignment Failed",
         description: error.message || "Failed to assign bonus",
-        variant: "destructive"
+        variant: "destructive",
       });
-    }
+    },
   });
 
   // Handle child selection
@@ -105,11 +111,11 @@ export function BonusWheelDebugger() {
       toast({
         title: "No Child Selected",
         description: "Please select a child first.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
-    
+
     resetBonusMutation.mutate(selectedChildId);
   };
 
@@ -119,11 +125,11 @@ export function BonusWheelDebugger() {
       toast({
         title: "No Child Selected",
         description: "Please select a child first.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
-    
+
     assignBonusMutation.mutate(selectedChildId);
   };
 
@@ -133,18 +139,18 @@ export function BonusWheelDebugger() {
       toast({
         title: "No Bonus ID",
         description: "Please assign or reset a bonus first.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
-    
+
     setWheelOpen(true);
   };
 
   return (
     <div className="container py-8">
       <h1 className="text-2xl font-bold mb-6">Bonus Wheel Debugger</h1>
-      
+
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Step 1: Select a Child</CardTitle>
@@ -156,41 +162,50 @@ export function BonusWheelDebugger() {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {users && users.filter(u => u.role === "child").map((child) => (
-                <Button
-                  key={child.id}
-                  variant={selectedChildId === child.id ? "default" : "outline"}
-                  onClick={() => handleSelectChild(child)}
-                  className="justify-start"
-                >
-                  {child.name}
-                </Button>
-              ))}
+              {users &&
+                users
+                  .filter((u) => u.role === "child")
+                  .map((child) => (
+                    <Button
+                      key={child.id}
+                      variant={
+                        selectedChildId === child.id ? "default" : "outline"
+                      }
+                      onClick={() => handleSelectChild(child)}
+                      className="justify-start"
+                    >
+                      {child.name}
+                    </Button>
+                  ))}
             </div>
           )}
         </CardContent>
       </Card>
-      
+
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Step 2: Reset or Assign Daily Bonus</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4">
-            <Button 
-              disabled={!selectedChildId || resetBonusMutation.isPending} 
+            <Button
+              disabled={!selectedChildId || resetBonusMutation.isPending}
               onClick={handleResetBonus}
               className="flex-1"
             >
-              {resetBonusMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {resetBonusMutation.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Reset Daily Bonus
             </Button>
-            <Button 
-              disabled={!selectedChildId || assignBonusMutation.isPending} 
+            <Button
+              disabled={!selectedChildId || assignBonusMutation.isPending}
               onClick={handleAssignBonus}
               className="flex-1"
             >
-              {assignBonusMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {assignBonusMutation.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Assign New Bonus
             </Button>
           </div>
@@ -203,14 +218,14 @@ export function BonusWheelDebugger() {
           )}
         </CardFooter>
       </Card>
-      
+
       <Card>
         <CardHeader>
           <CardTitle>Step 3: Open Bonus Wheel</CardTitle>
         </CardHeader>
         <CardContent>
-          <Button 
-            disabled={!bonusId} 
+          <Button
+            disabled={!bonusId}
             onClick={handleOpenWheel}
             className="w-full"
             size="lg"
@@ -219,7 +234,7 @@ export function BonusWheelDebugger() {
           </Button>
         </CardContent>
       </Card>
-      
+
       {/* Bonus Wheel Modal */}
       {selectedChildId && (
         <ChildBonusWheel

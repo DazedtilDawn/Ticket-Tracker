@@ -1,0 +1,158 @@
+2025-05-24 03:20:24.404 [info] Extension host with pid 246 started
+2025-05-24 03:20:24.404 [error] Error: EEXIST: file already exists, open '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock'
+2025-05-24 03:20:24.404 [info] Lock '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock': Could not acquire lock, checking if the file is stale.
+2025-05-24 03:20:24.410 [info] Lock '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock': The pid 790 appears to be gone.
+2025-05-24 03:20:24.410 [info] Lock '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock': Deleting a stale lock.
+2025-05-24 03:20:24.489 [info] Lock '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock': Lock acquired.
+2025-05-24 03:20:24.699 [info] ExtensionService#_doActivateExtension vscode.git-base, startup: false, activationEvent: '*', root cause: vscode.git
+2025-05-24 03:20:24.701 [info] ExtensionService#_doActivateExtension vscode.emmet, startup: false, activationEvent: 'onLanguage'
+2025-05-24 03:20:24.701 [info] ExtensionService#_doActivateExtension vscode.tunnel-forwarding, startup: false, activationEvent: 'onTunnel'
+2025-05-24 03:20:24.702 [info] ExtensionService#_doActivateExtension vscode.typescript-language-features, startup: false, activationEvent: 'onLanguage:typescriptreact'
+2025-05-24 03:20:26.114 [info] ExtensionService#_doActivateExtension vscode.git, startup: false, activationEvent: '*'
+2025-05-24 03:20:26.117 [info] ExtensionService#_doActivateExtension vscode.github, startup: false, activationEvent: '*'
+2025-05-24 03:20:26.625 [info] ExtensionService#_doActivateExtension vscode.npm, startup: true, activationEvent: 'workspaceContains:package.json'
+2025-05-24 03:20:29.192 [info] Eager extensions activated
+2025-05-24 03:20:29.192 [info] ExtensionService#_doActivateExtension vscode.debug-auto-launch, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 03:20:29.193 [info] ExtensionService#_doActivateExtension vscode.merge-conflict, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 03:20:29.193 [info] ExtensionService#_doActivateExtension Anthropic.claude-code, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 03:20:29.193 [info] ExtensionService#_doActivateExtension GitHub.copilot, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 03:20:29.194 [info] ExtensionService#_doActivateExtension GitHub.copilot-chat, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 03:20:36.084 [info] ExtensionService#_doActivateExtension GitHub.vscode-pull-request-github, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 03:20:39.810 [info] ExtensionService#_doActivateExtension vscode.configuration-editing, startup: false, activationEvent: 'onLanguage:json'
+2025-05-24 03:20:39.811 [info] ExtensionService#_doActivateExtension vscode.extension-editing, startup: false, activationEvent: 'onLanguage:json'
+2025-05-24 03:20:39.811 [info] ExtensionService#_doActivateExtension vscode.json-language-features, startup: false, activationEvent: 'onLanguage:json'
+2025-05-24 04:13:41.141 [info] ExtensionService#_doActivateExtension vscode.markdown-language-features, startup: false, activationEvent: 'onLanguage:markdown'
+2025-05-24 04:13:41.867 [info] ExtensionService#_doActivateExtension vscode.markdown-math, startup: false, activationEvent: 'api', root cause: vscode.markdown-language-features
+2025-05-24 04:31:40.110 [info] ExtensionService#_doActivateExtension vscode.css-language-features, startup: false, activationEvent: 'onLanguage:css'
+2025-05-24 04:37:46.463 [info] ExtensionService#_doActivateExtension robertpiosik.gemini-coder, startup: false, activationEvent: 'onView:codeWebChatViewOpenEditors'
+2025-05-24 04:38:28.164 [error] Actual command not found, wanted to execute codeWebChat.openFileFromWorkspace /3283 __vscc74ac5cd-febe-4032-9c4e-ae98959f8356 undefined
+2025-05-24 07:46:14.708 [info] Extension host with pid 31446 started
+2025-05-24 07:46:14.712 [error] Error: EEXIST: file already exists, open '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock'
+2025-05-24 07:46:14.712 [info] Lock '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock': Could not acquire lock, checking if the file is stale.
+2025-05-24 07:46:14.715 [info] Lock '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock': The pid 246 appears to be gone.
+2025-05-24 07:46:14.720 [info] Lock '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock': Deleting a stale lock.
+2025-05-24 07:46:14.769 [info] Lock '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock': Lock acquired.
+2025-05-24 07:46:15.027 [info] ExtensionService#_doActivateExtension vscode.git-base, startup: false, activationEvent: '*', root cause: vscode.git
+2025-05-24 07:46:15.029 [info] ExtensionService#_doActivateExtension vscode.emmet, startup: false, activationEvent: 'onLanguage'
+2025-05-24 07:46:15.029 [info] ExtensionService#_doActivateExtension vscode.tunnel-forwarding, startup: false, activationEvent: 'onTunnel'
+2025-05-24 07:46:15.030 [info] ExtensionService#_doActivateExtension vscode.typescript-language-features, startup: false, activationEvent: 'onLanguage:typescriptreact'
+2025-05-24 07:46:15.030 [info] ExtensionService#_doActivateExtension vscode.configuration-editing, startup: false, activationEvent: 'onLanguage:json'
+2025-05-24 07:46:15.031 [info] ExtensionService#_doActivateExtension vscode.extension-editing, startup: false, activationEvent: 'onLanguage:json'
+2025-05-24 07:46:15.031 [info] ExtensionService#_doActivateExtension vscode.json-language-features, startup: false, activationEvent: 'onLanguage:json'
+2025-05-24 07:46:15.032 [info] ExtensionService#_doActivateExtension vscode.npm, startup: false, activationEvent: 'onLanguage:json'
+2025-05-24 07:46:15.032 [info] ExtensionService#_doActivateExtension vscode.markdown-language-features, startup: false, activationEvent: 'onLanguage:markdown'
+2025-05-24 07:46:15.033 [info] ExtensionService#_doActivateExtension vscode.css-language-features, startup: false, activationEvent: 'onLanguage:css'
+2025-05-24 07:46:15.033 [info] ExtensionService#_doActivateExtension robertpiosik.gemini-coder, startup: false, activationEvent: 'onView:codeWebChatViewOpenEditors'
+2025-05-24 07:46:19.618 [info] ExtensionService#_doActivateExtension vscode.git, startup: false, activationEvent: '*'
+2025-05-24 07:46:19.619 [info] ExtensionService#_doActivateExtension vscode.github, startup: false, activationEvent: '*'
+2025-05-24 07:46:22.790 [info] Eager extensions activated
+2025-05-24 07:46:22.797 [info] ExtensionService#_doActivateExtension vscode.debug-auto-launch, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 07:46:22.797 [info] ExtensionService#_doActivateExtension vscode.merge-conflict, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 07:46:22.797 [info] ExtensionService#_doActivateExtension Anthropic.claude-code, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 07:46:22.798 [info] ExtensionService#_doActivateExtension GitHub.copilot, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 07:46:22.798 [info] ExtensionService#_doActivateExtension GitHub.copilot-chat, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 07:46:28.802 [info] ExtensionService#_doActivateExtension GitHub.vscode-pull-request-github, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 14:27:39.034 [info] Extension host with pid 8524 started
+2025-05-24 14:27:39.037 [error] Error: EEXIST: file already exists, open '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock'
+2025-05-24 14:27:39.037 [info] Lock '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock': Could not acquire lock, checking if the file is stale.
+2025-05-24 14:27:39.083 [info] Lock '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock': The pid 31446 appears to be gone.
+2025-05-24 14:27:39.083 [info] Lock '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock': Deleting a stale lock.
+2025-05-24 14:27:39.224 [info] ExtensionService#_doActivateExtension vscode.git-base, startup: false, activationEvent: '*', root cause: vscode.git
+2025-05-24 14:27:39.225 [info] ExtensionService#_doActivateExtension vscode.emmet, startup: false, activationEvent: 'onLanguage'
+2025-05-24 14:27:39.226 [info] ExtensionService#_doActivateExtension vscode.tunnel-forwarding, startup: false, activationEvent: 'onTunnel'
+2025-05-24 14:27:39.226 [info] ExtensionService#_doActivateExtension vscode.typescript-language-features, startup: false, activationEvent: 'onLanguage:typescriptreact'
+2025-05-24 14:27:39.226 [info] ExtensionService#_doActivateExtension vscode.configuration-editing, startup: false, activationEvent: 'onLanguage:json'
+2025-05-24 14:27:39.232 [info] ExtensionService#_doActivateExtension vscode.extension-editing, startup: false, activationEvent: 'onLanguage:json'
+2025-05-24 14:27:39.233 [info] ExtensionService#_doActivateExtension vscode.json-language-features, startup: false, activationEvent: 'onLanguage:json'
+2025-05-24 14:27:39.233 [info] ExtensionService#_doActivateExtension vscode.npm, startup: false, activationEvent: 'onLanguage:json'
+2025-05-24 14:27:39.234 [info] ExtensionService#_doActivateExtension vscode.markdown-language-features, startup: false, activationEvent: 'onLanguage:markdown'
+2025-05-24 14:27:39.234 [info] ExtensionService#_doActivateExtension vscode.css-language-features, startup: false, activationEvent: 'onLanguage:css'
+2025-05-24 14:27:39.235 [info] ExtensionService#_doActivateExtension robertpiosik.gemini-coder, startup: false, activationEvent: 'onView:codeWebChatViewOpenEditors'
+2025-05-24 14:27:39.235 [info] ExtensionService#_doActivateExtension Anthropic.claude-code, startup: false, activationEvent: 'onCommand:claude-code.runClaude'
+2025-05-24 14:27:39.236 [info] ExtensionService#_doActivateExtension GitHub.copilot-chat, startup: false, activationEvent: 'onTerminalQuickFixRequest:copilot-chat.terminalToDebuggingSuccess'
+2025-05-24 14:27:40.619 [info] Lock '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock': Lock acquired.
+2025-05-24 14:27:43.397 [info] ExtensionService#_doActivateExtension vscode.git, startup: false, activationEvent: '*'
+2025-05-24 14:27:43.397 [info] ExtensionService#_doActivateExtension vscode.github, startup: false, activationEvent: '*'
+2025-05-24 14:27:47.785 [info] Eager extensions activated
+2025-05-24 14:27:47.785 [info] ExtensionService#_doActivateExtension vscode.debug-auto-launch, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 14:27:47.788 [info] ExtensionService#_doActivateExtension vscode.merge-conflict, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 14:27:47.788 [info] ExtensionService#_doActivateExtension GitHub.copilot, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 14:27:52.627 [info] ExtensionService#_doActivateExtension GitHub.vscode-pull-request-github, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 14:29:26.703 [info] Extension host with pid 9770 started
+2025-05-24 14:29:26.704 [error] Error: EEXIST: file already exists, open '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock'
+2025-05-24 14:29:26.704 [info] Lock '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock': Could not acquire lock, checking if the file is stale.
+2025-05-24 14:29:26.711 [info] Lock '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock': The pid 8524 appears to be gone.
+2025-05-24 14:29:26.711 [info] Lock '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock': Deleting a stale lock.
+2025-05-24 14:29:26.933 [info] ExtensionService#_doActivateExtension vscode.git-base, startup: false, activationEvent: '*', root cause: vscode.git
+2025-05-24 14:29:27.283 [info] ExtensionService#_doActivateExtension vscode.emmet, startup: false, activationEvent: 'onLanguage'
+2025-05-24 14:29:27.284 [info] ExtensionService#_doActivateExtension vscode.tunnel-forwarding, startup: false, activationEvent: 'onTunnel'
+2025-05-24 14:29:27.284 [info] ExtensionService#_doActivateExtension vscode.typescript-language-features, startup: false, activationEvent: 'onLanguage:typescriptreact'
+2025-05-24 14:29:27.284 [info] ExtensionService#_doActivateExtension vscode.configuration-editing, startup: false, activationEvent: 'onLanguage:json'
+2025-05-24 14:29:27.285 [info] ExtensionService#_doActivateExtension vscode.extension-editing, startup: false, activationEvent: 'onLanguage:json'
+2025-05-24 14:29:27.285 [info] ExtensionService#_doActivateExtension vscode.json-language-features, startup: false, activationEvent: 'onLanguage:json'
+2025-05-24 14:29:27.286 [info] ExtensionService#_doActivateExtension vscode.npm, startup: false, activationEvent: 'onLanguage:json'
+2025-05-24 14:29:27.286 [info] ExtensionService#_doActivateExtension vscode.markdown-language-features, startup: false, activationEvent: 'onLanguage:markdown'
+2025-05-24 14:29:27.286 [info] ExtensionService#_doActivateExtension vscode.css-language-features, startup: false, activationEvent: 'onLanguage:css'
+2025-05-24 14:29:27.287 [info] ExtensionService#_doActivateExtension robertpiosik.gemini-coder, startup: false, activationEvent: 'onView:codeWebChatViewOpenEditors'
+2025-05-24 14:29:27.287 [info] ExtensionService#_doActivateExtension Anthropic.claude-code, startup: false, activationEvent: 'onCommand:claude-code.runClaude'
+2025-05-24 14:29:27.287 [info] ExtensionService#_doActivateExtension GitHub.copilot-chat, startup: false, activationEvent: 'onTerminalQuickFixRequest:copilot-chat.terminalToDebuggingSuccess'
+2025-05-24 14:29:29.699 [info] Lock '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock': Lock acquired.
+2025-05-24 14:29:38.395 [info] ExtensionService#_doActivateExtension vscode.git, startup: false, activationEvent: '*'
+2025-05-24 14:29:38.396 [info] ExtensionService#_doActivateExtension vscode.github, startup: false, activationEvent: '*'
+2025-05-24 14:29:40.586 [info] ExtensionService#_doActivateExtension vscode.debug-auto-launch, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 14:29:40.586 [info] ExtensionService#_doActivateExtension vscode.merge-conflict, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 14:29:40.587 [info] ExtensionService#_doActivateExtension GitHub.copilot, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 14:31:29.798 [info] Eager extensions activated
+2025-05-24 14:33:52.885 [info] Extension host with pid 10589 started
+2025-05-24 14:33:52.888 [error] Error: EEXIST: file already exists, open '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock'
+2025-05-24 14:33:52.888 [info] Lock '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock': Could not acquire lock, checking if the file is stale.
+2025-05-24 14:33:52.891 [info] Lock '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock': The pid 9770 appears to be gone.
+2025-05-24 14:33:52.891 [info] Lock '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock': Deleting a stale lock.
+2025-05-24 14:33:52.925 [info] Lock '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock': Lock acquired.
+2025-05-24 14:33:53.010 [info] ExtensionService#_doActivateExtension vscode.git-base, startup: false, activationEvent: '*', root cause: vscode.git
+2025-05-24 14:33:53.011 [info] ExtensionService#_doActivateExtension vscode.emmet, startup: false, activationEvent: 'onLanguage'
+2025-05-24 14:33:53.012 [info] ExtensionService#_doActivateExtension vscode.tunnel-forwarding, startup: false, activationEvent: 'onTunnel'
+2025-05-24 14:33:53.012 [info] ExtensionService#_doActivateExtension vscode.typescript-language-features, startup: false, activationEvent: 'onLanguage:typescriptreact'
+2025-05-24 14:33:53.012 [info] ExtensionService#_doActivateExtension vscode.configuration-editing, startup: false, activationEvent: 'onLanguage:json'
+2025-05-24 14:33:53.013 [info] ExtensionService#_doActivateExtension vscode.extension-editing, startup: false, activationEvent: 'onLanguage:json'
+2025-05-24 14:33:53.013 [info] ExtensionService#_doActivateExtension vscode.json-language-features, startup: false, activationEvent: 'onLanguage:json'
+2025-05-24 14:33:53.013 [info] ExtensionService#_doActivateExtension vscode.npm, startup: false, activationEvent: 'onLanguage:json'
+2025-05-24 14:33:53.014 [info] ExtensionService#_doActivateExtension vscode.markdown-language-features, startup: false, activationEvent: 'onLanguage:markdown'
+2025-05-24 14:33:53.014 [info] ExtensionService#_doActivateExtension vscode.css-language-features, startup: false, activationEvent: 'onLanguage:css'
+2025-05-24 14:33:53.014 [info] ExtensionService#_doActivateExtension robertpiosik.gemini-coder, startup: false, activationEvent: 'onView:codeWebChatViewOpenEditors'
+2025-05-24 14:33:53.015 [info] ExtensionService#_doActivateExtension Anthropic.claude-code, startup: false, activationEvent: 'onCommand:claude-code.runClaude'
+2025-05-24 14:33:53.015 [info] ExtensionService#_doActivateExtension GitHub.copilot-chat, startup: false, activationEvent: 'onTerminalQuickFixRequest:copilot-chat.terminalToDebuggingSuccess'
+2025-05-24 14:33:56.914 [info] ExtensionService#_doActivateExtension vscode.git, startup: false, activationEvent: '*'
+2025-05-24 14:33:56.982 [info] ExtensionService#_doActivateExtension vscode.github, startup: false, activationEvent: '*'
+2025-05-24 14:34:00.992 [info] Eager extensions activated
+2025-05-24 14:34:00.993 [info] ExtensionService#_doActivateExtension vscode.debug-auto-launch, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 14:34:00.993 [info] ExtensionService#_doActivateExtension vscode.merge-conflict, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 14:34:00.994 [info] ExtensionService#_doActivateExtension GitHub.copilot, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 14:34:04.993 [info] ExtensionService#_doActivateExtension GitHub.vscode-pull-request-github, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 14:34:54.630 [info] Extension host with pid 10867 started
+2025-05-24 14:34:54.632 [error] Error: EEXIST: file already exists, open '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock'
+2025-05-24 14:34:54.632 [info] Lock '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock': Could not acquire lock, checking if the file is stale.
+2025-05-24 14:34:54.684 [info] Lock '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock': The pid 10589 appears to be gone.
+2025-05-24 14:34:54.684 [info] Lock '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock': Deleting a stale lock.
+2025-05-24 14:34:54.890 [info] ExtensionService#_doActivateExtension vscode.git-base, startup: false, activationEvent: '*', root cause: vscode.git
+2025-05-24 14:34:54.891 [info] ExtensionService#_doActivateExtension vscode.emmet, startup: false, activationEvent: 'onLanguage'
+2025-05-24 14:34:54.891 [info] ExtensionService#_doActivateExtension vscode.tunnel-forwarding, startup: false, activationEvent: 'onTunnel'
+2025-05-24 14:34:54.892 [info] ExtensionService#_doActivateExtension vscode.typescript-language-features, startup: false, activationEvent: 'onLanguage:typescriptreact'
+2025-05-24 14:34:54.892 [info] ExtensionService#_doActivateExtension vscode.configuration-editing, startup: false, activationEvent: 'onLanguage:json'
+2025-05-24 14:34:54.892 [info] ExtensionService#_doActivateExtension vscode.extension-editing, startup: false, activationEvent: 'onLanguage:json'
+2025-05-24 14:34:54.893 [info] ExtensionService#_doActivateExtension vscode.json-language-features, startup: false, activationEvent: 'onLanguage:json'
+2025-05-24 14:34:54.893 [info] ExtensionService#_doActivateExtension vscode.npm, startup: false, activationEvent: 'onLanguage:json'
+2025-05-24 14:34:54.893 [info] ExtensionService#_doActivateExtension vscode.markdown-language-features, startup: false, activationEvent: 'onLanguage:markdown'
+2025-05-24 14:34:54.894 [info] ExtensionService#_doActivateExtension vscode.css-language-features, startup: false, activationEvent: 'onLanguage:css'
+2025-05-24 14:34:54.894 [info] ExtensionService#_doActivateExtension robertpiosik.gemini-coder, startup: false, activationEvent: 'onView:codeWebChatViewOpenEditors'
+2025-05-24 14:34:54.895 [info] ExtensionService#_doActivateExtension Anthropic.claude-code, startup: false, activationEvent: 'onCommand:claude-code.runClaude'
+2025-05-24 14:34:54.895 [info] ExtensionService#_doActivateExtension GitHub.copilot-chat, startup: false, activationEvent: 'onTerminalQuickFixRequest:copilot-chat.terminalToDebuggingSuccess'
+2025-05-24 14:34:56.495 [info] Lock '/home/runner/.vscode-server/data/User/workspaceStorage/b223f3aabd0dccce450599c95830c261/vscode.lock': Lock acquired.
+2025-05-24 14:34:59.601 [info] ExtensionService#_doActivateExtension vscode.git, startup: false, activationEvent: '*'
+2025-05-24 14:34:59.601 [info] ExtensionService#_doActivateExtension vscode.github, startup: false, activationEvent: '*'
+2025-05-24 14:35:03.686 [info] Eager extensions activated
+2025-05-24 14:35:03.686 [info] ExtensionService#_doActivateExtension vscode.debug-auto-launch, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 14:35:03.687 [info] ExtensionService#_doActivateExtension vscode.merge-conflict, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 14:35:03.687 [info] ExtensionService#_doActivateExtension GitHub.copilot, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 14:35:08.086 [info] ExtensionService#_doActivateExtension GitHub.vscode-pull-request-github, startup: false, activationEvent: 'onStartupFinished'
+2025-05-24 14:37:52.102 [error] Actual command not found, wanted to execute codeWebChat.openFileFromWorkspace /6055 __vsce51b5bd8-0d00-4079-bb5d-8e4bb9a98a60 undefined

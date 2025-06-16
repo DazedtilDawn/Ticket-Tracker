@@ -1,0 +1,56 @@
+2025-05-23 16:21:37.954 [info] Can't use the Electron fetcher in this environment.
+2025-05-23 16:21:37.954 [info] Using the Node fetch fetcher.
+2025-05-23 16:21:37.954 [info] Initializing Git extension service.
+2025-05-23 16:21:37.954 [info] Successfully activated the vscode.git extension.
+2025-05-23 16:21:37.954 [info] Enablement state of the vscode.git extension: true.
+2025-05-23 16:21:37.954 [info] Successfully registered Git commit message provider.
+2025-05-23 16:21:38.566 [info] Logged in as DazedtilDawn
+2025-05-23 16:21:39.647 [info] Got Copilot token for DazedtilDawn
+2025-05-23 16:21:40.105 [info] Fetched model metadata in 450ms 5aea625a-7ee8-4008-b497-03606506a68b
+2025-05-23 16:21:40.132 [info] activationBlocker from 'languageModelAccess' took for 2651ms
+2025-05-23 16:21:40.457 [info] copilot token chat_enabled: true, sku: monthly_subscriber
+2025-05-23 16:21:40.478 [info] Registering default platform agent...
+2025-05-23 16:21:40.731 [info] Successfully activated the GitHub.vscode-pull-request-github extension.
+2025-05-23 16:21:40.731 [info] [githubTitleAndDescriptionProvider] Initializing GitHub PR title and description provider provider.
+2025-05-23 16:21:40.731 [info] Successfully registered GitHub PR title and description provider.
+2025-05-23 16:21:40.731 [info] Successfully registered GitHub PR reviewer comments provider.
+2025-05-23 16:21:40.835 [info] BYOK: Copilot Chat known models list fetched successfully.
+2025-05-23 16:31:11.908 [info] TypeScript server plugin activated.
+2025-05-23 16:31:11.908 [info] Registered TypeScript context provider with Copilot inline completions.
+2025-05-23 16:36:41.580 [info] Fetched model metadata in 414ms ef49062c-53d7-4f31-92ca-b2d4f0e7468a
+2025-05-23 16:51:41.987 [info] Logged in as DazedtilDawn
+2025-05-23 16:51:42.768 [info] Got Copilot token for DazedtilDawn
+2025-05-23 16:51:43.263 [info] Fetched model metadata in 489ms 889fc3e8-717c-4016-aadf-cba6210a4adc
+2025-05-23 16:51:43.282 [info] copilot token chat_enabled: true, sku: monthly_subscriber
+2025-05-23 16:51:43.429 [info] BYOK: Copilot Chat known models list fetched successfully.
+2025-05-23 17:21:44.123 [info] Logged in as DazedtilDawn
+2025-05-23 17:21:45.011 [info] Got Copilot token for DazedtilDawn
+2025-05-23 17:21:45.445 [info] copilot token chat_enabled: true, sku: monthly_subscriber
+2025-05-23 17:21:45.503 [info] Fetched model metadata in 488ms 7c2d85f7-f16d-4db9-89d3-359af2c03601
+2025-05-23 17:21:45.606 [info] BYOK: Copilot Chat known models list fetched successfully.
+2025-05-23 17:51:46.177 [info] Logged in as DazedtilDawn
+2025-05-23 17:51:46.989 [info] Got Copilot token for DazedtilDawn
+2025-05-23 17:51:47.303 [info] copilot token chat_enabled: true, sku: monthly_subscriber
+2025-05-23 17:51:47.429 [info] BYOK: Copilot Chat known models list fetched successfully.
+2025-05-23 18:21:48.092 [info] Logged in as DazedtilDawn
+2025-05-23 18:21:49.009 [info] Got Copilot token for DazedtilDawn
+2025-05-23 18:21:49.459 [info] copilot token chat_enabled: true, sku: monthly_subscriber
+2025-05-23 18:21:49.515 [info] Fetched model metadata in 502ms 97942ec6-607c-4021-81c0-9176048b80f8
+2025-05-23 18:21:49.602 [info] BYOK: Copilot Chat known models list fetched successfully.
+2025-05-23 18:36:50.372 [info] Fetched model metadata in 408ms fa1d53d4-d8fc-47ee-9306-627d24ec70f5
+2025-05-23 18:51:50.829 [info] Logged in as DazedtilDawn
+2025-05-23 18:51:51.690 [info] Got Copilot token for DazedtilDawn
+2025-05-23 18:51:52.114 [info] Fetched model metadata in 421ms 1960ae44-a608-46c1-b9da-5aaf94323a86
+2025-05-23 18:51:52.126 [info] copilot token chat_enabled: true, sku: monthly_subscriber
+2025-05-23 18:51:52.257 [info] BYOK: Copilot Chat known models list fetched successfully.
+2025-05-23 19:06:53.085 [info] Fetched model metadata in 524ms 291fb7b3-3923-4a41-b1e1-51db87ca7749
+2025-05-23 19:21:53.497 [info] Logged in as DazedtilDawn
+2025-05-23 19:21:55.210 [info] Got Copilot token for DazedtilDawn
+2025-05-23 19:21:56.195 [info] Fetched model metadata in 975ms 26c8f6ce-34c7-4049-a491-8e5aa563c614
+2025-05-23 19:21:56.197 [info] copilot token chat_enabled: true, sku: monthly_subscriber
+2025-05-23 19:21:56.480 [info] BYOK: Copilot Chat known models list fetched successfully.
+2025-05-23 19:36:57.794 [info] Fetched model metadata in 798ms 168258d0-8c87-4f54-b980-d57fbea26e46
+2025-05-23 19:54:07.743 [info] Logged in as DazedtilDawn
+2025-05-23 19:54:08.587 [info] Got Copilot token for DazedtilDawn
+2025-05-23 19:54:08.926 [info] copilot token chat_enabled: true, sku: monthly_subscriber
+2025-05-23 19:54:09.080 [info] BYOK: Copilot Chat known models list fetched successfully.

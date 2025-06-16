@@ -30,156 +30,199 @@ import { useState, useEffect } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { subscribeToChannel } from "@/lib/websocketClient";
 import { useLocation } from "wouter";
+import { TransactionRow } from "@/components/TransactionRow";
+import { TransactionCard } from "@/components/TransactionCard";
 
 export interface TransactionsTableProps {
   userId?: string;
   limit?: number;
 }
 
-export default function TransactionsTable({ userId, limit = 10 }: TransactionsTableProps) {
+export default function TransactionsTable({
+  userId,
+  limit = 10,
+}: TransactionsTableProps) {
   const { user, isViewingAsChild } = useAuthStore();
   const viewingAsChild = isViewingAsChild();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { isMobile } = useMobile();
-  const [transactionToDelete, setTransactionToDelete] = useState<number | null>(null);
+  const [transactionToDelete, setTransactionToDelete] = useState<number | null>(
+    null,
+  );
   const [, navigate] = useLocation();
 
   const openDeleteDialog = (id: number) => {
     setTransactionToDelete(id);
   };
-  
+
   // If we're viewing as a child, use that user's ID (this is a fallback, as the query client
   // should automatically add userId to the query params for transactions)
   const effectiveUserId = viewingAsChild && user ? user.id.toString() : userId;
-  
-  const queryUrl = `/api/transactions${effectiveUserId ? `?userId=${effectiveUserId}` : ''}${limit ? `${effectiveUserId ? '&' : '?'}limit=${limit}` : ''}`;
-  
-  const { data: transactions = [], isLoading, refetch } = useQuery<any[]>({
-    queryKey: [queryUrl],
-    // Add automatic refetching to ensure we always have fresh data
-    refetchInterval: 5000, // Refresh every 5 seconds as a backup
-    staleTime: 2000,       // Consider data stale after 2 seconds
+
+  const queryUrl = `/api/transactions${effectiveUserId ? `?userId=${effectiveUserId}` : ""}${limit ? `${effectiveUserId ? "&" : "?"}limit=${limit}` : ""}`;
+
+  // Use a consistent query key to allow React Query to deduplicate requests
+  const {
+    data: transactions = [],
+    isLoading,
+    refetch,
+  } = useQuery<any[]>({
+    queryKey: ["/api/transactions", effectiveUserId || "all", limit], // Structured query key for better cache control
+    // Rely on WebSocket events, no polling
+    refetchInterval: false, // Disable automatic polling completely
+    staleTime: 120000, // Stay fresh for 2 minutes
+    gcTime: 300000, // Keep in cache for 5 minutes
+    // Cached data loading with optimized fetching
+    queryFn: async () => {
+      console.log(
+        `[OPTIMIZED] Loading transactions from cache or API: ${queryUrl}`,
+      );
+
+      try {
+        // Check session storage cache first
+        const cacheKey = `transactions_${effectiveUserId || "all"}_${limit}`;
+        const cachedData = sessionStorage.getItem(cacheKey);
+        const cachedTime = sessionStorage.getItem(`${cacheKey}_time`);
+
+        // If we have cached data less than 30 seconds old, use it
+        if (cachedData && cachedTime) {
+          const age = Date.now() - parseInt(cachedTime);
+          if (age < 30000) {
+            // 30 seconds
+            console.log(`[CACHE HIT] Using cached transactions, age: ${age}ms`);
+            return JSON.parse(cachedData);
+          }
+        }
+
+        // Cache miss or stale, fetch fresh data
+        // Use the proper auth token from our auth store
+        const authStore = JSON.parse(
+          localStorage.getItem("ticket-tracker-auth") || "{}",
+        );
+        const token = authStore?.state?.token;
+
+        const response = await fetch(queryUrl, {
+          credentials: "include",
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Cache the fresh data
+        sessionStorage.setItem(cacheKey, JSON.stringify(data));
+        sessionStorage.setItem(`${cacheKey}_time`, Date.now().toString());
+
+        return data;
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+        throw error;
+      }
+    },
   });
-  
-  // Set up WebSocket listeners for transaction events
+
+  // Set up WebSocket listeners for transaction events - using a debounced approach
   useEffect(() => {
-    console.log("Setting up WebSocket listeners in TransactionsTable component");
-    
-    // Set up individual channel subscriptions for better targeting
-    const earnSubscription = subscribeToChannel("transaction:earn", (data) => {
-      console.log("TransactionsTable received earn event:", data);
-      
-      // Always refresh the transaction list when a transaction is earned, regardless of user
-      // This helps ensure parent dashboard shows all child transactions
-      console.log("TransactionsTable: transaction:earn event - forcing complete refresh");
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-      
-      // First immediate refetch
-      queryClient.refetchQueries({ queryKey: [queryUrl], exact: false });
-      
-      // Force direct refetch of this component's data
-      refetch();
-      
-      // Also do a delayed refetch to ensure all backend processing is complete
-      setTimeout(() => {
-        console.log("TransactionsTable: executing delayed refetch after transaction:earn");
+    console.log(
+      "Setting up WebSocket listeners in TransactionsTable component",
+    );
+
+    // Debounce function to prevent multiple refetches in quick succession
+    let refetchTimeoutId: NodeJS.Timeout | null = null;
+
+    const debouncedRefetch = () => {
+      // Clear any existing timeout
+      if (refetchTimeoutId) {
+        clearTimeout(refetchTimeoutId);
+      }
+
+      // Set a new timeout
+      refetchTimeoutId = setTimeout(() => {
         refetch();
+        refetchTimeoutId = null;
       }, 300);
-    });
-    
-    const spendSubscription = subscribeToChannel("transaction:spend", (data) => {
-      console.log("TransactionsTable received spend event:", data);
-      console.log("TransactionsTable: transaction:spend event - forcing complete refresh");
+    };
+
+    // Simple change handler that works for all transaction events
+    const handleTransactionChange = (eventType: string, data: any) => {
+      console.log(`TransactionsTable received ${eventType} event:`, data);
+
+      // Just invalidate the queries once - TanStack Query will handle deduplication
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-      
-      // First immediate refetch
-      queryClient.refetchQueries({ queryKey: [queryUrl], exact: false });
-      
-      // Force direct refetch of this component's data
-      refetch();
-      
-      // Also do a delayed refetch to ensure all backend processing is complete
-      setTimeout(() => {
-        console.log("TransactionsTable: executing delayed refetch after transaction:spend");
-        refetch();
-      }, 300);
-    });
-    
-    const deleteSubscription = subscribeToChannel("transaction:delete", (data) => {
-      console.log("TransactionsTable received delete event:", data);
-      
-      // Always refresh transaction list when a transaction is deleted
-      console.log("TransactionsTable: transaction:delete event - forcing complete refresh");
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-      
-      // First immediate refetch
-      queryClient.refetchQueries({ queryKey: [queryUrl], exact: false });
-      
-      // Also do an immediate refetch for this specific component
-      refetch();
-      
-      // Force delayed refetches to ensure all backend processing is complete
-      setTimeout(() => {
-        console.log("TransactionsTable: executing delayed refetch after transaction:delete");
-        queryClient.refetchQueries({ queryKey: [queryUrl], exact: false });
-        refetch();
-      }, 100);
-      
-      // One more refetch after a longer delay to catch any stragglers
-      setTimeout(() => {
-        console.log("TransactionsTable: executing final delayed refetch after transaction:delete");
-        refetch();
-      }, 500);
-    });
-    
+
+      // Schedule a single debounced refetch
+      debouncedRefetch();
+    };
+
+    // Set up consolidated event handlers for all transaction types
+    const earnSubscription = subscribeToChannel("transaction:earn", (data) =>
+      handleTransactionChange("earn", data),
+    );
+
+    const spendSubscription = subscribeToChannel("transaction:spend", (data) =>
+      handleTransactionChange("spend", data),
+    );
+
+    const deleteSubscription = subscribeToChannel(
+      "transaction:delete",
+      (data) => handleTransactionChange("delete", data),
+    );
+
     return () => {
-      // Clean up the subscriptions
-      if (typeof earnSubscription === 'function') earnSubscription();
-      if (typeof spendSubscription === 'function') spendSubscription();
-      if (typeof deleteSubscription === 'function') deleteSubscription();
+      // Clean up the subscriptions and any pending timeout
+      if (refetchTimeoutId) {
+        clearTimeout(refetchTimeoutId);
+      }
+      if (typeof earnSubscription === "function") earnSubscription();
+      if (typeof spendSubscription === "function") spendSubscription();
+      if (typeof deleteSubscription === "function") deleteSubscription();
     };
   }, [queryClient, queryUrl]);
-  
-  // Delete transaction mutation
+
+  // Delete transaction mutation with optimistic updates
   const deleteTransactionMutation = useMutation({
     mutationFn: async (transactionId: number) => {
       return await apiRequest(`/api/transactions/${transactionId}`, {
-        method: "DELETE"
+        method: "DELETE",
       });
+    },
+    onMutate: async (transactionId: number) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: [queryUrl] });
+      
+      // Optimistically remove the transaction from the cache
+      queryClient.setQueryData([queryUrl], (oldData: any) => {
+        if (!oldData?.data) return oldData;
+        return {
+          ...oldData,
+          data: oldData.data.filter((t: any) => t.id !== transactionId)
+        };
+      });
+      
+      // Close dialog immediately for better UX
+      setTransactionToDelete(null);
     },
     onSuccess: (data) => {
       toast({
         title: "Transaction deleted",
         description: "The transaction has been successfully removed.",
       });
-      
-      // Immediately invalidate queries to refresh the data
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-      queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
-      
-      // Force a direct refetch of transactions with a small delay to allow the WebSocket event to process
-      setTimeout(() => {
-        console.log("Forcing immediate refetch after transaction deletion");
-        // Refetch all transaction queries
-        queryClient.refetchQueries({ 
-          queryKey: ["/api/transactions"],
-          exact: false
-        });
-        
-        // Also trigger a direct refetch for this specific component's data
-        refetch();
-        
-        // And another refetch after a slightly longer delay to ensure backend has completed all processing
-        setTimeout(() => {
-          refetch();
-        }, 300);
-      }, 50);
-      
-      setTransactionToDelete(null);
+
+      // Only invalidate stats query - transactions are already updated optimistically
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
     },
-    onError: (error) => {
+    onError: (error, transactionId) => {
       console.error("Error deleting transaction:", error);
+      
+      // Revert the optimistic update
+      queryClient.invalidateQueries({ queryKey: [queryUrl] });
+      
       toast({
         title: "Error",
         description: "Failed to delete transaction. Please try again.",
@@ -188,69 +231,74 @@ export default function TransactionsTable({ userId, limit = 10 }: TransactionsTa
       setTransactionToDelete(null);
     },
   });
-  
-  // Format date to readable format
+
+  // Format date to readable format (used by mobile layout)
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), "MMM d, yyyy");
   };
-  
-  // Get transaction description with more nuance for reward transactions
+
+  // Get transaction description with more nuance for reward transactions (used by mobile layout)
   const getTransactionDescription = (transaction: any) => {
     if (transaction.note) return transaction.note;
 
     switch (transaction.type) {
-      case 'earn':
-        if (transaction.source === 'chore' && transaction.chore)
+      case "earn":
+        if (transaction.source === "chore" && transaction.chore)
           return `Completed: ${transaction.chore.name}`;
-        if (transaction.source === 'bonus_spin') return 'Bonus Wheel Spin';
-        return 'Tickets Earned';
-      case 'spend':
+        if (transaction.source === "bonus_spin") return "Bonus Wheel Spin";
+        return "Tickets Earned";
+      case "spend":
         if (transaction.goal?.product)
           return `Purchase: ${transaction.goal.product.title}`;
-        return 'Tickets Spent';
-      case 'deduct':
-        return transaction.reason || 'Tickets Deducted';
-      case 'reward':
-        if (transaction.source === 'manual_add')
-          return transaction.reason || 'Bonus Tickets Awarded';
-        if (transaction.source === 'bonus_spin') return 'Bonus Spin Opportunity';
-        return 'Tickets Awarded';
+        return "Tickets Spent";
+      case "deduct":
+        return transaction.reason || "Tickets Deducted";
+      case "reward":
+        if (transaction.source === "manual_add")
+          return transaction.reason || "Bonus Tickets Awarded";
+        if (transaction.source === "bonus_spin")
+          return "Bonus Spin Opportunity";
+        return "Tickets Awarded";
       default:
-        return 'Transaction';
+        return "Transaction";
     }
   };
 
   const getTransactionStatusInfo = (transaction: any) => {
     if (transaction.delta > 0) {
       if (
-        transaction.type === 'reward' ||
-        transaction.source === 'manual_add' ||
-        transaction.source === 'bonus_spin'
+        transaction.type === "reward" ||
+        transaction.source === "manual_add" ||
+        transaction.source === "bonus_spin"
       ) {
         return {
-          text: 'Awarded',
-          style: 'bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-300'
+          text: "Awarded",
+          style: "bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-300",
         };
       }
       return {
-        text: 'Earned',
-        style: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+        text: "Earned",
+        style:
+          "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
       };
     } else if (transaction.delta < 0) {
-      if (transaction.type === 'deduct' || transaction.source === 'manual_deduct') {
+      if (
+        transaction.type === "deduct" ||
+        transaction.source === "manual_deduct"
+      ) {
         return {
-          text: 'Deducted',
-          style: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+          text: "Deducted",
+          style: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
         };
       }
       return {
-        text: 'Spent',
-        style: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+        text: "Spent",
+        style: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
       };
     }
     return {
-      text: 'Neutral',
-      style: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+      text: "Neutral",
+      style: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
     };
   };
 
@@ -266,145 +314,93 @@ export default function TransactionsTable({ userId, limit = 10 }: TransactionsTa
         ))
       ) : transactions && transactions.length > 0 ? (
         transactions.map((transaction: any) => (
-          <Card key={transaction.id} className="p-3 shadow-sm">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                {formatDate(transaction.created_at)}
-              </span>
-              <span
-                className={`text-sm font-semibold ${
-                  transaction.delta > 0
-                    ? 'text-green-600 dark:text-green-400'
-                    : transaction.delta < 0
-                    ? 'text-red-600 dark:text-red-400'
-                    : 'text-gray-500 dark:text-gray-400'
-                }`}
-              >
-                {transaction.delta > 0 ? `+${transaction.delta}` : transaction.delta} tickets
-              </span>
-            </div>
-            <p className="text-sm font-medium text-gray-900 dark:text-white mb-1 truncate">
-              {getTransactionDescription(transaction)}
-            </p>
-            <div className="flex justify-between items-center">
-              <Badge variant="outline" className={`${getTransactionStatusInfo(transaction).style} text-xs`}>
-                {getTransactionStatusInfo(transaction).text}
-              </Badge>
-              {(user?.role === 'parent' || user?.id === transaction.user_id) && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-gray-400 hover:text-red-500"
-                  onClick={() => openDeleteDialog(transaction.id)}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  <span className="sr-only">Delete transaction</span>
-                </Button>
-              )}
-            </div>
-          </Card>
+          <TransactionCard 
+            key={transaction.id} 
+            transaction={transaction} 
+            onDelete={openDeleteDialog} 
+          />
         ))
       ) : (
-        <div className="text-center py-6 text-gray-500 dark:text-gray-400">No transactions found</div>
+        <div className="text-center py-6 text-gray-500 dark:text-gray-400">
+          No transactions found
+        </div>
       )}
     </div>
   );
 
   const desktopLayout = (
-      
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader className="bg-gray-50 dark:bg-gray-900/50">
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Tickets</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-10"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                // Loading skeleton
-                Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-40" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-10" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-24 rounded-full" /></TableCell>
-                    <TableCell><Skeleton className="h-8 w-8 rounded-full" /></TableCell>
-                  </TableRow>
-                ))
-              ) : transactions && transactions.length > 0 ? (
-                transactions.map((transaction) => (
-                  <TableRow key={transaction.id}>
-                    <TableCell className="text-sm text-gray-500 dark:text-gray-400">
-                      {formatDate(transaction.created_at)}
-                    </TableCell>
-                    <TableCell className="text-sm font-medium text-gray-900 dark:text-white">
-                      {getTransactionDescription(transaction)}
-                    </TableCell>
-                    <TableCell className={`text-sm font-semibold ${
-                      transaction.delta > 0
-                        ? 'text-green-600 dark:text-green-400'
-                        : transaction.delta < 0
-                          ? 'text-red-600 dark:text-red-400'
-                          : 'text-gray-500 dark:text-gray-400'
-                    }`}>
-                      {transaction.delta > 0 ? `+${transaction.delta}` : transaction.delta}
-                    </TableCell>
-                    <TableCell>
-                      {(() => {
-                        const status = getTransactionStatusInfo(transaction);
-                        return (
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${status.style}`}>
-                            {status.text}
-                          </span>
-                        );
-                      })()}
-                    </TableCell>
-                    <TableCell>
-                      {/* Parent can delete any transaction, children can only undo very recent transactions */}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => openDeleteDialog(transaction.id)}
-                        className="text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400"
-                        title={isViewingAsChild() ? "Undo this transaction" : "Delete this transaction"}
-                        // For child users: Allow all transactions to be undone for now
-                        disabled={isViewingAsChild() && (
-                          !transaction.created_at
-                        )}
-                        style={isViewingAsChild() && (
-                          !transaction.created_at
-                        ) ? { display: 'none' } : {}}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-6 text-gray-500 dark:text-gray-400">
-                    No transactions found
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader className="bg-gray-50 dark:bg-gray-900/50">
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Tickets</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="w-10"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              // Loading skeleton
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell>
+                    <Skeleton className="h-4 w-20" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-40" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-10" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-6 w-24 rounded-full" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-8 w-8 rounded-full" />
                   </TableCell>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+              ))
+            ) : transactions && transactions.length > 0 ? (
+              transactions.map((transaction) => (
+                <TransactionRow 
+                  key={transaction.id} 
+                  transaction={transaction} 
+                  onDelete={openDeleteDialog} 
+                />
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={5}
+                  className="text-center py-6 text-gray-500 dark:text-gray-400"
+                >
+                  No transactions found
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
+    </div>
   );
 
   return (
     <>
       {isMobile ? mobileLayout : desktopLayout}
-      <AlertDialog open={transactionToDelete !== null} onOpenChange={(open) => !open && setTransactionToDelete(null)}>
+      <AlertDialog
+        open={transactionToDelete !== null}
+        onOpenChange={(open) => !open && setTransactionToDelete(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{isViewingAsChild() ? "Undo this action?" : "Delete this transaction?"}</AlertDialogTitle>
+            <AlertDialogTitle>
+              {isViewingAsChild()
+                ? "Undo this action?"
+                : "Delete this transaction?"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
               {isViewingAsChild()
                 ? "This will undo the transaction and adjust your ticket balance. You can only undo recent transactions."
@@ -414,8 +410,15 @@ export default function TransactionsTable({ userId, limit = 10 }: TransactionsTa
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => transactionToDelete && deleteTransactionMutation.mutate(transactionToDelete)}
-              className={isViewingAsChild() ? "bg-orange-600 hover:bg-orange-700" : "bg-red-600 hover:bg-red-700"}
+              onClick={() =>
+                transactionToDelete &&
+                deleteTransactionMutation.mutate(transactionToDelete)
+              }
+              className={
+                isViewingAsChild()
+                  ? "bg-orange-600 hover:bg-orange-700"
+                  : "bg-red-600 hover:bg-red-700"
+              }
             >
               {isViewingAsChild() ? "Undo" : "Delete"}
             </AlertDialogAction>

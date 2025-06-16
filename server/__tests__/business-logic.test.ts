@@ -4,7 +4,7 @@ import { calculateTier } from "../lib/business-logic";
 test("fewer than 3 chores maps tickets to tiers", () => {
   const chores = [
     { base_tickets: 2, is_active: true },
-    { base_tickets: 7, is_active: true }
+    { base_tickets: 7, is_active: true },
   ] as any;
 
   expect(calculateTier(3, chores)).toBe("common");

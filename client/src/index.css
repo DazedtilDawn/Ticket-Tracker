@@ -3,50 +3,113 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  /* Custom animation for the goal progress character */
+  @keyframes bounce-slow {
+    0%,
+    100% {
+      transform: translateY(-10%) translateX(-50%);
+      animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    }
+    50% {
+      transform: translateY(0) translateX(-50%);
+      animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    }
+  }
+  .animate-bounce-slow {
+    animation: bounce-slow 3s infinite;
+  }
+
+  /* Milestone achievement glow effect */
+  @keyframes milestone-glow {
+    0%,
+    100% {
+      box-shadow: 0 0 5px 2px rgba(250, 204, 21, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 10px 3px rgba(250, 204, 21, 0.7);
+    }
+  }
+  .animate-milestone-glow {
+    animation: milestone-glow 2s infinite;
+  }
+
+  /* Slide-up animation for the undo notification */
+  @keyframes slideUp {
+    0% {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  .animate-slideUp {
+    animation: slideUp 0.3s ease-out forwards;
+  }
+
+  /* Slow ping animation for spinning wheel hub */
+  @keyframes ping-slow {
+    75%, 100% {
+      transform: scale(2);
+      opacity: 0;
+    }
+  }
+  .animate-ping-slow {
+    animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+
+  /* Glow shadow effect */
+  .shadow-glow {
+    box-shadow: 0 0 20px rgba(250, 204, 21, 0.5);
+  }
+}
+
 :root {
-      --background: 0 0% 100%;
---foreground: 20 14.3% 4.1%;
---muted: 60 4.8% 95.9%;
---muted-foreground: 25 5.3% 44.7%;
---popover: 0 0% 100%;
---popover-foreground: 20 14.3% 4.1%;
---card: 0 0% 100%;
---card-foreground: 20 14.3% 4.1%;
---border: 20 5.9% 90%;
---input: 20 5.9% 90%;
---primary: 207 90% 54%;
---primary-foreground: 211 100% 99%;
---secondary: 60 4.8% 95.9%;
---secondary-foreground: 24 9.8% 10%;
---accent: 60 4.8% 95.9%;
---accent-foreground: 24 9.8% 10%;
---destructive: 0 84.2% 60.2%;
---destructive-foreground: 60 9.1% 97.8%;
---ring: 20 14.3% 4.1%;
---radius: 0.5rem;
-  }
-  .dark {
-      --background: 240 10% 3.9%;
---foreground: 0 0% 98%;
---muted: 240 3.7% 15.9%;
---muted-foreground: 240 5% 64.9%;
---popover: 240 10% 3.9%;
---popover-foreground: 0 0% 98%;
---card: 240 10% 3.9%;
---card-foreground: 0 0% 98%;
---border: 240 3.7% 15.9%;
---input: 240 3.7% 15.9%;
---primary: 207 90% 54%;
---primary-foreground: 211 100% 99%;
---secondary: 240 3.7% 15.9%;
---secondary-foreground: 0 0% 98%;
---accent: 240 3.7% 15.9%;
---accent-foreground: 0 0% 98%;
---destructive: 0 62.8% 30.6%;
---destructive-foreground: 0 0% 98%;
---ring: 240 4.9% 83.9%;
---radius: 0.5rem;
-  }
+  --background: 0 0% 100%;
+  --foreground: 20 14.3% 4.1%;
+  --muted: 60 4.8% 95.9%;
+  --muted-foreground: 25 5.3% 44.7%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 20 14.3% 4.1%;
+  --card: 0 0% 100%;
+  --card-foreground: 20 14.3% 4.1%;
+  --border: 20 5.9% 90%;
+  --input: 20 5.9% 90%;
+  --primary: 207 90% 54%;
+  --primary-foreground: 211 100% 99%;
+  --secondary: 60 4.8% 95.9%;
+  --secondary-foreground: 24 9.8% 10%;
+  --accent: 60 4.8% 95.9%;
+  --accent-foreground: 24 9.8% 10%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 60 9.1% 97.8%;
+  --ring: 20 14.3% 4.1%;
+  --radius: 0.5rem;
+}
+.dark {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --primary: 207 90% 54%;
+  --primary-foreground: 211 100% 99%;
+  --secondary: 240 3.7% 15.9%;
+  --secondary-foreground: 0 0% 98%;
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --ring: 240 4.9% 83.9%;
+  --radius: 0.5rem;
+}
 
 @layer base {
   * {
@@ -56,7 +119,7 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
-  
+
   /* Star shape for confetti */
   .star-shape {
     clip-path: polygon(
@@ -72,43 +135,61 @@
       39% 35%
     );
   }
-  
+
   /* Pulsing LED effect for wheel hub */
   @keyframes hub-pulse {
-    0% { box-shadow: 0 0 5px rgba(255, 215, 0, 0.3); }
-    50% { box-shadow: 0 0 15px rgba(255, 215, 0, 0.8); }
-    100% { box-shadow: 0 0 5px rgba(255, 215, 0, 0.3); }
+    0% {
+      box-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+    }
+    100% {
+      box-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+    }
   }
-  
+
   .hub-pulse {
     animation: hub-pulse 1.4s ease-in-out infinite;
   }
-  
+
   /* LED effect for wheel hub */
-  @keyframes ledpulse { 
-    50% { box-shadow: 0 0 12px #ffd700 } 
+  @keyframes ledpulse {
+    50% {
+      box-shadow: 0 0 12px #ffd700;
+    }
   }
-  
-  .hub-led { 
-    animation: ledpulse 1s ease-in-out infinite; 
+
+  .hub-led {
+    animation: ledpulse 1s ease-in-out infinite;
   }
-  
+
   /* Slow bounce animation for pointer triangle during spinning */
   @keyframes bounce-slow {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(6px); }
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(6px);
+    }
   }
-  
+
   .animate-bounce-slow {
     animation: bounce-slow 1s ease-in-out infinite;
   }
-  
+
   /* Shadow glow effect for winning pointer */
-  @keyframes shadow-pulse { 
-    0%, 100% { filter: drop-shadow(0 0 5px rgba(253, 224, 71, 0.4)); }
-    50% { filter: drop-shadow(0 0 12px rgba(253, 224, 71, 0.8)); }
+  @keyframes shadow-pulse {
+    0%,
+    100% {
+      filter: drop-shadow(0 0 5px rgba(253, 224, 71, 0.4));
+    }
+    50% {
+      filter: drop-shadow(0 0 12px rgba(253, 224, 71, 0.8));
+    }
   }
-  
+
   .shadow-glow {
     animation: shadow-pulse 1.5s ease-in-out infinite;
     filter: drop-shadow(0 0 8px rgba(253, 224, 71, 0.7));

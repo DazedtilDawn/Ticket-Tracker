@@ -6,13 +6,13 @@ services:
   # ── Express + Vite app (Docker) ─────────────────────────
   - name: ticket-tracker
     type: web
-    env: docker                  # Render builds from Dockerfile
+    env: docker # Render builds from Dockerfile
     plan: free
     dockerfilePath: ./Dockerfile
     healthCheckPath: /health
     autoDeploy: true
     envVars:
-      - key: DATABASE_URL        # ← injected from db below
+      - key: DATABASE_URL # ← injected from db below
         fromDatabase:
           name: ticket-db
           property: connectionString

@@ -1,0 +1,13 @@
+Re-optimizing dependencies because vite config has changed
+
+  VITE v5.4.14  ready in 383 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+Browserslist: browsers data (caniuse-lite) is 7 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+2:58:36 PM [vite] page reload test.html
+2:58:54 PM [vite] page reload src/lib/websocketClient.ts
+3:20:07 PM [vite] vite.config.ts changed, restarting server...
+3:20:07 PM [vite] server restarted.

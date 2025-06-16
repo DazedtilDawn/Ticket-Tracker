@@ -1,0 +1,25 @@
+2025-05-24 22:06:16.973 [info] Can't use the Electron fetcher in this environment.
+2025-05-24 22:06:16.973 [info] Using the Node fetch fetcher.
+2025-05-24 22:06:16.973 [info] Initializing Git extension service.
+2025-05-24 22:06:16.973 [info] Successfully activated the vscode.git extension.
+2025-05-24 22:06:16.973 [info] Enablement state of the vscode.git extension: true.
+2025-05-24 22:06:16.973 [info] Successfully registered Git commit message provider.
+2025-05-24 22:06:18.565 [info] Logged in as DazedtilDawn
+2025-05-24 22:06:20.032 [info] Got Copilot token for DazedtilDawn
+2025-05-24 22:06:20.165 [info] TypeScript server plugin activated.
+2025-05-24 22:06:20.166 [info] Registered TypeScript context provider with Copilot inline completions.
+2025-05-24 22:06:20.448 [info] Fetched model metadata in 409ms 39498291-a7f7-480f-b813-29309cff5a17
+2025-05-24 22:06:20.475 [info] activationBlocker from 'languageModelAccess' took for 3633ms
+2025-05-24 22:06:20.596 [info] copilot token chat_enabled: true, sku: monthly_subscriber
+2025-05-24 22:06:20.615 [info] Registering default platform agent...
+2025-05-24 22:06:20.913 [info] Successfully activated the GitHub.vscode-pull-request-github extension.
+2025-05-24 22:06:20.913 [info] [githubTitleAndDescriptionProvider] Initializing GitHub PR title and description provider provider.
+2025-05-24 22:06:20.913 [info] Successfully registered GitHub PR title and description provider.
+2025-05-24 22:06:20.913 [info] Successfully registered GitHub PR reviewer comments provider.
+2025-05-24 22:06:21.067 [info] BYOK: Copilot Chat known models list fetched successfully.
+2025-05-24 22:21:22.292 [info] Fetched model metadata in 342ms 4c6b58c9-911b-4563-aa37-cb95fd1e5fb4
+2025-05-24 22:36:22.691 [info] Logged in as DazedtilDawn
+2025-05-24 22:36:23.447 [info] Got Copilot token for DazedtilDawn
+2025-05-24 22:36:23.801 [info] Fetched model metadata in 341ms a6649b6b-1fb4-47fb-aef9-881e79900798
+2025-05-24 22:36:23.889 [info] copilot token chat_enabled: true, sku: monthly_subscriber
+2025-05-24 22:36:24.039 [info] BYOK: Copilot Chat known models list fetched successfully.

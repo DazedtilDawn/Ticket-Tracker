@@ -1,7 +1,8 @@
 // client/src/lib/dummy-neon-ws.ts
 // This file provides a dummy WebSocket constructor to prevent Neon's client-side WS attempts.
 export default function WebSocket() {
-  const message = "Neon Database WebSocket connections are not allowed from the client-side.";
+  const message =
+    "Neon Database WebSocket connections are not allowed from the client-side.";
   console.warn(message);
   // Return a mock WebSocket object that does nothing or throws.
   return {
@@ -11,19 +12,19 @@ export default function WebSocket() {
     close: () => {},
     send: () => {},
     readyState: 3, // WebSocket.CLOSED
-    CONNECTING: 0, 
-    OPEN: 1, 
-    CLOSING: 2, 
+    CONNECTING: 0,
+    OPEN: 1,
+    CLOSING: 2,
     CLOSED: 3,
-    url: '', 
-    protocol: '', 
-    extensions: '', 
+    url: "",
+    protocol: "",
+    extensions: "",
     bufferedAmount: 0,
-    onopen: null, 
-    onerror: null, 
-    onclose: null, 
+    onopen: null,
+    onerror: null,
+    onclose: null,
     onmessage: null,
-    binaryType: 'blob'
+    binaryType: "blob",
   };
 }
 

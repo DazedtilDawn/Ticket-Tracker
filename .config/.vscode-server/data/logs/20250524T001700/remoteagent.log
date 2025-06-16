@@ -1,0 +1,57 @@
+2025-05-24 00:17:00.938 [info] 
+
+
+
+
+2025-05-24 00:17:01.140 [info] Extension host agent started.
+2025-05-24 00:17:01.467 [info] [<unknown>][e6baf84d][ManagementConnection] New connection established.
+2025-05-24 00:17:01.468 [info] [<unknown>][eb841e22][ExtensionHostConnection] New connection established.
+2025-05-24 00:17:01.642 [info] ComputeTargetPlatform: linux-x64
+2025-05-24 00:17:01.850 [info] [<unknown>][eb841e22][ExtensionHostConnection] <258> Launched Extension Host Process.
+2025-05-24 00:17:02.173 [info] Marked extension as removed anthropic.claude-code-1.0.2
+2025-05-24 00:17:02.427 [info] Deleted marked for removal extension from disk anthropic.claude-code /home/runner/.vscode-server/extensions/anthropic.claude-code-1.0.2
+2025-05-24 00:17:04.616 [info] ComputeTargetPlatform: linux-x64
+2025-05-24 00:22:01.142 [info] New EH opened, aborting shutdown
+2025-05-24 00:31:43.702 [info] [<unknown>][e6baf84d][ManagementConnection] The client has disconnected gracefully, so the connection will be disposed.
+2025-05-24 00:31:43.940 [info] [<unknown>][eb841e22][ExtensionHostConnection] <258> Extension Host Process exited with code: 0, signal: null.
+2025-05-24 00:31:43.941 [info] Last EH closed, waiting before shutting down
+2025-05-24 00:34:55.736 [info] [<unknown>][2851a3d4][ManagementConnection] New connection established.
+2025-05-24 00:34:55.819 [info] [<unknown>][c204508c][ExtensionHostConnection] New connection established.
+2025-05-24 00:34:55.823 [info] [<unknown>][c204508c][ExtensionHostConnection] <790> Launched Extension Host Process.
+2025-05-24 00:35:01.034 [error] CodeExpectedError: Could not find pty 8 on pty host
+    at I.W (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:16623:21)
+    at I.updateTitle (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:16401:12)
+    at s.<computed> (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:16144:19)
+    at Object.call (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:6160:21)
+    at ul.s (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:5759:15)
+    at ul.q (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:5725:18)
+    at ps.value (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:5676:48)
+    at C.B (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:4074:11)
+    at C.fire (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:4090:40)
+    at process.x (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:3756:28)
+    at process.emit (node:events:524:28)
+    at emit (node:internal/child_process:950:14)
+    at process.processTicksAndRejections (node:internal/process/task_queues:83:21)
+2025-05-24 00:35:01.037 [error] CodeExpectedError: Could not find pty 8 on pty host
+    at I.W (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:16623:21)
+    at I.updateIcon (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:16404:12)
+    at s.<computed> (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:16144:19)
+    at Object.call (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:6160:21)
+    at ul.s (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:5759:15)
+    at ul.q (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:5725:18)
+    at ps.value (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:5676:48)
+    at C.B (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:4074:11)
+    at C.fire (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:4090:40)
+    at process.x (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/vs/platform/terminal/node/ptyHostMain.js:3756:28)
+    at process.emit (node:events:524:28)
+    at emit (node:internal/child_process:950:14)
+    at process.processTicksAndRejections (node:internal/process/task_queues:83:21)
+2025-05-24 00:35:01.041 [error] Error: Unexpected SIGPIPE
+    at process.<anonymous> (file:///home/runner/workspace/.config/.vscode-server/cli/servers/Stable-848b80aeb52026648a8ff9f7c45a9b0a80641e2e/server/out/server-main.js:61243:24)
+    at process.emit (node:events:536:35)
+2025-05-24 00:36:43.942 [info] New EH opened, aborting shutdown
+2025-05-24 00:38:54.674 [info] Installing extension: anthropic.claude-code {"isMachineScoped":true,"installGivenVersion":true,"isApplicationScoped":false,"profileLocation":{"$mid":1,"fsPath":"/home/runner/.vscode-server/extensions/extensions.json","external":"file:///home/runner/.vscode-server/extensions/extensions.json","path":"/home/runner/.vscode-server/extensions/extensions.json","scheme":"file"},"productVersion":{"version":"1.100.2","date":"2025-05-14T21:47:40.416Z"}}
+2025-05-24 00:38:54.718 [info] Deleted existing extension from disk anthropic.claude-code /home/runner/.vscode-server/extensions/anthropic.claude-code-1.0.3
+2025-05-24 00:38:54.735 [info] Extracted extension to file:///home/runner/.vscode-server/extensions/anthropic.claude-code-1.0.3: anthropic.claude-code
+2025-05-24 00:38:54.772 [info] Renamed to /home/runner/.vscode-server/extensions/anthropic.claude-code-1.0.3
+2025-05-24 00:38:54.791 [info] Extension installed successfully: anthropic.claude-code file:///home/runner/.vscode-server/extensions/extensions.json

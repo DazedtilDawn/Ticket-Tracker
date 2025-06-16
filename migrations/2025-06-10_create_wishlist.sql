@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS wishlist_items (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  product_id INTEGER NOT NULL,
+  progress INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT now()
+);

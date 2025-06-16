@@ -1,0 +1,884 @@
+{
+	"name": "gemini-coder",
+	"displayName": "Code Web Chat (CWC, prev. Gemini Coder)",
+	"description": "Initialize any web chat with your code",
+	"version": "1.11.0",
+	"scripts": {
+		"build": "npx vsce package --no-dependencies",
+		"vscode:prepublish": "npm run compile",
+		"compile": "webpack --config ./webpack.config.js",
+		"lint": "eslint src --ext ts,tsx",
+		"lint:fix": "eslint src --ext ts,tsx --fix",
+		"test": "jest"
+	},
+	"publisher": "robertpiosik",
+	"homepage": "https://codeweb.chat/",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/robertpiosik/CodeWebChat"
+	},
+	"engines": {
+		"vscode": "^1.92.0"
+	},
+	"sponsor": {
+		"url": "https://buymeacoffee.com/robertpiosik"
+	},
+	"categories": [
+		"Programming Languages",
+		"Machine Learning",
+		"AI",
+		"Chat"
+	],
+	"keywords": [
+		"ai",
+		"autocomplete",
+		"refactoring",
+		"assistant",
+		"fim",
+		"chat",
+		"free",
+		"AI Studio",
+		"Gemini",
+		"ChatGPT",
+		"Claude",
+		"DeepSeek",
+		"Qwen",
+		"Grok",
+		"Mistral",
+		"HuggingChat",
+		"openai",
+		"typescript",
+		"javascript",
+		"go",
+		"golang",
+		"json",
+		"php",
+		"ruby",
+		"kotlin",
+		"tools",
+		"c++",
+		"c#"
+	],
+	"main": "out/extension.js",
+	"activationEvents": [],
+	"capabilities": {
+		"virtualWorkspaces": true,
+		"untrustedWorkspaces": {
+			"supported": true
+		}
+	},
+	"icon": "media/logo.png",
+	"contributes": {
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "codeWebChat",
+					"title": "Code Web Chat",
+					"icon": "resources/activity-bar-icon.svg"
+				}
+			]
+		},
+		"views": {
+			"codeWebChat": [
+				{
+					"id": "codeWebChatViewOpenEditors",
+					"name": "Context: Open Editors",
+					"icon": "resources/activity-bar-icon.svg"
+				},
+				{
+					"id": "codeWebChatViewWorkspace",
+					"name": "Context: Workspace",
+					"icon": "resources/activity-bar-icon.svg"
+				},
+				{
+					"id": "codeWebChatViewWebsites",
+					"name": "Context: Websites",
+					"icon": "resources/activity-bar-icon.svg"
+				},
+				{
+					"id": "codeWebChatView",
+					"name": "Code Web Chat",
+					"type": "webview",
+					"icon": "resources/activity-bar-icon.svg"
+				}
+			]
+		},
+		"commands": [
+			{
+				"command": "codeWebChat.copyContext",
+				"title": "Copy Context",
+				"category": "Code Web Chat",
+				"icon": "$(copy)"
+			},
+			{
+				"command": "codeWebChat.selectSavedContext",
+				"title": "Select Saved Context",
+				"category": "Code Web Chat",
+				"icon": "$(checklist)"
+			},
+			{
+				"command": "codeWebChat.saveContext",
+				"title": "Save Current Context",
+				"category": "Code Web Chat",
+				"icon": "$(save)"
+			},
+			{
+				"command": "codeWebChat.checkAll",
+				"title": "Check All",
+				"category": "Code Web Chat",
+				"icon": "$(check-all)"
+			},
+			{
+				"command": "codeWebChat.clearChecks",
+				"title": "Clear All Checks",
+				"category": "Code Web Chat",
+				"icon": "$(clear-all)"
+			},
+			{
+				"command": "codeWebChat.collapseFolders",
+				"title": "Collapse Folders",
+				"category": "Code Web Chat",
+				"icon": "$(collapse-all)"
+			},
+			{
+				"command": "codeWebChat.checkAllOpenEditors",
+				"title": "Check All",
+				"category": "Code Web Chat",
+				"icon": "$(check-all)"
+			},
+			{
+				"command": "codeWebChat.clearChecksOpenEditors",
+				"title": "Clear All Checks",
+				"category": "Code Web Chat",
+				"icon": "$(clear-all)"
+			},
+			{
+				"command": "codeWebChat.closeEditor",
+				"title": "Close Editor",
+				"category": "Code Web Chat",
+				"icon": "$(close)"
+			},
+			{
+				"command": "codeWebChat.closeAllEditors",
+				"title": "Close All Editors",
+				"category": "Code Web Chat",
+				"icon": "$(close-all)"
+			},
+			{
+				"command": "codeWebChat.saveAll",
+				"title": "Save All",
+				"category": "Code Web Chat",
+				"icon": "$(save-all)"
+			},
+			{
+				"command": "codeWebChat.codeCompletion",
+				"title": "Code Completion",
+				"category": "Code Web Chat"
+			},
+			{
+				"command": "codeWebChat.codeCompletionAutoAccept",
+				"title": "Code Completion",
+				"category": "Code Web Chat"
+			},
+			{
+				"command": "codeWebChat.codeCompletionUsing",
+				"title": "Code Completion using...",
+				"category": "Code Web Chat"
+			},
+			{
+				"command": "codeWebChat.codeCompletionUsingAutoAccept",
+				"title": "Code Completion using...",
+				"category": "Code Web Chat"
+			},
+			{
+				"command": "codeWebChat.codeCompletionWithSuggestions",
+				"title": "Code Completion with Suggestions",
+				"category": "Code Web Chat"
+			},
+			{
+				"command": "codeWebChat.codeCompletionWithSuggestionsUsing",
+				"title": "Code Completion with Suggestions using...",
+				"category": "Code Web Chat"
+			},
+			{
+				"command": "codeWebChat.codeCompletionWithSuggestionsUsingAutoAccept",
+				"title": "Code Completion with Suggestions using...",
+				"category": "Code Web Chat"
+			},
+			{
+				"command": "codeWebChat.codeCompletionWithSuggestionsAutoAccept",
+				"title": "Code Completion with Suggestions",
+				"category": "Code Web Chat"
+			},
+			{
+				"command": "codeWebChat.codeCompletionToClipboard",
+				"title": "Code Completion Prompt to Clipboard",
+				"category": "Code Web Chat"
+			},
+			{
+				"command": "codeWebChat.codeCompletionWithSuggestionsToClipboard",
+				"title": "Code Completion with Suggestions to Clipboard",
+				"category": "Code Web Chat"
+			},
+			{
+				"command": "codeWebChat.codeCompletionInChat",
+				"title": "Code Completion in Chat",
+				"category": "Code Web Chat"
+			},
+			{
+				"command": "codeWebChat.codeCompletionInChatWith",
+				"title": "Code Completion in Chat with...",
+				"category": "Code Web Chat"
+			},
+			{
+				"command": "codeWebChat.applyChatResponse",
+				"title": "Apply Chat Response",
+				"category": "Code Web Chat"
+			},
+			{
+				"command": "codeWebChat.webChat",
+				"title": "Web Chat",
+				"category": "Code Web Chat"
+			},
+			{
+				"command": "codeWebChat.webChatWith",
+				"title": "Web Chat with...",
+				"category": "Code Web Chat"
+			},
+			{
+				"command": "codeWebChat.chatToClipboard",
+				"title": "Chat to Clipboard",
+				"category": "Code Web Chat"
+			},
+			{
+				"command": "codeWebChat.refactor",
+				"title": "Refactor",
+				"category": "Code Web Chat"
+			},
+			{
+				"command": "codeWebChat.refactorUsing",
+				"title": "Refactor using...",
+				"category": "Code Web Chat"
+			},
+			{
+				"command": "codeWebChat.refactorToClipboard",
+				"title": "Refactor to Clipboard",
+				"category": "Code Web Chat"
+			},
+			{
+				"command": "codeWebChat.newFolder",
+				"title": "New Folder...",
+				"icon": "$(new-folder)"
+			},
+			{
+				"command": "codeWebChat.newFile",
+				"title": "New File...",
+				"icon": "$(new-file)"
+			},
+			{
+				"command": "codeWebChat.rename",
+				"title": "Rename..."
+			},
+			{
+				"command": "codeWebChat.previewWebsite",
+				"title": "Preview Website Content"
+			},
+			{
+				"command": "codeWebChat.delete",
+				"title": "Delete"
+			},
+			{
+				"command": "codeWebChat.revert",
+				"title": "Revert Last Applied Chat Response",
+				"category": "Code Web Chat"
+			},
+			{
+				"command": "codeWebChat.generateCommitMessage",
+				"title": "Generate Commit Message with Code Web Chat",
+				"category": "Code Web Chat",
+				"icon": "$(sparkle)"
+			},
+			{
+				"command": "codeWebChat.referenceInChat",
+				"title": "Reference in Chat",
+				"category": "Code Web Chat"
+			},
+			{
+				"command": "codeWebChat.openSettings",
+				"title": "Open Settings",
+				"category": "Code Web Chat",
+				"icon": "$(settings)"
+			},
+			{
+				"command": "codeWebChat.openDocumentation",
+				"title": "Documentation",
+				"category": "Code Web Chat",
+				"icon": "$(book)"
+			},
+			{
+				"command": "codeWebChat.rateExtension",
+				"title": "Rate Extension",
+				"category": "Code Web Chat",
+				"icon": "$(feedback)"
+			},
+			{
+				"command": "codeWebChat.openRepository",
+				"title": "Repository",
+				"category": "Code Web Chat",
+				"icon": "$(github-alt)"
+			},
+			{
+				"command": "codeWebChat.openX",
+				"title": "@robertpiosik",
+				"category": "Code Web Chat",
+				"icon": {
+					"light": "resources/x-logo-light.svg",
+					"dark": "resources/x-logo-dark.svg"
+				}
+			},
+			{
+				"command": "codeWebChat.openReddit",
+				"title": "/r/CodeWebChat",
+				"category": "Code Web Chat",
+				"icon": {
+					"light": "resources/reddit-logo-light.svg",
+					"dark": "resources/reddit-logo-dark.svg"
+				}
+			}
+		],
+		"menus": {
+			"commandPalette": [
+				{
+					"command": "codeWebChat.clearChecks",
+					"when": "false"
+				},
+				{
+					"command": "codeWebChat.clearChecksOpenEditors",
+					"when": "false"
+				},
+				{
+					"command": "codeWebChat.checkAll",
+					"when": "false"
+				},
+				{
+					"command": "codeWebChat.checkAllOpenEditors",
+					"when": "false"
+				},
+				{
+					"command": "codeWebChat.collapseFolders",
+					"when": "false"
+				},
+				{
+					"command": "codeWebChat.closeEditor",
+					"when": "false"
+				},
+				{
+					"command": "codeWebChat.closeAllEditors",
+					"when": "false"
+				},
+				{
+					"command": "codeWebChat.saveAll",
+					"when": "false"
+				},
+				{
+					"command": "codeWebChat.newFile",
+					"when": "false"
+				},
+				{
+					"command": "codeWebChat.newFolder",
+					"when": "false"
+				},
+				{
+					"command": "codeWebChat.rename",
+					"when": "false"
+				},
+				{
+					"command": "codeWebChat.delete",
+					"when": "false"
+				},
+				{
+					"command": "codeWebChat.previewWebsite",
+					"when": "false"
+				},
+				{
+					"command": "codeWebChat.selectSavedContext",
+					"when": "false"
+				},
+				{
+					"command": "codeWebChat.saveContext",
+					"when": "false"
+				},
+				{
+					"command": "codeWebChat.generateCommitMessage",
+					"when": "false"
+				},
+				{
+					"command": "codeWebChat.codeCompletionAutoAccept",
+					"when": "false"
+				},
+				{
+					"command": "codeWebChat.codeCompletionUsingAutoAccept",
+					"when": "false"
+				},
+				{
+					"command": "codeWebChat.codeCompletionWithSuggestionsAutoAccept",
+					"when": "false"
+				},
+				{
+					"command": "codeWebChat.codeCompletionWithSuggestionsUsingAutoAccept",
+					"when": "false"
+				},
+				{
+					"command": "codeWebChat.referenceInChat",
+					"when": "false"
+				},
+				{
+					"command": "codeWebChat.openSettings",
+					"when": "false"
+				},
+				{
+					"command": "codeWebChat.openDocumentation",
+					"when": "false"
+				},
+				{
+					"command": "codeWebChat.rateExtension",
+					"when": "false"
+				},
+				{
+					"command": "codeWebChat.openRepository",
+					"when": "false"
+				},
+				{
+					"command": "codeWebChat.openX",
+					"when": "false"
+				},
+				{
+					"command": "codeWebChat.openReddit",
+					"when": "false"
+				}
+			],
+			"view/title": [
+				{
+					"command": "codeWebChat.selectSavedContext",
+					"when": "view == codeWebChatViewWorkspace",
+					"group": "navigation@1"
+				},
+				{
+					"command": "codeWebChat.saveContext",
+					"when": "view == codeWebChatViewWorkspace",
+					"group": "navigation@2"
+				},
+				{
+					"command": "codeWebChat.copyContext",
+					"when": "view == codeWebChatViewWorkspace",
+					"group": "navigation@3"
+				},
+				{
+					"command": "codeWebChat.checkAll",
+					"when": "view == codeWebChatViewWorkspace",
+					"group": "navigation@4"
+				},
+				{
+					"command": "codeWebChat.clearChecks",
+					"when": "view == codeWebChatViewWorkspace",
+					"group": "navigation@5"
+				},
+				{
+					"command": "codeWebChat.newFile",
+					"when": "view == codeWebChatViewWorkspace",
+					"group": "navigation@6"
+				},
+				{
+					"command": "codeWebChat.newFolder",
+					"when": "view == codeWebChatViewWorkspace",
+					"group": "navigation@7"
+				},
+				{
+					"command": "codeWebChat.collapseFolders",
+					"when": "view == codeWebChatViewWorkspace",
+					"group": "navigation@8"
+				},
+				{
+					"command": "codeWebChat.checkAllOpenEditors",
+					"when": "view == codeWebChatViewOpenEditors",
+					"group": "navigation@1"
+				},
+				{
+					"command": "codeWebChat.clearChecksOpenEditors",
+					"when": "view == codeWebChatViewOpenEditors",
+					"group": "navigation@2"
+				},
+				{
+					"command": "codeWebChat.saveAll",
+					"when": "view == codeWebChatViewOpenEditors",
+					"group": "navigation@3"
+				},
+				{
+					"command": "codeWebChat.closeAllEditors",
+					"when": "view == codeWebChatViewOpenEditors",
+					"group": "navigation@4"
+				},
+				{
+					"command": "codeWebChat.openDocumentation",
+					"when": "view == codeWebChatView",
+					"group": "navigation@1"
+				},
+				{
+					"command": "codeWebChat.openRepository",
+					"when": "view == codeWebChatView",
+					"group": "navigation@2"
+				},
+				{
+					"command": "codeWebChat.openX",
+					"when": "view == codeWebChatView",
+					"group": "navigation@3"
+				},
+				{
+					"command": "codeWebChat.openReddit",
+					"when": "view == codeWebChatView",
+					"group": "navigation@4"
+				},
+				{
+					"command": "codeWebChat.rateExtension",
+					"when": "view == codeWebChatView",
+					"group": "navigation@5"
+				},
+				{
+					"command": "codeWebChat.openSettings",
+					"when": "view == codeWebChatView",
+					"group": "navigation@6"
+				}
+			],
+			"view/item/context": [
+				{
+					"command": "codeWebChat.closeEditor",
+					"when": "view == codeWebChatViewOpenEditors && viewItem == openEditor",
+					"group": "inline"
+				},
+				{
+					"command": "codeWebChat.rename",
+					"when": "view == codeWebChatViewOpenEditors && viewItem == openEditor",
+					"group": "1_modification@1"
+				},
+				{
+					"command": "codeWebChat.delete",
+					"when": "view == codeWebChatViewOpenEditors && viewItem == openEditor",
+					"group": "1_modification@2"
+				},
+				{
+					"command": "codeWebChat.referenceInChat",
+					"when": "view == codeWebChatViewOpenEditors && viewItem == openEditor",
+					"group": "1_modification@3"
+				},
+				{
+					"command": "codeWebChat.newFile",
+					"when": "view == codeWebChatViewWorkspace && viewItem == directory",
+					"group": "1_creation@1"
+				},
+				{
+					"command": "codeWebChat.newFolder",
+					"when": "view == codeWebChatViewWorkspace && viewItem == directory",
+					"group": "1_creation@2"
+				},
+				{
+					"command": "codeWebChat.rename",
+					"when": "view == codeWebChatViewWorkspace",
+					"group": "1_modification@1"
+				},
+				{
+					"command": "codeWebChat.delete",
+					"when": "view == codeWebChatViewWorkspace",
+					"group": "1_modification@2"
+				},
+				{
+					"command": "codeWebChat.referenceInChat",
+					"when": "view == codeWebChatViewWorkspace",
+					"group": "1_modification@3"
+				}
+			],
+			"scm/title": [
+				{
+					"command": "codeWebChat.generateCommitMessage",
+					"group": "navigation",
+					"when": "scmProvider == git"
+				}
+			]
+		},
+		"configuration": {
+			"type": "object",
+			"title": "Code Web Chat Settings",
+			"properties": {
+				"codeWebChat.commitMessageInstructions": {
+					"type": "string",
+					"scope": "resource",
+					"description": "The instructions used when generating a commit message.",
+					"default": "Write a brief and precise summary for the following diff, limited to a single sentence if possible and nothing else. Use an imperative tone to ensure clarity and focus on the primary change or purpose."
+				},
+				"codeWebChat.ignoredExtensions": {
+					"type": "array",
+					"description": "List of file extensions to ignore in the context.",
+					"default": [
+						"svg"
+					],
+					"items": {
+						"type": "string",
+						"description": "File extension to ignore (without the dot)"
+					}
+				},
+				"codeWebChat.editFormatSelectorVisibility": {
+					"type": "string",
+					"description": "Control visibility of the edit format selector.",
+					"enum": [
+						"visible",
+						"hidden"
+					],
+					"default": "visible"
+				},
+				"codeWebChat.editFormatInstructionsTruncated": {
+					"type": "string",
+					"scope": "resource",
+					"description": "Style instructions for chat responses when using truncated format.",
+					"default": "Whenever proposing a file use the markdown code block syntax and always add file path in the first line comment. Use ellipsis comments, e.g. \"// ...\", when appropriate."
+				},
+				"codeWebChat.editFormatInstructionsWhole": {
+					"type": "string",
+					"scope": "resource",
+					"description": "Style instructions for chat responses when showing complete files.",
+					"default": "Whenever proposing a file use the markdown code block syntax and always add file path in the first line comment. Please show me the full code of the changed files, I have a disability which means I can't type and need to be able to copy and paste the full code."
+				},
+				"codeWebChat.editFormatInstructionsDiff": {
+					"type": "string",
+					"scope": "resource",
+					"description": "Style instructions for chat responses when using diff format.",
+					"default": "Whenever proposing a file use the markdown code block syntax. Each code block should be a diff patch without line numbers."
+				},
+				"codeWebChat.chatCodeCompletionsInstructions": {
+					"type": "string",
+					"scope": "resource",
+					"description": "Instructions for code completions in chat.",
+					"default": "Find correct replacement text for the <missing text> symbol. Correctly formatted response begins with a code block containing replacement text end then proceeds with explanation. Always refer to symbol \"<missing_text>\" as \"cursor position\" and \"replacement\" as \"completion\"."
+				},
+				"codeWebChat.presets": {
+					"type": "array",
+					"default": [
+						{
+							"name": "AI Studio",
+							"chatbot": "AI Studio",
+							"temperature": 0.5,
+							"systemInstructions": "You're a helpful coding assistant."
+						},
+						{
+							"name": "Gemini",
+							"chatbot": "Gemini"
+						},
+						{
+							"name": "ChatGPT",
+							"chatbot": "ChatGPT"
+						},
+						{
+							"name": "Claude",
+							"chatbot": "Claude"
+						},
+						{
+							"name": "Grok",
+							"chatbot": "Grok"
+						},
+						{
+							"name": "Grok (Think)",
+							"chatbot": "Grok",
+							"options": [
+								"think"
+							]
+						},
+						{
+							"name": "DeepSeek",
+							"chatbot": "DeepSeek"
+						},
+						{
+							"name": "DeepSeek - DeepThink (R1)",
+							"chatbot": "DeepSeek",
+							"options": [
+								"deep-think"
+							]
+						},
+						{
+							"name": "Qwen",
+							"chatbot": "Qwen"
+						},
+						{
+							"name": "Yuanbao",
+							"chatbot": "Yuanbao",
+							"model": "deepseek"
+						},
+						{
+							"name": "Doubao",
+							"chatbot": "Doubao"
+						},
+						{
+							"name": "Mistral",
+							"chatbot": "Mistral"
+						},
+						{
+							"name": "HuggingChat",
+							"chatbot": "HuggingChat"
+						},
+						{
+							"name": "Open WebUI",
+							"chatbot": "Open WebUI",
+							"port": 3000,
+							"temperature": 0.5,
+							"systemInstructions": "You're a helpful coding assistant."
+						}
+					],
+					"description": "Preset is a general or task specific web chat configuration.",
+					"items": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string",
+								"description": "Name of the preset."
+							},
+							"chatbot": {
+								"type": "string",
+								"enum": [
+									"AI Studio",
+									"Gemini",
+									"Open WebUI",
+									"OpenRouter",
+									"ChatGPT",
+									"Claude",
+									"Grok",
+									"DeepSeek",
+									"Qwen",
+									"Yuanbao",
+									"Doubao",
+									"Mistral",
+									"HuggingChat"
+								],
+								"description": "Choose among supported chatbots."
+							},
+							"promptPrefix": {
+								"type": "string",
+								"examples": [
+									"Outline the steps needed to achieve:",
+									"Draft a roadmap for accomplishing:",
+									"Propose various approaches for addressing:",
+									"Identify potential challenges in developing:",
+									"Describe the purpose of this code:",
+									"I need assistance troubleshooting this issue:",
+									"Help diagnose this error:",
+									"Generate commit message based on changes:",
+									"Write tests for:"
+								],
+								"description": "Prefix prepended to all prompts sent with this chat."
+							},
+							"promptSuffix": {
+								"type": "string",
+								"examples": [
+									"Keep your response concise.",
+									"Think step by step.",
+									"Show only changed fragments.",
+									"Summarize your understanding of the problem.",
+									"Highlight what needs to change.",
+									"Detail the key considerations.",
+									"Suggest any alternative approaches.",
+									"Identify potential drawbacks.",
+									"Ask for clarifications if needed before proceeding."
+								],
+								"description": "Suffix appended to all prompts sent with this chat."
+							},
+							"model": {
+								"type": "string",
+								"description": "Model to use."
+							},
+							"options": {
+								"type": "array",
+								"description": "Options to enable, e.g. canvas.",
+								"items": {
+									"type": "string",
+									"description": "Option name."
+								}
+							},
+							"temperature": {
+								"type": "number",
+								"description": "Temperature to use."
+							},
+							"top_p": {
+								"type": "number",
+								"description": "Top P setting to use."
+							},
+							"systemInstructions": {
+								"type": "string",
+								"description": "System instructions to use."
+							},
+							"port": {
+								"type": "number",
+								"description": "Open WebUI only. Port for 'localhost', if your instance is networked, remove this param and proxy it to `http://openwebui/` with nginx."
+							}
+						},
+						"required": [
+							"name",
+							"chatbot"
+						]
+					}
+				}
+			}
+		}
+	},
+	"devDependencies": {
+		"@babel/core": "^7.27.1",
+		"@babel/preset-env": "^7.27.2",
+		"@babel/preset-react": "^7.27.1",
+		"@babel/preset-typescript": "^7.27.1",
+		"@types/he": "^1.2.3",
+		"@types/jest": "^29.5.14",
+		"@types/node": "20.x",
+		"@types/react": "^18.2.60",
+		"@types/react-dom": "^18.2.19",
+		"@types/vscode": "1.92.0",
+		"@types/ws": "^8.18.1",
+		"@typescript-eslint/eslint-plugin": "^7.18.0",
+		"@typescript-eslint/parser": "^7.18.0",
+		"babel-loader": "^9.2.1",
+		"clean-webpack-plugin": "^4.0.0",
+		"copy-webpack-plugin": "^12.0.2",
+		"css-loader": "^6.5.1",
+		"eslint": "^8.57.1",
+		"eslint-config-prettier": "^10.1.5",
+		"eslint-plugin-react": "^7.37.5",
+		"jest": "^29.7.0",
+		"mini-css-extract-plugin": "^2.9.2",
+		"sass-embedded": "^1.88.0",
+		"sass-loader": "^12.6.0",
+		"style-loader": "^3.3.4",
+		"ts-jest": "^29.3.2",
+		"ts-loader": "^9.5.2",
+		"typed-css-modules": "^0.9.1",
+		"typescript": "^5.8.3",
+		"webpack": "^5.99.8",
+		"webpack-cli": "^6.0.1"
+	},
+	"dependencies": {
+		"@svgr/webpack": "^8.1.0",
+		"@vscode/codicons": "^0.0.36",
+		"axios": "^1.9.0",
+		"bufferutil": "^4.0.9",
+		"classnames": "^2.5.1",
+		"glob": "^11.0.2",
+		"he": "^1.2.0",
+		"ignore": "^6.0.2",
+		"marked": "^15.0.11",
+		"path-browserify": "^1.0.1",
+		"react": "^18.2.0",
+		"react-autosize-textarea": "^7.1.0",
+		"react-dom": "^18.2.0",
+		"ui": "workspace:*",
+		"utf-8-validate": "^6.0.5",
+		"ws": "^8.18.2"
+	},
+	"__metadata": {
+		"installedTimestamp": 1748130539087,
+		"targetPlatform": "undefined",
+		"size": 1799954
+	}
+}

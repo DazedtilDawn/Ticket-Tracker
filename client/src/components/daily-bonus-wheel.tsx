@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,14 +11,13 @@ import {
 import { useAuthStore } from "@/store/auth-store";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { Loader2, RefreshCw, Star, Rocket } from "lucide-react";
 import {
-  Loader2,
-  RefreshCw,
-  Star,
-  Rocket,
-  Volume2,
-} from "lucide-react";
-import { pickAudio, SOURCES, createLoopingAudio, playOnce } from "@/utils/audio";
+  pickAudio,
+  SOURCES,
+  createLoopingAudio,
+  playOnce,
+} from "@/utils/audio";
 import {
   Select,
   SelectContent,
@@ -47,14 +46,14 @@ interface UserInfo {
 
 /* ------ wheel configuration -------------------------------------*/
 const WHEEL_SEGMENTS = [
-  { value: 1,  color: "#FF6384", label: "1",  text: "#fff" },
-  { value: 2,  color: "#36A2EB", label: "2",  text: "#fff" },
-  { value: 3,  color: "#FFCE56", label: "3",  text: "#000" },
-  { value: 5,  color: "#4BC0C0", label: "5",  text: "#fff" },
-  { value: 2,  color: "#9966FF", label: "2",  text: "#fff" },
-  { value: 3,  color: "#FF9F40", label: "3",  text: "#000" },
+  { value: 1, color: "#FF6384", label: "1", text: "#fff" },
+  { value: 2, color: "#36A2EB", label: "2", text: "#fff" },
+  { value: 3, color: "#FFCE56", label: "3", text: "#000" },
+  { value: 5, color: "#4BC0C0", label: "5", text: "#fff" },
+  { value: 2, color: "#9966FF", label: "2", text: "#fff" },
+  { value: 3, color: "#FF9F40", label: "3", text: "#000" },
   { value: 10, color: "#FFCD56", label: "10", text: "#000" },
-  { value: 1,  color: "#C9CBCF", label: "1",  text: "#000" },
+  { value: 1, color: "#C9CBCF", label: "1", text: "#000" },
 ];
 
 const SEGMENT_ANGLE = 360 / WHEEL_SEGMENTS.length;
@@ -76,10 +75,10 @@ function describeSlice(startAngle: number, endAngle: number, radius = 50) {
 
   // SVG path
   return [
-    `M ${radius} ${radius}`,            // Move to center
-    `L ${startX} ${startY}`,            // Line to start point
+    `M ${radius} ${radius}`, // Move to center
+    `L ${startX} ${startY}`, // Line to start point
     `A ${radius} ${radius} 0 ${largeArc} 1 ${endX} ${endY}`, // Arc to end point
-    "Z",                                // Close path
+    "Z", // Close path
   ].join(" ");
 }
 
@@ -98,11 +97,12 @@ export function DailyBonusWheel() {
 
   /* ----- audio ------------------------------------------------*/
   // Store references to audio handlers for proper cleanup
-  const wheelAudioRef = useRef<ReturnType<typeof createLoopingAudio> | null>(null);
+  const wheelAudioRef = useRef<ReturnType<typeof createLoopingAudio> | null>(
+    null,
+  );
   const tickTimer = useRef<NodeJS.Timeout>();
 
   // Find compatible audio sources on mount
-  const [wheelSrc, setWheelSrc] = useState<string | null>(null);
   const [cheerSrc, setCheerSrc] = useState<string | null>(null);
 
   // Initialize audio on component mount
@@ -111,14 +111,13 @@ export function DailyBonusWheel() {
     const wheelSoundSrc = pickAudio(SOURCES.wheel);
     const cheerSoundSrc = pickAudio(SOURCES.cheer);
 
-    setWheelSrc(wheelSoundSrc);
     setCheerSrc(cheerSoundSrc);
 
     // Initialize the wheel audio controller
     wheelAudioRef.current = createLoopingAudio(wheelSoundSrc, {
       volume: 0.2,
       fallbackTickInterval: 90,
-      fallbackToneHz: 600
+      fallbackToneHz: 600,
     });
 
     // Clean up when component unmounts
@@ -135,13 +134,19 @@ export function DailyBonusWheel() {
 
   /* ----- data --------------------------------------------------*/
   const childUsers = getChildUsers();
-  const { data: chores = [] } = useQuery({ queryKey: ["/api/chores"], enabled: !isViewingAsChild() });
+  const { data: chores = [] } = useQuery({
+    queryKey: ["/api/chores"],
+    enabled: false, // Temporarily disabled to prevent API loopild(),
+  });
 
   // Mutation to assign bonus tickets
   const spinMutation = useMutation({
     mutationFn: (d: { user_id: number; chore_id: number }) =>
-      apiRequest("/api/spin-wheel", { method: "POST", body: JSON.stringify(d) }),
-    onSuccess: (data) => {
+      apiRequest("/api/spin-wheel", {
+        method: "POST",
+        body: JSON.stringify(d),
+      }),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       toast({
         title: "Bonus Assigned!",
@@ -155,7 +160,10 @@ export function DailyBonusWheel() {
   // Mutation to reset the daily bonus
   const resetBonusMutation = useMutation({
     mutationFn: (userId: number) =>
-      apiRequest("/api/reset-daily-bonus", { method: "POST", body: JSON.stringify({ user_id: userId }) }),
+      apiRequest("/api/reset-daily-bonus", {
+        method: "POST",
+        body: JSON.stringify({ user_id: userId }),
+      }),
     onSuccess: () => {
       toast({
         title: "Bonus Reset",
@@ -209,12 +217,13 @@ export function DailyBonusWheel() {
       const FULL_SPINS = 12;
 
       // ➊ exact centre-line of the chosen slice in SVG polar coords
-      const midPoint = idx * SEGMENT_ANGLE          // east-based
-                    - 90                           // wheel rotated so 0° is north
-                    + SEGMENT_ANGLE / 2;           // move to slice centre
+      const midPoint =
+        idx * SEGMENT_ANGLE - // east-based
+        90 + // wheel rotated so 0° is north
+        SEGMENT_ANGLE / 2; // move to slice centre
 
       // ➋ small random offset so we never land on a divider
-      const JITTER_RANGE = SEGMENT_ANGLE / 2 - 4;     // leave 4° safety margin
+      const JITTER_RANGE = SEGMENT_ANGLE / 2 - 4; // leave 4° safety margin
       const jitter = (Math.random() - 0.5) * 2 * JITTER_RANGE;
 
       // ➌ final rotation: lots of full spins, then land mid-slice plus offset
@@ -224,7 +233,10 @@ export function DailyBonusWheel() {
 
       /* send API mid-spin so DB is ready by landing */
       setTimeout(() => {
-        spinMutation.mutate({ user_id: +selectedChild, chore_id: +selectedChore });
+        spinMutation.mutate({
+          user_id: +selectedChild,
+          chore_id: +selectedChore,
+        });
       }, 500);
 
       /* 3️⃣ on settle - stop the audio sooner */
@@ -250,12 +262,13 @@ export function DailyBonusWheel() {
 
       /* Visual effects and celebration after wheel stops */
       setTimeout(() => {
-
         // glow slice
-        const slices = wheelRef.current?.querySelectorAll<HTMLElement>("[data-slice]");
+        const slices =
+          wheelRef.current?.querySelectorAll<HTMLElement>("[data-slice]");
         slices?.forEach((s, i) =>
-          i === idx ? s.classList.add("ring-4", "ring-yellow-300", "animate-pulse") :
-                      s.classList.remove("ring-4", "ring-yellow-300", "animate-pulse")
+          i === idx
+            ? s.classList.add("ring-4", "ring-yellow-300", "animate-pulse")
+            : s.classList.remove("ring-4", "ring-yellow-300", "animate-pulse"),
         );
 
         // haptic
@@ -264,13 +277,13 @@ export function DailyBonusWheel() {
         // celebratory sound for the win using our robust audio utility
         playOnce(cheerSrc, {
           volume: 0.3,
-          fallbackToneHz: 880 // higher pitch for win sound
+          fallbackToneHz: 880, // higher pitch for win sound
         });
 
         // confetti for 10
         if (WHEEL_SEGMENTS[idx].value === 10) {
           import("canvas-confetti").then((m) =>
-            m.default({ particleCount: 120, spread: 80, origin: { y: 0.6 } })
+            m.default({ particleCount: 120, spread: 80, origin: { y: 0.6 } }),
           );
         }
       }, 7500);
@@ -281,38 +294,55 @@ export function DailyBonusWheel() {
 
   /* ----- render ------------------------------------------------*/
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="text-center text-2xl">Daily Fun-Wheel Bonus</CardTitle>
-        <CardDescription className="text-center">Spin for hidden tickets!</CardDescription>
+    <Card className="w-full bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-shadow duration-300">
+      <CardHeader className="pb-4">
+        <div className="flex items-center justify-center mb-2">
+          <div className="p-2 bg-gradient-to-br from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 rounded-full">
+            <Rocket className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+          </div>
+        </div>
+        <CardTitle className="text-center text-2xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 dark:from-yellow-400 dark:to-orange-400 bg-clip-text text-transparent">
+          Daily Fun-Wheel Bonus
+        </CardTitle>
+        <CardDescription className="text-center text-gray-600 dark:text-gray-400">
+          Spin for hidden tickets! 🎟️
+        </CardDescription>
       </CardHeader>
 
-      <CardContent className="flex flex-col items-center">
+      <CardContent className="flex flex-col items-center px-6">
         {/* wheel + pointer */}
-        <div className="relative w-72 h-72 mb-6 select-none">
+        <div className="relative w-72 h-72 mb-6 select-none hover:scale-[1.02] transition-transform duration-300">
           {/* 🟨 Pointer (star + triangle) placed OUTSIDE the wheel container */}
-          <div className="absolute -top-7 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center" aria-hidden="true">
-            <div className={cn(
-              "w-9 h-9 rounded-full shadow-lg border-2 flex items-center justify-center",
-              spinResult ? 
-                "bg-yellow-500 border-yellow-300 animate-pulse shadow-glow" : 
-                "bg-yellow-500 border-yellow-300"
-            )}>
+          <div
+            className="absolute -top-7 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center"
+            aria-hidden="true"
+          >
+            <div
+              className={cn(
+                "w-9 h-9 rounded-full shadow-lg border-2 flex items-center justify-center",
+                spinResult
+                  ? "bg-yellow-500 border-yellow-300 animate-pulse shadow-glow"
+                  : "bg-yellow-500 border-yellow-300",
+              )}
+            >
               <Star className="w-5 h-5 text-white" />
             </div>
             {/* ▼ yellow triangle */}
-            <div className={cn(
-              "w-0 h-0 border-x-8 border-b-[14px] border-x-transparent drop-shadow",
-              isSpinning && "animate-bounce-slow",
-              spinResult ? 
-                "border-b-yellow-500 animate-pulse shadow-glow" : 
-                "border-b-yellow-500"
-            )} />
+            <div
+              className={cn(
+                "w-0 h-0 border-x-8 border-b-[14px] border-x-transparent drop-shadow-lg",
+                isSpinning && "animate-bounce",
+                spinResult
+                  ? "border-b-yellow-500 animate-pulse"
+                  : "border-b-yellow-500",
+              )}
+            />
           </div>
 
           {/* wheel in overflow container */}
-          <div className="w-full h-full rounded-full shadow-xl overflow-hidden" 
-               style={{ border: "6px solid #fff", outline: "2px solid #ddd" }}>
+          <div
+            className="w-full h-full rounded-full shadow-2xl overflow-hidden border-4 border-white dark:border-gray-700 ring-2 ring-gray-200 dark:ring-gray-600"
+          >
             <div
               ref={wheelRef}
               onClick={!isSpinning ? handleSpin : undefined}
@@ -324,24 +354,26 @@ export function DailyBonusWheel() {
               }}
               className={cn(
                 "w-full h-full rounded-full relative",
-                isSpinning ? "cursor-wait" : "cursor-pointer hover:scale-[1.03]"
+                isSpinning
+                  ? "cursor-wait"
+                  : "cursor-pointer hover:scale-[1.03]",
               )}
             >
               {/* SVG slices */}
               <svg viewBox="0 0 100 100" className="absolute inset-0">
                 {WHEEL_SEGMENTS.map((seg, i) => {
-                  const LABEL_RADIUS = 38;                   // % of SVG radius 
-                  const start = i * SEGMENT_ANGLE - 90;      // rotate to start at top
-                  const end   = start + SEGMENT_ANGLE;
-                  const mid   = start + SEGMENT_ANGLE / 2;
+                  const LABEL_RADIUS = 38; // % of SVG radius
+                  const start = i * SEGMENT_ANGLE - 90; // rotate to start at top
+                  const end = start + SEGMENT_ANGLE;
+                  const mid = start + SEGMENT_ANGLE / 2;
 
                   /* ➊ polar → cartesian */
-                  const rad   = (mid * Math.PI) / 180;
-                  const x     = 50 + LABEL_RADIUS * Math.cos(rad);
-                  const y     = 50 + LABEL_RADIUS * Math.sin(rad);
+                  const rad = (mid * Math.PI) / 180;
+                  const x = 50 + LABEL_RADIUS * Math.cos(rad);
+                  const y = 50 + LABEL_RADIUS * Math.sin(rad);
 
                   /* ➋ keep text upright: flip anything in the lower half-circle */
-                  const flip  = mid > 90 && mid < 270 ? 180 : 0;
+                  const flip = mid > 90 && mid < 270 ? 180 : 0;
 
                   return (
                     <g key={i} data-slice>
@@ -371,12 +403,14 @@ export function DailyBonusWheel() {
               </svg>
 
               {/* hub */}
-              <div className={cn(
-                "absolute left-1/2 top-1/2 w-16 h-16 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-b from-white to-gray-200 flex flex-col items-center justify-center border-2 border-gray-300 shadow-lg",
-                isSpinning && "animate-ping-slow"
-              )}>
+              <div
+                className={cn(
+                  "absolute left-1/2 top-1/2 w-16 h-16 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-white to-gray-100 dark:from-gray-700 dark:to-gray-800 flex flex-col items-center justify-center border-2 border-gray-300 dark:border-gray-600 shadow-xl",
+                  isSpinning && "animate-pulse",
+                )}
+              >
                 <Star className="w-4 h-4 text-yellow-500 mb-0.5" />
-                <span className="font-bold text-gray-800 text-sm">SPIN</span>
+                <span className="font-bold text-gray-800 dark:text-gray-200 text-sm">SPIN</span>
               </div>
             </div>
           </div>
@@ -385,9 +419,10 @@ export function DailyBonusWheel() {
         {/* result */}
         {spinResult && (
           <div className="mb-6" aria-live="polite">
-            <span className="inline-flex items-center gap-1 text-4xl font-bold bg-white/80 px-6 py-3 rounded-full border-2 border-pink-400 shadow">
-              <span className="text-yellow-500">+{spinResult}</span>
-              <span className="text-purple-600">tickets</span>
+            <span className="inline-flex items-center gap-2 text-4xl font-bold bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 px-6 py-3 rounded-full border-2 border-yellow-400 dark:border-yellow-600 shadow-lg animate-pulse">
+              <span className="bg-gradient-to-r from-yellow-500 to-orange-500 bg-clip-text text-transparent">+{spinResult}</span>
+              <span className="text-gray-700 dark:text-gray-300">tickets</span>
+              <Star className="h-6 w-6 text-yellow-500 animate-spin" />
             </span>
           </div>
         )}
@@ -395,12 +430,15 @@ export function DailyBonusWheel() {
         {/* selectors */}
         <div className="grid gap-4 w-full max-w-md">
           <div className="flex-1">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Select Child</label>
             <Select
               value={selectedChild}
               onValueChange={setSelectedChild}
               disabled={isSpinning}
             >
-              <SelectTrigger><SelectValue placeholder="Select child" /></SelectTrigger>
+              <SelectTrigger className="h-12 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+                <SelectValue placeholder="Choose a child..." />
+              </SelectTrigger>
               <SelectContent>
                 {childUsers.map((c: UserInfo) => (
                   <SelectItem key={c.id} value={c.id.toString()}>
@@ -412,31 +450,35 @@ export function DailyBonusWheel() {
           </div>
 
           <div className="flex-1">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Select Chore</label>
             <Select
               value={selectedChore}
               onValueChange={setSelectedChore}
               disabled={isSpinning || !selectedChild}
             >
-              <SelectTrigger><SelectValue placeholder="Select chore" /></SelectTrigger>
+              <SelectTrigger className="h-12 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+                <SelectValue placeholder="Choose a chore..." />
+              </SelectTrigger>
               <SelectContent>
-                {Array.isArray(chores) && chores.map((ch: any) => (
-                  <SelectItem key={ch.id} value={ch.id.toString()}>
-                    {`${ch.name} (${ch.base_tickets})`}
-                  </SelectItem>
-                ))}
+                {Array.isArray(chores) &&
+                  chores.map((ch: any) => (
+                    <SelectItem key={ch.id} value={ch.id.toString()}>
+                      {`${ch.name} (${ch.base_tickets})`}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
         </div>
       </CardContent>
 
-      <CardFooter className="flex gap-3">
+      <CardFooter className="flex gap-3 px-6 pb-6 pt-2">
         {/* Show reset button if the wheel has been spun or is in error state */}
         {(rotation > 0 || spinResult) && (
-          <Button
-            onClick={resetWheel}
-            variant="outline"
-            className="w-1/3 py-6"
+          <Button 
+            onClick={resetWheel} 
+            variant="outline" 
+            className="w-1/3 h-14 font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 border-gray-300 dark:border-gray-600"
           >
             <RefreshCw className="mr-2 h-4 w-4" /> Reset
           </Button>
@@ -445,7 +487,7 @@ export function DailyBonusWheel() {
         {/* Only show spin button if not currently spinning */}
         <Button
           onClick={handleSpin}
-          className="w-full py-6 text-lg bg-gradient-to-b from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 shadow-lg"
+          className="w-full h-14 text-lg font-bold bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group"
           disabled={isSpinning || !selectedChild || !selectedChore}
         >
           {isSpinning ? (
@@ -455,7 +497,8 @@ export function DailyBonusWheel() {
             </>
           ) : (
             <>
-              <Rocket className="mr-2 h-5 w-5" /> SPIN THE WHEEL!
+              <Rocket className="mr-2 h-5 w-5 group-hover:animate-bounce" /> 
+              SPIN THE WHEEL!
             </>
           )}
         </Button>

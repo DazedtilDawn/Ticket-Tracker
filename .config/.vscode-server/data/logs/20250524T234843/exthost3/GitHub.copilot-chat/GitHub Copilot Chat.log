@@ -1,0 +1,12 @@
+2025-05-25 05:13:16.949 [info] Can't use the Electron fetcher in this environment.
+2025-05-25 05:13:16.949 [info] Using the Node fetch fetcher.
+2025-05-25 05:13:16.949 [info] Initializing Git extension service.
+2025-05-25 05:13:16.949 [info] Successfully activated the vscode.git extension.
+2025-05-25 05:13:16.949 [info] Enablement state of the vscode.git extension: true.
+2025-05-25 05:13:16.949 [info] Successfully registered Git commit message provider.
+2025-05-25 05:13:18.050 [info] Logged in as DazedtilDawn
+2025-05-25 05:13:19.246 [info] Got Copilot token for DazedtilDawn
+2025-05-25 05:13:21.959 [info] TypeScript server plugin activated.
+2025-05-25 05:13:21.960 [info] Registered TypeScript context provider with Copilot inline completions.
+2025-05-25 08:13:28.734 [error] Error getting a session: Canceled: Canceled
+2025-05-25 08:13:28.734 [error] Error getting a session: Canceled: Canceled

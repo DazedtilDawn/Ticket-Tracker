@@ -10,43 +10,60 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { MobileProvider } from "./context/MobileContext";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
-import ParentDashboard from "@/pages/parent-dashboard";
+import ParentManagement from "@/pages/parent-management";
 import Login from "@/pages/login";
 import Chores from "@/pages/chores";
-import FamilyCatalogPage from "@/pages/family-catalog"; // Renamed import
+import FamilyCatalog from "@/pages/family-catalog";
 import Transactions from "@/pages/transactions";
 import BonusManagement from "@/pages/bonus-management";
 import DebugPage from "@/pages/debug";
+import DebugChorePage from "@/pages/debug-chore";
+import ManageChildren from "@/pages/manage-children";
 import { useAuthStore } from "./store/auth-store";
 import { Sidebar } from "./components/layout/sidebar";
 import { MobileNav } from "./components/layout/mobile-nav";
 import ChildViewBanner from "./components/layout/child-view-banner";
 
-function ProtectedRoute({ component: Component, ...rest }: { component: React.ComponentType<any> } & Record<string, any>) {
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-  const user = useAuthStore(state => state.user);
-  const isViewingAsChild = useAuthStore(state => state.isViewingAsChild);
-  console.log('ProtectedRoute: user:', user, 'isAuthenticated:', isAuthenticated, 'isViewingAsChild:', isViewingAsChild());
-  
+function ProtectedRoute({
+  component: Component,
+  ...rest
+}: { component: React.ComponentType<any> } & Record<string, any>) {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const user = useAuthStore((state) => state.user);
+  const isViewingAsChild = useAuthStore((state) => state.isViewingAsChild);
+  console.log(
+    "ProtectedRoute: user:",
+    user,
+    "isAuthenticated:",
+    isAuthenticated,
+    "isViewingAsChild:",
+    isViewingAsChild(),
+  );
+
   if (!isAuthenticated) {
     return <Route path="*" component={Login} />;
   }
-  
+
   // Special case for the Dashboard to show parent-specific dashboard
-  if (Component === Dashboard && user?.role === 'parent' && !isViewingAsChild()) {
-    return <ParentDashboard {...rest} />;
+  // Show ParentManagement only if the current user is a parent and not viewing as child
+  if (
+    Component === Dashboard &&
+    user?.role === "parent" &&
+    !isViewingAsChild()
+  ) {
+    return <ParentManagement {...rest} />;
   }
-  
+
   return <Component {...rest} />;
 }
 
 function AppLayout({ children }: { children: React.ReactNode }) {
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-  
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
   if (!isAuthenticated) {
     return children;
   }
-  
+
   return (
     <div className="flex flex-col md:flex-row min-h-screen">
       <Sidebar />
@@ -66,11 +83,14 @@ function Router() {
       <Route path="/">
         <ProtectedRoute component={Dashboard} />
       </Route>
+      <Route path="/child">
+        <ProtectedRoute component={Dashboard} />
+      </Route>
       <Route path="/chores">
         <ProtectedRoute component={Chores} />
       </Route>
-      <Route path="/family-catalog"> {/* Renamed path */}
-        <ProtectedRoute component={FamilyCatalogPage} /> {/* Use renamed component */}
+      <Route path="/family-catalog">
+        <ProtectedRoute component={FamilyCatalog} />
       </Route>
       <Route path="/transactions">
         <ProtectedRoute component={Transactions} />
@@ -78,8 +98,17 @@ function Router() {
       <Route path="/bonus-management">
         <ProtectedRoute component={BonusManagement} />
       </Route>
+      <Route path="/parent-dashboard">
+        <ProtectedRoute component={ParentManagement} />
+      </Route>
+      <Route path="/settings/children">
+        <ProtectedRoute component={ManageChildren} />
+      </Route>
       <Route path="/debug">
         <ProtectedRoute component={DebugPage} />
+      </Route>
+      <Route path="/debug-chore">
+        <ProtectedRoute component={DebugChorePage} />
       </Route>
       <Route component={NotFound} />
     </Switch>
@@ -89,23 +118,26 @@ function Router() {
 function App() {
   const { checkAuth, autoLoginEnabled } = useAuthStore();
   const [isLoading, setIsLoading] = useState(true);
-  
+
   useEffect(() => {
     // Check if user is authenticated on app load
     const init = async () => {
       try {
-        console.log('Checking authentication status, auto-login:', autoLoginEnabled);
+        console.log(
+          "Checking authentication status, auto-login:",
+          autoLoginEnabled,
+        );
         await checkAuth();
       } catch (error) {
-        console.error('Auth check failed:', error);
+        console.error("Auth check failed:", error);
       } finally {
         setIsLoading(false);
       }
     };
-    
+
     init();
   }, [checkAuth, autoLoginEnabled]);
-  
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -113,7 +145,7 @@ function App() {
       </div>
     );
   }
-  
+
   return (
     <ErrorBoundary>
       <MobileProvider>

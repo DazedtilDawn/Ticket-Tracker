@@ -44,9 +44,12 @@ const formSchema = z.object({
   }),
   recurrence: z.enum(["daily", "weekly", "monthly"]),
   image_url: z.string().optional(),
-  emoji: z.string().max(4, {
-    message: "Emoji must be 4 characters or less"
-  }).optional(),
+  emoji: z
+    .string()
+    .max(4, {
+      message: "Emoji must be 4 characters or less",
+    })
+    .optional(),
   is_active: z.boolean().default(true),
 });
 
@@ -58,7 +61,11 @@ interface NewChoreDialogProps {
   onChoreCreated: () => void;
 }
 
-export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDialogProps) {
+export function NewChoreDialog({
+  children,
+  chore,
+  onChoreCreated,
+}: NewChoreDialogProps) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -66,7 +73,7 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEditMode = !!chore;
-  
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -79,9 +86,9 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
       is_active: chore?.is_active !== undefined ? chore.is_active : true,
     },
   });
-  
+
   const handleImageUpload = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith("image/")) {
       toast({
         title: "Invalid file type",
         description: "Please upload an image file",
@@ -89,8 +96,9 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
       });
       return;
     }
-    
-    if (file.size > 5 * 1024 * 1024) { // 5MB
+
+    if (file.size > 5 * 1024 * 1024) {
+      // 5MB
       toast({
         title: "File too large",
         description: "Image must be less than 5MB",
@@ -98,38 +106,40 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
       });
       return;
     }
-    
+
     setIsUploading(true);
-    
+
     try {
       const formData = new FormData();
-      formData.append('image', file);
-      
+      formData.append("image", file);
+
       // Get auth token from local storage
-      const authStore = JSON.parse(localStorage.getItem('ticket-tracker-auth') || '{}');
+      const authStore = JSON.parse(
+        localStorage.getItem("ticket-tracker-auth") || "{}",
+      );
       const token = authStore?.state?.token;
-      
+
       // Determine current user ID for the profile image endpoint
-      const userId = authStore?.state?.user?.id ?? '';
+      const userId = authStore?.state?.user?.id ?? "";
 
       // Manual fetch with token for FormData upload
       const response = await fetch(`/api/profile-image/${userId}`, {
-        method: 'POST',
+        method: "POST",
         body: formData,
         headers: {
-          'Authorization': token ? `Bearer ${token}` : ''
+          Authorization: token ? `Bearer ${token}` : "",
           // Don't set content-type header for FormData
-        }
+        },
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to upload image');
+        throw new Error("Failed to upload image");
       }
-      
+
       const data = await response.json();
 
-      form.setValue('image_url', data.profile_image_url || data.imageUrl);
-      
+      form.setValue("image_url", data.profile_image_url || data.imageUrl);
+
       toast({
         title: "Image uploaded",
         description: "Image has been uploaded successfully",
@@ -145,34 +155,34 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
       setIsUploading(false);
     }
   };
-  
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
   };
-  
+
   const handleDragLeave = () => {
     setIsDragging(false);
   };
-  
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       handleImageUpload(e.dataTransfer.files[0]);
     }
   };
-  
+
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       handleImageUpload(e.target.files[0]);
     }
   };
-  
+
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
-    
+
     try {
       const payload = { ...data, base_tickets: data.base_tickets };
 
@@ -181,7 +191,7 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
         await apiRequest(`/api/chores/${chore.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
         });
         toast({
           title: "Chore updated",
@@ -192,14 +202,14 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
         await apiRequest("/api/chores", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
         });
         toast({
           title: "Chore created",
           description: "New chore has been added successfully.",
         });
       }
-      
+
       onChoreCreated();
       setOpen(false);
     } catch (error: any) {
@@ -212,25 +222,27 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
       setIsSubmitting(false);
     }
   };
-  
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{isEditMode ? "Edit Chore" : "Create New Chore"}</DialogTitle>
+          <DialogTitle>
+            {isEditMode ? "Edit Chore" : "Create New Chore"}
+          </DialogTitle>
           <DialogDescription>
-            {isEditMode 
-              ? "Update the details of this chore." 
-              : "Add a new chore for children to complete."
-            }
+            {isEditMode
+              ? "Update the details of this chore."
+              : "Add a new chore for children to complete."}
           </DialogDescription>
         </DialogHeader>
-        
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-4 py-4"
+          >
             <FormField
               control={form.control}
               name="name"
@@ -240,14 +252,12 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
                   <FormControl>
                     <Input placeholder="Clean Bedroom" {...field} />
                   </FormControl>
-                  <FormDescription>
-                    A clear name for the chore
-                  </FormDescription>
+                  <FormDescription>A clear name for the chore</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="description"
@@ -255,8 +265,8 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Make bed, tidy floor, organize desk" 
+                    <Textarea
+                      placeholder="Make bed, tidy floor, organize desk"
                       rows={3}
                       {...field}
                       value={field.value || ""}
@@ -269,7 +279,7 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
                 </FormItem>
               )}
             />
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -287,7 +297,7 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="emoji"
@@ -296,9 +306,9 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
                     <FormLabel>Emoji</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Input 
-                          placeholder="e.g. 🧹 🧼 🧸" 
-                          maxLength={4} 
+                        <Input
+                          placeholder="e.g. 🧹 🧼 🧸"
+                          maxLength={4}
                           {...field}
                           value={field.value || ""}
                         />
@@ -317,17 +327,14 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
                 )}
               />
             </div>
-            
+
             <FormField
               control={form.control}
               name="recurrence"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Recurrence</FormLabel>
-                  <Select 
-                    value={field.value} 
-                    onValueChange={field.onChange}
-                  >
+                  <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select frequency" />
@@ -346,7 +353,7 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="image_url"
@@ -354,11 +361,11 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
                 <FormItem>
                   <FormLabel>Chore Image</FormLabel>
                   <div className="space-y-2">
-                    <div 
+                    <div
                       className={`border-2 border-dashed rounded-md p-4 transition-colors ${
-                        isDragging 
-                          ? 'border-primary bg-primary/5' 
-                          : 'border-gray-300 dark:border-gray-700'
+                        isDragging
+                          ? "border-primary bg-primary/5"
+                          : "border-gray-300 dark:border-gray-700"
                       }`}
                       onDragOver={handleDragOver}
                       onDragLeave={handleDragLeave}
@@ -376,10 +383,11 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
                               onError={() => {
                                 toast({
                                   title: "Image error",
-                                  description: "Could not load the image. Please try another URL.",
+                                  description:
+                                    "Could not load the image. Please try another URL.",
                                   variant: "destructive",
                                 });
-                                form.setValue('image_url', '');
+                                form.setValue("image_url", "");
                               }}
                             />
                             <button
@@ -387,10 +395,20 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
                               className="absolute top-1 right-1 p-1 bg-red-500 rounded-full text-white"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                form.setValue('image_url', '');
+                                form.setValue("image_url", "");
                               }}
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
                                 <line x1="18" y1="6" x2="6" y2="18"></line>
                                 <line x1="6" y1="6" x2="18" y2="18"></line>
                               </svg>
@@ -407,7 +425,10 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
                                 </div>
                               ) : (
                                 <>
-                                  <span className="font-medium">Click to upload</span> or drag and drop
+                                  <span className="font-medium">
+                                    Click to upload
+                                  </span>{" "}
+                                  or drag and drop
                                   <p>SVG, PNG, JPG or GIF (max. 5MB)</p>
                                 </>
                               )}
@@ -418,8 +439,8 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
                     </div>
                     <FormControl>
                       <div className="flex items-center gap-2">
-                        <Input 
-                          placeholder="Or enter image URL" 
+                        <Input
+                          placeholder="Or enter image URL"
                           {...field}
                           value={field.value || ""}
                           disabled={isUploading}
@@ -442,7 +463,7 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="is_active"
@@ -465,7 +486,7 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
                 </FormItem>
               )}
             />
-            
+
             <DialogFooter>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
@@ -473,7 +494,11 @@ export function NewChoreDialog({ children, chore, onChoreCreated }: NewChoreDial
                     <span className="animate-spin mr-2 h-4 w-4 border-t-2 border-b-2 border-white rounded-full"></span>
                     Saving...
                   </span>
-                ) : isEditMode ? "Update Chore" : "Create Chore"}
+                ) : isEditMode ? (
+                  "Update Chore"
+                ) : (
+                  "Create Chore"
+                )}
               </Button>
             </DialogFooter>
           </form>

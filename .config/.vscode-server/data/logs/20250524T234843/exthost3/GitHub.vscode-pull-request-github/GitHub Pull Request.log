@@ -1,0 +1,13 @@
+2025-05-25 05:13:16.950 [warning] /home/runner/.ssh/config: ENOENT: no such file or directory, open '/home/runner/.ssh/config'
+2025-05-25 05:13:16.950 [info] [Activation] Extension version: 0.111.2025052204
+2025-05-25 05:13:16.990 [info] [Authentication] Creating hub for .com
+2025-05-25 05:13:18.050 [info] [Activation] Looking for git repository
+2025-05-25 05:13:18.050 [info] [Activation] Found 0 repositories during activation
+2025-05-25 05:13:18.050 [info] [Activation] Git repository found, initializing review manager and pr tree view.
+2025-05-25 05:13:18.124 [info] [GitAPI] Registering git provider
+2025-05-25 05:13:18.213 [info] [Activation] Repo state for file:///home/runner/workspace changed.
+2025-05-25 05:13:18.213 [info] [Activation] Repo file:///home/runner/workspace has already been setup.
+2025-05-25 05:13:18.718 [info] [Activation] Git initialization state changed: state=initialized
+2025-05-25 05:13:18.718 [info] [Review+0] Validate state in progress
+2025-05-25 05:13:18.718 [info] [Review+0] Validating state...
+2025-05-25 05:15:18.643 [error] [Review+0] Timeout occurred while validating state.

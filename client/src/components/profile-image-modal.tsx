@@ -5,7 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,11 @@ interface ProfileImageModalProps {
   user: User;
 }
 
-export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImageModalProps) {
+export default function ProfileImageModal({
+  isOpen,
+  onClose,
+  user,
+}: ProfileImageModalProps) {
   const queryClient = useQueryClient();
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -30,7 +34,7 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
   const fileInputRef = useRef<HTMLInputElement>(null);
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
-  
+
   // Reset state when modal is closed
   React.useEffect(() => {
     if (!isOpen) {
@@ -39,7 +43,7 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
         clearTimeout(closeTimeoutRef.current);
         closeTimeoutRef.current = null;
       }
-      
+
       // Reset state after modal is closed
       setSelectedFile(null);
       setUploadSuccess(false);
@@ -51,10 +55,10 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     // Store the selected file
     setSelectedFile(file);
-    
+
     // Preview the selected image immediately for instant feedback
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -82,95 +86,101 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
       toast({
         title: "No image selected",
         description: "Please select an image first",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
-    
+
     // Step 2: Prevent duplicate uploads
     if (isUploading) {
-      console.log('[UPLOAD] Already in progress, ignoring duplicate request');
+      console.log("[UPLOAD] Already in progress, ignoring duplicate request");
       return;
     }
-    
+
     try {
       // Step 3: Set the uploading state FIRST - this is critical
       setIsUploading(true);
       setUploadSuccess(false);
-      
+
       // Step 4: Prepare upload data
       console.log(`[UPLOAD] Starting upload for ${user.name} (ID: ${user.id})`);
-      
+
       const formData = new FormData();
-      formData.append('image', selectedFile); // Must use 'image' to match what the server expects
-      
+      formData.append("image", selectedFile); // Must use 'image' to match what the server expects
+
       // Use the profile image upload endpoint
       const uploadUrl = `/api/profile-image/${user.id}`;
-      
+
       // Log details for debugging
-      console.log(`[UPLOAD] File: ${selectedFile.name}, Size: ${selectedFile.size} bytes`);
-      
+      console.log(
+        `[UPLOAD] File: ${selectedFile.name}, Size: ${selectedFile.size} bytes`,
+      );
+
       // Add the user_id to the form data to identify which user this image is for
-      formData.append('user_id', user.id.toString());
-      
+      formData.append("user_id", user.id.toString());
+
       // Setup automatic timeout (prevents hanging)
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
-        console.log('[UPLOAD] Request timeout, aborting');
+        console.log("[UPLOAD] Request timeout, aborting");
         controller.abort();
       }, 15000); // 15-second timeout (slightly longer)
-      
+
       // Get authentication token from local storage
-      const authStore = JSON.parse(localStorage.getItem('ticket-tracker-auth') || '{}');
+      const authStore = JSON.parse(
+        localStorage.getItem("ticket-tracker-auth") || "{}",
+      );
       const token = authStore?.state?.token;
-      
+
       // Prepare headers with authentication
       const headers: Record<string, string> = {};
       if (token) {
         headers["Authorization"] = `Bearer ${token}`;
-        console.log('[UPLOAD] Added authorization token to request');
+        console.log("[UPLOAD] Added authorization token to request");
       } else {
-        console.warn('[UPLOAD] No authentication token found in storage');
+        console.warn("[UPLOAD] No authentication token found in storage");
       }
-      
+
       // Execute the actual upload using the same endpoint as chore images
       console.log(`[UPLOAD] POST request to ${uploadUrl}`);
       const response = await fetch(uploadUrl, {
-        method: 'POST',
+        method: "POST",
         headers,
         body: formData,
-        credentials: 'include',
-        signal: controller.signal
+        credentials: "include",
+        signal: controller.signal,
       });
-      
+
       // Clear the timeout since we got a response
       clearTimeout(timeoutId);
-      
+
       // Step 7: Handle response
       console.log(`[UPLOAD] Response status: ${response.status}`);
-      
+
       if (!response.ok) {
         // Handle error response
         const errorText = await response.text();
-        throw new Error(`Server error: ${response.status} - ${errorText.substring(0, 100)}`);
+        throw new Error(
+          `Server error: ${response.status} - ${errorText.substring(0, 100)}`,
+        );
       }
-      
+
       // Step 8: Parse and validate the JSON response
       const data = await response.json();
-      console.log('[UPLOAD] Server response:', data);
-      
+      console.log("[UPLOAD] Server response:", data);
+
       if (!data) {
-        throw new Error('Empty response from server');
+        throw new Error("Empty response from server");
       }
-      
+
       if (!data.success && !data.imageUrl) {
-        throw new Error(data?.message || 'Server indicated failure');
+        throw new Error(data?.message || "Server indicated failure");
       }
-      
+
       // Step 9: Process success - CRITICAL PART FOR FIXING THE LOOP
       // Extract image URL from any of the possible response formats
       let imageUrl = null;
-      
+
       // Try all possible fields where the URL might be located
       if (data.public_url) {
         imageUrl = data.public_url;
@@ -179,98 +189,106 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
       } else if (data.imageUrl) {
         imageUrl = data.imageUrl;
       }
-      
+
       // Still no URL? Throw an error
       if (!imageUrl) {
-        throw new Error('No image URL in server response');
+        throw new Error("No image URL in server response");
       }
-      
+
       // Add timestamp for cache busting if not already present
       const currentTime = Date.now();
-      if (!imageUrl.includes('?t=')) {
+      if (!imageUrl.includes("?t=")) {
         imageUrl = `${imageUrl}?t=${currentTime}`;
       }
-      
-      console.log('[UPLOAD] Final image URL with cache busting:', imageUrl);
+
+      console.log("[UPLOAD] Final image URL with cache busting:", imageUrl);
       setPreviewUrl(imageUrl);
-      
+
       // Mark the upload as successful
       setUploadSuccess(true);
-      console.log('[UPLOAD] Success! Image URL:', imageUrl);
-      
+      console.log("[UPLOAD] Success! Image URL:", imageUrl);
+
       // Notify the user
       toast({
         title: "Success!",
-        description: "Profile image updated successfully"
+        description: "Profile image updated successfully",
       });
-      
+
       // DIAGNOSTIC LOGGING
-      console.log('[DEBUG] Original user object before update:', user);
-      console.log('[DEBUG] Image URL from server response:', imageUrl);
-      
+      console.log("[DEBUG] Original user object before update:", user);
+      console.log("[DEBUG] Image URL from server response:", imageUrl);
+
       // Force refresh all user data to update the UI
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/verify"] });
-      
+
       // Force immediate refetch of all user data
-      queryClient.refetchQueries({ queryKey: ["/api/users"] })
-        .then(results => {
-          console.log('[DEBUG] User data after refetch:', results);
-          
+      queryClient
+        .refetchQueries({ queryKey: ["/api/users"] })
+        .then((results) => {
+          console.log("[DEBUG] User data after refetch:", results);
+
           // Check if the users API response contains the updated profile image
-          fetch('/api/users')
-            .then(res => res.json())
-            .then(users => {
+          fetch("/api/users")
+            .then((res) => res.json())
+            .then((users) => {
               const updatedUser = users.find((u: any) => u.id === user.id);
-              console.log('[DEBUG] User from /api/users API after update:', updatedUser);
-              console.log('[DEBUG] Profile image URL in user record:', updatedUser?.profile_image_url);
+              console.log(
+                "[DEBUG] User from /api/users API after update:",
+                updatedUser,
+              );
+              console.log(
+                "[DEBUG] Profile image URL in user record:",
+                updatedUser?.profile_image_url,
+              );
             })
-            .catch(err => console.error('[DEBUG] Error fetching users:', err));
+            .catch((err) =>
+              console.error("[DEBUG] Error fetching users:", err),
+            );
         });
-      
+
       // For specific user
       if (user.id) {
         queryClient.invalidateQueries({ queryKey: [`/api/users/${user.id}`] });
         queryClient.refetchQueries({ queryKey: [`/api/users/${user.id}`] });
         queryClient.invalidateQueries({ queryKey: [`/api/stats`] });
       }
-      
+
       // Force reload the auth store to update profile image in the UI
       setTimeout(() => {
         // Force window reload to ensure all components pick up the new image
         // This is needed because some components may have cached the old image
         window.location.reload();
       }, 3000); // Extended timeout to see logs
-      
+
       // Auto-close after success with a delay
-      console.log('[UPLOAD] Scheduling auto-close');
+      console.log("[UPLOAD] Scheduling auto-close");
       if (closeTimeoutRef.current) {
         clearTimeout(closeTimeoutRef.current);
       }
-      
+
       closeTimeoutRef.current = setTimeout(() => {
-        console.log('[UPLOAD] Auto-closing modal after successful upload');
+        console.log("[UPLOAD] Auto-closing modal after successful upload");
         onClose();
       }, 1200);
-      
     } catch (error: any) {
       // Step 10: Error handling
-      console.error('[UPLOAD] Error:', error);
-      
+      console.error("[UPLOAD] Error:", error);
+
       // Cancel any pending close
       if (closeTimeoutRef.current) {
         clearTimeout(closeTimeoutRef.current);
         closeTimeoutRef.current = null;
       }
-      
+
       // Reset success state
       setUploadSuccess(false);
-      
+
       // Show error to user
       toast({
         title: "Upload failed",
         description: error?.message || "Could not upload image",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       // Step 11: Always clean up by resetting the uploading state
@@ -282,9 +300,9 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
   // Generate initials for avatar fallback
   const getInitials = (name: string) => {
     return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
+      .split(" ")
+      .map((part) => part[0])
+      .join("")
       .toUpperCase()
       .substring(0, 2);
   };
@@ -298,19 +316,22 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
             Upload a new profile image for {user.name}.
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="flex flex-col items-center justify-center py-6">
           <div className="relative inline-block group">
-            <Avatar className="h-32 w-32 border-2 border-gray-200 dark:border-gray-700 cursor-pointer" onClick={handleUploadClick}>
-              <AvatarImage 
-                src={previewUrl || user.profile_image_url || undefined} 
-                alt={`${user.name}'s profile`} 
+            <Avatar
+              className="h-32 w-32 border-2 border-gray-200 dark:border-gray-700 cursor-pointer"
+              onClick={handleUploadClick}
+            >
+              <AvatarImage
+                src={previewUrl || user.profile_image_url || undefined}
+                alt={`${user.name}'s profile`}
               />
               <AvatarFallback className="bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200">
                 {getInitials(user.name)}
               </AvatarFallback>
             </Avatar>
-            
+
             <Button
               type="button"
               size="icon"
@@ -326,11 +347,11 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
               )}
             </Button>
           </div>
-          
+
           <div className="text-center text-xs text-muted-foreground mt-2">
             Click to select a photo
           </div>
-          
+
           <Input
             ref={fileInputRef}
             type="file"
@@ -338,23 +359,23 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
             className="hidden"
             onChange={handleFileChange}
           />
-          
+
           {uploadSuccess && (
             <p className="mt-4 text-sm text-green-600 font-medium">
               Profile image successfully updated!
             </p>
           )}
         </div>
-        
+
         <DialogFooter className="flex justify-between">
           {!uploadSuccess ? (
             <>
               <Button variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button 
-                variant="default" 
-                onClick={handleSaveImage} 
+              <Button
+                variant="default"
+                onClick={handleSaveImage}
                 disabled={!selectedFile || isUploading}
               >
                 {isUploading ? (
@@ -363,7 +384,7 @@ export default function ProfileImageModal({ isOpen, onClose, user }: ProfileImag
                     Saving...
                   </>
                 ) : (
-                  'Save Image'
+                  "Save Image"
                 )}
               </Button>
             </>

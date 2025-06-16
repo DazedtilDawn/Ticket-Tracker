@@ -38,8 +38,8 @@ export async function setupVite(app: Express, server: Server) {
     server: {
       ...serverOptions,
       allowedHosts: [
-        '32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev',
-        '.replit.dev',
+        "32734c3e-d439-4087-ae79-1e0d888e5505-00-1bqv5wxyb7jt8.riker.replit.dev",
+        ".replit.dev",
       ],
     },
     appType: "custom",
